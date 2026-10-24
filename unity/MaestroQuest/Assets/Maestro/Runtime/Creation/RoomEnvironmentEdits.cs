@@ -61,8 +61,8 @@ namespace Maestro.Quest.Creation
             error="Read the exact object and selected profile revisions before assigning an environment";
             if(ObjectRevision(target)!=revision||profile==null||profile.Length==0&&profileRevision!=0||profile.Length>0&&(definition==null||EnvironmentRevision(profile)!=profileRevision))return false;
             if(!CanChangeEnvironment(target,definition?.realCollisions??true,out error))return false;
-            error="A shared environment profile supports at most 16 bound objects; use another profile for additional objects";
-            if(profile.Length>0&&Read(target).environmentProfile!=profile&&EnvironmentMembers(profile).Length>=16)return false;
+            error="This environment profile has reached the saved-world member limit";
+            if(profile.Length>0&&Read(target).environmentProfile!=profile&&EnvironmentMembers(profile).Length>=RoomEnvironmentProfile.MaximumMembers)return false;
             error=null;return true;
         }
         internal bool PrepareEnvironmentBinding(string target,int revision,string profile,int profileRevision,out RoomObjectData data,out string error) {
@@ -109,8 +109,12 @@ namespace Maestro.Quest.Creation
             return value;
         }
         internal JObject ObserveEnvironmentProfile(string id) {
-            var p=ReadEnvironment(id);return p==null?null:new JObject{["id"]=id,["revision"]=EnvironmentRevision(id),["name"]=p.name,
-                ["realCollisions"]=p.realCollisions,["members"]=new JArray(EnvironmentMembers(id)),["temporary"]=TemporaryRoom};
+            var p=ReadEnvironment(id);if(p==null)return null;var members=EnvironmentMembers(id);
+            // Preserve the original bounded fact. Never truncate a complete-set
+            // read: larger profiles use summary + coherent resource.members pages.
+            if(members.Length>RoomEnvironmentProfile.LegacyMaximumMembers)return null;
+            return new JObject{["id"]=id,["revision"]=EnvironmentRevision(id),["name"]=p.name,
+                ["realCollisions"]=p.realCollisions,["members"]=new JArray(members),["temporary"]=TemporaryRoom};
         }
         internal JObject ObserveEnvironmentProfiles(int offset) {
             if(offset<0||offset>RoomEnvironmentProfile.MaximumProfiles)return null;

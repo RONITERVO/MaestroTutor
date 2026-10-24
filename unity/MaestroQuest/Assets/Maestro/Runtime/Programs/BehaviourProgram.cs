@@ -113,7 +113,11 @@ namespace Maestro.Quest.Programs
         }
         void Read(string source,bool invocation=false)
         {
-            Need(source!=null&&source.Length<=MaximumCharacters,"Program exceeds its size limit");
+            // A validated one-off call also carries a generated resource list and
+            // wrapper. Reserve their bounded overhead without enlarging authored
+            // programs, imported modules, call arguments or interpreter values.
+            int sourceLimit=invocation?MaximumCharacters+Maestro.Quest.Creation.RoomCapabilityCatalog.MaximumInvocationResources*35+1024:MaximumCharacters;
+            Need(source!=null&&source.Length<=sourceLimit,"Program exceeds its size limit");
             using var reader=new JsonTextReader(new System.IO.StringReader(source)) {MaxDepth=48,DateParseHandling=DateParseHandling.None};
             var root=JObject.Load(reader,new JsonLoadSettings {DuplicatePropertyNameHandling=DuplicatePropertyNameHandling.Error});
             Need(!reader.Read(),"Extra data follows the program");

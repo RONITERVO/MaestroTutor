@@ -6,6 +6,7 @@ import type {CapabilitySchema} from './capabilities';
 export type BehaviourValueType='number'|'boolean'|'text';
 /** Generated native vocabulary, not a claim that a target or device can run it. */
 export const behaviourCatalog=manifest;
+export const roomSnapshotTransport=Object.freeze({...manifest.transport.roomSnapshot});
 export const behaviourFactTypes:Readonly<Record<string,DataType>>=Object.freeze(Object.fromEntries(
  manifest.facts.map(fact=>[fact.id,fact.type as DataType])));
 export interface BehaviourFactDefinition {domain?:'room'|'workspace';id:string;version:number;type:DataType;label:string;description:string;input?:CapabilitySchema;example?:Record<string,unknown>;features?:string[]}

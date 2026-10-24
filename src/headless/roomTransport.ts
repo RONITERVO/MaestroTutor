@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import {readFile,writeFile,rename,stat} from 'node:fs/promises';
 import {join,resolve} from 'node:path';
+import {roomSnapshotTransport} from '../../shared/behaviourCatalog';
 import {RoomAgentClient} from '../core-sdk/room/roomAgentClient';
 import {chatImageSources} from '../core-sdk/room/chatImageSource';
 import {chatAudioSources} from '../core-sdk/room/chatAudioSource';
@@ -35,7 +36,7 @@ export class RoomProbeChannel {
   }
  }
  private send(value:unknown){
-  const bytes=JSON.stringify(value);if(Buffer.byteLength(bytes)>40000)throw new Error('Room probe request exceeds its byte limit.');
+  const bytes=JSON.stringify(value);if(Buffer.byteLength(bytes)>roomSnapshotTransport.maximumCharacters*6+1024)throw new Error('Room probe request exceeds its byte limit.');
   const write=this.pendingWrite.then(()=>publishRoomProbeFile(join(this.directory,'request.json'),bytes));
   this.pendingWrite=write.catch(()=>undefined);return write;
  }
@@ -54,6 +55,7 @@ export class RoomProbeChannel {
   if(this.stopped)throw new Error('Room probe channel is closed.');
   if(this.exchanging)throw new Error('Room probe exchange is already pending.');
   if(!snapshot||typeof snapshot.clientId!=='string'||!/^[a-f0-9]{32}$/.test(snapshot.clientId))throw new Error('Invalid room probe client identity.');
+  if(JSON.stringify(snapshot).length>roomSnapshotTransport.maximumCharacters)throw new Error('Room probe snapshot exceeds its character limit.');
   this.exchanging=true;
   try{
    await this.send({version:1,id:this.id,operation:'exchange',snapshot});

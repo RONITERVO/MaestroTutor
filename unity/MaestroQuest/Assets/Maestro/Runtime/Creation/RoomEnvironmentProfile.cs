@@ -11,6 +11,8 @@ namespace Maestro.Quest.Creation
     [Serializable] public sealed class RoomEnvironmentProfile
     {
         public const int MaximumProfiles=16;
+        public const int MaximumMembers=RoomDocument.MaximumObjects+2;
+        internal const int LegacyMaximumMembers=16;
         public int version=1;
         public string id,name;
         public bool realCollisions=true;
@@ -30,8 +32,9 @@ namespace Maestro.Quest.Creation
                 if(!string.IsNullOrEmpty(obj.environmentProfile)&&(version<24||!ids.Contains(obj.environmentProfile)))return false;
                 if(version>=24&&obj.environmentProfile==null)return false;
             }
-            error="A shared environment profile supports at most 16 bound objects; use another profile for additional objects";
-            if(profiles.Any(p=>objects.Count(x=>x.environmentProfile==p.id)>16))return false;
+            error="This room format cannot represent all members of the environment profile";
+            int memberLimit=version>=43?MaximumMembers:LegacyMaximumMembers;
+            if(profiles.Any(p=>objects.Count(x=>x.environmentProfile==p.id)>memberLimit))return false;
             error=null;return true;
         }
         internal static bool ValidWire(JObject room) {

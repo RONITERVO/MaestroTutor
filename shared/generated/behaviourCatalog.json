@@ -1,5 +1,13 @@
 {
   "version": 1,
+  "transport": {
+    "roomSnapshot": {
+      "feature": "roomSnapshot64K.v1",
+      "maximumCharacters": 65536,
+      "legacyMaximumCharacters": 32768,
+      "mediaMaximumCharacters": 32768
+    }
+  },
   "limits": {
     "programResources": 66,
     "invocationResources": 258,
@@ -34307,7 +34315,7 @@
               }
             },
             "minItems": 0,
-            "maxItems": 16
+            "maxItems": 258
           }
         },
         "required": [
@@ -34321,7 +34329,8 @@
         "additionalProperties": false,
         "x-features": [
           "environmentProfiles.v1",
-          "environmentSavedEdits.v1"
+          "environmentSavedEdits.v1",
+          "environmentWorldMembers.v1"
         ]
       },
       "duration": "completion",
@@ -34336,7 +34345,7 @@
         "environment.revision.current",
         "storage.writable"
       ],
-      "description": "Create or edit one of up to 16 reusable environment profiles, each shared by at most 16 objects. Empty id, revision 0, empty membership and members create a new stable ID. Otherwise read environment.profile.summary and supply its exact revision and membership token. Read resource.members with kind environment and the same membership token, then object.environment.settings for every member's saved revision. Include every member exactly once as target/revision. A stale membership token or member revision refuses the whole edit, including changes undone back to the old membership. Saved unloaded members stay unloaded and retain their pose; current geometry is admitted when restored, never by this metadata edit. Resident members still require clearance before acceptance. realCollisions=false lets those objects use virtual terrain below or beyond the real floor/walls. realCollisions=true inherits the global real-room switch. Read environment.profiles to find definitions. Saving does not assign new members; use object.environment.assign. Stable exact IDs are references; names are display text. Changes use the saved room journal with one Undo and temporary-play Keep/Discard semantics. Already-identical values do not add Undo. All affected targets must be released and free of authoring or competing motion. The entire edit refuses on stale revision, changed membership, missing target, unavailable support during running physics, or new scanned-surface penetration. It never moves an object. Changed targets lose previous throw speeds. Visual depth/opacity and acoustics remain independent; this setting changes collision participation only. The global real-room switch is an upper bound: a profile cannot re-enable it. Virtual collisions remain active. Virtual-only simulation needs accepted authored ground; current bounds are columns up to 16 metres above and 0.25 metres below those surfaces, not unlimited space. Outside temporary play, prepares and publishes its save in the background with one Undo edit. Completion confirms native application and saving. Once preparation begins, newer authored changes invalidate its candidate. Cancellation before native acceptance leaves the requested edit unapplied. After acceptance, stopping cannot retract the edit or its pending save. A save conflict preserves files, blocks further saves and requires inspection; never blindly replay it. Runtime clock and viewer movement continue. Concurrent persisted object edits enter preparation in arrival order after earlier saves drain, without copying a waiting candidate. Stopping or invalidating a waiter releases its place; target changes while waiting require a new request. In a temporary room, changes the live room and local Undo; a kept snapshot makes it durable. Other objects keep running.",
+      "description": "Create or edit one of up to 16 reusable environment profiles, each shared by up to 258 saved objects (including book and Maestro). A one-off edit can cover the whole saved world; authored programs retain their separate resource and value limits. Empty id, revision 0, empty membership and members create a new stable ID. Otherwise read environment.profile.summary and supply its exact revision and membership token. Read resource.members with kind environment and the same membership token, then object.environment.settings for every member's saved revision. Include every member exactly once as target/revision. A stale membership token or member revision refuses the whole edit, including changes undone back to the old membership. Saved unloaded members stay unloaded and retain their pose; current geometry is admitted when restored, never by this metadata edit. Resident members still require clearance before acceptance. realCollisions=false lets those objects use virtual terrain below or beyond the real floor/walls. realCollisions=true inherits the global real-room switch. Read environment.profiles to find definitions. Saving does not assign new members; use object.environment.assign. Stable exact IDs are references; names are display text. Changes use the saved room journal with one Undo and temporary-play Keep/Discard semantics. Already-identical values do not add Undo. All affected targets must be released and free of authoring or competing motion. The entire edit refuses on stale revision, changed membership, missing target, unavailable support during running physics, or new scanned-surface penetration. It never moves an object. Changed targets lose previous throw speeds. Visual depth/opacity and acoustics remain independent; this setting changes collision participation only. The global real-room switch is an upper bound: a profile cannot re-enable it. Virtual collisions remain active. Virtual-only simulation needs accepted authored ground; current bounds are columns up to 16 metres above and 0.25 metres below those surfaces, not unlimited space. Outside temporary play, prepares and publishes its save in the background with one Undo edit. Completion confirms native application and saving. Once preparation begins, newer authored changes invalidate its candidate. Cancellation before native acceptance leaves the requested edit unapplied. After acceptance, stopping cannot retract the edit or its pending save. A save conflict preserves files, blocks further saves and requires inspection; never blindly replay it. Runtime clock and viewer movement continue. Concurrent persisted object edits enter preparation in arrival order after earlier saves drain, without copying a waiting candidate. Stopping or invalidating a waiter releases its place; target changes while waiting require a new request. In a temporary room, changes the live room and local Undo; a kept snapshot makes it durable. Other objects keep running.",
       "example": {
         "id": "",
         "revision": 0,
@@ -34477,7 +34486,8 @@
         "additionalProperties": false,
         "x-features": [
           "environmentProfiles.v1",
-          "environmentSavedEdits.v1"
+          "environmentSavedEdits.v1",
+          "environmentWorldMembers.v1"
         ],
         "x-current": {
           "fact": "object.environment.settings",
@@ -48494,7 +48504,7 @@
         }
       },
       "label": "Environment profile",
-      "description": "Read the exact saved profile revision and all currently bound object IDs. Names are display metadata. To edit, read environment.profile.summary for its membership token and object.environment.settings for every member revision. Missing profiles are unavailable; never substitute by name.",
+      "description": "Compatibility read for profiles with at most 16 members: returns the exact saved revision and complete member IDs. Larger profiles are unavailable through this fact, never truncated. Use environment.profile.summary and coherent resource.members pages for every profile size. Names are display metadata. To edit, read environment.profile.summary for its membership token and object.environment.settings for every member revision. Missing profiles are unavailable; never substitute by name.",
       "input": {
         "type": "object",
         "properties": {
@@ -49943,7 +49953,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/EnvironmentProfileCapabilities.cs",
-      "sha256": "0fd0b2d5dcca2807439004f46eff044c43f15b2f5f8cc04578a05e42c068d666"
+      "sha256": "578c30acd4a0d600c2cc74a2c9ad0caeb39c27185e1d6efb7fdf2c6bcf88d76f"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/EnvironmentRecoveryCapability.cs",
@@ -50787,11 +50797,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomAgent.cs",
-      "sha256": "65508587fc68a3ae60ae87fcdd1104d119910bae4f738914805c7d64a7e60953"
+      "sha256": "b41f73a60190eefd7dd9da113f8ef707c20afae6ab4f413adf701270cfbc9ab6"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomAgentWire.cs",
-      "sha256": "c593cb2575f6093e15883276e059c368140c1887f8adc50aefd23e64a83fac21"
+      "sha256": "e69f8a1e3396828de06573bc2afb300df55a668ee3be4754f8c2ec3f253ad592"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomAnimationEdits.cs",
@@ -50867,7 +50877,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomControls.cs",
-      "sha256": "f1e3cb4cbae959622393f4ce79f19ba97b8114930994e4ac25293066143ca051"
+      "sha256": "745a7426042b2ef50def02391b1491604422bc959351ed5b943a91f8d301b3cb"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomCreationBudget.cs",
@@ -50883,7 +50893,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomDocument.cs",
-      "sha256": "019be71e721c83bb3ee8ce1faab7e61cef263ceb98539aab5c16f573c456dc58"
+      "sha256": "23f7afe707a4b249d831fe419a0c55147191a3d137d7d0666294369b252969d6"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomDormantRecovery.cs",
@@ -50915,11 +50925,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEnvironmentEdits.cs",
-      "sha256": "3b866f02619905d0a19c6a3f0a0dcb02091c05c11bceb9fba0913553c1c223a6"
+      "sha256": "cf2695022d245d40506910ae2cdc4cc3f6f270ee8aa593ddb2e8e6ccc4eac866"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEnvironmentProfile.cs",
-      "sha256": "ad586372dc567bcd70b4d850cbe604357bea3f11574d316723e8b98626c55b99"
+      "sha256": "13fb7bd21d47a8a612210dffcc4dbc63018fed727d96c5c80d2d2c9ea21bf1fb"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEnvironmentSnapshot.cs",
@@ -52255,11 +52265,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "9e55cb69f7ae5736e70e88a76bdcb6cccc6205cf1a6574066b258360ddf95dd4"
+      "sha256": "cd31107fd2cfb435d28fec042fdf10586254c00cdbeddd53745ffa21e6664c19"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourProgram.cs",
-      "sha256": "9c8b88f52d0c07a81b8622cd448b53013b66ca2126b37e0e2d16b0d69149e43e"
+      "sha256": "7dcbe372d194ca39b8b342f9678a5f724cba277a0b31ada992ff41743a6b1666"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/CalendarSubscription.cs",

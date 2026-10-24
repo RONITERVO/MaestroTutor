@@ -13,6 +13,7 @@
   },
   "include": [
     "scripts/probe-native-room.ts",
+    "scripts/probe-room-transport.ts",
     "scripts/probe-native-book.ts",
     "test-fixtures/browser/questNativeBookFixture.tsx",
     "src/vite-env.d.ts",

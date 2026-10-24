@@ -1941,3 +1941,19 @@ book form selects the same policy and reads its saved value. The probe records
 `independent-area-loading.json`, `book-native-area-loading.png` and the area
 receipt/fact evidence. These are desktop native and book checks, not headset
 capacity or performance acceptance.
+
+
+### Room transport boundary
+
+Use `Run-QuestRoomProbe.ps1 -Editor <pinned-editor> -BuildMirror <owned-mirror>
+-TransportOnly` for the offline full-world wire regression. It runs a fresh real
+Unity app through the shared file adapter, sends the shared client's complete
+258-member high-revision request as escaped JSON, verifies the native refusal
+without a saved edit, and confirms the next request succeeds. Evidence is in
+`transport-boundary.json`; the usual owner, terminal and clean Editor-exit
+checks apply. It does not run a provider or constitute a full Book/Headless
+journey. This mode excludes Book, provider, resume and other focused modes.
+
+The file adapter bounds both decoded UTF-16 characters and encoded JSON bytes.
+The encoded allowance accounts for JSON escapes and the small session envelope;
+it never expands capability arguments or bypasses native revision checks.

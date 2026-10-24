@@ -6,6 +6,15 @@ import {afterEach,expect,it,vi} from 'vitest';
 import {CapabilityFields,changeCapabilityVariant,initialCapabilityValue} from './CapabilityFields';
 import {capabilityDefinition,resolveCapabilitySchema,validateCapabilityArguments} from '../../../shared/capabilities';
 afterEach(cleanup);
+it('preserves every member of a whole-world collision edit when its last revision changes',()=>{
+ const action=capabilityDefinition('environment.profile.save')!,onChange=vi.fn();
+ const members=Array.from({length:258},(_,i)=>({target:String(i).padStart(32,'0'),revision:i+1}));
+ const screen=render(<CapabilityFields label="Members" schema={action.input.properties!.members} value={members} objects={[]} onChange={onChange}/>);
+ expect(screen.getByRole('button',{name:'Add Members entry'}).hasAttribute('disabled')).toBe(true);
+ fireEvent.change(screen.getByLabelText('Members 258 revision'),{target:{value:'2147483647'}});
+ expect(onChange).toHaveBeenCalledExactlyOnceWith([...members.slice(0,-1),{...members[257],revision:2147483647}]);
+ expect(members[257].revision).toBe(258);
+});
 it('shows native float values readably without changing an untouched draft',()=>{
  const onChange=vi.fn();
  const {getByLabelText,rerender}=render(<CapabilityFields label="Cloud cover" objects={[]} schema={{type:'number'}} value={Math.fround(.6)} onChange={onChange}/>);

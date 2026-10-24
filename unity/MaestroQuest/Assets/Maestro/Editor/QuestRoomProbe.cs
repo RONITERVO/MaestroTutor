@@ -15,6 +15,9 @@ namespace Maestro.Quest.Editor
     [InitializeOnLoad]
     public static class QuestRoomProbe
     {
+        // A JSON string can spell one UTF-16 code unit as six ASCII escape bytes.
+        // Keep the envelope bounded too; RoomAgent checks the decoded frame separately.
+        const int MaximumRequestBytes=RoomAgentWire.MaximumSnapshotCharacters*6+1024;
         const string Key="Maestro.RoomProbe.Directory";
         static string directory,id,clientId;static RoomAgent agent;static GameObject root;
         static double started,next;static int timeoutSeconds;static bool finishing;static QuestAvatarProbe avatarProbe;static QuestRoomProbeScan scanProbe;
@@ -86,9 +89,9 @@ namespace Maestro.Quest.Editor
                 if(File.Exists(input)){
                     byte[] bytes;
                     using(var stream=new FileStream(input,FileMode.Open,FileAccess.Read,FileShare.ReadWrite|FileShare.Delete)){
-                        if(stream.Length>40000)throw new InvalidDataException("Oversized room-probe request.");
+                        if(stream.Length>MaximumRequestBytes)throw new InvalidDataException("Oversized room-probe request.");
                         using var data=new MemoryStream();var buffer=new byte[4096];int read;
-                        while((read=stream.Read(buffer,0,buffer.Length))>0){if(data.Length+read>40000)throw new InvalidDataException("Oversized room-probe request.");data.Write(buffer,0,read);}bytes=data.ToArray();
+                        while((read=stream.Read(buffer,0,buffer.Length))>0){if(data.Length+read>MaximumRequestBytes)throw new InvalidDataException("Oversized room-probe request.");data.Write(buffer,0,read);}bytes=data.ToArray();
                     }
                     var request=JObject.Parse(new UTF8Encoding(false,true).GetString(bytes));
                     if((int?)request["version"]!=1||(string)request["id"]!=id)throw new InvalidDataException("Wrong probe session.");

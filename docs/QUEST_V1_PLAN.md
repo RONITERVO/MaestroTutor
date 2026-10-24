@@ -5,7 +5,7 @@ Status: active implementation. Nothing in this document claims store readiness.
 Start with the [accepted product scope](#accepted-product-scope) and
 [release evidence checklist](#release-evidence-still-required) and the latest
 [complete integration checkpoint](#complete-native-book-and-android-integration-2026-10-24). The current
-[saved collision-settings checkpoint](#saved-collision-settings-without-native-loading-2026-10-24) records the latest
+[whole-world collision checkpoint](#shared-collision-policies-across-the-saved-world--2026-10-24) records the latest
 native increment, following the [shared visual metadata checkpoint](#shared-visual-metadata-across-unloaded-world-objects-2026-10-24). The [saved-world capacity checkpoint](#saved-world-capacity-and-deferred-creation--2026-10-23) records its
 creation and residency foundation. The preceding
 [restoration](#restoring-unloaded-objects--2026-10-23),
@@ -16769,3 +16769,122 @@ protected inputs stayed frozen during the two journeys; the two fixture updates
 were recorded afterward. Evidence and corrected initial test failures remain in
 `.quest-evidence/saved-environment-20261024/`. These are offline desktop Unity
 checks, with no new Android, headset, real-provider, signing or Store acceptance.
+
+### Shared collision policies across the saved world — 2026-10-24
+
+Environment profiles now support all 258 saved identities, while the profile
+count stays 16 and native-object capacity stays 128. The version-2 save action
+keeps its coherent membership generation and exact revision for every affected
+object. One-off edits can cover the complete saved world without loading
+dormant members. Current geometry admission, ownership, Undo/Redo, cancellation,
+temporary rooms and accepted-save publication retain their existing authority.
+
+Room format 43 identifies the expanded membership. Valid version-42 saves remain
+readable and retain their original 16-member validation rule. The legacy
+`environment.profile` fact is explicitly unavailable for larger profiles;
+compact summaries and coherent 16-ID member pages provide complete discovery
+without exceeding program-value budgets. Hosts advertise
+`environmentWorldMembers.v1` for expanded save/assignment support.
+
+A validated single-action wrapper now reserves bounded space for its generated
+resource list in addition to the unchanged 24,000-character call arguments.
+Authored programs/modules keep their 24,000-character and 66-resource limits;
+interpreter values keep their existing bounds. This prevents a legitimate
+world-wide guarded edit failing only because its private wrapper repeats object
+IDs, without increasing general scripting or native simulation capacity.
+
+The first full Book journey exposed a missing `deferredCreation.v1` host
+advertisement: native deferred creation existed, but the shared client correctly
+refused to send it. The host advertisement is repaired and has a regression
+check. The Book harness now checks required native features before submission,
+so a client-side refusal is reported directly. Initial run
+`88df98a807c645ae962a26aae6610eb1` and its timeout evidence remain retained.
+The next Book run `9ddf6a55fcba4a669ac533cf3ea2d47b` created the deferred batch
+and correctly refused the stale final-page revision; a test expression expected
+the error words in the wrong order and stopped that run. The expression was
+corrected to the actual member/revision refusal, with no further native change.
+
+The corrected source passed **1,666 EditMode and 226 selected PlayMode** cases,
+retaining all 217 cases from the preceding selected run. Full-world coverage
+binds 258 identities, keeps 256 dormant with the native budget full, walks all
+17 membership pages, refuses a stale final member despite current outer guards,
+and verifies one Undo/Redo, receipt replay, cancellation and failed-save
+preservation. No pose or native allocation changes. Older valid rooms round-trip
+into format 43, and the generated one-off wrapper fits without increasing
+authored-program or interpreter budgets.
+
+The actual native full-world call, receipt and bounded pages are retained in
+`test-fixtures/browser/environmentWorld.json`, copied byte-for-byte from the
+completed native test. All **1,533 room tests**, **79 focused control/contract
+tests**, app/probe TypeScript and catalog/ten-guide provenance checks passed.
+Native evidence and the initial integration failure are retained under
+`.quest-evidence/world-environment-20261024/`. Device/provider holds and broader
+release gates remain active; this is offline desktop verification.
+
+
+Both complete pre-transport client journeys then passed: Book
+`e1bfa996f6494c698efdd24110b85e1a` and Headless
+`a6353770d0324db4aa97ad4860c8cd8e`. Each discovered two coherent pages for a
+17-member profile, refused a stale last member with current outer guards, edited
+all 17 while unloaded, and completed restoration, recovery and cleanup. All
+3,572 native, 742 client/tool/catalog and 14 protected inputs stayed unchanged.
+Their proof is retained as `journey-result-pretransport.json`.
+
+A subsequent real-client measurement exposed a transport gap: the valid
+258-member action was 31,871 characters with its observed counters and 34,471
+with maximum valid revisions. The browser/native input limit was 32,768, so the
+latter could silently disappear before native execution. The fix introduces an
+independent, negotiated `roomSnapshot64K.v1` frame (65,536 UTF-16 characters),
+exported in the native catalog and checked against the Android store. The client
+refuses oversized legacy-host requests before queuing and reserves capture-ack
+space. The media frame budget remains 32,768; argument, program and interpreter
+limits remain unchanged. No exact member guard is removed. The original
+measurement is retained in `wire-measurement.json`.
+
+
+Post-transport native verification passed **1,666 EditMode and 227 selected
+PlayMode** cases with clean Editor/wrapper exits. All 217 preceding selected
+cases remain covered. The new native boundary regression accepts a valid large
+frame into revision validation, refuses 65,537 characters before the inbox,
+and accepts the exact 65,536-character boundary without mutating saved state.
+The full-world fixture was refreshed byte-for-byte from this native run.
+
+The final web room suite passed **1,536 tests**; the refreshed native fixture's
+four checks and app/probe TypeScript passed. The new web regression verifies all
+258 high-revision guards, negotiated support, immediate refusal on older hosts,
+and a usable client after refusal. Its initial follow-up query used an invalid
+test-only catalog operation; that fixture was corrected and the failure log
+retained. Android browser verification passed **130 tests**, release AAR build
+and lint. Catalog provenance and ten generated guides passed. These are native
+browser-library checks, not a newly packaged APK or headset measurement.
+
+
+The complete post-runtime-change Book run `4c61d770549c467096baf62ab09caf03`
+passed **2,260 requests and 6,614 observations with no browser errors**. The
+matching Headless run `ac44ee832a0d4d2ebc6872cf549f70c6` passed **2,848
+observations and 2,847 read sets**. Both had clean client, Editor and wrapper
+exits. The new shared-policy/recovery checks passed in both, including stale
+inner guards with fresh outer read sets, 17 dormant members across two pages,
+restoration, explicit retry and cleanup. Book policy/blocked/recovered captures
+were retained and the current policy capture was visually checked. All 3,572
+native, 756 client/tool/catalog and 14 protected inputs stayed frozen.
+
+A final adapter audit found the desktop-only file wire still capped at 40,000
+bytes. That did not block those profile edits, but could reject valid Unicode or
+escaped JSON frames. Its client and Editor reader now derive a bounded byte
+allowance from the same decoded-character limit, while the client and native
+runtime separately enforce that character limit. `Run-QuestRoomProbe.ps1
+-TransportOnly` is the reusable offline boundary check; it cannot be combined
+with provider, Book, resume or other focused modes.
+
+The focused real-Unity run `127fe2f3041942b6afc8bd19ec4df3ab` passed: the actual
+shared client emitted a **34,502-character, 258-guard** request; equivalent
+escaped JSON crossed the file wire as **149,970 bytes**, reached the native
+stale-revision refusal without changing the scene, and a subsequent compact
+request completed. Client, Editor and wrapper all exited zero. The 11 headless
+transport tests and four native-fixture/web-boundary tests passed, as did final
+app/probe types. All 4,318 final verification inputs and 14 protected files
+remained unchanged. The only native source change after the complete journeys
+was this Editor-only adapter byte bound; application runtime sources are
+identical to those verified by the complete native and client runs. No fresh
+Android APK, signing, device, provider or Store acceptance is claimed.

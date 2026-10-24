@@ -18,7 +18,8 @@ it('validates actual native profile receipts and exact target assignments withou
   const commands=[{action:'execution',execution:{operation:'start',call}}];
   expect(()=>requireRoomCapabilities(commands,{capabilities:['execution.v1']})).toThrow('environmentProfiles.v1');
   expect(()=>requireRoomCapabilities(commands,{capabilities:['execution.v1','environmentProfiles.v1']})).toThrow('environmentSavedEdits.v1');
-  expect(()=>requireRoomCapabilities(commands,{capabilities:['execution.v1','environmentProfiles.v1','environmentSavedEdits.v1']})).not.toThrow();
+  expect(()=>requireRoomCapabilities(commands,{capabilities:['execution.v1','environmentProfiles.v1','environmentSavedEdits.v1']})).toThrow('environmentWorldMembers.v1');
+  expect(()=>requireRoomCapabilities(commands,{capabilities:['execution.v1','environmentProfiles.v1','environmentSavedEdits.v1','environmentWorldMembers.v1']})).not.toThrow();
  }
  expect(capabilityResources(native.saveCall.id,native.saveCall.arguments)).toEqual([]);
  expect(capabilityResources(native.assignCall.id,native.assignCall.arguments)).toEqual(['maestro']);
@@ -41,7 +42,10 @@ it('keeps shared profile edits bounded and exposes every affected member as a ta
  const save={...native.saveCall.arguments,id:native.profile.id,revision:native.profile.revision,membership:native.summary.membership,members:[{target:'maestro',revision:2},{target:'book',revision:3}]};
  expect(validateCapabilityArguments('environment.profile.save',2,save)).toBeNull();
  expect(capabilityResources('environment.profile.save',save)).toEqual(['maestro','book']);
- for(const bad of [{...save,members:Array.from({length:17},(_,i)=>({target:String(i).padStart(32,'0'),revision:1}))},{...save,realCollisions:'false'},{...save,revision:-1},{...save,name:'bad\nname'},{...save,force:true}])expect(validateCapabilityArguments('environment.profile.save',2,bad)).not.toBeNull();
+ const worldMembers=Array.from({length:258},(_,i)=>({target:String(i).padStart(32,'0'),revision:2147483647}));
+ expect(validateCapabilityArguments('environment.profile.save',2,{...save,members:worldMembers})).toBeNull();
+ expect(capabilityResources('environment.profile.save',{...save,members:worldMembers})).toEqual(worldMembers.map(x=>x.target));
+ for(const bad of [{...save,members:Array.from({length:259},(_,i)=>({target:String(i).padStart(32,'0'),revision:1}))},{...save,realCollisions:'false'},{...save,revision:-1},{...save,name:'bad\nname'},{...save,force:true}])expect(validateCapabilityArguments('environment.profile.save',2,bad)).not.toBeNull();
  expect(validateCapabilityArguments('environment.profile.save',1,save)).not.toBeNull();
  for(const bad of [{...save,membership:undefined},{...save,members:['maestro']},{...save,members:[{target:'maestro',revision:0}]}])expect(validateCapabilityArguments('environment.profile.save',2,bad)).not.toBeNull();
  const assign=native.assignCall.arguments;

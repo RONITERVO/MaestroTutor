@@ -38,7 +38,7 @@ public final class BookWebView extends OffscreenBrowser {
     private static final String HOST = "appassets.androidplatform.net";
     private static final String START = "https://" + HOST + "/index.html?surface=quest-book";
     private WebView web;
-    private final BrowserSnapshotStore roomSnapshots = new BrowserSnapshotStore(32768);
+    private final BrowserSnapshotStore roomSnapshots = BrowserSnapshotStore.room();
     private final BrowserSnapshotStore snapshots = new BrowserSnapshotStore();
     private final BookSpeechMailbox speech = new BookSpeechMailbox();
     private volatile String error = "";

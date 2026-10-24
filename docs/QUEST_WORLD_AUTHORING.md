@@ -3536,3 +3536,44 @@ Capturing bounds still visits the saved inventory, and viewing demand still
 examines dormant members. Current saved limits remain unchanged. Persistent
 spatial indexing and measured larger-world/headset capacity are unfinished;
 fewer candidate checks alone do not establish a frame-time improvement.
+
+### Shared collision policies across saved areas
+
+One environment profile may serve all 258 saved identities (256 creations,
+Maestro and the book). The limit remains 16 distinct profiles. This lets a
+landscape's characters share virtual-only ground while tabletop props still
+obey the scanned room; the global real-collision switch remains an upper bound.
+Visibility, depth occlusion, sound and native loading are separate decisions.
+
+The user and agent use the same `environment.profile.save` v2 action. Read
+`environment.profile.summary`, then every `resource.members` page with kind
+`environment` and the same membership token. Read
+`object.environment.settings` for each exact saved revision. Supply every
+target/revision once. An intervening edit, missing member or membership change
+(even one undone later) refuses the whole action. The compatibility
+`environment.profile` read is unavailable above 16 members; it never returns a
+partial list. The host advertises `environmentWorldMembers.v1` for the expanded
+save and assignment contract.
+
+One-off edits can cover the saved world without loading cold members. Current
+resident geometry must still pass clearance, and restored objects must pass
+their later native admission. One accepted edit gives one Undo and retains the
+usual temporary Keep/Discard and failed-save behavior. An action that edits
+metadata does not start walking, physics or a previous throw.
+
+Room format 43 identifies this expanded membership; format 42 keeps its original
+16-member restriction. Existing valid rooms remain readable. The larger
+internally generated one-action wrapper has bounded space for its resource
+list; user-authored programs and modules still have 66 resources and 24,000
+source characters, and interpreter values keep their existing bounds. This
+capacity is for saved metadata, not 258 simultaneously simulated actors or a
+claim of measured Quest performance.
+
+
+Large one-off edits also require the host's independent `roomSnapshot64K.v1`
+transport feature. The exported native catalog defines a 65,536 UTF-16-character
+input frame; the Android WebView store and shared client enforce the same bound.
+Older hosts retain 32,768 characters, with a clear local refusal before queuing an
+oversized request. This carries every member revision without weakening stale
+edit protection. Capability arguments, authored programs and the 32,768-character
+media-enriched frame budget retain their smaller bounds.

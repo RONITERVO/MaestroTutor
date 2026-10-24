@@ -235,6 +235,7 @@ namespace Maestro.Quest.Programs
         }
         public static JObject Manifest()=>new JObject {
             ["version"]=1,
+            ["transport"]=new JObject{["roomSnapshot"]=RoomAgentWire.SnapshotTransport},
             ["limits"]=new JObject{["programResources"]=BehaviourProgram.MaximumResources,["invocationResources"]=RoomCapabilityCatalog.MaximumInvocationResources,["ownershipClaims"]=Interaction.RoomOwnership.MaximumClaims,["programRecordFields"]=ProgramDataType.MaximumRecordFields},
             ["actions"]=new JArray(Actions.Select(x=>x.ToJson())),
             ["events"]=new JArray(Events.Select(x=>x.ToJson())),

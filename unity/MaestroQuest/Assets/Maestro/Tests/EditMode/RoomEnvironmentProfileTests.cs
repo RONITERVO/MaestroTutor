@@ -71,5 +71,44 @@ namespace Maestro.Quest.Tests
                 storage=new RoomStorage(directory);Assert.That(storage.Load(out _),Is.Null);Assert.That(storage.ReadOnly,Is.True);Assert.That(File.ReadAllText(path),Is.EqualTo(raw));
             }finally{if(Directory.Exists(directory))Directory.Delete(directory,true);}
         }
+        [Test]public void WholeWorldProfilesNeedTheNewRoomFormatAndKeepOlderRoomsReadable() {
+            var doc=Room();var profile=Profile();doc.environmentProfiles=new[]{profile};
+            doc.objects=doc.objects.Concat(Enumerable.Range(0,RoomDocument.MaximumObjects).Select(_=>new RoomObjectData{
+                id=Guid.NewGuid().ToString("N"),kind=RoomObjectKind.Block})).ToArray();
+            foreach(var item in doc.objects)item.environmentProfile=profile.id;
+            Assert.That(doc.Validate(out var error),Is.True,error);
+            doc.version=42;Assert.That(doc.Validate(out error),Is.False);
+            Assert.That(error,Does.Contain("format"));
+            foreach(var item in doc.objects.Skip(16))item.environmentProfile="";
+            Assert.That(doc.Validate(out error),Is.True,error);
+            string directory=Path.Combine(Path.GetTempPath(),"MaestroEnvironmentWorld-"+Guid.NewGuid().ToString("N"));
+            try {
+                Directory.CreateDirectory(directory);string old=JsonUtility.ToJson(doc);
+                File.WriteAllText(Path.Combine(directory,"room.v42.json"),old);
+                var storage=new RoomStorage(directory);var restored=storage.Load(out error);
+                Assert.That(restored,Is.Not.Null,error);
+                foreach(var item in restored.objects)item.environmentProfile=profile.id;
+                Assert.That(storage.Save(restored,out error),Is.True,error);
+                Assert.That(File.ReadAllText(Path.Combine(directory,"room.v42.json")),Is.EqualTo(old));
+                var loaded=new RoomStorage(directory).Load(out error);Assert.That(loaded,Is.Not.Null,error);
+                Assert.That(loaded.version,Is.EqualTo(43));Assert.That(loaded.objects.Count(x=>x.environmentProfile==profile.id),Is.EqualTo(258));
+            }finally{if(Directory.Exists(directory))Directory.Delete(directory,true);}
+        }
+        [Test]public void WholeWorldInvocationFitsWithoutIncreasingAuthoredProgramOrValueLimits() {
+            var args=new EnvironmentProfileSaveCapability().Example;
+            args["members"]=new JArray(Enumerable.Range(0,258).Select(_=>new JObject{
+                ["target"]=Guid.NewGuid().ToString("N"),["revision"]=int.MaxValue}));
+            var call=new JObject{["id"]="environment.profile.save",["version"]=2,["arguments"]=args};
+            Assert.That(RoomCapabilityCatalog.ValidCall(call),Is.True);
+            Assert.That(BehaviourProgram.FromInvocation(call).Length,Is.GreaterThan(BehaviourProgram.MaximumCharacters));
+            Assert.That(BehaviourProgram.TryInvocation(call,out var invocation,out var error),Is.True,error);
+            Assert.That(invocation.Resources.Length,Is.EqualTo(258));
+            Assert.That(BehaviourProgram.TryParse(invocation.Source,out _,out _),Is.False);
+            Assert.That(BehaviourProgram.MaximumResources,Is.EqualTo(66));
+            Assert.That(BehaviourProgram.MaximumCharacters,Is.EqualTo(24000));
+            Assert.That(ProgramValue.MaximumCharacters,Is.EqualTo(1024));
+            ((JArray)args["members"]).Add(new JObject{["target"]=Guid.NewGuid().ToString("N"),["revision"]=1});
+            Assert.That(BehaviourProgram.TryInvocation(call,out _,out _),Is.False);
+        }
     }
 }

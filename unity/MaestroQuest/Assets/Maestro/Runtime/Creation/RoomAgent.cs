@@ -290,7 +290,7 @@ namespace Maestro.Quest.Creation
         internal void Receive(string json)
         {
             if(executor==null)return;
-            if(!string.IsNullOrEmpty(json) && json.Length<=32768)
+            if(!string.IsNullOrEmpty(json) && json.Length<=RoomAgentWire.MaximumSnapshotCharacters)
             {
                 try {
                     using var reader=new Newtonsoft.Json.JsonTextReader(new System.IO.StringReader(json)) {MaxDepth=64,DateParseHandling=Newtonsoft.Json.DateParseHandling.None};

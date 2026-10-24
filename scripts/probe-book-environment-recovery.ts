@@ -3,7 +3,7 @@
 import assert from 'node:assert/strict';
 import {join} from 'node:path';
 import type {Page} from 'playwright-core';
-import {capabilityDefinition} from '../shared/capabilities';
+import {capabilityDefinition,capabilityFeatures} from '../shared/capabilities';
 import {behaviourFact} from '../shared/behaviourCatalog';
 import {nativeBookObjects} from './native-book-objects';
 import {probeEnvironmentRecovery} from './probe-environment-recovery';
@@ -39,6 +39,8 @@ export async function probeBookEnvironmentRecovery(page:Page,directory:string){
    await page.getByLabel('Action arguments',{exact:true}).fill(JSON.stringify(args));
    await page.getByText('Advanced action arguments',{exact:true}).click();
   }
+  const supported=await page.evaluate(()=>window.nativeBookEvidence!().state!.capabilities??[]);
+  assert.deepEqual(capabilityFeatures(id,args).filter(feature=>!supported.includes(feature)),[],id+' needs native-advertised features');
  };
  const submit=async(id:string)=>{
   const previous=await page.evaluate(()=>{const s=window.nativeBookEvidence!().state!;return {ack:s.ack,id:s.execution?.selected?.id};});
@@ -51,7 +53,7 @@ export async function probeBookEnvironmentRecovery(page:Page,directory:string){
   count:book.count,
   invoke:async(id,args)=>{await prepare(id,args);const state=await submit(id);assert.equal(state.ok,true,state.status);assert.equal(state.execution?.selected?.capability,id);assert.equal(state.execution?.selected?.phase,'completed',state.execution?.selected?.status);return state.execution!.selected!;},
   reject:async(id,args)=>{await prepare(id,args,true);const state=await submit(id);await page.getByRole('status').filter({hasText:/changed|again/i}).waitFor();await page.screenshot({path:join(directory,'book-environment-recovery-stale-'+(args.revision)+'-'+String(args.stateId).slice(0,8)+'.png')});return state;},
-  capture:async phase=>{if(phase==='blocked'||phase==='recovered'){
+  capture:async phase=>{if(phase==='blocked'||phase==='recovered'||phase==='world-policy'){
    await page.getByLabel('Current fact value',{exact:true}).scrollIntoViewIfNeeded();await page.screenshot({path:join(directory,'book-environment-recovery-'+phase+'.png')});
   }}
  },directory,'book');

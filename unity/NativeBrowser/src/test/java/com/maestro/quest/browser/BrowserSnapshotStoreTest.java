@@ -5,11 +5,13 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 public final class BrowserSnapshotStoreTest {
     @Test public void roomChannelHasIndependentBoundAndRejectsLateCallbacks() {
-        BrowserSnapshotStore room=new BrowserSnapshotStore(32768),book=new BrowserSnapshotStore();
+        BrowserSnapshotStore room=BrowserSnapshotStore.room(),book=new BrowserSnapshotStore();
         String recipe="r".repeat(6000);long before=room.begin();room.publish(before,recipe);book.publish(book.begin(),recipe);
         assertEquals(recipe,room.read());assertEquals("",book.read());
         room.suspend(true);room.suspend(false);room.publish(before,recipe);assertEquals("",room.read());
-        room.publish(room.begin(),"r".repeat(32769));assertEquals("",room.read());
+        String world="r".repeat(BrowserSnapshotStore.ROOM_MAXIMUM_CHARACTERS);
+        room.publish(room.begin(),world);assertEquals(world,room.read());
+        room.invalidate();room.publish(room.begin(),world+"r");assertEquals("",room.read());
     }
     @Test public void suspendResumeAndNavigationRejectLateActivitySnapshots() {
         BrowserSnapshotStore store = new BrowserSnapshotStore();

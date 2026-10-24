@@ -5,6 +5,7 @@ import {mkdtemp,readFile,writeFile,rm} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {randomUUID} from 'node:crypto';
+import {roomSnapshotTransport} from '../../shared/behaviourCatalog';
 import {HeadlessRoomTransport,RoomProbeChannel,publishRoomProbeFile} from './roomTransport';
 vi.mock('node:fs/promises',async importOriginal=>{
  const original=await importOriginal<typeof import('node:fs/promises')>();return {...original,readFile:vi.fn(original.readFile)};
@@ -88,11 +89,21 @@ it('does not deliver a previous browser document observation to a new client',as
 it('rejects oversized or invalid client envelopes before publishing a request',async()=>{
  const native=await boundary(),channel=await RoomProbeChannel.connect(native.directory,3000);
  await expect(channel.exchange({clientId:'bad',session:'',request:null})).rejects.toThrow('identity');
- await expect(channel.exchange({clientId:'a'.repeat(32),session:'a'.repeat(40001),request:null})).rejects.toThrow('byte limit');
+ await expect(channel.exchange({clientId:'a'.repeat(32),session:'a'.repeat(roomSnapshotTransport.maximumCharacters),request:null})).rejects.toThrow('character limit');
  await expect(readFile(join(native.directory,'request.json'))).rejects.toMatchObject({code:'ENOENT'});await channel.stop();
 });
 it('refuses overlapping writers and closes without accepting further exchanges',async()=>{
  const native=await boundary(),channel=await RoomProbeChannel.connect(native.directory,3000),snapshot={clientId:'a'.repeat(32),session:'',request:null};
  const pending=channel.exchange(snapshot);await expect(channel.exchange(snapshot)).rejects.toThrow('already pending');await pending;
  await channel.stop();await expect(channel.exchange(snapshot)).rejects.toThrow('closed');
+});
+
+it('carries a bounded Unicode snapshot beyond the old file-byte limit without truncation',async()=>{
+ const native=await boundary(),channel=await RoomProbeChannel.connect(native.directory,3000);
+ const snapshot={clientId:'a'.repeat(32),session:'界'.repeat(22000),request:null};
+ expect(JSON.stringify(snapshot).length).toBeLessThan(roomSnapshotTransport.maximumCharacters);
+ await channel.exchange(snapshot);
+ const bytes=await readFile(join(native.directory,'request.json'),'utf8');
+ expect(Buffer.byteLength(bytes)).toBeGreaterThan(40000);expect(JSON.parse(bytes).snapshot).toEqual(snapshot);
+ await channel.stop();
 });

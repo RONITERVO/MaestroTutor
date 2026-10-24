@@ -8,6 +8,12 @@ namespace Maestro.Quest.Creation
 {
     public static class RoomAgentWire
     {
+        // UTF-16 character counts match Java String.length and JS string.length.
+        // Capability arguments and media retain their own smaller limits.
+        public const string SnapshotFeature="roomSnapshot64K.v1";
+        public const int LegacySnapshotCharacters=32768,MaximumSnapshotCharacters=65536,MediaSnapshotCharacters=32768;
+        public static JObject SnapshotTransport=>new(){["feature"]=SnapshotFeature,["maximumCharacters"]=MaximumSnapshotCharacters,
+            ["legacyMaximumCharacters"]=LegacySnapshotCharacters,["mediaMaximumCharacters"]=MediaSnapshotCharacters};
         // Unity expands null serializable classes into empty default objects. Keep
         // Unity's vector/colour layout, but preserve the contract's actual absences.
         public static string Serialize(RoomAgentState state)

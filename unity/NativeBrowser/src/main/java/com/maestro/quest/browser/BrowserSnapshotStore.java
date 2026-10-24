@@ -4,6 +4,8 @@ package com.maestro.quest.browser;
 
 /** Invalidates delayed WebView results across suspension, navigation and replacement. */
 final class BrowserSnapshotStore {
+    static final int ROOM_MAXIMUM_CHARACTERS = 65536;
+    static BrowserSnapshotStore room() { return new BrowserSnapshotStore(ROOM_MAXIMUM_CHARACTERS); }
     private final int maximum;
     BrowserSnapshotStore() { this(4096); }
     BrowserSnapshotStore(int maximum) { this.maximum = maximum; }

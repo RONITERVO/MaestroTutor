@@ -1,5 +1,6 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
+import {roomSnapshotTransport} from '../../../shared/behaviourCatalog';
 import { ChatImageSource } from './chatImageSource';
 import { ChatAudioSource } from './chatAudioSource';
 import { validChatAudioRequest } from '../../../shared/chatAudio';
@@ -144,8 +145,8 @@ export class RoomAgentClient {
     // One bounded wire serves actions and both media types. Rotate priority so
     // concurrent image and audio selections cannot starve one another.
     this.mediaFirst=!this.mediaFirst;
-    const addImage=()=>{if(images&&JSON.stringify({...snapshot,...media,images}).length<=32768)media.images=images;};
-    const addSound=()=>{if(sounds&&JSON.stringify({...snapshot,...media,sounds}).length<=32768)media.sounds=sounds;};
+    const addImage=()=>{if(images&&JSON.stringify({...snapshot,...media,images}).length<=roomSnapshotTransport.mediaMaximumCharacters)media.images=images;};
+    const addSound=()=>{if(sounds&&JSON.stringify({...snapshot,...media,sounds}).length<=roomSnapshotTransport.mediaMaximumCharacters)media.sounds=sounds;};
     if(this.mediaFirst){addImage();addSound();}else{addSound();addImage();}
     return {...snapshot,...media};
   };
@@ -166,6 +167,11 @@ export class RoomAgentClient {
       if(this.value!.capabilities?.includes('executionReceipts.v1'))commands=commands.map(c=>c.action==='execution'&&c.execution?{...c,execution:identifyExecution(c.execution,this.value!.execution)}:c);
       const context=roomCommandConditions(commands,expectedObjects??roomRevisionBasis(this.value!),this.reconciling(commands));
       const request={...context,session,sequence:++this.sequence,sceneRevision:expectedRevision,commands:commands.map(command => command.action === 'create' ? {scale:1,color:{r:1,g:1,b:1,a:1},...command} : command)};
+      const frameLimit=this.value!.capabilities?.includes(roomSnapshotTransport.feature)?roomSnapshotTransport.maximumCharacters:roomSnapshotTransport.legacyMaximumCharacters;
+      // Reserve an acknowledgement that may arrive while this request is pending.
+      // Refuse locally before queuing; an older native bridge silently drops oversized frames.
+      if(JSON.stringify({clientId:this.clientId,session,captureAck:this.captureAck??'f'.repeat(32),request}).length>frameLimit)
+        return Promise.reject(new Error('This room action is too large for the connected app. Update the Quest app or reduce the request.'));
       return new Promise<RoomAgentState>((resolve,reject)=>{
         const abort=()=>{if(this.pending?.request===request)this.cancel();};
         const timer=setTimeout(abort,15000);

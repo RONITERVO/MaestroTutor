@@ -70,6 +70,44 @@ export async function probeEnvironmentRecovery(driver:RecoveryDriver,directory:s
  const savedEdits={profile,assigned,firstSummary,currentSummary,memberPage,savedSettings,staleMembership:{ok:staleMembership.ok,status:staleMembership.status},edited,dormantSettings,dormantAfterEdit};
  Object.assign(evidence,{savedEdits});await checkpoint('saved-policy');
 
+ // Cross the old 16-member boundary through ordinary creation and saved-object
+ // editing. Both clients page the same directory, keep far objects unloaded and
+ // guard the last member rather than relying on a partial observation window.
+ const batchExample=capabilityDefinition('object.batch.create')!.example!;
+ const blueprint=batchExample.blueprint as {version:number;pieces:Record<string,unknown>[]};
+ const cohort=await invoke('object.batch.create',{...batchExample,loading:'onDemand',position:{...obstructed,y:1.2},
+  blueprint:{version:1,pieces:Array.from({length:16},(_,i)=>({...blueprint.pieces[0],slot:'policy_'+i,name:'Distant policy member '+i,
+   position:{x:(i%4)*.2,y:0,z:Math.floor(i/4)*.2},scale:.2}))}});
+ const extraMembers=cohort.output!.objectIds as string[];assert.equal(extraMembers.length,16);
+ for(const member of extraMembers)await invoke('object.environment.assign',{target:member,revision:(await fact('object.environment.settings',{target:member})).revision,
+  profileId,profileRevision:edited.output!.revision});
+ const worldSummary=await fact('environment.profile.summary',{id:profileId});assert.equal(worldSummary.memberCount,17);
+ assert.equal((await driver.fact('environment.profile',{id:profileId})).available,false,'Legacy read must not truncate a larger profile');
+ const worldPages:Record<string,unknown>[]=[],worldMembers:{target:string;revision:unknown}[]=[];let cursor='';
+ do{
+  const page=await fact('resource.members',{kind:'environment',id:profileId,cursor});assert.equal(page.membership,worldSummary.membership);
+  worldPages.push(page);
+  for(const member of page.members as string[])worldMembers.push({target:member,revision:(await fact('object.environment.settings',{target:member})).revision});
+  cursor=String(page.next);
+ }while(cursor);
+ assert.equal(worldPages.length,2);assert.equal(worldMembers.length,17);
+ const worldEdit={id:profileId,revision:worldSummary.revision,membership:worldSummary.membership,name:'Shared landscape collision policy',realCollisions:false,members:worldMembers};
+ const staleLast=await driver.reject('environment.profile.save',{...worldEdit,members:worldMembers.map((member,i)=>i===16?{...member,revision:Number(member.revision)-1}:member)});
+ assert.equal(staleLast.ok,false);assert.match(staleLast.status,/member changed.*saved revision/i);
+ const worldEdited=await invoke('environment.profile.save',worldEdit);
+ assert.deepEqual([...worldEdited.resources].sort(),[target,...extraMembers].sort());
+ const worldPresence=[];
+ for(const member of [target,...extraMembers]){
+  const state=await fact('object.presence',{target:member});assert.equal(state.nativeInstance,false,'Shared policy edit loaded a far member');worldPresence.push(state);
+  assert.equal((await fact('object.environment.settings',{target:member})).realCollisions,false);
+ }
+ Object.assign(evidence,{worldEdits:{cohort,worldSummary,worldPages,worldMembers,staleLast:{ok:staleLast.ok,status:staleLast.status},worldEdited,worldPresence}});
+ await checkpoint('world-policy');
+ for(const member of extraMembers)await invoke('object.delete',{target:member});
+ const remainingSummary=await fact('environment.profile.summary',{id:profileId});assert.equal(remainingSummary.memberCount,1);
+ await invoke('environment.profile.save',{...worldEdit,revision:remainingSummary.revision,membership:remainingSummary.membership,realCollisions:true,
+  members:[{target,revision:(await fact('object.environment.settings',{target})).revision}]});
+
  // Saved placement can intentionally stay unloaded. A visible member of a
  // together area is ordinary native demand for the same obstructed saved peer.
  const anchorCreated=await invoke('object.create',{...capabilityDefinition('object.create')!.example!,name:'Recovery area companion',...clear,x:clear.x+.7,scale:.2});
