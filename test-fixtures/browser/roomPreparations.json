@@ -1,0 +1,113 @@
+{
+  "inspection": {
+    "selected": {
+      "id": "404ad909ee6c4c5b906378de2009f958",
+      "capability": "room.storage.preparations.inspect",
+      "version": 1,
+      "resources": [],
+      "phase": "completed",
+      "status": "Action completed",
+      "output": {
+        "inspectionId": "e6496ed08780410bb6e966a8b6f042a0",
+        "count": 1,
+        "more": false
+      },
+      "call": {
+        "id": "room.storage.preparations.inspect",
+        "version": 1,
+        "arguments": {}
+      }
+    },
+    "running": [],
+    "outcomes": [
+      {
+        "id": "404ad909ee6c4c5b906378de2009f958",
+        "capability": "room.storage.preparations.inspect",
+        "version": 1,
+        "resources": [],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "inspectionId": "e6496ed08780410bb6e966a8b6f042a0",
+          "count": 1,
+          "more": false
+        }
+      }
+    ],
+    "nextRunId": "1928beb4ae3442f2bae39b4feb5e35f5",
+    "storageError": null,
+    "recovery": null
+  },
+  "status": {
+    "runId": "404ad909ee6c4c5b906378de2009f958",
+    "phase": "completed",
+    "inspectionId": "e6496ed08780410bb6e966a8b6f042a0",
+    "count": 1,
+    "more": false,
+    "error": ""
+  },
+  "entry": {
+    "entryId": "be91c2fcc819471f80c02aef23d089fb",
+    "fingerprint": "5e82fe8bf8202eb51ca14c81e93c793cc1802ff7205f6749ec3a47c407b8e329",
+    "bytes": 24,
+    "eligible": true,
+    "reason": ""
+  },
+  "discard": {
+    "selected": {
+      "id": "1928beb4ae3442f2bae39b4feb5e35f5",
+      "capability": "room.storage.preparations.discard",
+      "version": 1,
+      "resources": [],
+      "phase": "completed",
+      "status": "Action completed",
+      "output": {
+        "entryId": "be91c2fcc819471f80c02aef23d089fb",
+        "fingerprint": "5e82fe8bf8202eb51ca14c81e93c793cc1802ff7205f6749ec3a47c407b8e329",
+        "removed": true
+      },
+      "call": {
+        "id": "room.storage.preparations.discard",
+        "version": 1,
+        "arguments": {
+          "inspectionId": "e6496ed08780410bb6e966a8b6f042a0",
+          "entryId": "be91c2fcc819471f80c02aef23d089fb",
+          "fingerprint": "5e82fe8bf8202eb51ca14c81e93c793cc1802ff7205f6749ec3a47c407b8e329",
+          "confirmation": "discard be91c2fcc819471f80c02aef23d089fb"
+        }
+      }
+    },
+    "running": [],
+    "outcomes": [
+      {
+        "id": "404ad909ee6c4c5b906378de2009f958",
+        "capability": "room.storage.preparations.inspect",
+        "version": 1,
+        "resources": [],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "inspectionId": "e6496ed08780410bb6e966a8b6f042a0",
+          "count": 1,
+          "more": false
+        }
+      },
+      {
+        "id": "1928beb4ae3442f2bae39b4feb5e35f5",
+        "capability": "room.storage.preparations.discard",
+        "version": 1,
+        "resources": [],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "entryId": "be91c2fcc819471f80c02aef23d089fb",
+          "fingerprint": "5e82fe8bf8202eb51ca14c81e93c793cc1802ff7205f6749ec3a47c407b8e329",
+          "removed": true
+        }
+      }
+    ],
+    "nextRunId": "71c0095ff63d426c9fba5ba8805278d6",
+    "storageError": null,
+    "recovery": null
+  }
+}

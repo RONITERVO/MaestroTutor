@@ -1,0 +1,172 @@
+{
+  "version": 3,
+  "parallelVersion": 1,
+  "entry": "main",
+  "resources": [
+    "00000000000000000000000000000000",
+    "11111111111111111111111111111111"
+  ],
+  "state": [],
+  "events": [],
+  "functions": [
+    {
+      "name": "main",
+      "returns": "void",
+      "parameters": [],
+      "locals": [
+        {
+          "name": "didThrow",
+          "initial": false
+        }
+      ],
+      "body": [
+        {
+          "id": "together",
+          "op": "parallel",
+          "branches": [
+            {
+              "function": "carry",
+              "args": [
+                {
+                  "value": "00000000000000000000000000000000"
+                },
+                {
+                  "value": "11111111111111111111111111111111"
+                },
+                {
+                  "value": 1
+                }
+              ],
+              "result": "didThrow"
+            },
+            {
+              "function": "wave",
+              "args": [
+                {
+                  "value": "11111111111111111111111111111111"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "observe",
+          "op": "sleep",
+          "seconds": {
+            "value": 2
+          }
+        }
+      ]
+    },
+    {
+      "name": "carry",
+      "returns": "boolean",
+      "parameters": [
+        {
+          "name": "prop",
+          "type": "text"
+        },
+        {
+          "name": "holder",
+          "type": "text"
+        },
+        {
+          "name": "revision",
+          "type": "number"
+        }
+      ],
+      "locals": [
+        {
+          "name": "released",
+          "initial": false
+        }
+      ],
+      "body": [
+        {
+          "id": "carryProp",
+          "op": "invoke",
+          "capability": "object.hold",
+          "version": 1,
+          "arguments": {
+            "target": "00000000000000000000000000000000",
+            "holder": {
+              "kind": "recipePart",
+              "objectId": "11111111111111111111111111111111",
+              "part": "RightHand",
+              "revision": 1
+            },
+            "offset": {
+              "x": 0,
+              "y": 0,
+              "z": 0.35
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0,
+              "w": 1
+            },
+            "seconds": 1.2,
+            "release": "throw",
+            "releaseAt": 0.2
+          },
+          "bindings": {
+            "target": {
+              "var": "prop"
+            },
+            "holder.objectId": {
+              "var": "holder"
+            },
+            "holder.revision": {
+              "var": "revision"
+            }
+          },
+          "results": {
+            "released": "released"
+          }
+        },
+        {
+          "id": "returnReleased",
+          "op": "return",
+          "value": {
+            "var": "released"
+          }
+        }
+      ]
+    },
+    {
+      "name": "wave",
+      "returns": "void",
+      "parameters": [
+        {
+          "name": "holder",
+          "type": "text"
+        }
+      ],
+      "locals": [],
+      "body": [
+        {
+          "id": "waveArm",
+          "op": "invoke",
+          "capability": "animation.play",
+          "version": 1,
+          "arguments": {
+            "target": "11111111111111111111111111111111",
+            "source": {
+              "kind": "recipe",
+              "part": "RightUpperArm"
+            },
+            "channel": "recipePart",
+            "seconds": 1.2,
+            "loop": false
+          },
+          "bindings": {
+            "target": {
+              "var": "holder"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,108 @@
+# Copyright 2026 Roni Tervo
+# SPDX-License-Identifier: Apache-2.0
+[CmdletBinding()]
+param(
+    [Parameter(Mandatory)][string]$UnityArchive,
+    [Parameter(Mandatory)][string]$Editor,
+    [string]$Python = 'python',
+    [switch]$OwnedLifecycle
+)
+$ErrorActionPreference = 'Stop'
+$repo = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../../..'))
+$archive = (Resolve-Path -LiteralPath $UnityArchive).Path
+$editorPath = (Resolve-Path -LiteralPath $Editor).Path
+$version = (Get-Item -LiteralPath $editorPath).VersionInfo.ProductVersion
+if (!$version.StartsWith('6000.3.24f1')) { throw 'This evaluation is pinned to Unity 6000.3.24f1.' }
+$digest = (Get-FileHash -LiteralPath $archive -Algorithm SHA256).Hash.ToLowerInvariant()
+if ($digest -ne '9b7e3689561670e6b4b8e0c579a2d951bb4a0589f7d46c23bc9df923d62940f0') {
+    throw 'Expected the reviewed official Steam Audio Unity 4.8.1 archive.'
+}
+if (Get-CimInstance Win32_Process -Filter "Name='Unity.exe'") { throw 'Wait for the existing Unity Editor to exit first.' }
+$id = [Guid]::NewGuid().ToString('N').Substring(0, 12)
+$run = Join-Path $repo ('.quest-evidence/audio-unity/' + $id)
+if (Test-Path -LiteralPath $run) { throw 'Do not overwrite existing evaluation evidence.' }
+New-Item -ItemType Directory -Path $run | Out-Null
+$project = Join-Path $run 'project'
+$receipt = Join-Path $run 'result.json'
+. (Join-Path $PSScriptRoot '../QuestBuildProcesses.ps1')
+$record = [ordered]@{
+    version = 1; status = 'running'; sourceCommit = (git -C $repo rev-parse HEAD)
+    started = [DateTime]::UtcNow.ToString('o'); unity = $version; sdk = '4.8.1'; sdkSha256 = $digest
+    project = $project; platform = 'Windows x64'; appRuntimeChanged = $false; appPcmTransportReused = [bool]$OwnedLifecycle; appPcmLeaseReused = [bool]$OwnedLifecycle; appDefaultAdapterIncluded = $false
+    mode = $(if ($OwnedLifecycle) { 'owned-lifecycle' } else { 'stock-integration' })
+    questAcceptance = $false; providerUsed = $false; physicalAudioPlayback = $false
+    sourceHashes = @{}
+}
+foreach ($relative in @('Run-UnityProbe.ps1', 'PrepareUnityProject.py', 'Unity/CandidateTests.cs', 'Unity/NativeDsp.cs', 'Unity/PreparedGraph.cs', 'Unity/OwnedLifecycle.cs', 'Unity/OwnedLifecycleTests.cs', 'Unity/AcousticFrame.cs', 'Unity/PreparedGraph.Motion.cs', 'Unity/OwnedLifecycle.Motion.cs', 'Unity/MovingAudioTests.cs', 'Unity/PcmVoice.cs', 'Unity/PreparedGraph.Pcm.cs', 'Unity/PreparedGraph.Tails.cs', 'Unity/PcmAudioTests.cs', 'Unity/PcmTailTests.cs', 'Unity/PcmAdmissionTests.cs', 'Unity/PcmControls.cs', 'Unity/PcmTransformBinding.cs', 'Unity/PcmPresentationTests.cs', 'Unity/AcousticSceneData.cs', 'Unity/PreparedGraph.Geometry.cs', 'Unity/GeometryAudioTests.cs', 'Unity/RuntimeAssembly.cs', 'Unity/NativePlayerProbe.cs', 'Unity/NativePlayerTests.cs','Unity/GeometryBridge.cs','Unity/GeometryBridgeTests.cs','Unity/PresentationConcurrencyTests.cs','Unity/PcmLeaseAdapter.cs','Unity/PcmLeaseTests.cs','Unity/PcmLeasePlayerProbe.cs','Unity/EchoReferenceTests.cs','Unity/EchoReferencePlayerProbe.cs')) {
+    $record.sourceHashes[$relative] = (Get-FileHash -LiteralPath (Join-Path $PSScriptRoot $relative) -Algorithm SHA256).Hash
+}
+$record.sourceHashes['AudioManager.asset'] = (Get-FileHash -LiteralPath (Join-Path $repo 'unity/MaestroQuest/ProjectSettings/AudioManager.asset') -Algorithm SHA256).Hash
+$record.sourceHashes['SpeechPcmStream.cs'] = (Get-FileHash -LiteralPath (Join-Path $repo 'unity/MaestroQuest/Assets/Maestro/Runtime/Book/SpeechPcmStream.cs') -Algorithm SHA256).Hash
+$record.sourceHashes['AcousticGeometry.cs'] = (Get-FileHash -LiteralPath (Join-Path $repo 'unity/MaestroQuest/Assets/Maestro/Runtime/Book/AcousticGeometry.cs') -Algorithm SHA256).Hash
+$record.sourceHashes['AcousticGeometryCatalog.cs'] = (Get-FileHash -LiteralPath (Join-Path $repo 'unity/MaestroQuest/Assets/Maestro/Runtime/Book/AcousticGeometryCatalog.cs') -Algorithm SHA256).Hash
+$record.sourceHashes['RoomPreparationBudget.cs'] = (Get-FileHash -LiteralPath (Join-Path $repo 'unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomPreparationBudget.cs') -Algorithm SHA256).Hash
+$record.sourceHashes['PcmOutputLease.cs'] = (Get-FileHash -LiteralPath (Join-Path $repo 'unity/MaestroQuest/Assets/Maestro/Runtime/Book/PcmOutputLease.cs') -Algorithm SHA256).Hash
+$record.sourceHashes['PcmOutputBackend.cs'] = (Get-FileHash -LiteralPath (Join-Path $repo 'unity/MaestroQuest/Assets/Maestro/Runtime/Book/PcmOutputBackend.cs') -Algorithm SHA256).Hash
+foreach ($name in @('EchoReferenceStream.cs','RoomAudioTap.cs','AcousticOutputMonitor.cs')) {
+    $record.sourceHashes[$name]=(Get-FileHash -LiteralPath (Join-Path $repo ('unity/MaestroQuest/Assets/Maestro/Runtime/Book/'+$name)) -Algorithm SHA256).Hash
+}
+function Save-Receipt { $record | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath $receipt }
+function Invoke-EvaluationEditor([string]$Phase, [string[]]$Extra) {
+    if (Get-CimInstance Win32_Process -Filter "Name='Unity.exe'") { throw 'Another Unity Editor started; leave it untouched.' }
+    $log = Join-Path $run ($Phase + '.log')
+    $arguments = @('-batchmode', '-force-d3d11', '-buildTarget', 'Win64', '-projectPath', ('"' + $project + '"'), '-logFile', ('"' + $log + '"')) + $Extra
+    Stop-QuestBuildHelper
+    $process = Start-Process -FilePath $editorPath -ArgumentList $arguments -WindowStyle Hidden -PassThru -Environment @{ ADB_SERVER_SOCKET = 'tcp:localhost:5041' }
+    $record.phase = $Phase; $record.editorPid = $process.Id; Save-Receipt
+    $deadline = [DateTime]::UtcNow.AddMinutes(10)
+    try {
+        while (!$process.WaitForExit(1000)) {
+            if ([DateTime]::UtcNow -gt $deadline) {
+                $process.Kill(); $process.WaitForExit()
+                throw 'The owned isolated editor exceeded its deadline; a partial report is not success.'
+            }
+        }
+        $record[$Phase + 'Exit'] = $process.ExitCode
+    } finally { $process.Dispose(); Stop-QuestBuildHelper }
+}
+Save-Receipt
+try {
+    $mode = if ($OwnedLifecycle) { 'owned' } else { 'stock' }
+    & $Python (Join-Path $PSScriptRoot 'PrepareUnityProject.py') $archive $project $mode *> (Join-Path $run 'prepare.log')
+    if ($LASTEXITCODE -ne 0) { throw 'Project preparation failed; see prepare.log.' }
+    if (!$OwnedLifecycle) {
+        Invoke-EvaluationEditor 'configure' @('-quit', '-executeMethod', 'Maestro.AudioEvaluation.Configure.Run')
+        if ($record.configureExit -ne 0) { throw 'Candidate configuration failed; see configure.log.' }
+    }
+    $testClass = if ($OwnedLifecycle) { 'Maestro.AudioEvaluation.OwnedLifecycleTests' } else { 'Maestro.AudioEvaluation.CandidateTests' }
+    $result = Join-Path $run 'tests.xml'
+    Invoke-EvaluationEditor 'playmode' @('-runTests', '-testPlatform', 'PlayMode', '-testFilter', $testClass, '-testResults', ('"' + $result + '"'))
+    if (!(Test-Path -LiteralPath $result)) { throw 'The candidate produced no test report.' }
+    [xml]$xml = Get-Content -LiteralPath $result
+    $record.tests = @($xml.SelectNodes('//test-case') | ForEach-Object {
+        @{ name = $_.name; result = $_.result; message = $_.failure.message.InnerText }
+    })
+    $expected = @('EditableGeometryAndIndependentVoicesRenderThroughUnity', 'ExistingVoiceSurvivesSameConfigurationAudioReset', 'ChangedDeviceFormatUpdatesSimulationConfiguration')
+    if ($OwnedLifecycle) { $expected = @('DeviceResetRebuildsFormatWithoutReplayingVoices', 'RetiredGraphWaitsForOwnedReader', 'SupersededPreparationDrainsBeforeLatestGenerationPublishes', 'PreparationFailureReleasesNativeOwnershipAndCanRetry', 'SupersededFailureCannotPoisonNewConfiguration', 'CloseDuringPreparationCannotPublishOrReplay', 'MovingEmittersAndRoomEditsUpdateWithoutVoiceRestart', 'MovingListenerAndHeadRotationChangeMeasuredStereo', 'SceneUpdatesCoalesceWhileAudioContinues', 'ResetDuringSimulationRejectsStaleFailureAndKeepsLatestRoom', 'FailedSceneUpdateRetiresOutputUntilExplicitRetry', 'MutedVoiceConsumesUpdatesBeforeItRestarts', 'ProducerWaitsForAudioConsumerThenAppliesLatestScene', 'PcmStreamUsesNativeOutputAndActualPlaybackReceipts', 'PcmDryContinuesWhileReflectionsAwaitLatestScene', 'PcmReplacementClearsTailsAndKeepsOtherVoicePlaying', 'PcmFormatResetClosesOldStreamAndResamplesNewSpeech', 'PcmInvalidCallbackCannotConsumeAndCloseRejectsLateData', 'PcmRoomEditAtOutputBoundarySuppressesOnlyWetAudio', 'PcmEmptyReplacementRejectsFirstBufferedTail', 'PcmStopAtSubmissionDiscardsAlreadyProcessedVoice', 'PcmNaturalCompletionDrainsWetTailWithoutInventingPlayedSamples', 'PcmPausePreservesSourceWhileOtherVoiceAndSceneContinue', 'PcmPauseAfterDspKeepsAdmittedBlockAndThenFencesConsumption', 'PcmRendererCompletionWaitsForFinalSubmissionAndOutputClock', 'PcmFinishedVoiceConsumesFutureResponsesWithoutReplayOrBlockingOtherVoice', 'PcmTailPauseAndReplacementCannotCompleteAnOpenEmptyStream', 'PcmDeviceResetDuringTailInvalidatesOldCompletion', 'PcmRoomReplacementCannotReviveObsoleteTailGeometry', 'PcmExistingStreamTransferPreservesProducerAndCompletion', 'PcmNineVoicesKeepIndependentBindingsAndResponses', 'PcmRejectedTransfersCloseOnlyTheirFreshInputs', 'PcmCapacitySurvivesDeviceResetWithoutReplayingNineStreams', 'AcousticCapacityAndSnapshotsRejectTopologyMutation', 'PcmMutableGainPreservesDryWetAndIndependentProgress', 'PcmGainAtSubmissionMutesOnlyTheOutputNotSourceProgress', 'PcmMutedFinalTailStillCompletesItsExactOwner', 'PcmNonspatialMatchesUnityAndIgnoresWorldMovement', 'PcmDistanceRolloffMatchesUnityReference', 'PcmAnchorFollowsParentTranslationRotationAndScale', 'PcmAnchorLossStopsOnlyItsVoiceAndCannotReopenIt', 'AcousticGeometrySnapshotsValidateBeforeNativeAdmission', 'AcousticGeometryCaptureOutlivesItsViewAndInputArrays', 'AcousticGeometryPlacementsReuseMeshesAndFollowWorldTransforms', 'AcousticGeometryTopologyReplacementKeepsVoiceAndReleasesOldMesh', 'AcousticGeometryChangeAtSubmissionRejectsOldWetOutput', 'AcousticGeometryResetWhileWorkerOwnsSceneUsesLatestSnapshot', 'NativePlayerProbeUsesStaticAotCallbackAndDrainsNineStreams', 'GeometryBridgeReusesMeshesAcrossMovementAndOwnerTransfer', 'GeometryBridgeFencesPendingAndUnavailableBoundaries', 'GeometryBridgeCancelsChangedDefinitionsWithinSharedBudget', 'GeometryBridgeCachesFailureUntilRepairOrRetry', 'GeometryBridgeStopsOldWetOutputAtSubmission', 'GeometryBridgeCloseCancelsPreparationAndResetStaysHeld', 'GeometryBridgeBoundsAcquisitionAndKeepsScanReservation', 'PresentationPublishesGeometryRequirementBeforeConcurrentRead', 'PresentationInvalidationDuringConcurrentRenderFencesWetSubmission', 'PcmLeasePlayerEntryUsesApplicationBoundaryAndDrainsNativeOwnership', 'PcmLeaseSealedQueueStartsOnlyOnRequestAndCompletesActualOutput', 'PcmLeaseCompletionWaitsForNativeTailAndFinalOutputClock', 'PcmLeaseAndDirectAliasesCannotCloseOrStealEachOthersInputs', 'PcmLeasePoseGainAndPauseReachNativeOutputWithoutStoppingPeer', 'PcmLeaseScopeAndSelectionTeardownLeaveBorrowedGraphAndOtherVoiceAlive', 'PcmLeaseDeviceResetInvalidatesOldPlaybackWithoutReplayingIt','ListenerReferenceContainsNativeReflectionsAndIndependentVoicesExactly','ListenerReferenceKeepsNativeTailAfterSourceConsumption','ListenerReferencePlayerEntryUsesActualMutedAudioCallbacks') }
+    $actual = @($xml.SelectNodes('//test-case') | ForEach-Object { $_.name })
+    if (@(Compare-Object ($expected | Sort-Object) ($actual | Sort-Object)).Count -ne 0 -or
+        $record.playmodeExit -ne 0 -or $xml.'test-run'.result -ne 'Passed' -or [int]$xml.'test-run'.passed -ne $expected.Count) {
+        throw 'Candidate requirements did not pass. Retain the failed cases; this does not alter the app native gate.'
+    }
+    $bookInputs=@('SpeechPcmStream.cs','AcousticGeometry.cs','AcousticGeometryCatalog.cs','PcmOutputLease.cs','PcmOutputBackend.cs','EchoReferenceStream.cs','RoomAudioTap.cs','AcousticOutputMonitor.cs')
+    foreach ($entry in $record.sourceHashes.GetEnumerator()) {
+        $inputPath=if ($entry.Key -eq 'AudioManager.asset') {Join-Path $repo 'unity/MaestroQuest/ProjectSettings/AudioManager.asset'} elseif ($entry.Key -eq 'RoomPreparationBudget.cs') {Join-Path $repo 'unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomPreparationBudget.cs'} elseif ($entry.Key -in $bookInputs) {Join-Path $repo ('unity/MaestroQuest/Assets/Maestro/Runtime/Book/'+$entry.Key)} else {Join-Path $PSScriptRoot $entry.Key}
+        if ((Get-FileHash -LiteralPath $inputPath -Algorithm SHA256).Hash -ne $entry.Value) {throw ('Input changed during evaluation: '+$entry.Key)}
+    }
+    foreach ($copied in Get-ChildItem -LiteralPath (Join-Path $project 'Assets/Evaluation') -Recurse -Filter '*.cs') {
+        $key=if ($copied.Name -in $bookInputs -or $copied.Name -eq 'RoomPreparationBudget.cs') {$copied.Name} else {'Unity/'+$copied.Name}
+        if (!$record.sourceHashes.ContainsKey($key) -or (Get-FileHash -LiteralPath $copied.FullName -Algorithm SHA256).Hash -ne $record.sourceHashes[$key]) {throw ('Prepared source differs: '+$copied.Name)}
+    }
+    $record.sourceHashesVerified=$record.sourceHashes.Count
+    $record.status = 'passed'
+} catch {
+    $record.status = 'failed'; $record.error = $_.ToString(); throw
+} finally {
+    $record.finished = [DateTime]::UtcNow.ToString('o'); Save-Receipt
+}
+Write-Output "Isolated Unity candidate evaluation passed: $receipt"

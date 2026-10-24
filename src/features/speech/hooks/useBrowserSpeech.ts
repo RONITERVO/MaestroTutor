@@ -7,6 +7,7 @@ import type { SpeechPart, RecordedUtterance } from '../../../core/types';
 import { useTtsEngine } from './useTtsEngine';
 import { type GeminiLiveSttTurnComplete, useGeminiLiveStt } from './useGeminiLiveStt';
 import { pcmToWav } from '../../../core-sdk/media/audioProcessing';
+import { sessionActivity } from '../../../platform/browser/sessionActivity';
 import type { TtsLiveOpenTrigger } from '../../../../shared/liveOpenReason';
 import type { SttStartOptions } from '../../../core-sdk/media/sttTurnRouting';
 
@@ -22,7 +23,7 @@ interface UseBrowserSpeechProps {
 interface UseBrowserSpeechReturn {
   isSpeaking: boolean;
   speak: (textOrParts: string | SpeechPart[], defaultLang: string, liveOpenTrigger: TtsLiveOpenTrigger) => void;
-  stopSpeaking: () => void;
+  stopSpeaking: () => void | Promise<void>;
   isSpeechSynthesisSupported: boolean;
   isListening: boolean;
   transcript: string;
@@ -109,6 +110,7 @@ const useBrowserSpeech = (props?: UseBrowserSpeechProps): UseBrowserSpeechReturn
     }, [geminiStt.isListening, geminiStt.error]);
 
   const startListening = useCallback((languageOrOptions?: string | SttStartOptions) => {
+      if (!sessionActivity.isActive()) return;
       // If TTS is speaking, we don't start immediately but ensure the interrupt flag is set 
       // so it resumes after TTS finishes.
       if (isSpeaking || hasPendingQueueItems()) {

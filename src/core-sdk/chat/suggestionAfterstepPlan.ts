@@ -32,7 +32,10 @@ export function planSuggestionAftersteps(input: {
   const assistantPatches: Partial<ChatMessage>[] = [];
   const isLive = mode === 'browser-live';
 
-  if (isLive && (artifact || toolRequest)) {
+  // A spoken agent handoff retains its exact source transcript for provenance.
+  // History compaction reads the tool kind and attachment from message state.
+  if (isLive && toolRequest?.tool === 'agent') assistantPatches.push({ maestroToolKind: 'agent' });
+  if (isLive && toolRequest?.tool !== 'agent' && (artifact || toolRequest)) {
     const raw = artifact
       ? buildCompactAssistantRawText(contextText, { artifact: { mimeType: artifact.mimeType, fileName: artifact.fileName, dataUrl: artifact.dataUrl, source: 'live-suggestion-creator' } })
       : (toolRequest ? buildLiveToolRawText(contextText, toolRequest) : '');
@@ -55,7 +58,7 @@ export function planSuggestionAftersteps(input: {
     assistantPatches.push(patch);
   }
 
-  const splitToolMessage: SplitToolMessage | null = artifact && toolRequest
+  const splitToolMessage: SplitToolMessage | null = artifact && toolRequest && toolRequest.tool !== 'agent'
     ? mode === 'headless'
       ? { role: 'assistant', rawAssistantResponse: contextText || undefined }
       : { role: 'assistant', llmRawResponse: isLive ? buildLiveToolRawText(contextText, toolRequest) : undefined }

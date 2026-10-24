@@ -46,7 +46,9 @@ export type LiveGatewayServerMessage =
   | { type: 'error'; message: string; code?: string; retryable?: boolean };
 
 export const LIVE_GATEWAY_AUTH_TIMEOUT_MS = 5_000;
-export const LIVE_GATEWAY_CONNECT_TIMEOUT_MS = 20_000;
+// Covers a scale-from-zero gateway startup plus its bounded provider connection.
+// Ticket expiry and session deadlines remain server-enforced; no automatic retry.
+export const LIVE_GATEWAY_CONNECT_TIMEOUT_MS = 60_000;
 export const LIVE_GATEWAY_MAX_MESSAGE_BYTES = 2_000_000;
 /** One minute of input, followed by time for the model to answer. */
 export const LIVE_USER_TURN_MAX_MS = 60_000;
@@ -58,3 +60,9 @@ export const LIVE_GATEWAY_MAX_QUEUED_MESSAGES = 1024;
 export const LIVE_GATEWAY_MAX_TURNS = 1;
 /** Camera input is admitted at the same one-frame-per-second cadence as the app. */
 export const LIVE_GATEWAY_VIDEO_FRAME_INTERVAL_MS = 1_000;
+
+/** Closed room tool protocol. These limits also bound the managed reservation. */
+export const LIVE_ROOM_MAX_CALLS = 6;
+export const LIVE_ROOM_MAX_CALL_BYTES = 32 * 1024;
+export const LIVE_ROOM_MAX_RESPONSE_BYTES = 72 * 1024;
+export const LIVE_ROOM_MAX_TOTAL_RESPONSE_BYTES = 144 * 1024;

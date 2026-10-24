@@ -1,6 +1,7 @@
 // Copyright 2025 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 
+import { ROOM_LIVE_TOOLS, ROOM_LIVE_OBSERVE } from '../../shared/prompts/room';
 import assert from 'node:assert/strict';
 import { afterEach, describe, it, vi } from 'vitest';
 import { LIVE_USER_TURN_MAX_MS, LIVE_GATEWAY_MAX_QUEUED_MESSAGES } from '../../shared/liveGatewayProtocol';
@@ -597,5 +598,95 @@ describe('managed Live gateway connection', () => {
       (message) => message.type === 'error' && message.code === 'LIVE_GATEWAY_AUTH',
     ), true);
     assert.equal(harness.transport.closeCalls.length, 1);
+  });
+});
+
+
+describe('managed room tool transport', () => {
+  const toolCall = (id='room-1') => ({toolCall:{functionCalls:[{id,name:ROOM_LIVE_OBSERVE,args:{}}]}});
+  const response = (id='room-1') => ({type:'toolResponse',input:{functionResponses:[{id,name:ROOM_LIVE_OBSERVE,response:{ok:true,scene:{objects:[]}}}]}});
+  const roomHarness = async () => {
+    const h = createHarness(); h.billing.config.tools = ROOM_LIVE_TOOLS;
+    await h.authenticate(); return h;
+  };
+  it('persists a useful tool-only answer before delivery and counts matching response bytes', async () => {
+    const h = await roomHarness();
+    h.provider.callbacks!.onmessage(toolCall());
+    await h.connection.whenIdle();
+    assert.ok(h.billing.checkpoints[0].usefulOutput);
+    assert.ok(h.billing.checkpoints[0].outputToolCallBytes! > 0);
+    const providerMessages = h.transport.messages.filter(m => m.type === 'providerMessage');
+    assert.ok(providerMessages.some(m => 'toolCall' in (m.message as object)));
+    h.connection.receive(JSON.stringify(response()));
+    await h.connection.whenIdle();
+    assert.equal(h.provider.toolResponses.length,1);
+    assert.equal(h.billing.checkpoints.at(-1)!.inputToolResponseBytes,Buffer.byteLength(JSON.stringify(response().input),'utf8'));
+    await h.close();
+    assert.equal(h.billing.finalizations[0].checkpoint.usefulOutput,true);
+  });
+  it('rejects tools on ordinary tickets and rejects altered ticket definitions before provider connect', async () => {
+    const h = createHarness(); await h.authenticate();
+    h.provider.callbacks!.onmessage(toolCall()); await h.connection.whenIdle();
+    assert.equal(h.billing.finalizations[0].reason,'gateway-error');
+    assert.equal(h.transport.messages.some(m => m.type === 'providerMessage' && (m.message as any).toolCall),false);
+    const altered = createHarness();
+    altered.billing.config.tools = [{functionDeclarations:[{name:ROOM_LIVE_OBSERVE}]}];
+    await altered.authenticate();
+    assert.equal(altered.provider.callbacks,null);
+    assert.equal(altered.billing.finalizations[0].reason,'gateway-error');
+  });
+  it('rejects unsolicited and repeated client responses without forwarding twice', async () => {
+    const unknown = await roomHarness();
+    unknown.connection.receive(JSON.stringify(response())); await unknown.connection.whenIdle();
+    assert.equal(unknown.provider.toolResponses.length,0);
+    const h = await roomHarness();
+    h.provider.callbacks!.onmessage(toolCall()); await h.connection.whenIdle();
+    h.connection.receive(JSON.stringify(response()));
+    h.connection.receive(JSON.stringify(response()));
+    await h.connection.whenIdle();
+    assert.equal(h.provider.toolResponses.length,1);
+    assert.equal(h.billing.finalizations[0].reason,'gateway-error');
+  });
+  it('cancellation overtakes an already queued client reply', async () => {
+    const h = await roomHarness();
+    h.provider.callbacks!.onmessage(toolCall()); await h.connection.whenIdle();
+    h.connection.receive(JSON.stringify(response()));
+    h.provider.callbacks!.onmessage({toolCallCancellation:{ids:['room-1']}});
+    await h.connection.whenIdle();
+    assert.equal(h.provider.toolResponses.length,0);
+    assert.ok(!h.transport.messages.some(m => m.type === 'error'));
+    await h.close();
+  });
+  it('does not offer a call cancelled during checkpoint persistence', async () => {
+    const h = await roomHarness();
+    let release!:() => void;
+    h.billing.checkpoint = async () => {await new Promise<void>(resolve => {release=resolve;});};
+    h.provider.callbacks!.onmessage(toolCall()); await tick();
+    h.provider.callbacks!.onmessage({toolCallCancellation:{ids:['room-1']}});
+    release(); await h.connection.whenIdle();
+    assert.equal(h.transport.messages.some(m => m.type === 'providerMessage' && (m.message as any).toolCall),false);
+    await h.close();
+  });
+  it('suppresses identical provider retransmissions while retaining usage metadata', async () => {
+    const h = await roomHarness();
+    h.provider.callbacks!.onmessage(toolCall()); await h.connection.whenIdle();
+    h.provider.callbacks!.onmessage({...toolCall(),usageMetadata:{totalTokenCount:12}});
+    await h.connection.whenIdle();
+    const offers = h.transport.messages.filter(m => m.type === 'providerMessage' && (m.message as any).toolCall);
+    assert.equal(offers.length,1);
+    assert.equal(h.billing.checkpoints.at(-1)!.providerUsageMetadata?.totalTokenCount,12);
+    await h.close();
+  });
+  it('ends queued input audio at a tool call without cutting off the answer', async () => {
+    const h = createHarness({sleep:()=>new Promise(()=>undefined)}); h.billing.config.tools = ROOM_LIVE_TOOLS;
+    await h.authenticate();
+    const audio = JSON.stringify({type:'realtimeInput',input:{audio:{data:Buffer.alloc(3200).toString('base64'),mimeType:'audio/pcm;rate=16000'}}});
+    h.connection.receive(audio); h.connection.receive(audio); await tick();
+    h.provider.callbacks!.onmessage(toolCall()); await h.connection.whenIdle();
+    assert.equal(h.provider.realtimeInputs.length,1);
+    assert.equal(h.provider.closeCount,0);
+    h.connection.receive(JSON.stringify(response())); await h.connection.whenIdle();
+    assert.equal(h.provider.toolResponses.length,1);
+    await h.close();
   });
 });

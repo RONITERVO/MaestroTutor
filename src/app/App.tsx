@@ -18,7 +18,7 @@ import { VisualContextVideo } from '../features/vision';
 // --- Hooks ---
 import { useAppInitialization, useMaestroActivityStage, useIdleReengagement } from './hooks';
 
-import { useTutorConversation, useSuggestions, useChatPersistence } from '../features/chat';
+import { useTutorConversation, useSuggestions, useChatPersistence, useAgentTaskSpeech } from '../features/chat';
 import { useSpeechOrchestrator, type GeminiLiveSttTurnComplete } from '../features/speech';
 import { useCameraManager } from '../features/vision';
 import { useLiveSessionController, useSilentObserverController } from '../features/live';
@@ -49,8 +49,11 @@ import { createReengagementSequence } from './coordinators/reengagement';
 import { createSpeechModeActions } from './coordinators/speechMode';
 import { readSpeechRoutingState } from './speechRoutingState';
 import { useLanguageSessionReset } from './hooks/useLanguageSessionReset';
+import { useNativeSessionLifecycle } from './hooks/useNativeSessionLifecycle';
+import { useSessionActive } from '../platform/browser/useSessionActive';
 
 const App: React.FC = () => {
+  const sessionActive = useSessionActive();
   // ============================================================
   // REFS - Declared before hooks
   // ============================================================
@@ -63,6 +66,7 @@ const App: React.FC = () => {
   const scheduleReengagementRef = useRef<(reason: string, delayOverrideMs?: number) => void>(() => {});
   const cancelReengagementRef = useRef<() => void>(() => {});
   const stopSilentObserverRef = useRef<() => Promise<void>>(async () => {});
+  const cancelAgentSpeechRef = useRef<() => void | Promise<void>>(() => {});
   const pendingSttEnableRef = useRef<symbol | null>(null);
   useEffect(() => () => { pendingSttEnableRef.current = null; }, []);
   const resetSilentObserverRef = useRef<() => Promise<void>>(async () => {});
@@ -173,8 +177,8 @@ const App: React.FC = () => {
     captureSnapshot,
   } = useCameraManager({
     t,
-    sendWithSnapshotEnabled: settings.sendWithSnapshotEnabled,
-    useVisualContext: settings.smartReengagement.useVisualContext,
+    sendWithSnapshotEnabled: sessionActive && settings.sendWithSnapshotEnabled,
+    useVisualContext: sessionActive && settings.smartReengagement.useVisualContext,
     selectedCameraId: settings.selectedCameraId,
   });
 
@@ -196,7 +200,7 @@ const App: React.FC = () => {
   // NOTE: Moved before useSmartReengagement to provide speechIsSpeakingRef
   const {
     isSpeaking,
-    stopSpeaking,
+    stopSpeaking: stopSpeechOutput,
     isSpeechSynthesisSupported,
     hasPendingQueueItems,
     isListening,
@@ -215,6 +219,10 @@ const App: React.FC = () => {
     onSttTurnComplete: (turn) => handleSttTurnCompleteRef.current(turn),
   });
   
+  const stopSpeaking = useCallback(() => {
+    return cancelAgentSpeechRef.current() ?? stopSpeechOutput();
+  }, [stopSpeechOutput]);
+
   // --- Maestro Controller ---
   const {
     isSending,
@@ -298,7 +306,7 @@ const App: React.FC = () => {
 
   useIdleReengagement({
     selectedLanguagePair,
-    isBlockingActivity,
+    isBlockingActivity: isBlockingActivity || !sessionActive,
     isUserActive,
     reengagementPhase,
     scheduleReengagement,
@@ -398,6 +406,7 @@ const App: React.FC = () => {
 
   const {
     handleStartLiveSession,
+    pauseLiveForSpeech,
     handleStopLiveSession,
     handleLiveTurnComplete,
     handleLiveTurnTranscriptUpdate,
@@ -440,14 +449,15 @@ const App: React.FC = () => {
     userText: string,
     modelText: string,
     userAudioPcm?: Int16Array,
-    modelAudioLines?: Int16Array[]
+    modelAudioLines?: Int16Array[],
+    context?: import('../features/speech').LiveTurnContext
   ) => {
-    await handleLiveTurnComplete(userText, modelText, userAudioPcm, modelAudioLines);
+    await handleLiveTurnComplete(userText, modelText, userAudioPcm, modelAudioLines, context);
     scheduleReengagement('silent-observer-response');
   }, [handleLiveTurnComplete, scheduleReengagement]);
 
-  const { stopSilentObserver, resetSilentObserver } = useSilentObserverController({
-    enabled: hasAiAccess && !showApiKeyGate,
+  const { stopSilentObserver, resetSilentObserver, pauseObserverForSpeech } = useSilentObserverController({
+    enabled: sessionActive && hasAiAccess && !showApiKeyGate,
     isBlockingActivity: blocksSilentObserver,
     liveSessionState,
     liveVideoStream,
@@ -458,13 +468,23 @@ const App: React.FC = () => {
     onTurnTranscriptUpdate: handleLiveTurnTranscriptUpdate,
     onTurnComplete: handleSilentObserverTurnComplete,
   });
+  const cancelAgentSpeech = useAgentTaskSpeech({
+    enabled: hasAiAccess && !showApiKeyGate && isSpeechSynthesisSupported,
+    speakMessage, stopSpeaking: stopSpeechOutput, hasPendingQueueItems,
+    pauseLiveForSpeech, pauseObserverForSpeech,
+  });
+  cancelAgentSpeechRef.current = cancelAgentSpeech;
   stopSilentObserverRef.current = stopSilentObserver;
   resetSilentObserverRef.current = resetSilentObserver;
 
+  useNativeSessionLifecycle({ cancelReengagement, stopSpeaking, stopListening,
+    stopSilentObserver, handleStopLiveSession, clearVideo: () => setLiveVideoStream(null) });
+
   const handleStartLiveSessionWithObserverStop = useCallback(async () => {
+    await stopSpeaking();
     await stopSilentObserver();
     await handleStartLiveSession();
-  }, [handleStartLiveSession, stopSilentObserver]);
+  }, [handleStartLiveSession, stopSilentObserver, stopSpeaking]);
 
   useLanguageSessionReset({
     selectedLanguagePairId: settings.selectedLanguagePairId, settingsRef,

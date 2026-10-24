@@ -89,7 +89,10 @@ export const runHeadlessLiveTurn = async (
   const pair = resolveLanguagePair({
     pairId: input.languagePairId || client.state.settings.selectedLanguagePairId,
   });
-  const history = client.state.chats[pair.id] || [];
+  client.state.settings.selectedLanguagePairId = pair.id;
+  const originalHistory = client.state.chats[pair.id];
+  const history = originalHistory || [];
+  const originalAccessMode = client.accessMode;
   const visual = input.includeVisual ? await createSyntheticVisualFrame(input.visualLabel) : null;
   const latestAssistant = history.slice().reverse().find(message => message.role === 'assistant');
   const basePrompt = input.mode === 'stt'
@@ -109,6 +112,18 @@ export const runHeadlessLiveTurn = async (
   if (input.instructionSuffix?.trim()) {
     systemInstruction += `\n\n${input.instructionSuffix.trim()}`;
   }
+  const roomContext = input.mode === 'stt' ? null : await client.roomAgent?.prepareLive({
+    model: getGeminiModels().text.default, history: [], nativeLanguageCode: pair.nativeLanguageCode, systemInstruction,
+  }, pair.id);
+  if (roomContext) systemInstruction = roomContext.systemInstruction;
+  const requireCurrentSource = async () => {
+    const current = () => client.state.settings.selectedLanguagePairId === pair.id
+      && client.state.chats[pair.id] === originalHistory && client.accessMode === originalAccessMode;
+    if (!current() || (roomContext && !await roomContext.current()) || !current()) {
+      throw new Error('The Live source conversation, account or room changed. Its result cannot start a task or replace the current chat.');
+    }
+  };
+  await requireCurrentSource();
   const contextEvidence = {
     historyMessageCount: history.length,
     systemInstructionSha256: createHash('sha256').update(systemInstruction).digest('hex'),
@@ -139,6 +154,7 @@ export const runHeadlessLiveTurn = async (
     playModelAudioRealtime: input.pace === true,
     timeoutMs: input.timeoutMs,
     includeModelAudio: true,
+    captureInputMedia: !!roomContext,
     videoFrames: visual ? [{ dataBase64: visual.dataBase64, mimeType: visual.mimeType }] : undefined,
   }, { runtime: client.runtime, operationId });
   const transcriptEvidence = requireTranscriptEvidence(
@@ -170,6 +186,7 @@ export const runHeadlessLiveTurn = async (
   if (input.mode === 'stt') {
     return {
       ...result,
+      liveInputMedia: undefined,
       contextEvidence,
       mode: input.mode,
       accessMode: client.accessMode,
@@ -183,6 +200,7 @@ export const runHeadlessLiveTurn = async (
     };
   }
 
+  await requireCurrentSource();
   const userMessage: ChatMessage = {
     id: client.runtime.ids.create('message-user'),
     role: 'user',
@@ -215,6 +233,7 @@ export const runHeadlessLiveTurn = async (
     id: client.runtime.ids.create('message-assistant'),
     role: 'assistant',
     timestamp: client.runtime.clock.now(),
+    llmRawResponse: result.outputTranscript || result.transcript,
     rawAssistantResponse: result.outputTranscript || result.transcript,
     translations: parsed.translations.length ? parsed.translations : undefined,
     text: parsed.translations.length ? undefined : (parsed.visibleText || result.outputTranscript || result.transcript),
@@ -229,11 +248,14 @@ export const runHeadlessLiveTurn = async (
       }],
     } : {}),
   };
+  await requireCurrentSource();
   history.push(userMessage, assistantMessage);
   client.state.chats[pair.id] = history;
   client.state.settings.selectedLanguagePairId = pair.id;
   await client.save();
 
+  await roomContext?.capture({ sourceUserId: userMessage.id, sourceAssistantId: assistantMessage.id, conversationId: pair.id },
+    userMessage.text || '', assistantMessage.llmRawResponse || '', result.liveInputMedia);
   const aftersteps = input.runSuggestionAftersteps === false
     ? null
     : await runHeadlessSuggestionAftersteps(client, {
@@ -245,6 +267,7 @@ export const runHeadlessLiveTurn = async (
   const compactAssistantMessage = summarizeLiveMessageForHeadlessOutput(assistantMessage);
   return {
     ...result,
+    liveInputMedia: undefined,
     contextEvidence,
     mode: input.mode,
     accessMode: client.accessMode,

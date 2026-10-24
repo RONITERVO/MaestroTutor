@@ -7,6 +7,7 @@ export type CoreJourney =
   | 'billing'
   | 'report'
   | 'persistence'
+  | 'agent'
   | 'chat'
   | 'suggestions'
   | 'media'

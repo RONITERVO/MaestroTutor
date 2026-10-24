@@ -1,0 +1,564 @@
+{
+  "boundary": "Full native shared transport and editable terrain readiness; actual collisions are tested in PlayMode. No provider or headset proof.",
+  "nativeRun": "cf909f0e69444ce1b0857987c294b679",
+  "before": {
+    "stateId": "0c8e46f4c55443e7976f02067bc1f644",
+    "realCollisions": true,
+    "scanReady": true,
+    "authoredReady": true,
+    "ready": true,
+    "scope": "alignedPhysicalRoom"
+  },
+  "virtual": {
+    "stateId": "a64686da8c2a4c8e8dc9bc4209f9ab32",
+    "realCollisions": false,
+    "scanReady": true,
+    "authoredReady": true,
+    "ready": true,
+    "scope": "acceptedGroundColumns"
+  },
+  "restored": {
+    "stateId": "61e70f23dcca409d95fabda841d51bc5",
+    "realCollisions": true,
+    "scanReady": true,
+    "authoredReady": true,
+    "ready": true,
+    "scope": "alignedPhysicalRoom"
+  },
+  "disabled": {
+    "selected": {
+      "id": "a5d0996406ee435fb126fe32b82164c1",
+      "capability": "physics.environment.set",
+      "version": 1,
+      "resources": [],
+      "phase": "completed",
+      "status": "Action completed",
+      "output": {
+        "stateId": "a64686da8c2a4c8e8dc9bc4209f9ab32",
+        "realCollisions": false,
+        "scanReady": true,
+        "authoredReady": true,
+        "ready": true,
+        "scope": "acceptedGroundColumns"
+      },
+      "call": {
+        "id": "physics.environment.set",
+        "version": 1,
+        "arguments": {
+          "realCollisions": false,
+          "stateId": "0c8e46f4c55443e7976f02067bc1f644"
+        }
+      }
+    },
+    "running": [],
+    "outcomes": [
+      {
+        "id": "09e25819d4cd45fab491b6dc551cb794",
+        "capability": "object.create",
+        "version": 1,
+        "resources": [],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "objectId": "da1811cf3bd947d2bc29ceceab27b989"
+        }
+      },
+      {
+        "id": "7a2cde43579f4a369ee121ab621900de",
+        "capability": "room.view.capture",
+        "version": 1,
+        "resources": [],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "captureId": "08a99fab7f8049cb8658881caff3ff01",
+          "sha256": "852cbebf2a4ec97b57803a674051a85b1ab82710377fc801e2406c67f608b993",
+          "mimeType": "image/jpeg",
+          "width": 512,
+          "height": 384,
+          "capturedAt": "2026-10-07T14:05:31.165069Z",
+          "sceneRevision": 3,
+          "verticalFov": 60,
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        }
+      },
+      {
+        "id": "c4c67ab820a044519b28ffe6178036c0",
+        "capability": "object.create",
+        "version": 1,
+        "resources": [],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "objectId": "b6a5f3ca5870455c9428f4c4fbb6fe7a"
+        }
+      },
+      {
+        "id": "2ac35e657049464ea90f25f42fbba02c",
+        "capability": "object.recipe.edit",
+        "version": 1,
+        "resources": [
+          "b6a5f3ca5870455c9428f4c4fbb6fe7a"
+        ],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "target": "b6a5f3ca5870455c9428f4c4fbb6fe7a",
+          "revision": 10,
+          "parts": 1,
+          "tracks": 0,
+          "duration": 2,
+          "loop": false,
+          "playing": false,
+          "autoplay": false
+        }
+      },
+      {
+        "id": "171ccb7a420e469fb2de299d53557bfc",
+        "capability": "object.collision.edit",
+        "version": 1,
+        "resources": [
+          "b6a5f3ca5870455c9428f4c4fbb6fe7a"
+        ],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "target": "b6a5f3ca5870455c9428f4c4fbb6fe7a",
+          "revision": 12,
+          "shapes": 2,
+          "pieces": 13,
+          "customActive": true,
+          "temporary": false
+        }
+      },
+      {
+        "id": "e3eeea36501148ea940228d461b4a3ee",
+        "capability": "object.create",
+        "version": 1,
+        "resources": [],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "objectId": "a18f3b98d71c4515abd2057f74046829"
+        }
+      },
+      {
+        "id": "8ec0c09d6af248c082c6adc7df7e211d",
+        "capability": "object.recipe.edit",
+        "version": 1,
+        "resources": [
+          "a18f3b98d71c4515abd2057f74046829"
+        ],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "target": "a18f3b98d71c4515abd2057f74046829",
+          "revision": 15,
+          "parts": 1,
+          "tracks": 0,
+          "duration": 2,
+          "loop": false,
+          "playing": false,
+          "autoplay": false
+        }
+      },
+      {
+        "id": "d7a6634f3d0d469ca0c260b6e5fbe1db",
+        "capability": "object.create",
+        "version": 1,
+        "resources": [],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "objectId": "d544f5f2c1a7493796eb742b5107f385"
+        }
+      },
+      {
+        "id": "a345df2faba3422186a3f207afeb9bff",
+        "capability": "object.recipe.edit",
+        "version": 1,
+        "resources": [
+          "d544f5f2c1a7493796eb742b5107f385"
+        ],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "target": "d544f5f2c1a7493796eb742b5107f385",
+          "revision": 18,
+          "parts": 1,
+          "tracks": 0,
+          "duration": 2,
+          "loop": false,
+          "playing": false,
+          "autoplay": false
+        }
+      },
+      {
+        "id": "7624181498ad4da791c9f0c65bb3b464",
+        "capability": "object.create",
+        "version": 1,
+        "resources": [],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "objectId": "153b67648b1a407ba62582630456baa0"
+        }
+      },
+      {
+        "id": "c3f6d214718342d1a5aecd35e6820c30",
+        "capability": "object.recipe.edit",
+        "version": 1,
+        "resources": [
+          "153b67648b1a407ba62582630456baa0"
+        ],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "target": "153b67648b1a407ba62582630456baa0",
+          "revision": 21,
+          "parts": 1,
+          "tracks": 0,
+          "duration": 2,
+          "loop": false,
+          "playing": false,
+          "autoplay": false
+        }
+      },
+      {
+        "id": "ff55c8ca1e9948acb3f261a4d0b94422",
+        "capability": "object.create",
+        "version": 1,
+        "resources": [],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "objectId": "1656419f662f4b129f87497cdb7a47ad"
+        }
+      },
+      {
+        "id": "29778f1cbde14b38acb8d2211cc2227d",
+        "capability": "object.create",
+        "version": 1,
+        "resources": [],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "objectId": "034fcbfa24244d219cf48cbfeee658b0"
+        }
+      },
+      {
+        "id": "a5d0996406ee435fb126fe32b82164c1",
+        "capability": "physics.environment.set",
+        "version": 1,
+        "resources": [],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "stateId": "a64686da8c2a4c8e8dc9bc4209f9ab32",
+          "realCollisions": false,
+          "scanReady": true,
+          "authoredReady": true,
+          "ready": true,
+          "scope": "acceptedGroundColumns"
+        }
+      }
+    ],
+    "nextRunId": "d235a8789f154d99be17bf2fe2bde948",
+    "storageError": null,
+    "recovery": null,
+    "workspace": {
+      "selected": null,
+      "running": [],
+      "outcomes": [],
+      "nextRunId": "5854663229414016848911fea8ddb5a2",
+      "storageError": null,
+      "recovery": null
+    }
+  },
+  "enabled": {
+    "selected": {
+      "id": "d235a8789f154d99be17bf2fe2bde948",
+      "capability": "physics.environment.set",
+      "version": 1,
+      "resources": [],
+      "phase": "completed",
+      "status": "Action completed",
+      "output": {
+        "stateId": "61e70f23dcca409d95fabda841d51bc5",
+        "realCollisions": true,
+        "scanReady": true,
+        "authoredReady": true,
+        "ready": true,
+        "scope": "alignedPhysicalRoom"
+      },
+      "call": {
+        "id": "physics.environment.set",
+        "version": 1,
+        "arguments": {
+          "realCollisions": true,
+          "stateId": "a64686da8c2a4c8e8dc9bc4209f9ab32"
+        }
+      }
+    },
+    "running": [],
+    "outcomes": [
+      {
+        "id": "09e25819d4cd45fab491b6dc551cb794",
+        "capability": "object.create",
+        "version": 1,
+        "resources": [],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "objectId": "da1811cf3bd947d2bc29ceceab27b989"
+        }
+      },
+      {
+        "id": "7a2cde43579f4a369ee121ab621900de",
+        "capability": "room.view.capture",
+        "version": 1,
+        "resources": [],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "captureId": "08a99fab7f8049cb8658881caff3ff01",
+          "sha256": "852cbebf2a4ec97b57803a674051a85b1ab82710377fc801e2406c67f608b993",
+          "mimeType": "image/jpeg",
+          "width": 512,
+          "height": 384,
+          "capturedAt": "2026-10-07T14:05:31.165069Z",
+          "sceneRevision": 3,
+          "verticalFov": 60,
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        }
+      },
+      {
+        "id": "c4c67ab820a044519b28ffe6178036c0",
+        "capability": "object.create",
+        "version": 1,
+        "resources": [],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "objectId": "b6a5f3ca5870455c9428f4c4fbb6fe7a"
+        }
+      },
+      {
+        "id": "2ac35e657049464ea90f25f42fbba02c",
+        "capability": "object.recipe.edit",
+        "version": 1,
+        "resources": [
+          "b6a5f3ca5870455c9428f4c4fbb6fe7a"
+        ],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "target": "b6a5f3ca5870455c9428f4c4fbb6fe7a",
+          "revision": 10,
+          "parts": 1,
+          "tracks": 0,
+          "duration": 2,
+          "loop": false,
+          "playing": false,
+          "autoplay": false
+        }
+      },
+      {
+        "id": "171ccb7a420e469fb2de299d53557bfc",
+        "capability": "object.collision.edit",
+        "version": 1,
+        "resources": [
+          "b6a5f3ca5870455c9428f4c4fbb6fe7a"
+        ],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "target": "b6a5f3ca5870455c9428f4c4fbb6fe7a",
+          "revision": 12,
+          "shapes": 2,
+          "pieces": 13,
+          "customActive": true,
+          "temporary": false
+        }
+      },
+      {
+        "id": "e3eeea36501148ea940228d461b4a3ee",
+        "capability": "object.create",
+        "version": 1,
+        "resources": [],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "objectId": "a18f3b98d71c4515abd2057f74046829"
+        }
+      },
+      {
+        "id": "8ec0c09d6af248c082c6adc7df7e211d",
+        "capability": "object.recipe.edit",
+        "version": 1,
+        "resources": [
+          "a18f3b98d71c4515abd2057f74046829"
+        ],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "target": "a18f3b98d71c4515abd2057f74046829",
+          "revision": 15,
+          "parts": 1,
+          "tracks": 0,
+          "duration": 2,
+          "loop": false,
+          "playing": false,
+          "autoplay": false
+        }
+      },
+      {
+        "id": "d7a6634f3d0d469ca0c260b6e5fbe1db",
+        "capability": "object.create",
+        "version": 1,
+        "resources": [],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "objectId": "d544f5f2c1a7493796eb742b5107f385"
+        }
+      },
+      {
+        "id": "a345df2faba3422186a3f207afeb9bff",
+        "capability": "object.recipe.edit",
+        "version": 1,
+        "resources": [
+          "d544f5f2c1a7493796eb742b5107f385"
+        ],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "target": "d544f5f2c1a7493796eb742b5107f385",
+          "revision": 18,
+          "parts": 1,
+          "tracks": 0,
+          "duration": 2,
+          "loop": false,
+          "playing": false,
+          "autoplay": false
+        }
+      },
+      {
+        "id": "7624181498ad4da791c9f0c65bb3b464",
+        "capability": "object.create",
+        "version": 1,
+        "resources": [],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "objectId": "153b67648b1a407ba62582630456baa0"
+        }
+      },
+      {
+        "id": "c3f6d214718342d1a5aecd35e6820c30",
+        "capability": "object.recipe.edit",
+        "version": 1,
+        "resources": [
+          "153b67648b1a407ba62582630456baa0"
+        ],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "target": "153b67648b1a407ba62582630456baa0",
+          "revision": 21,
+          "parts": 1,
+          "tracks": 0,
+          "duration": 2,
+          "loop": false,
+          "playing": false,
+          "autoplay": false
+        }
+      },
+      {
+        "id": "ff55c8ca1e9948acb3f261a4d0b94422",
+        "capability": "object.create",
+        "version": 1,
+        "resources": [],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "objectId": "1656419f662f4b129f87497cdb7a47ad"
+        }
+      },
+      {
+        "id": "29778f1cbde14b38acb8d2211cc2227d",
+        "capability": "object.create",
+        "version": 1,
+        "resources": [],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "objectId": "034fcbfa24244d219cf48cbfeee658b0"
+        }
+      },
+      {
+        "id": "a5d0996406ee435fb126fe32b82164c1",
+        "capability": "physics.environment.set",
+        "version": 1,
+        "resources": [],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "stateId": "a64686da8c2a4c8e8dc9bc4209f9ab32",
+          "realCollisions": false,
+          "scanReady": true,
+          "authoredReady": true,
+          "ready": true,
+          "scope": "acceptedGroundColumns"
+        }
+      },
+      {
+        "id": "d235a8789f154d99be17bf2fe2bde948",
+        "capability": "physics.environment.set",
+        "version": 1,
+        "resources": [],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "stateId": "61e70f23dcca409d95fabda841d51bc5",
+          "realCollisions": true,
+          "scanReady": true,
+          "authoredReady": true,
+          "ready": true,
+          "scope": "alignedPhysicalRoom"
+        }
+      }
+    ],
+    "nextRunId": "1f70e6e8110445ba9c678f006b42c4e5",
+    "storageError": null,
+    "recovery": null,
+    "workspace": {
+      "selected": null,
+      "running": [],
+      "outcomes": [],
+      "nextRunId": "5854663229414016848911fea8ddb5a2",
+      "storageError": null,
+      "recovery": null
+    }
+  }
+}

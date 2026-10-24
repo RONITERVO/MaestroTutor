@@ -1,0 +1,167 @@
+{
+  "format": "maestro-creation-template",
+  "version": 1,
+  "id": "material-scoop",
+  "name": "Material scoop",
+  "description": "Lift one measured scoop of snow; invert and touch to deposit. Editable tool, material store and shape.",
+  "tags": [
+    "snow",
+    "tool",
+    "scoop",
+    "material"
+  ],
+  "author": "Roni Tervo / Maestro",
+  "license": "Apache-2.0",
+  "definition": {
+    "version": 1,
+    "recipe": {
+      "version": 1,
+      "parts": [
+        {
+          "id": "Handle",
+          "shape": "cylinder",
+          "parent": "",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": -0.095
+          },
+          "size": {
+            "x": 0.022,
+            "y": 0.21,
+            "z": 0.022
+          },
+          "rotation": {
+            "x": 0.70710677,
+            "y": 0,
+            "z": 0,
+            "w": 0.70710677
+          },
+          "color": {
+            "r": 0.16,
+            "g": 0.55,
+            "b": 0.53,
+            "a": 1
+          }
+        },
+        {
+          "id": "Blade",
+          "shape": "box",
+          "parent": "",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0.09
+          },
+          "size": {
+            "x": 0.14,
+            "y": 0.012,
+            "z": 0.16
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "color": {
+            "r": 0.72,
+            "g": 0.76,
+            "b": 0.8,
+            "a": 1
+          }
+        }
+      ],
+      "tracks": [],
+      "duration": 1,
+      "loop": false,
+      "playing": false
+    },
+    "collision": {
+      "version": 1,
+      "shapes": [
+        {
+          "id": "Handle",
+          "shape": "box",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": -0.095
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "size": {
+            "x": 0.03,
+            "y": 0.03,
+            "z": 0.21
+          }
+        },
+        {
+          "id": "Blade",
+          "shape": "box",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0.09
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "size": {
+            "x": 0.14,
+            "y": 0.012,
+            "z": 0.16
+          }
+        }
+      ]
+    },
+    "physics": {
+      "mode": "solid",
+      "shape": "automatic",
+      "mass": 0.12
+    },
+    "sculptTips": [
+      {
+        "version": 2,
+        "part": "",
+        "position": {
+          "x": 0,
+          "y": 0.007,
+          "z": 0.09
+        },
+        "rotation": {
+          "x": -0.70710677,
+          "y": 0,
+          "z": 0,
+          "w": 0.70710677
+        },
+        "mode": "scoop",
+        "radius": 0.08,
+        "amountLitres": 0.25,
+        "enabled": true,
+        "height": 0
+      }
+    ],
+    "materialStores": [
+      {
+        "version": 1,
+        "capacityLitres": 0.25,
+        "amountLitres": 0,
+        "material": "Snow",
+        "color": {
+          "r": 0.94,
+          "g": 0.97,
+          "b": 1,
+          "a": 1
+        }
+      }
+    ]
+  }
+}

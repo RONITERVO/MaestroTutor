@@ -1,0 +1,43 @@
+{
+  "budget": {
+    "reservations": 1,
+    "units": 2579,
+    "reservationLimit": 64,
+    "unitLimit": 524288,
+    "streamSegments": 32,
+    "queryHits": 64,
+    "scoopSamples": 5,
+    "rainSamples": 5
+  },
+  "current": [
+    {
+      "reservationId": "c46013942ad64d8dbfd76a80961dbb73",
+      "worldId": "e1b7fe529d6f481ba745ad20fa3a7158",
+      "regionId": "af7bf3224cc348188c0feb49959a8778",
+      "vessels": 1,
+      "units": 2579,
+      "current": true
+    }
+  ],
+  "stale": [
+    {
+      "reservationId": "c46013942ad64d8dbfd76a80961dbb73",
+      "worldId": "e1b7fe529d6f481ba745ad20fa3a7158",
+      "regionId": "af7bf3224cc348188c0feb49959a8778",
+      "vessels": 2,
+      "units": 2579,
+      "current": false
+    }
+  ],
+  "resized": [
+    {
+      "reservationId": "c46013942ad64d8dbfd76a80961dbb73",
+      "worldId": "e1b7fe529d6f481ba745ad20fa3a7158",
+      "regionId": "af7bf3224cc348188c0feb49959a8778",
+      "vessels": 2,
+      "units": 5326,
+      "current": false
+    }
+  ],
+  "released": []
+}

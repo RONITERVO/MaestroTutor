@@ -1,7 +1,8 @@
 // Copyright 2025 Roni Tervo
 //
 // SPDX-License-Identifier: Apache-2.0
-/**
+
+import { LIVE_ROOM_MAX_CALLS } from '../../shared/liveGatewayProtocol';/**
  * Backend pricing.
  *
  * Deliberately thin. Every rate, every model match and the whole usage-to-USD
@@ -79,16 +80,16 @@ export const calculateManagedLiveWindowCredits = (durationSeconds: number): numb
   usdToCredits(calculateManagedLiveWindowUsd(durationSeconds))
 );
 
-export const getManagedLiveGatewayTokenBudget = (durationSeconds: number) => (
-  getLiveGatewayWindowTokenBudget(durationSeconds)
+export const getManagedLiveGatewayTokenBudget = (durationSeconds: number, roomTools = false) => (
+  getLiveGatewayWindowTokenBudget(durationSeconds, undefined, roomTools)
 );
 
-export const calculateManagedLiveGatewayWindowUsd = (durationSeconds: number): number => (
-  calculateLiveGatewayWindowUsd(durationSeconds)
+export const calculateManagedLiveGatewayWindowUsd = (durationSeconds: number, roomTools = false): number => (
+  calculateLiveGatewayWindowUsd(durationSeconds, undefined, roomTools)
 );
 
-export const calculateManagedLiveGatewayWindowCredits = (durationSeconds: number): number => (
-  usdToCredits(calculateManagedLiveGatewayWindowUsd(durationSeconds))
+export const calculateManagedLiveGatewayWindowCredits = (durationSeconds: number, roomTools = false): number => (
+  usdToCredits(calculateManagedLiveGatewayWindowUsd(durationSeconds, roomTools))
 );
 
 /**
@@ -96,8 +97,8 @@ export const calculateManagedLiveGatewayWindowCredits = (durationSeconds: number
  * the full largest enabled model context/output, independently of socket time.
  * This is operator exposure, not the customer's refundable window reservation.
  */
-export const calculateManagedLiveSpendAdmissionUsd = (): number => roundUsd(
-  ((131_072 * 3 + 65_536 * 12) / 1_000_000) * 1.1,
+export const calculateManagedLiveSpendAdmissionUsd = (roomTools = false): number => roundUsd(
+  ((131_072 * 3 + 65_536 * 12) / 1_000_000) * 1.1 * (roomTools ? LIVE_ROOM_MAX_CALLS + 1 : 1),
 );
 
 export const estimateReservationUsd = (params: {

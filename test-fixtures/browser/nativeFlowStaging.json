@@ -1,0 +1,143 @@
+{
+  "loading": {
+    "discovery": {
+      "step": 5382,
+      "reservations": 1,
+      "executions": 1,
+      "units": 299,
+      "unitLimit": 524288,
+      "objectLimit": 66
+    },
+    "execution": {
+      "step": 5382,
+      "executions": 0,
+      "executionLimit": 32,
+      "queued": 1,
+      "queueLimit": 64,
+      "units": 0,
+      "unitLimit": 524288
+    },
+    "pending": true,
+    "captures": 1,
+    "source": {
+      "sessionId": "71a45edf18524a9db890b63b8f0a64d6",
+      "phase": "waiting",
+      "contents": {
+        "amountMl": 400.0,
+        "savedAmountMl": 400.0,
+        "capacityMl": 500.0,
+        "transferredMl": 0.0,
+        "spilledMl": 0.0
+      },
+      "temporary": false,
+      "error": "Preparing liquid flow ground, obstacles and water"
+    },
+    "receiver": {
+      "sessionId": "71a45edf18524a9db890b63b8f0a64d6",
+      "phase": "waiting",
+      "contents": {
+        "amountMl": 0.0,
+        "savedAmountMl": 0.0,
+        "capacityMl": 500.0,
+        "transferredMl": 0.0,
+        "spilledMl": 0.0
+      },
+      "temporary": false,
+      "error": "Preparing liquid flow ground, obstacles and water"
+    }
+  },
+  "preparedWaiting": {
+    "discovery": {
+      "step": 5383,
+      "reservations": 1,
+      "executions": 1,
+      "units": 299,
+      "unitLimit": 524288,
+      "objectLimit": 66
+    },
+    "execution": {
+      "step": 5383,
+      "executions": 0,
+      "executionLimit": 32,
+      "queued": 1,
+      "queueLimit": 64,
+      "units": 0,
+      "unitLimit": 524288
+    },
+    "pending": false,
+    "captures": 1,
+    "source": {
+      "sessionId": "71a45edf18524a9db890b63b8f0a64d6",
+      "phase": "waiting",
+      "contents": {
+        "amountMl": 400.0,
+        "savedAmountMl": 400.0,
+        "capacityMl": 500.0,
+        "transferredMl": 0.0,
+        "spilledMl": 0.0
+      },
+      "temporary": false,
+      "error": "Liquid flow is waiting for work capacity. Ready groups take turns automatically; saved quantities are preserved."
+    },
+    "receiver": {
+      "sessionId": "71a45edf18524a9db890b63b8f0a64d6",
+      "phase": "waiting",
+      "contents": {
+        "amountMl": 0.0,
+        "savedAmountMl": 0.0,
+        "capacityMl": 500.0,
+        "transferredMl": 0.0,
+        "spilledMl": 0.0
+      },
+      "temporary": false,
+      "error": "Liquid flow is waiting for work capacity. Ready groups take turns automatically; saved quantities are preserved."
+    }
+  },
+  "flowing": {
+    "discovery": {
+      "step": 5383,
+      "reservations": 1,
+      "executions": 1,
+      "units": 299,
+      "unitLimit": 524288,
+      "objectLimit": 66
+    },
+    "execution": {
+      "step": 5383,
+      "executions": 1,
+      "executionLimit": 32,
+      "queued": 0,
+      "queueLimit": 64,
+      "units": 5326,
+      "unitLimit": 524288
+    },
+    "pending": false,
+    "captures": 1,
+    "source": {
+      "sessionId": "d354ff3854554b5bad1e4120b0f65d5c",
+      "phase": "flowing",
+      "contents": {
+        "amountMl": 383.9616933816729,
+        "savedAmountMl": 400.0,
+        "capacityMl": 500.0,
+        "transferredMl": 16.038306618327088,
+        "spilledMl": 0.0
+      },
+      "temporary": false,
+      "error": ""
+    },
+    "receiver": {
+      "sessionId": "d354ff3854554b5bad1e4120b0f65d5c",
+      "phase": "flowing",
+      "contents": {
+        "amountMl": 16.038306618327088,
+        "savedAmountMl": 0.0,
+        "capacityMl": 500.0,
+        "transferredMl": 0.0,
+        "spilledMl": 0.0
+      },
+      "temporary": false,
+      "error": ""
+    }
+  }
+}

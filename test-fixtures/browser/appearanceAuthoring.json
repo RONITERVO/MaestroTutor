@@ -1,0 +1,135 @@
+{
+  "call": {
+    "id": "object.appearance.bind",
+    "version": 1,
+    "arguments": {
+      "operation": "assign",
+      "target": "3a4087dde669477a8ae8e0eafd1dd3ec",
+      "revision": 9,
+      "appearanceRevision": 10,
+      "binding": {
+        "version": 1,
+        "appearanceId": "e9a21d57a3e042b39f5d883f52a4d2eb",
+        "kind": "root",
+        "partId": "",
+        "modelHash": "",
+        "tint": "",
+        "materialIndex": -1
+      }
+    }
+  },
+  "receipt": {
+    "id": "9a63300802f3482bae4ab0ef45959ec1",
+    "capability": "object.appearance.bind",
+    "version": 1,
+    "resources": [
+      "3a4087dde669477a8ae8e0eafd1dd3ec"
+    ],
+    "phase": "completed",
+    "status": "Action completed",
+    "output": {
+      "target": "3a4087dde669477a8ae8e0eafd1dd3ec",
+      "revision": 11,
+      "appearanceId": "e9a21d57a3e042b39f5d883f52a4d2eb",
+      "appearanceRevision": 10,
+      "temporary": false
+    },
+    "call": {
+      "id": "object.appearance.bind",
+      "version": 1,
+      "arguments": {
+        "operation": "assign",
+        "target": "3a4087dde669477a8ae8e0eafd1dd3ec",
+        "revision": 9,
+        "appearanceRevision": 10,
+        "binding": {
+          "version": 1,
+          "appearanceId": "e9a21d57a3e042b39f5d883f52a4d2eb",
+          "kind": "root",
+          "partId": "",
+          "modelHash": "",
+          "tint": "",
+          "materialIndex": -1
+        }
+      }
+    }
+  },
+  "definition": {
+    "id": "e9a21d57a3e042b39f5d883f52a4d2eb",
+    "revision": 10,
+    "source": {
+      "tint": "#DDBBAA",
+      "patternMode": "inherit",
+      "imageHash": "",
+      "pattern": {
+        "kind": "solid",
+        "plane": "uv",
+        "secondary": "#FFFFFF",
+        "columns": 1,
+        "rows": 1
+      },
+      "tiling": {
+        "x": 1.0,
+        "y": 1.0
+      },
+      "offset": {
+        "x": 0.0,
+        "y": 0.0
+      }
+    },
+    "surface": {
+      "renderMode": "blend",
+      "opacity": 0.40000000596046448,
+      "cutoff": 0.0,
+      "sidedness": "inherit",
+      "grain": -1.0,
+      "shading": -1.0
+    }
+  },
+  "bindings": {
+    "target": "3a4087dde669477a8ae8e0eafd1dd3ec",
+    "revision": 11,
+    "offset": 0,
+    "total": 1,
+    "pageSize": 2,
+    "bindings": [
+      {
+        "appearanceId": "e9a21d57a3e042b39f5d883f52a4d2eb",
+        "appearanceRevision": 10,
+        "kind": "root",
+        "partId": "",
+        "modelHash": "",
+        "materialIndex": -1,
+        "tint": "",
+        "state": "active"
+      }
+    ],
+    "temporary": false
+  },
+  "targets": {
+    "target": "3a4087dde669477a8ae8e0eafd1dd3ec",
+    "revision": 11,
+    "offset": 0,
+    "total": 1,
+    "pageSize": 3,
+    "targets": [
+      {
+        "kind": "root",
+        "partId": "",
+        "modelHash": "",
+        "materialIndex": -1,
+        "state": "active"
+      }
+    ]
+  },
+  "members": {
+    "id": "e9a21d57a3e042b39f5d883f52a4d2eb",
+    "revision": 10,
+    "offset": 0,
+    "total": 1,
+    "pageSize": 16,
+    "members": [
+      "3a4087dde669477a8ae8e0eafd1dd3ec"
+    ]
+  }
+}

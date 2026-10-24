@@ -2,6 +2,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { isRoomLiveTools } from '../../shared/roomLiveProtocol';
 import { createHttpError } from './http';
 import { DEFAULT_GEMINI_PRICING, resolvePricingRule } from '../../shared/pricing/registry';
 import { requireLiveOpenReason, type LiveOpenReason } from '../../shared/liveOpenReason';
@@ -196,6 +197,7 @@ export const buildManagedPromptTokenCountInputs = (
 /** Live tokens are scoped to this validated config as well as their model. */
 export const requireSafeManagedLiveConfig = (
   config: Record<string, unknown> | undefined,
+  options: { allowRoomTools?: boolean } = {},
 ): Record<string, unknown> | undefined => {
   if (!config) return applyLiveCostControls(undefined);
   if (typeof config !== 'object' || Array.isArray(config)) {
@@ -205,7 +207,8 @@ export const requireSafeManagedLiveConfig = (
     throw createHttpError(400, 'Managed Live config exceeds the 32 KiB safety limit.');
   }
   for (const key of Object.keys(config)) {
-    if (FORBIDDEN_MANAGED_CONFIG_KEYS.has(key) || key === 'tools' || key === 'toolConfig') {
+    if (FORBIDDEN_MANAGED_CONFIG_KEYS.has(key) || key === 'toolConfig'
+      || (key === 'tools' && (!options.allowRoomTools || !isRoomLiveTools(config.tools)))) {
       throw createHttpError(400, `Managed Live config does not allow "${key}".`);
     }
   }

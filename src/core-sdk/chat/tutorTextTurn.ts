@@ -1,3 +1,4 @@
+import type {InlineImage} from '../../../shared/inlineImages';
 // Copyright 2025 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 
@@ -10,13 +11,18 @@ import { pickGeminiClientSource, type GeminiClientSource } from '../gemini/clien
 import { createCoreRuntime, type CoreRuntime } from '../runtime';
 import { formatStreamingTutorDraftText, parseStrictTutorResponseText } from './tutorResponse';
 
+import type { ChatFilePart } from '../../core/types';
+import type { LiveInputMedia } from '../media/liveInputContext';
+
 export interface TutorTextTurnInput {
   model: string;
   prompt: string;
   history: unknown[];
   nativeLanguageCode: string;
   systemInstruction: string;
-  currentFileParts?: Array<{ fileUri: string; mimeType: string }>;
+  currentFileParts?: ChatFilePart[];
+  liveInputMedia?: LiveInputMedia;
+  currentImages?:InlineImage[];
   useGoogleSearch?: boolean;
   configOverrides?: unknown;
   timeoutMs?: number;
@@ -25,6 +31,7 @@ export interface TutorTextTurnInput {
 export type TutorTextTurnOptions = GeminiClientSource & {
   runtime?: CoreRuntime;
   operationId?: string;
+  signal?: AbortSignal;
   lifecycleHooks?: GeminiRequestLifecycleHooks;
   onGoogleSearchUnavailable?: () => void;
 }
@@ -64,9 +71,12 @@ export const runTutorTextTurn = async (
       {
         systemInstruction: input.systemInstruction,
         currentFileParts: input.currentFileParts,
+        currentImages:input.currentImages,
+        ...(input.liveInputMedia ? { liveInputMedia: input.liveInputMedia } : {}),
         useGoogleSearch: input.useGoogleSearch,
         configOverrides: input.configOverrides,
         timeoutMs: input.timeoutMs,
+        ...(options.signal ? { signal: options.signal } : {}),
         ...pickGeminiClientSource(options),
         onGoogleSearchUnavailable: options.onGoogleSearchUnavailable,
         lifecycleHooks: {
