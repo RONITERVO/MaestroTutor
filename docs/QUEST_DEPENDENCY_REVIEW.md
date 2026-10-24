@@ -97,3 +97,41 @@ The Functions shipped-dependency audit has no high/critical findings; six
 moderate entries through the existing `uuid` dependency remain reported. The
 Live gateway shipped audit has no findings. No audit exception was added, no
 provider request or deployment was made, and no installed Quest package changed.
+
+
+## Functions request-parser and SDK dependency patches — 2026-10-24
+
+Release-gate run `40048263190` on `3ecab791` failed its shipped Functions audit
+on two high-severity advisories published/reviewed since the preceding green run.
+The Functions lockfile now resolves body-parser **1.20.9 / 2.4.0** and Zod
+**4.6.7**, covering the upstream
+[compressed-request parser failure](https://github.com/advisories/GHSA-27r3-jxmh-p828)
+and [oversized-collection validation issue](https://github.com/advisories/GHSA-mrhx-c7xc-m3w5).
+No new audit exception or forced major-version override was introduced.
+
+Updates stay within the existing manifest ranges. Firebase Admin moves from
+14.3.0 to [14.5.0](https://github.com/firebase/firebase-admin-node/releases/tag/v14.5.0),
+including its supported Firestore 9.4.0 and Storage 8.4.0 dependency trees.
+Firebase Tools moves to 15.34.1. The manifest is unchanged. The final production
+Functions audit reports **zero findings**. Its development tooling retains five
+moderate findings through the Pub/Sub/OpenTelemetry and gaxios/uuid chains;
+the reported automatic remedy requires downgrading Firebase Tools to a different
+major version, which this update deliberately does not do. The Live gateway audit
+remains clean. The root application's existing exact Firebase server-path exception
+and 2026-11-01 expiry remain unchanged; this does not claim a universally clean
+application dependency tree.
+
+Verification used **Node 22.23.4**, matching the declared backend runtime:
+**102 Functions unit tests**, the complete local Firestore emulator command
+(billing, Live gateway, **57 managed Gemini cases**, Quest attestation and
+account-link transactions), plus **31 Live gateway tests** and its TypeScript build.
+The new HTTP regression tests exercise the actual API entry point using malformed
+gzip/deflate input and verify subsequent CORS and valid compressed requests still
+work. They use only loopback requests to an unknown route, with no authentication,
+database, provider or billing action. Deflate truncation is tested because zlib
+accepts a trailing deflate suffix; gzip covers the advisory's trailing-byte case.
+
+Evidence, lockfile version deltas, the initial test correction, official Node archive
+checksum and process exits are retained in
+`.quest-evidence/quest-integration-20261024/`. This is local dependency verification;
+no deployment, provider request, release-key use or device operation occurred.
