@@ -583,14 +583,21 @@ The shared catalog provides these saved authoring operations:
 
 These operations finish only after the shared edit queue confirms persistence.
 An independent copy and its object binding are one atomic edit and one Undo.
-While waiting, edits recheck the source revision, complete membership, native
-surface availability and capacity. Cancellation before acceptance publishes
+While waiting, edits recheck the source revision, complete membership and
+capacity. New bindings also recheck native surface availability. Cancellation before acceptance publishes
 neither a copied resource nor a binding. After acceptance, stopping drains the
 accepted save and reports it as pending; it does not report a successful receipt.
 Receipts retain the revisions accepted by that edit even if a later human edit
 changes the same appearance. Shared opacity changes preserve unrelated runtime
 placement and the advancing world clock. Temporary Keep/Discard uses the same
 resource-and-binding transaction.
+
+A shared definition edit can name all 256 saved creations plus book/Maestro.
+Intentionally unloaded members stay unloaded, including through Undo/Redo;
+loading or retiring members must finish their transition first. Later loading
+uses the accepted definition. Assigning an imported material still requires its
+verified native address. The larger one-off action limit does not increase the
+66-resource limit of saved programs or reusable modules.
 
 Use appearance.library, appearance.definition, appearance.members,
 object.appearances and object.appearance.targets to inspect current values and
@@ -3193,7 +3200,11 @@ edits. The book, agent and programs wait for the original receipt; none needs a
 separate save tool or a second invocation. Names and settings are captured at
 request time. Cheap admission checks do not copy the whole room while waiting.
 Layer edits require the complete current member list and recheck capacity,
-revisions and released authoring ownership before acceptance.
+revisions and released authoring ownership before acceptance. Shared layer
+edits can include every saved member within the 258-object one-off action limit.
+Layer assignments and definition edits leave intentionally unloaded objects
+unloaded. Completion confirms saved metadata; it does not claim visible or
+simulated readiness. An in-flight load/unload must finish before these edits.
 
 Visual history is explicitly distinguished from placement history. A visual
 object delta may change its visibility binding, local lights or passthrough

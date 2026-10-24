@@ -16350,11 +16350,10 @@ that bound. The scheduler reads the version of the actual running machine rather
 than reparsing a one-off wrapper as a saved program.
 
 
-Appearance and visual-layer **editing** still accepts at most 66 members and
-requires native readiness. Their membership paging can describe the larger world,
-but editing one definition shared by more members needs a follow-up metadata
-transaction that preserves dormant members without activating them. This remains
-a release gate, not an advertised large-world appearance capability.
+At this checkpoint, appearance and visual-layer editing still accepted at most
+66 members and required native readiness. Membership paging could describe the
+larger world, but full-world definition edits needed the separate metadata
+transaction completed in the following checkpoint.
 
 
 Verification covers the complete discovered native inventory: **1,642 EditMode +
@@ -16385,3 +16384,51 @@ large imported-avatar populations or a fully incremental index. Current display
 demand and accepted reconciliation still visit saved members; query allocations
 and capacity profiling remain release work. No device, provider, signing,
 deployment or Meta actions are included. The full v1 goal remains active.
+
+
+### Shared visual metadata across unloaded world objects (2026-10-24)
+
+Status: verified desktop checkpoint; not headset or Store acceptance.
+
+`appearance.save` and `visibility.layer.save` now use the independent one-off
+invocation bound of 258 object identities, covering 256 saved creations plus the
+book and Maestro. Every member remains an explicit revision guard and ownership
+claim. Missing or partial membership refuses the complete edit. Saved programs
+and reusable modules retain their 66-resource bound.
+
+Definition edits and visual-layer assignments operate on canonical saved metadata.
+Intentionally unloaded members stay unloaded; neither a receipt nor an opacity
+change claims that those members are rendered or simulated. Loading and retiring
+members must finish their transition first. A missing view that was not deliberately
+unloaded is still an error. Shared appearance updates retain existing bindings;
+new material bindings still require verified native surface addresses, including
+exact imported model hashes and material indices.
+
+Both physical controls and delegated actions use the same persisted operations.
+Cancellation before acceptance, failed publication, Undo/Redo and temporary
+Keep/Discard preserve the same saved definitions and unloaded identities. Later
+native loading applies the accepted appearance and visibility definitions. Visual
+edits remain separate from collision participation, real-depth occlusion, audio,
+world placement and motion. This separation lets a distant NPC follow virtual
+terrain while other objects continue to use the real-room floor.
+
+Verification: all **1,642 EditMode** and **80 selected PlayMode** cases passed
+with clean native process exits and exact discovered-case coverage. The runtime
+selection covers all tests in 12 appearance, visibility, pending-save, native-area,
+deferred-creation, capacity and dormant-guard files. It includes a 256-member edit
+at the full 128-root native budget, all-target stale guards and receipts, unchanged
+object state, Undo/Redo, cancellation, failed saves, temporary Keep/Discard,
+retirement refusal and rendering after later loading. This is a focused PlayMode
+regression, not a rerun of the complete 2,284-case inventory.
+
+All **1,920 web tests** passed (1,523 room, 355 Quest book, 42 deterministic
+headless), plus TypeScript and catalog provenance checks. Native inputs stayed
+frozen across the final run; 3,550 source files, four reviewed Configure differences
+and 12 generated mirror inputs were reconciled. The 14 unrelated protected files
+remain unchanged. The initial invalid large-world fixture, old web bound assertion
+and catalog-copy file-lock interruption are retained alongside the final evidence
+in `.quest-evidence/shared-visual-metadata-20261024/`.
+
+This source has not been packaged, installed or exercised with a real provider.
+The saved-world and native-resource budgets remain unchanged; this is not a claim
+of unbounded worlds, background NPC simulation or measured Quest performance.

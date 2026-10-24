@@ -44,9 +44,11 @@ namespace Maestro.Quest.Creation
         public int AppearanceRevision(string id)=>journal.AppearanceRevision(id);
         public RoomAppearance ReadAppearance(string id)=>journal.ReadAppearance(id);
         internal string[] AppearanceMembers(string id)=>journal.AppearanceMembers(id);
-        bool CanChangeAppearance(string target,out string error) {
-            if(!CanEditStructures(out error)||!CanEditObject(target,false,out error))return false;
+        bool CanChangeAppearance(string target,out string error,bool sharedDefinition=false) {
+            bool dormant=sharedDefinition&&NativeEntityDormant(target);
+            if(!CanEditStructures(out error)||!CanChangeObject(target,false,!dormant,false,out error))return false;
             if(GetComponent<AnimationWorkshop>()?.ControlsTarget(target)==true){error="Finish authoring this object before editing its appearance";return false;}
+            if(dormant)return CanEditDormantVisual(target,out error);
             return new CapabilityContext(this,GetComponent<AnimationWorkshop>()).Target(new JObject{["target"]=target},out _,out error);
         }
         internal bool CanEditAppearance(RoomAppearance definition,string id,int revision,string[] members,out string error) {
@@ -59,7 +61,7 @@ namespace Maestro.Quest.Creation
             error="Include every bound object exactly once before changing a shared appearance";
             if(members==null||members.Length!=members.Distinct().Count()||!expected.ToHashSet().SetEquals(members))return false;
             if(definition==null&&members.Length>0){error="Unbind this appearance before removing it";return false;}
-            foreach(string member in members)if(!CanChangeAppearance(member,out error))return false;
+            foreach(string member in members)if(!CanChangeAppearance(member,out error,sharedDefinition:true))return false;
             error="The room already has the maximum number of appearance definitions";
             if(current==null&&journal.AppearanceCount>=RoomAppearance.MaximumDefinitions)return false;
             error=null;return true;

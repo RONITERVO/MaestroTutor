@@ -20,7 +20,7 @@ namespace Maestro.Quest.Programs
         public override IReadOnlyList<string> Channels=>new[]{"visibility"};
         public override IReadOnlyList<string> Requirements=>new[]{"target.exists","target.unheld","authoring.inactive","visibility.revision.current","storage.writable"};
         public override BehaviourCatalog.Claim[] Claims(JObject args)=>CapabilityArguments.Resources(args,InputSchema).Select(id=>new BehaviourCatalog.Claim(id,"visibility")).ToArray();
-        protected const string Rules=" Stable IDs identify saved definitions; names are display text. One Undo and temporary Keep/Discard apply. Compatible movement, animation and audio keep running; held objects and authoring gestures refuse. Layers multiply existing surface alpha, preserving cutouts and source textures. Book browser pages remain readable. Real-depth participation is independent of collisions, walking, sound and camera sharing, and cannot enable globally disabled or unavailable depth. Opacity zero does not disable physical collision. Inspect saved facts after completion; those are not proof of visual headset acceptance."+PersistedEditOperation.Persistence;
+        protected const string Rules=" Stable IDs identify saved definitions; names are display text. Unloaded members remain unloaded on definition edits and assignments; saved completion does not claim that they are visible. A member currently loading or retiring must finish that transition first. One Undo and temporary Keep/Discard apply. Compatible movement, animation and audio keep running; held objects and authoring gestures refuse. Layers multiply existing surface alpha, preserving cutouts and source textures. Book browser pages remain readable. Real-depth participation is independent of collisions, walking, sound and camera sharing, and cannot enable globally disabled or unavailable depth. Opacity zero does not disable physical collision. Inspect saved facts after completion; those are not proof of visual headset acceptance."+PersistedEditOperation.Persistence;
         protected static bool StartLayer(RoomEditor editor,RoomVisibilityLayer value,string id,int revision,string[] members,out CapabilityOperation operation,out string error) {
             bool temporary=editor.TemporaryRoom;RoomEditor.PendingPersistedEdit pending=null;
             return PersistedEditOperation.Start(editor,null,
@@ -31,11 +31,10 @@ namespace Maestro.Quest.Programs
     }
     internal sealed class VisibilityLayerSaveCapability:VisibilityLayerCapability
     {
-        internal override IEnumerable<string> NativeEntities(JObject args)=>CapabilityArguments.Resources(args,InputSchema);
         public override string Id=>"visibility.layer.save";
         public override string Label=>"Save visual layer";
-        public override string Description=>"Create or edit one of up to 16 reusable visual layers. Empty id and revision 0 create. Otherwise read visibility.layer and every visibility.members page at its revision, then supply all members (up to the per-action member limit). opacity 0–1 fades the group; realDepth=false keeps this layer visible in front of physical depth. Saving alone does not bind objects. Use object.visibility.assign for each object."+Rules;
-        public override JObject InputSchema=>Featured(Object(new JObject{["id"]=LayerId(true),["revision"]=Revision(true),["name"]=Text("^.{1,80}$",80),["opacity"]=Number(0,1),["realDepth"]=Bool(),["members"]=List(TargetSchema(),0,BehaviourProgram.MaximumResources)}));
+        public override string Description=>"Create or edit one of up to 16 reusable visual layers. Empty id and revision 0 create. Otherwise read visibility.layer and every visibility.members page at its revision, then supply all members (up to the saved-world invocation limit). opacity 0–1 fades the group; realDepth=false keeps this layer visible in front of physical depth. Saving alone does not bind objects. Use object.visibility.assign for each object."+Rules;
+        public override JObject InputSchema=>Featured(Object(new JObject{["id"]=LayerId(true),["revision"]=Revision(true),["name"]=Text("^.{1,80}$",80),["opacity"]=Number(0,1),["realDepth"]=Bool(),["members"]=List(TargetSchema(),0,RoomCapabilityCatalog.MaximumInvocationResources)}));
         public override JObject OutputSchema=>Object(new JObject{["id"]=LayerId(),["revision"]=Revision(),["temporary"]=Bool()});
         public override JObject Example=>new(){["id"]="",["revision"]=0,["name"]="Distant landscape",["opacity"]=.5,["realDepth"]=false,["members"]=new JArray()};
         RoomVisibilityLayer Definition(JObject a)=>new(){id=string.IsNullOrEmpty((string)a["id"])?Guid.NewGuid().ToString("N"):(string)a["id"],name=(string)a["name"],opacity=(float)a["opacity"],realDepth=(bool)a["realDepth"]};
@@ -65,7 +64,6 @@ namespace Maestro.Quest.Programs
     }
     internal sealed class VisibilityAssignCapability:VisibilityLayerCapability
     {
-        internal override IEnumerable<string> NativeEntities(JObject args)=>CapabilityArguments.Resources(args,InputSchema);
         public override string Id=>"object.visibility.assign";
         public override string Label=>"Choose object visual layer";
         public override string Description=>"Assign a saved visual layer to Maestro, the book frame or a creation. Read object.visibility for the current object revision and visibility.layer for the selected layer revision. Empty layerId with layerRevision 0 restores full visibility and inherited depth. Assignment affects that object and its visual children, excluding independent room objects and book browser pages. It leaves simulation and physical participation unchanged."+Rules;

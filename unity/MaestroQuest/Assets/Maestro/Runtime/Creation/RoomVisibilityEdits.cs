@@ -18,7 +18,8 @@ namespace Maestro.Quest.Creation
         bool CanChangeVisibility(string target,out string error) {
             if(!CanEditStructures(out error))return false;
             var item=Find(target);error="Choose a current, released object outside an authoring gesture";
-            if(!item||Read(target)==null||item.Grab&&item.Grab.isSelected||GetComponent<AnimationWorkshop>()?.ControlsTarget(target)==true)return false;
+            if(Read(target)==null||!item&&!NativeEntityDormant(target)||item&&item.Grab&&item.Grab.isSelected||GetComponent<AnimationWorkshop>()?.ControlsTarget(target)==true)return false;
+            if(NativeEntityDormant(target))return CanEditDormantVisual(target,out error);
             error=null;return true;
         }
         internal bool CanEditVisibility(RoomVisibilityLayer definition,string id,int revision,string[] members,out string error) {

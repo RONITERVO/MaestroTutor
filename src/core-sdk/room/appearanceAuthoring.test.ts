@@ -7,7 +7,7 @@ import {validFactValue} from '../../../shared/behaviourFacts';
 import {validExecutionView} from '../../../shared/roomExecutions';
 import {validCatalogView} from '../../../shared/roomCatalog';
 import {requireRoomCapabilities} from '../../../shared/roomControls';
-import {programResourceLimit} from '../../../shared/programLimits';
+import {invocationResourceLimit,programResourceLimit} from '../../../shared/programLimits';
 import {parseProgram} from './programs';
 import {moduleHash,validModuleRecord} from '../../../shared/programModuleIdentity';
 it('accepts actual native appearance receipts and bounded observations through the shared contracts',()=>{
@@ -37,14 +37,16 @@ it('rejects conflicting opacity/inheritance and unstable imported-slot addresses
  for(const binding of [{...assign.binding,partId:'wrong'},{...assign.binding,kind:'material',materialIndex:0},{...assign.binding,kind:'part'},{...assign.binding,tint:'red'}])expect(validateCapabilityArguments('object.appearance.bind',1,{...assign,binding})).not.toBeNull();
  expect(validateCapabilityArguments('object.appearance.bind',1,{...assign,binding:{...assign.binding,kind:'material',modelHash:'a'.repeat(64),materialIndex:0}})).toBeNull();
 });
-it('claims every object in a shared edit and keeps native/web program, receipt and module ceilings aligned',()=>{
+it('claims every object in a shared edit and preserves independent invocation and program/module ceilings',()=>{
  expect(programResourceLimit).toBe(66);
  const members=Array.from({length:programResourceLimit},(_,i)=>i.toString(16).padStart(32,'0'));
  const args={...capabilityDefinition('appearance.save')!.example,members};
  const call={id:'appearance.save',version:1,arguments:args};
  expect(validateCapabilityArguments(call.id,1,args)).toBeNull();expect(capabilityResources(call.id,args)).toEqual(members);
  expect(validCatalogView({operation:'check',call,valid:true,available:true,occupied:false,resources:members,status:'Ready'})).toBe(true);
- expect(validateCapabilityArguments(call.id,1,{...args,members:[...members,'book']})).not.toBeNull();
+ expect(validateCapabilityArguments(call.id,1,{...args,members:[...members,'book']})).toBeNull();
+ const overflow=Array.from({length:invocationResourceLimit+1},(_,i)=>i.toString(16).padStart(32,'0'));
+ expect(validateCapabilityArguments(call.id,1,{...args,members:overflow})).not.toBeNull();
  const program={version:3,entry:'main',resources:members,state:[],events:[],functions:[{name:'main',returns:'void',parameters:[],locals:[],body:[]}]};
  expect(parseProgram(JSON.stringify(program)).error).toBeNull();
  expect(parseProgram(JSON.stringify({...program,resources:[...members,'book']})).program).toBeNull();
