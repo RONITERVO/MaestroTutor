@@ -3,7 +3,8 @@
 Status: active implementation. Nothing in this document claims store readiness.
 
 Start with the [accepted product scope](#accepted-product-scope) and
-[release evidence checklist](#release-evidence-still-required). The current
+[release evidence checklist](#release-evidence-still-required) and the latest
+[complete integration checkpoint](#complete-native-book-and-android-integration-2026-10-24). The current
 [shared visual metadata checkpoint](#shared-visual-metadata-across-unloaded-world-objects-2026-10-24) records the latest
 native increment. The [saved-world capacity checkpoint](#saved-world-capacity-and-deferred-creation--2026-10-23) records its
 creation and residency foundation. The preceding
@@ -16452,3 +16453,49 @@ room geometry obstructs a returning object. The bounded implementation sequence 
 acceptance cases are in [collision-profile scaling](QUEST_SPATIAL_SETTINGS.md#planned-scaling-of-collision-profiles).
 No new limit or dormant collision-edit capability is advertised until that work is
 implemented and verified through the same Book, program and agent paths.
+
+
+### Complete native, Book and Android integration (2026-10-24)
+
+Status: complete desktop and unsigned Android compilation checkpoint at
+`d29dc0d5`; native sources remain unchanged from `3ecab791`. This does not replace
+headset, real-provider, audio-quality or Store acceptance.
+
+The canonical `Build-QuestDevelopment.ps1 -CompileOnly` invocation completed with
+exit 0, from 01:17:38 to 02:23:16 UTC. All **1,642 EditMode + 2,281 PlayMode**
+cases passed, with the three named optional private-asset skips. The discovered
+inventory has no missing or duplicate cases, including all 20 per-entity
+collision-profile authoring and physics regressions. Every native test process
+exited cleanly; this is a complete fresh run, not a merged selection of reruns.
+
+The fresh **Headless** journey `d75ca31290404ba98ea52b273d9d81e7` recorded 2,623
+observations. The fresh **Book** journey `860055f81df64d33b1e2469b3409aa00` recorded
+4,515 observations and 1,454 requests through the original chat, generated controls
+and real Unity executor. It verifies completion receipts, intervening human edits,
+stale agent refusal and reload without replay. Both client and Editor processes
+exited 0 with terminal and verified receipts. Provider responses and media are
+explicit offline fixtures. Desktop screenshots were inspected for chat/form
+rendering; they do not establish headset legibility, passthrough rendering or
+novice real-provider behavior.
+
+The web build and native-browser Gradle build/lint gate passed. Gradle reused
+unchanged browser unit-test/lint inputs; these are not newly executed unit tests.
+Unity exported Android with zero errors and five warnings; the scoped native,
+Java, manifest and asset compile tasks passed. The fresh project
+`Android-compile-20261024-021753-c846d07c` contains 22 selected ARM64 libraries with
+verified 16 KiB ELF LOAD alignment. Five unselected dependency libraries remain
+in the intermediate. No APK/AAB was produced, so final package ABI filtering is
+not claimed. Nothing was signed, installed, deployed or changed on Meta.
+
+Reconciliation confirms unchanged **3,550 native + 1,298 web/tool/browser source
+inputs** and all **14 protected files**. The mirror has no missing source inputs;
+its four reviewed differences remain configured Quest occlusion, Android Vulkan,
+the pending-collision layer and file formatting. Unity's temporary XR simulation
+asset moves were restored. All 152 generated web files and the browser AAR match
+their build outputs. Evidence, process receipts, source hashes, current coverage
+and binary audit are under `.quest-evidence/quest-integration-20261024/`.
+
+The next runtime increment is the saved collision-settings observation described
+in the scaling contract above. Dormant policy edits and larger profile membership
+remain unimplemented until their physical admission and recovery checks exist.
+The v1 goal and the device/provider holds remain active.
