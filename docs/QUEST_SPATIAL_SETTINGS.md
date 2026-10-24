@@ -87,8 +87,8 @@ are separate choices, so excluding a physical floor from a robot's movement does
 not make it invisible or silent.
 
 Read `environment.profiles` to find a saved definition, `environment.profile`
-for its current revision and complete membership, and `object.environment` for
-an object's current assignment and revision. `environment.profile.save`,
+for its current revision and complete membership, and `object.environment.settings`
+for an object's saved assignment and revision. `environment.profile.save`,
 `environment.profile.remove` and `object.environment.assign` all have
 `completion` duration and use the same bounded save queue as the settings above.
 The book generates the profile picker from these definitions; agent and program
@@ -96,6 +96,18 @@ calls use the same native implementation. No successful output is emitted before
 native application and saving. Profile results retain their exact accepted ID
 and revision even after a later human edit; a successful removal returns revision
 zero. Assignment results retain the accepted object revision.
+
+The saved-settings fact reads the canonical record, including a temporary fork,
+without allocating a native root, loading an asset or starting an action. It stays
+available when a view is deliberately unloaded, disabled or unexpectedly missing.
+A missing saved object returns unavailable. `realCollisions` is the requested
+policy, not effective collision: inherited participation can still be disabled by
+the global switch. No simulation-readiness field is fabricated for an absent view.
+
+Use `object.presence` for native lifetime and `object.environment` for the existing
+live readiness observation. The latter remains unavailable without an active view.
+The generated assignment form loads current values from the saved-settings fact;
+that read does not relax the assignment action's native/physical requirements.
 
 A shared definition edit must explicitly claim every member. An unused profile
 can be removed; a bound one cannot. A waiting edit rechecks membership, exact
@@ -117,9 +129,9 @@ collision, visual and acoustic policy are part of the shared contract.
 
 ## Planned scaling of collision profiles
 
-This section records the next implementation contract, not currently available
-behavior. The current 16-member and native-readiness requirements above remain in
-force. Appearance and visibility already support unloaded members; collision
+This section records the remaining implementation contract. The saved-settings
+read above is available; the current 16-member and native-readiness requirements
+for editing remain in force. Appearance and visibility already support unloaded members; collision
 participation cannot use that path without physical admission work.
 
 The durable world should store what an object is meant to collide with. A native
@@ -130,8 +142,9 @@ floor. It also keeps rendered opacity and acoustic obstruction independent.
 
 Implement in this order:
 
-1. Expose saved assignment/revision independently of native presence. Report
-   unloaded, preparing, unavailable ground and obstruction explicitly. An absent
+1. Keep the implemented saved assignment/revision read independent of native
+   presence. Extend readiness and recovery observations to distinguish unloaded,
+   preparing, unavailable ground and obstruction explicitly. An absent
    body is not evidence that the requested policy is disabled or that motion is
    ready. The human inspector and agent facts must return the same distinction.
 2. Give profile membership a bounded, revision-checked discovery path before

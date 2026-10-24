@@ -34441,7 +34441,7 @@
           "environmentProfiles.v1"
         ],
         "x-current": {
-          "fact": "object.environment",
+          "fact": "object.environment.settings",
           "version": 1,
           "arguments": {
             "target": "target"
@@ -34484,7 +34484,7 @@
         "environment.revision.current",
         "storage.writable"
       ],
-      "description": "Assign a saved environment profile to the book, Maestro or a creation, including all its assembly/import child colliders. Read object.environment for target revision and environment.profile for selected profile revision. An empty profileId with profileRevision 0 explicitly restores inherited real-room participation. One object's assignment does not edit the reusable profile or other members. It does not start physics or walking. Stable exact IDs are references; names are display text. Changes use the saved room journal with one Undo and temporary-play Keep/Discard semantics. Already-identical values do not add Undo. All affected targets must be released and free of authoring or competing motion. The entire edit refuses on stale revision, changed membership, missing target, unavailable support during running physics, or new scanned-surface penetration. It never moves an object. Changed targets lose previous throw speeds. Visual depth/opacity and acoustics remain independent; this setting changes collision participation only. The global real-room switch is an upper bound: a profile cannot re-enable it. Virtual collisions remain active. Virtual-only simulation needs accepted authored ground; current bounds are columns up to 16 metres above and 0.25 metres below those surfaces, not unlimited space. Outside temporary play, prepares and publishes its save in the background with one Undo edit. Completion confirms native application and saving. Once preparation begins, newer authored changes invalidate its candidate. Cancellation before native acceptance leaves the requested edit unapplied. After acceptance, stopping cannot retract the edit or its pending save. A save conflict preserves files, blocks further saves and requires inspection; never blindly replay it. Runtime clock and viewer movement continue. Concurrent persisted object edits enter preparation in arrival order after earlier saves drain, without copying a waiting candidate. Stopping or invalidating a waiter releases its place; target changes while waiting require a new request. In a temporary room, changes the live room and local Undo; a kept snapshot makes it durable. Other objects keep running.",
+      "description": "Assign a saved environment profile to the book, Maestro or a creation, including all its assembly/import child colliders. Read object.environment.settings for the saved target assignment/revision and environment.profile for the selected profile revision. Saved settings are readable while unloaded, but assignment still requires native readiness. An empty profileId with profileRevision 0 explicitly restores inherited real-room participation. One object's assignment does not edit the reusable profile or other members. It does not start physics or walking. Stable exact IDs are references; names are display text. Changes use the saved room journal with one Undo and temporary-play Keep/Discard semantics. Already-identical values do not add Undo. All affected targets must be released and free of authoring or competing motion. The entire edit refuses on stale revision, changed membership, missing target, unavailable support during running physics, or new scanned-surface penetration. It never moves an object. Changed targets lose previous throw speeds. Visual depth/opacity and acoustics remain independent; this setting changes collision participation only. The global real-room switch is an upper bound: a profile cannot re-enable it. Virtual collisions remain active. Virtual-only simulation needs accepted authored ground; current bounds are columns up to 16 metres above and 0.25 metres below those surfaces, not unlimited space. Outside temporary play, prepares and publishes its save in the background with one Undo edit. Completion confirms native application and saving. Once preparation begins, newer authored changes invalidate its candidate. Cancellation before native acceptance leaves the requested edit unapplied. After acceptance, stopping cannot retract the edit or its pending save. A save conflict preserves files, blocks further saves and requires inspection; never blindly replay it. Runtime clock and viewer movement continue. Concurrent persisted object edits enter preparation in arrival order after earlier saves drain, without copying a waiting candidate. Stopping or invalidating a waiter releases its place; target changes while waiting require a new request. In a temporary room, changes the live room and local Undo; a kept snapshot makes it durable. Other objects keep running.",
       "example": {
         "target": "maestro",
         "revision": 1,
@@ -39922,7 +39922,7 @@
         }
       },
       "label": "Object saved and native presence",
-      "description": "Distinguish saved existence from the native room instance without loading or changing anything. state is missing (no saved entity), unavailable (saved entity without a native instance), inactive (native instance disabled), or active. revision is the canonical saved revision, zero when missing. Active does not prove geometry, images, audio, navigation or physics readiness; use the relevant component facts. Saved definition, collision, drawing, surface and recorded-animation reads do not require a native instance. Live position, playback and interaction require an active instance. This reports current native presence, not implemented regional streaming or permission to unload.",
+      "description": "Distinguish saved existence from the native room instance without loading or changing anything. state is missing (no saved entity), unavailable (saved entity without a native instance), inactive (native instance disabled), or active. revision is the canonical saved revision, zero when missing. Active does not prove geometry, images, audio, navigation or physics readiness; use the relevant component facts. Saved definition, collision, drawing, surface and recorded-animation reads do not require a native instance. Live position, playback and interaction require an active instance. This reports current native presence, not permission to unload. Area loading policy and current retention requirements decide native lifetime.",
       "input": {
         "type": "object",
         "properties": {
@@ -48151,6 +48151,44 @@
       "description": "Read the separate physical scan, authored ground and default-scope simulation readiness. ready additionally requires an active authored region with no unresolved imported-collision bounds or placement. Known unavailable geometry stops dependent actors through local input checks; room readiness does not guarantee every actor can move. scanReady and authoredReady remain separate raw ground observations. Individual profile admission is reported by object.environment; physics.simulation reports whether any accepted environment can run. This does not verify physical alignment or a clear route, start physics, load a scan or change its collision/visual/acoustic geometry. Physical placement continues to use scanReady even when authored ground is ready. No side effects."
     },
     {
+      "id": "object.environment.settings",
+      "version": 1,
+      "type": {
+        "record": {
+          "target": "text",
+          "revision": "number",
+          "profileId": "text",
+          "profileRevision": "number",
+          "realCollisions": "boolean",
+          "temporary": "boolean"
+        }
+      },
+      "label": "Saved object environment",
+      "description": "Read canonical collision-profile assignment and exact saved object/profile revisions, including the temporary fork. realCollisions is the saved request: an empty profileId inherits real-room participation, subject to the global switch. It is not effective collision, ground availability, admission or permission to move. This read does not load native objects, reserve resources or change the room. It remains available for deliberately unloaded, inactive or missing native views; a missing saved target is unavailable. Use object.presence for native lifecycle and object.environment for live readiness. Assignment still requires the existing physical admission checks.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^(book|maestro|[a-fA-F0-9]{32})$",
+            "maxLength": 32,
+            "x-resource": "object"
+          }
+        },
+        "required": [
+          "target"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "target": "maestro"
+      },
+      "features": [
+        "factQueries.v1",
+        "environmentProfiles.v1"
+      ]
+    },
+    {
       "id": "object.environment",
       "version": 1,
       "type": {
@@ -48172,7 +48210,7 @@
         }
       },
       "label": "Object environment",
-      "description": "Saved profile binding and effective real-room participation. Empty profileId inherits the global switch. ready checks this actor's environment; inside checks its current centre against that environment's bounds. admitted means environment admission and running physics, not that this body's geometry, ownership or dynamic mode permits motion. Does not test a complete walking route or overlap.",
+      "description": "Live profile binding and effective real-room participation. Unloaded or inactive native views are unavailable; read object.environment.settings for their saved assignment. Empty profileId inherits the global switch. ready checks this actor's environment; inside checks its current centre against that environment's bounds. admitted means environment admission and running physics, not that this body's geometry, ownership or dynamic mode permits motion. Does not test a complete walking route or overlap.",
       "input": {
         "type": "object",
         "properties": {
@@ -49622,7 +49660,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/EnvironmentProfileCapabilities.cs",
-      "sha256": "e0c1f35cbabf259d46a12e94a6705816641b004a1a86682a9093a3300878de2c"
+      "sha256": "4b3dde6d773669fce5641933b998ff2ec375d965ac110e5f7016fcbc270f9836"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/FlowGroupFacts.cs",
@@ -50586,7 +50624,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEnvironmentEdits.cs",
-      "sha256": "974ec5b7ad7b12bd192746c2fad80689a9189490b25f0fc154d1b68ee77da570"
+      "sha256": "efcbfb6b32f2b442b7e60adc7fb6c2235662ddc7ce7b39df64655d0ccb8f3a69"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEnvironmentProfile.cs",
@@ -51910,7 +51948,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "448e4030263507efb03d53b7646bc398f6c2596247ea0ae028e7b45a8002deb5"
+      "sha256": "0a8b07e01809894a0e5ec7cdbb871bae83b719779ffc2111e435ba8e47892838"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourProgram.cs",
@@ -51938,7 +51976,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/NativeObjectFacts.cs",
-      "sha256": "3dc6bd3d6198f58222d6eafefa5cc9ae2afca69c8b456d435dbcadf32fe95d18"
+      "sha256": "35f6e1f58ef6d2ffa7562ed6eedd38a2610d1f9f2c345a795d61bea4630231c9"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/PhysicsMotionSubscription.cs",

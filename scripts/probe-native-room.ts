@@ -504,11 +504,14 @@ try{
   if(typeof profileId!=='string')throw new Error('Environment profile returned no stable ID');
   const profileRead=()=>execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'environment.profile',version:1,arguments:{id:profileId}}}]);
   const actorEnvironment=()=>execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.environment',version:1,arguments:{target:'maestro'}}}]);
+  const savedEnvironment=()=>execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.environment.settings',version:1,arguments:{target:'maestro'}}}]);
   const unbound=await actorEnvironment(),profileInitial=await profileRead();
   const profileAssigned=await completeProbeAction(execute,await execute([{action:'execution',execution:{operation:'start',call:{id:'object.environment.assign',version:1,arguments:{target:'maestro',revision:(unbound.catalog!.value as {revision:number}).revision,profileId,profileRevision:(profileInitial.catalog!.value as {revision:number}).revision}}}}]));
   const bound=await actorEnvironment(),profileBound=await profileRead();
   const boundValue=bound.catalog!.value as {profileId:string;state:{effectiveRealCollisions:boolean}};
   if(boundValue.profileId!==profileId||boundValue.state.effectiveRealCollisions)throw new Error('Per-actor profile did not exclude the real room');
+  const savedBinding=await savedEnvironment(),savedValue=savedBinding.catalog!.value as {profileId:string;profileRevision:number;realCollisions:boolean;state?:unknown};
+  if(savedValue.profileId!==profileId||savedValue.profileRevision!==(profileBound.catalog!.value as {revision:number}).revision||savedValue.realCollisions||savedValue.state!==undefined)throw new Error('Saved environment intent was confused with live readiness');
   const members=(profileBound.catalog!.value as {members:string[]}).members;
   if(JSON.stringify(members)!==JSON.stringify(['maestro']))throw new Error('Profile membership did not preserve exact target IDs');
   const profileEdited=await completeProbeAction(execute,await execute([{action:'execution',execution:{operation:'start',call:{id:'environment.profile.save',version:1,arguments:{id:profileId,revision:(profileBound.catalog!.value as {revision:number}).revision,name:'Downhill actors',realCollisions:false,members}}}}]));
@@ -519,7 +522,7 @@ try{
   if((bindingUndo.catalog!.value as {profileId:string}).profileId!=='')throw new Error('Assignment Undo did not restore inheritance');
   const unusedProfile=await profileRead();
   const profileRemoved=await completeProbeAction(execute,await execute([{action:'execution',execution:{operation:'start',call:{id:'environment.profile.remove',version:1,arguments:{id:profileId,revision:(unusedProfile.catalog!.value as {revision:number}).revision}}}}]));
-  await writeFile(join(directory,'entity-environment.json'),JSON.stringify({boundary:'Real native shared transport, persisted profile edits, binding facts and Undo. PlayMode separately tests physical motion; no headset or live provider proof.',profileSaved,unbound,profileInitial,profileAssigned,bound,profileBound,profileEdited,profileList,profileUndo,bindingUndo,profileRemoved},null,2));
+  await writeFile(join(directory,'entity-environment.json'),JSON.stringify({boundary:'Real native shared transport, persisted profile edits, binding facts and Undo. PlayMode separately tests physical motion; no headset or live provider proof.',profileSaved,unbound,profileInitial,profileAssigned,bound,savedBinding,profileBound,profileEdited,profileList,profileUndo,bindingUndo,profileRemoved},null,2));
 
   const appearanceStyle={tint:'#DDBBAA',patternMode:'inherit',imageHash:'',pattern:{kind:'solid',plane:'uv',secondary:'#FFFFFF',columns:1,rows:1},tiling:{x:1,y:1},offset:{x:0,y:0},renderMode:'blend',opacity:.4,cutoff:0,sidedness:'inherit',grain:-1,shading:-1};
   const appearanceSaved=await completeProbeAction(execute,await execute([{action:'execution',execution:{operation:'start',call:{id:'appearance.save',version:1,arguments:{id:'',revision:0,name:'Shared warm glass',style:appearanceStyle,members:[]}}}}]));

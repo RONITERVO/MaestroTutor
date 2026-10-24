@@ -85,6 +85,60 @@ namespace Maestro.Quest.Tests
             string output=Environment.GetEnvironmentVariable("MAESTRO_ENTITY_ENVIRONMENT");
             if(!string.IsNullOrEmpty(output)){System.IO.Directory.CreateDirectory(output);System.IO.File.WriteAllText(System.IO.Path.Combine(output,"profiles.json"),evidence.ToString());}
         }
+        [UnityTest]public IEnumerator EnvironmentSettingsReadDormantAssignmentsWithoutNativeCapacityOrMutation() {
+            string target=editor.Identity(block),profile=NewEnvironment();
+            Assert.That(AssignEnvironment(target,profile,out var error),Is.True,error);
+            var before=editor.ObserveEnvironmentSettings(target);int revision=editor.Revision;
+            yield return NativeAreaCompletion(editor.RetireNativeArea(NativeAreaFor(target)));
+            // Retirement can capture dynamic placements, so use its accepted revision.
+            revision=editor.Revision;before=editor.ObserveEnvironmentSettings(target);
+            var reservations=NativeObjectAdmissionFixture.Fill(editor.WorldIdentity);
+            try {
+                int count=(int)NativeObjectResources.ObserveBudget()["instances"];
+                var context=new BehaviourCatalog.FactContext(editor:editor);
+                for(int i=0;i<4;i++) {
+                    Assert.That(EnvironmentProfileFacts.Settings().TryRead(context,1,new JObject{["target"]=target},out _),Is.True);
+                    Assert.That(JToken.DeepEquals(editor.ObserveEnvironmentSettings(target),before),Is.True);
+                }
+                Assert.That((string)before["profileId"],Is.EqualTo(profile));
+                Assert.That((int)before["profileRevision"],Is.EqualTo(editor.EnvironmentRevision(profile)));
+                Assert.That((bool)before["realCollisions"],Is.False);Assert.That(before["state"],Is.Null);
+                Assert.That(editor.ObserveEnvironmentBinding(target),Is.Null);
+                Assert.That(editor.NativeEntityDormant(target)&&!editor.Find(target),Is.True);
+                Assert.That(editor.Revision,Is.EqualTo(revision));
+                Assert.That((int)NativeObjectResources.ObserveBudget()["instances"],Is.EqualTo(count));
+                Assert.That(editor.NativeActivationPending,Is.False);
+            } finally { foreach(var lease in reservations)lease.Dispose(); }
+        }
+        [UnityTest]public IEnumerator EnvironmentSettingsDistinguishSavedObjectsFromInactiveLostAndMissingViews() {
+            string target=editor.Identity(block);var expected=editor.ObserveEnvironmentSettings(target);
+            block.gameObject.SetActive(false);
+            Assert.That(JToken.DeepEquals(editor.ObserveEnvironmentSettings(target),expected),Is.True);
+            Assert.That(editor.ObserveEnvironmentBinding(target),Is.Null);
+            block.gameObject.SetActive(true);UnityEngine.Object.Destroy(block.gameObject);yield return null;
+            Assert.That(editor.Read(target),Is.Not.Null);Assert.That(editor.NativeEntityDormant(target),Is.False);
+            Assert.That(JToken.DeepEquals(editor.ObserveEnvironmentSettings(target),expected),Is.True);
+            Assert.That(editor.ObserveEnvironmentBinding(target),Is.Null);
+            string missing=Guid.NewGuid().ToString("N");
+            Assert.That(editor.ObserveEnvironmentSettings(missing),Is.Null);
+            Assert.That(EnvironmentProfileFacts.Settings().TryRead(new BehaviourCatalog.FactContext(editor:editor),1,new JObject{["target"]=missing},out _),Is.False);
+        }
+        [UnityTest]public IEnumerator EnvironmentSettingsSeparateRequestedPolicyFromGlobalStateAndTemporaryEdits() {
+            string profile=NewEnvironment();
+            Assert.That(physics.SetEnvironment((string)physics.ObserveEnvironment()["stateId"],false,out _,out var error),Is.True,error);
+            Assert.That((bool)editor.ObserveEnvironmentSettings("maestro")["realCollisions"],Is.True);
+            Assert.That((bool)editor.ObserveEnvironmentBinding("maestro")["state"]["effectiveRealCollisions"],Is.False);
+            Assert.That(editor.BeginTemporaryRoom(out error),Is.True,error);while(editor.TemporarySavePending)yield return null;
+            Assert.That(AssignEnvironment("maestro",profile,out error),Is.True,error);
+            var temporary=editor.ObserveEnvironmentSettings("maestro");
+            Assert.That((string)temporary["profileId"],Is.EqualTo(profile));Assert.That((bool)temporary["realCollisions"],Is.False);
+            Assert.That((bool)temporary["temporary"],Is.True);
+            Assert.That(new RoomStorage(directory).Load(out error).objects.Single(x=>x.id=="maestro").environmentProfile,Is.Empty,error);
+            Assert.That(editor.DiscardTemporaryRoom(out error),Is.True,error);
+            var restored=editor.ObserveEnvironmentSettings("maestro");
+            Assert.That((string)restored["profileId"],Is.Empty);Assert.That((bool)restored["realCollisions"],Is.True);
+            Assert.That((bool)restored["temporary"],Is.False);Assert.That((int)restored["revision"],Is.GreaterThan((int)temporary["revision"]));
+        }
         [UnityTest]public IEnumerator EnablingPhysicalProfileRefusesAnIntersectingWallWithoutSaving() {
             RoomPhysicsLayers.Configure();string id=NewEnvironment();Assert.That(AssignEnvironment("maestro",id,out var error),Is.True,error);
             var avatar=editor.Find("maestro");var wall=GameObject.CreatePrimitive(PrimitiveType.Cube);wall.transform.SetParent(root.transform,false);wall.transform.position=avatar.transform.position;wall.layer=RoomPhysicsLayers.Scanned;

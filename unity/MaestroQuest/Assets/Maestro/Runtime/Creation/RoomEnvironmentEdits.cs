@@ -101,13 +101,21 @@ namespace Maestro.Quest.Creation
                     bool ready=PrepareEnvironmentBinding(target,revision,profile,profileRevision,out var data,out issue);
                     values=ready?new[]{data}:null;return ready;
                 },Array.Empty<string>(),"Object environment saved",out pending,out error,checkpoint);
+        internal JObject ObserveEnvironmentSettings(string target) {
+            var data=Read(target);if(data==null)return null;
+            string id=data.environmentProfile??"";
+            return new JObject{["target"]=target,["revision"]=ObjectRevision(target),["profileId"]=id,
+                ["profileRevision"]=EnvironmentRevision(id),["realCollisions"]=ReadEnvironment(id)?.realCollisions??true,
+                ["temporary"]=TemporaryRoom};
+        }
         internal JObject ObserveEnvironmentBinding(string target) {
-            var data=Read(target);if(data==null||!TryGetLiveObject(target,out var item,out _))return null;
-            string id=data.environmentProfile??"";bool requested=ReadEnvironment(id)?.realCollisions??true;var world=PhysicsWorld;
-            return new JObject{["target"]=target,["revision"]=ObjectRevision(target),["profileId"]=id,["profileRevision"]=EnvironmentRevision(id),
-                ["realCollisions"]=requested,["state"]=new JObject{["effectiveRealCollisions"]=world&&world.IncludesRealRoom(item),
+            var value=ObserveEnvironmentSettings(target);
+            if(value==null||!TryGetLiveObject(target,out var item,out _))return null;
+            var world=PhysicsWorld;
+            value["state"]=new JObject{["effectiveRealCollisions"]=world&&world.IncludesRealRoom(item),
                 ["ready"]=world&&world.EnvironmentReady(item),["inside"]=world&&world.ContainsSimulation(item.transform.position,item),
-                ["admitted"]=world&&world.CanSimulate(item.transform.position,item)},["temporary"]=TemporaryRoom};
+                ["admitted"]=world&&world.CanSimulate(item.transform.position,item)};
+            return value;
         }
         internal JObject ObserveEnvironmentProfile(string id) {
             var p=ReadEnvironment(id);return p==null?null:new JObject{["id"]=id,["revision"]=EnvironmentRevision(id),["name"]=p.name,

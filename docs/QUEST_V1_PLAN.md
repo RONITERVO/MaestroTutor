@@ -5,8 +5,8 @@ Status: active implementation. Nothing in this document claims store readiness.
 Start with the [accepted product scope](#accepted-product-scope) and
 [release evidence checklist](#release-evidence-still-required) and the latest
 [complete integration checkpoint](#complete-native-book-and-android-integration-2026-10-24). The current
-[shared visual metadata checkpoint](#shared-visual-metadata-across-unloaded-world-objects-2026-10-24) records the latest
-native increment. The [saved-world capacity checkpoint](#saved-world-capacity-and-deferred-creation--2026-10-23) records its
+[saved collision-settings checkpoint](#saved-collision-settings-without-native-loading-2026-10-24) records the latest
+native increment, following the [shared visual metadata checkpoint](#shared-visual-metadata-across-unloaded-world-objects-2026-10-24). The [saved-world capacity checkpoint](#saved-world-capacity-and-deferred-creation--2026-10-23) records its
 creation and residency foundation. The preceding
 [restoration](#restoring-unloaded-objects--2026-10-23),
 [physical discovery](#linear-physical-discovery--2026-10-23),
@@ -16499,3 +16499,45 @@ The next runtime increment is the saved collision-settings observation described
 in the scaling contract above. Dormant policy edits and larger profile membership
 remain unimplemented until their physical admission and recovery checks exist.
 The v1 goal and the device/provider holds remain active.
+
+
+### Saved collision settings without native loading (2026-10-24)
+
+Status: focused native and shared-client checks passed with the bounded rerun
+below; fresh Headless/Book journeys are running. The complete integration entry
+above remains evidence for the preceding source, not this later increment.
+
+`object.environment.settings` exposes the canonical assignment, exact object and
+profile revisions, requested real-room participation and temporary-room state.
+It remains readable at the native-root budget and for unloaded, disabled or lost
+views. A missing saved identity remains unavailable. The existing live
+`object.environment` fact retains its readiness/admission semantics and requires
+an active view. It now shares the canonical saved projection rather than repeating
+that logic. The generated assignment form uses the new saved fact to load current
+values. Neither inspection nor the form changes collision settings or loads a body.
+
+This is the first read-only step in collision-profile scaling. Assignment and
+shared profile edits still require the existing physical checks and 16-member
+limit. No saved format, resource budget or physics policy changes. The catalog
+also corrects the obsolete presence description that predated regional loading.
+
+All **1,642 EditMode and 23 selected PlayMode** cases passed with clean process
+exits and exact selected-case coverage. The runtime selection covers the existing
+20 environment authoring/physics/pending-save tests and three new regressions:
+no-load reads at native capacity, saved identity versus inactive/lost/missing
+views, and requested policy versus global state and temporary edits. The 3,550
+native inputs and 14 protected files remained unchanged during verification.
+
+The shared web run reported **1,920 passes and one 10-second timeout** in a long
+visual-editor journey while Unity was also running. The unchanged affected file
+then passed all **39 cases in isolation**, with that same case taking 8.2 seconds
+under its original 10-second limit. This retains the initial failure; it is not a
+claim that the first full web invocation passed. TypeScript, probe TypeScript,
+shared guide consistency, generated catalog provenance and native export equality
+passed. No test deadline was relaxed.
+
+Both end-to-end scripts now explicitly inspect the new saved fact and reject a
+fabricated live-state field. Fresh offline runs are in progress under
+`.quest-evidence/collision-settings-20261024/`; do not substitute the earlier
+complete journeys for these pending assertions. A fresh Android compile of this
+increment has not run. Device/provider/signing/deployment/Meta holds remain.
