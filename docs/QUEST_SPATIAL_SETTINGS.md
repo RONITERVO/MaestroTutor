@@ -153,6 +153,23 @@ subsequent edits must claim all affected members, provide exact current guards
 and pass the action's publication checks. This directory adds no saved format,
 native loading, physics, profile-member or program-resource allowance.
 
+
+## Collision-clearance geometry
+
+Live profile changes use `RoomEnvironmentClearance` for selected-ground and
+scanned-surface checks; their revision and ownership guards remain in the edit
+path. The helper also handles staged collision geometry without enabling it.
+A conservative envelope without scanned candidates can establish clearance; nearby candidates require
+an enabled shape for the exact penetration test. Pinned Unity tests show that
+`ComputePenetration` otherwise returns false for inactive intersecting shapes.
+That false result is treated as unavailable, never as permission to simulate.
+
+This is the geometry foundation for restoration, not a completed restoration
+admission path. Returning objects still need explicit non-simulating publication,
+a current exact check and visible recovery before unloaded collision edits can be
+supported. A blocked object must stay inspectable and movable for repair; loading
+or clearing an obstacle must not replay an old action or throw.
+
 ## Planned scaling of collision profiles
 
 This section records the remaining implementation contract. The saved-settings
@@ -180,8 +197,10 @@ Implement in this order:
    value budget. Every affected object still needs an exact guard and ownership
    claim. Saved programs retain their declared resource budget; a large one-off
    edit is not a license for an unbounded program action.
-3. Extract one physical admission check shared by live policy changes and native
-   restoration. Keep exact collider/scan penetration proof, selected ground,
+3. Integrate the shared geometry proof above into native restoration while keeping
+   newly enabled bodies non-simulating. Inactive overlap candidates cannot supply
+   exact penetration proof; repeat it with enabled shapes before releasing the
+   simulation hold. Keep selected ground,
    current world transform, tracking and object ownership checks. Preparation may
    cross frames, so repeat the relevant checks at publication. Unsupported or
    saturated geometry queries remain unavailable rather than guessed clear.

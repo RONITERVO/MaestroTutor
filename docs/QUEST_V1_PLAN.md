@@ -16581,3 +16581,52 @@ It does not enlarge the 16-member collision profile limit or permit dormant
 collision edits. Versioned profile summaries and shared physical admission remain
 the next collision-scaling steps. Evidence is in
 `.quest-evidence/resource-members-20261024/`.
+
+
+### Saved membership integration and physical-clearance proof (2026-10-24)
+
+The `fbd73053` membership increment completed fresh offline Headless
+(`c41c8a476f7342429a940601c700bc36`) and rendered Book
+(`24e71df116044b0284fc0a2e1e966a3c`) journeys. Client, Editor and sequential
+wrapper exits were all zero. Both checked the exact saved collision-profile ID,
+definition revision and member identity through `resource.members`; the Book
+inspector screenshot was reviewed on desktop. All 3,558 native, 1,301 client/tool/
+catalog and 14 protected inputs stayed unchanged. Release gate 40057462033 and
+native echo 40057462039 passed. This evidence precedes the clearance extraction
+below and is not new device, provider or Android evidence.
+
+Live collision-profile changes now delegate geometry checks to
+`RoomEnvironmentClearance`. Ownership, revision checks, atomic acceptance and
+the current 16-member limit remain at their existing boundaries. The helper
+checks selected ground when required and actual active shapes against scanned
+surfaces, retaining the 3 mm penetration tolerance and bounded 64-candidate query.
+Inactive shapes use conservative declared geometry for candidate discovery;
+intentionally disabled child shapes stay disabled. Missing or unsupported shape
+proof and saturated queries cannot be treated as clear.
+
+The pinned Unity 6000.3.24f1 experiment found that `ComputePenetration` returns
+false for inactive box, sphere, capsule and convex-mesh colliders even when their
+active equivalents intersect a wall. An inactive query result therefore does not
+establish clearance. A candidate with no nearby scanned shape can pass the
+conservative envelope check; an inactive candidate with nearby geometry reports
+clearance unavailable. It must remain non-simulating until an enabled collision
+shape passes the exact check. Enabling that geometry is not authorization to
+resume an earlier throw or action.
+
+Verification passed all **1,663 EditMode + 42 selected PlayMode** cases with clean
+native exits and exact selected-case coverage. The selection contains 18 new
+clearance cases and the preceding 24 environment/membership regressions.
+The 262 web catalog tests, source provenance, native export equality and all ten
+bundled guides also passed. Catalog schemas, events, limits and adapters are
+unchanged. All 3,562 native and 14 protected inputs stayed unchanged during the
+final run. Evidence is in `.quest-evidence/physical-admission-20261024/`, including
+the initial 11 failing probes that exposed Unity's inactive-query behavior and
+the earlier provenance-only configuration stop.
+
+This completes the shared geometry-check foundation, not native-restoration
+recovery. `ActivateNativeTargets` still needs a non-simulating publication and
+repair path, with current geometry, tracking, ground and ownership rechecked
+before motion. The restored object must remain visible and editable when blocked.
+Versioned profile summaries, larger profile membership and canonical collision
+edits for unloaded members remain unfinished. Device/provider holds and the
+broader v1 release gates remain active.

@@ -14,31 +14,13 @@ namespace Maestro.Quest.Creation
         public int EnvironmentRevision(string id)=>journal.EnvironmentRevision(id);
         public RoomEnvironmentProfile ReadEnvironment(string id)=>journal.ReadEnvironment(id);
         internal string[] EnvironmentMembers(string id)=>journal.EnvironmentMembers(id);
-        readonly Collider[] environmentOverlaps=new Collider[64];
+        readonly RoomEnvironmentClearance environmentClearance=new();
         bool CanChangeEnvironment(string id,bool real,out string error) {
             if(!CanEditStructures(out error)||!CanEditObject(id,false,out error))return false;
             if(!new CapabilityContext(this,GetComponent<AnimationWorkshop>()).Target(new JObject{["target"]=id},out var item,out error))return false;
             var world=PhysicsWorld;if(!world)return true;
-            bool next=world.RealCollisions&&real;
-            if(next==world.IncludesRealRoom(item))return true;
-            error="Pause physics or place this object within its selected ground before changing its environment";
-            if(world.Running&&!world.ContainsEnvironment(item.transform.position,next))return false;
-            if(next&&world.SurfacesReady) {
-                Physics.SyncTransforms();
-                foreach(var own in item.Grab.colliders) {
-                    if(!own||!own.enabled||own.isTrigger)continue;
-                    var bounds=own.bounds;
-                    int count=Physics.OverlapBoxNonAlloc(bounds.center,bounds.extents,environmentOverlaps,Quaternion.identity,1<<RoomPhysicsLayers.Scanned,QueryTriggerInteraction.Ignore);
-                    error="Move the object clear of scanned surfaces before enabling real-room collisions";
-                    if(count==environmentOverlaps.Length)return false;
-                    for(int i=0;i<count;i++) {
-                        var other=environmentOverlaps[i];if(!other||other.transform.IsChildOf(item.transform))continue;
-                        if(own is MeshCollider mesh&&!mesh.convex)return false; // Unsupported penetration proof, never guess clear.
-                        if(Physics.ComputePenetration(own,own.transform.position,own.transform.rotation,other,other.transform.position,other.transform.rotation,out _,out float depth)&&depth>.003f)return false;
-                    }
-                }
-            }
-            error=null;return true;
+            if((world.RealCollisions&&real)==world.IncludesRealRoom(item))return true;
+            return environmentClearance.Check(world,item,real,world.Running,out error);
         }
         internal bool CanEditEnvironment(RoomEnvironmentProfile definition,string id,int revision,string[] members,out string error) {
             if(!CanEditStructures(out error))return false;

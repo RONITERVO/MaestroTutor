@@ -50687,7 +50687,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEnvironmentEdits.cs",
-      "sha256": "efcbfb6b32f2b442b7e60adc7fb6c2235662ddc7ce7b39df64655d0ccb8f3a69"
+      "sha256": "ec163d2c3597f4e140689336d0e3a2399a3c49f35b157c3014a0fd75a3ca5ded"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEnvironmentProfile.cs",
@@ -51632,6 +51632,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomEnvironmentBinding.cs",
       "sha256": "3b220055afb02a213e1980c4aad930d5902fbb717a1ef1119009b9608011ec8e"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomEnvironmentClearance.cs",
+      "sha256": "a015bafdd03222e27e2014a3eced90a3dbd86f929f1bcd16c808056001849026"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomEnvironmentQueries.cs",
