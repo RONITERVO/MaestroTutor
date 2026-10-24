@@ -770,6 +770,28 @@ it('requires an explicit settings snapshot, preserves edits, invalidates changed
  expect(screen.queryByRole('button',{name:'Load current values'})).toBeNull();expect(client.snapshot().request).toBeNull();act(()=>client.cancel());
 });
 
+it.each([false,true])('runs explicit source snapshots in the current room scope (temporary=%s) without retaining an earlier read context',async temporary=>{
+ const {client,screen,receive,state}=setup(true,['environmentRecovery.v1','execution.v1','actionResults.v1']);
+ const target=state.objects.find(o=>o.id==='maestro')!;expect(target).toBeDefined();
+ const before={target:target.id,revision:target.objectRevision,stateId:'a'.repeat(32),held:true,reason:'Move clear of the floor'};
+ await receive(undefined,false,{execution:{...nativeExecutions.running.execution,selected:null,running:[],outcomes:[],nextRunId:nativeExecutions.running.execution.selected.id},
+  ...(temporary?{temporaryRoom:{active:true,pending:false,id:'d'.repeat(32),saveId:'e'.repeat(32),phase:'ready' as const,error:'',savedRevision:0}}:{})});
+ const definition=capabilityDefinition('object.environment.recheck')!;
+ fireEvent.click(screen.getByRole('button',{name:'Action catalog'}));fireEvent.click(screen.getByRole('button',{name:'Search'}));
+ await receive({operation:'search',query:'',offset:0,total:1,pageSize:6,entries:[{id:definition.id,version:1,label:definition.label}],status:'Found recovery'});
+ fireEvent.click(screen.getByRole('button',{name:new RegExp(definition.label)}));await receive({operation:'inspect',capability:definition.id,version:1,definition,status:'Recovery contract'});
+ await loadCurrentDraft(screen,receive,definition,before);
+ const revision=target.objectRevision!+1,sceneRevision=state.sceneRevision+1;
+ await receive(undefined,false,{sceneRevision,objects:state.objects.map(o=>o.id===target.id?{...o,objectRevision:revision}:o)});
+ const args={target:target.id,revision,stateId:'b'.repeat(32)};
+ fireEvent.change(screen.getByLabelText('Action arguments'),{target:{value:JSON.stringify(args)}});
+ expect((screen.getByRole('button',{name:'Run action now'}) as HTMLButtonElement).disabled).toBe(false);
+ await act(async()=>{fireEvent.click(screen.getByRole('button',{name:'Run action now'}));});
+ expect(client.snapshot().request?.commands[0]).toMatchObject({action:'execution',execution:{operation:'start',call:{id:definition.id,version:1,arguments:args}}});
+ expect(client.snapshot().request?.conditions).toContainEqual({id:target.id,revision});expect(client.snapshot().request?.sceneRevision).toBe(sceneRevision);
+ act(()=>client.cancel());
+});
+
 it('adds visible current-value reads with live unedited preferences and fixed user edits to the existing program',async()=>{
  const {client,screen,receive,state}=setup(true,['structuredValues.v1','spatialSettings.v1','actionResults.v1']);
  const original=JSON.parse(state.rules!.selected!.program),definition=capabilityDefinition('avatar.movement.configure')!;

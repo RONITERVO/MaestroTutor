@@ -61,6 +61,9 @@ namespace Maestro.Quest.Creation
                 if(!Model.ApplyGeometry(settings,out error))throw new ModelImportException(error);
                 var old=importedCollision;importedCollision=candidate;candidate=null;old?.SetActive(false);
                 var box=(BoxCollider)originalCollider;box.transform.localScale=Vector3.one;box.center=Model.LocalBounds.center;box.size=Model.LocalBounds.size+Vector3.one*.02f;
+                // A base pivot is also the support plane. Keep the useful padding
+                // on the sides/top without placing the body inside its floor.
+                if(settings.pivot=="base")box.center+=Vector3.up*.01f;
                 box.GetComponent<Renderer>().enabled=false;geometryBounds=Model.LocalBounds;
                 bool selected=selection&&selection.activeSelf;if(selection){selection.SetActive(false);Destroy(selection);}BuildSelection(geometryBounds);SetSelected(selected);
                 appliedModelGeometry=settings.Copy();modelGeometryReady=true;ModelGeometryIssue="";

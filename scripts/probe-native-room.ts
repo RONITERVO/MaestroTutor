@@ -10,7 +10,7 @@ import {readNativeObjects} from './native-probe-read-set';
 import {probeAvatarAttention} from './probe-avatar-attention';
 import {probeObjectAttention} from './probe-object-attention';
 import {probeGroundedTravel,probeGroundedFollowing,probeWalkingActorClearance} from './probe-grounded-travel';
-import {prepareObjectWalk,probeObjectWalk} from './probe-object-walk';
+import {prepareObjectWalk,probeObjectWalk,probeGaitRestoration,gaitFixture} from './probe-object-walk';
 import {prepareAgentModelGeometry,runAgentModelGeometryProof} from './probe-agent-model-geometry';
 import {probeModelAssetBounds} from './probe-model-asset-bounds';
 import {runAgentWindowProof} from './probe-agent-windows';
@@ -37,6 +37,7 @@ import {probeObjectLights} from './probe-object-lights';
 import {probeWorldTime} from './probe-world-time';
 import {probeVisibilityLayers} from './probe-visibility-layers';
 import {probeWorldRegions} from './probe-world-regions';
+import {probeEnvironmentRecovery} from './probe-environment-recovery';
 import {probeWorldLocation} from './probe-world-location';
 import {probeControllerCompletion} from './probe-controller-completion';
 import {probeConstructionResources} from './probe-construction-resources';
@@ -120,6 +121,7 @@ try{
   await probeNativeSteering(execute,()=>transport.lease(),directory,!!probeOwner.sparseObjectView);outcome={steeringOnly:true};
  }else if(probeOwner.motionOnly){
   if(prompt||providerScenario)throw new Error('The motion fixture cannot call a provider');
+  if(await gaitFixture(directory))await probeGaitRestoration(execute,directory);
   await probeNativeMotion(execute,()=>lease.state(),directory);outcome={motionOnly:true};
  }else if(prompt){
   const client=await createHeadlessClient(); // isolated evidence, never an existing user's profile
@@ -499,6 +501,18 @@ try{
  await probeChatAudio(transport,execute,directory);
   await probeVisibilityLayers(execute,directory);
   await probeWorldRegions(execute,directory);
+  await probeEnvironmentRecovery({
+   fact:async(id,args)=>factReply(await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:id,version:1,arguments:args}}])),
+   count:nativeObjects.count,
+   invoke:async(id,args)=>(await completeProbeAction(execute,await execute([{action:'execution',execution:{operation:'start',call:{id,version:1,arguments:args}}}]))).execution!.selected!,
+   reject:async(id,args)=>{
+    const commands:RoomCommand[]=[{action:'execution',execution:{operation:'start',call:{id,version:1,arguments:args}}}];
+    const prepared=await transport.client.prepare(commands,lease.state());if(!lease.valid())throw new Error('Recovery room changed while preparing stale action');
+    readSets.push({commands:structuredClone(commands),session:prepared.state.session,sceneRevision:prepared.state.sceneRevision,objects:structuredClone(prepared.objects)});
+    const result=await lease.execute(commands,prepared.state.sceneRevision,prepared.objects);checkSparse(result);observations.push(structuredClone(result));return result;
+   },
+   replay:async receipt=>(await execute([{action:'execution',execution:{operation:'start',runId:receipt.id,call:receipt.call}}])).execution!.selected!
+  },directory,'headless');
 
   const profileSaved=await completeProbeAction(execute,await execute([{action:'execution',execution:{operation:'start',call:{id:'environment.profile.save',version:1,arguments:{id:'',revision:0,name:'Virtual terrain actors',realCollisions:false,members:[]}}}}]));
   const profileId=profileSaved.execution?.selected?.output?.id;

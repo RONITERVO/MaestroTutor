@@ -35,6 +35,7 @@ namespace Maestro.Quest.Interaction {
         internal GroundedMovement(RoomEditor editor,RoomItem item,Vector3 destination,float speed,string mode="walk",RoomLocomotionOwner owner=null){this.mode=mode;this.editor=editor;this.item=item;target=editor.Identity(item);this.owner=owner??new(editor,item);ownsLifetime=owner==null;this.destination=destination;this.speed=speed;obstacle=Obstacle;}
         internal static bool CanBegin(RoomEditor editor,RoomItem item,out string error,RoomLocomotionOwner owner=null){
             if(!RoomLocomotionOwner.CanBegin(editor,item,owner,false,out error))return false;
+            if(item.TryGetComponent<RoomEnvironmentBinding>(out var environment)&&environment.RestorationHeld){error=environment.RestorationReason;return false;}
             error="Start physics with accepted ground before walking";
             if(editor.PhysicsWorld.IncludesRealRoom(item)&&!editor.PhysicsWorld.EnvironmentReady(item))return false;
             var walk=AvatarWalkSelection.Observe(editor,editor.Identity(item));

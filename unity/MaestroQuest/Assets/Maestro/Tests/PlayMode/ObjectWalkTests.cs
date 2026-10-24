@@ -35,6 +35,13 @@ namespace Maestro.Quest.Tests {
             Assert.That(editor.MoveObject(id,gaitItem.transform.position+new Vector3(-2,0,-2)-foot,out error),Is.True,error);Physics.SyncTransforms();Ready();
         }
         bool SelectGait(string source,string motionId,out string error)=>editor.ConfigureObjectWalk(editor.Identity(gaitItem),editor.ObjectRevision(editor.Identity(gaitItem)),source,gaitModel.AssetHash,motionId,0,out error);
+        [UnityTest]public IEnumerator ObjectWalkReportsTheRestorationReasonBeforeGenericGroundReadiness(){
+            yield return WalkingCharacter();var wall=GameObject.CreatePrimitive(PrimitiveType.Cube);wall.transform.SetParent(root.transform,false);
+            wall.transform.position=gaitItem.transform.position;wall.layer=RoomPhysicsLayers.Scanned;Physics.SyncTransforms();
+            var binding=gaitItem.GetComponent<RoomEnvironmentBinding>();binding.BeginRestoration(false);binding.FinishRestoration();
+            Assert.That(binding.RestorationHeld,Is.True);Assert.That(GroundedMovement.CanBegin(editor,gaitItem,out var error),Is.False);
+            Assert.That(error,Is.EqualTo(binding.RestorationReason));Assert.That(error,Does.Contain("scanned surfaces"));
+        }
         [UnityTest]public IEnumerator ObjectWalkSharedChoiceSavesWithoutPlayingAndUndoRetainsIt(){
             yield return WalkingCharacter();string id=editor.Identity(gaitItem);
             var workshop=root.AddComponent<RuleWorkshop>();workshop.Initialize(editor,directory);

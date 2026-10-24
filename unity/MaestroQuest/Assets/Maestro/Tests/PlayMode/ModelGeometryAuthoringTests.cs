@@ -52,6 +52,25 @@ namespace Maestro.Quest.Tests
             Assert.That(BehaviourCatalog.TryRead("object.model.geometry",1,new JObject{["target"]=geometryTarget},new BehaviourCatalog.FactContext(editor:editor),out var fact),Is.True);
             var observation=(JObject)fact.Value;Assert.That(observation["settings"],Is.Not.Null);Assert.That((bool)observation["ready"],Is.True);Assert.That(fact.Characters,Is.LessThanOrEqualTo(1024));
         }
+        [UnityTest] public IEnumerator ModelGeometryBaseColliderRestoresOnFloorWithoutAnArtificialOverlap()
+        {
+            yield return GeometryModel(ModelFixture.WalkingCharacter());var ex=new RoomAgentExecutor(editor);
+            var view=editor.Find(geometryTarget).GetComponent<CreatedRoomObject>();
+            var initial=(BoxCollider)editor.Find(geometryTarget).Grab.colliders.Single();
+            Assert.That(initial.center.y-initial.size.y*.5f,Is.EqualTo(view.Model.LocalBounds.min.y-.01f).Within(.00001f),"Centered geometry retains symmetric padding");
+            yield return ContainerAction(ex,GeometryCall(new RoomModelGeometry{pivot="base"}));
+            Assert.That(editor.MoveObject(geometryTarget,new Vector3(3,0,3),out var error),Is.True,error);
+            var floor=RestorationWall(new Vector3(0,-.1f,0));floor.transform.localScale=new Vector3(20,.2f,20);Physics.SyncTransforms();
+            var item=editor.Find(geometryTarget);var box=(BoxCollider)item.Grab.colliders.Single();
+            Assert.That(box.bounds.min.y,Is.EqualTo(0).Within(.00001f));
+            Assert.That(box.size,Is.EqualTo(view.Model.LocalBounds.size+Vector3.one*.02f),"Side and top padding still protects thin imported geometry");
+            var clearance=new RoomEnvironmentClearance();Assert.That(clearance.Check(physics,item,true,true,out error),Is.True,error);
+            string area=NativeAreaFor(geometryTarget),saved=JsonUtility.ToJson(editor.Read(geometryTarget));
+            yield return NativeAreaCompletion(editor.RetireNativeArea(area));yield return NativeAreaCompletion(editor.ActivateNativeArea(area));
+            Assert.That(RestoredBinding(geometryTarget).RestorationHeld,Is.False,RestoredBinding(geometryTarget).RestorationReason);
+            Assert.That(JsonUtility.ToJson(editor.Read(geometryTarget)),Is.EqualTo(saved));
+            Assert.That(editor.Find(geometryTarget).Grab.colliders.Single().bounds.min.y,Is.EqualTo(0).Within(.00001f));
+        }
         [UnityTest] public IEnumerator ModelGeometryUsesDoorwayAndInteriorFloorRatherThanBoundingBox()
         {
             yield return GeometryModel(BuildingModelFixture.Create());var ex=new RoomAgentExecutor(editor);yield return ContainerAction(ex,GeometryCall(BuildingSettings()));

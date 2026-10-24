@@ -1195,6 +1195,41 @@ The headless world-area journey reads `object.presence` for a real creation and 
 PlayMode lifecycle regressions separately deactivate and destroy native instances, then verify canonical reads, live-operation refusal, unchanged saved revisions, exact motion/recipe keys, accepted-edit recovery, deletion/Undo and host-owned book/Maestro handling. The existing missing-room-anchor regression additionally verifies that an intentionally hidden drawing can be repaired or deleted. Shared client tests reject contradictory metadata and preserve older observations without fabricating a presence state. Lossless receipt-context tests preserve presence changes in agent history. This is local native and shared-client evidence, not a paid-provider, headset or regional-streaming acceptance claim.
 
 
+### Restored collision recovery coverage
+
+The headless and rendered-book journeys share
+`scripts/probe-environment-recovery.ts`. An ordinary saved ball is placed inside
+the explicitly labelled synthetic floor, assigned to an independent area and
+allowed to retire offscreen. Reading its recovery fact must remain unavailable
+without loading it or changing its saved definition. A visible companion and an
+accepted `together` area edit then provide actual native restoration demand.
+Saved placement alone is not evidence of native residency.
+
+Both clients require the restored ball to remain held, a blocked retry to return
+`held=true` even though its check completed, and stale runtime-state and saved
+revision requests to fail without effects. Moving it clear must leave the hold
+until an explicit retry. Successful recovery preserves placement and saved
+revision, leaves room physics paused and permits an already-clear repeat without
+changing recovery state. Headless additionally replays the completed receipt and
+requires the identical result without another effect. Both remove their two test
+objects and empty area afterwards.
+
+The book uses generated placement/retry fields, exact current-value guards and
+visible status/result readbacks. Its optional source editor submits deliberately
+stale snapshots through the ordinary client. Setup uses the same visible source
+editor for area/creation actions. Evidence is `headless-environment-recovery.json`
+or `book-environment-recovery.json`, with book screenshots for blocked, recovered
+and stale results. This is desktop native integration with synthetic geometry;
+it does not establish headset, real-room alignment or real-provider behavior.
+
+`-Journey Headless -MotionOnly -SyntheticGait -SparseObjectView` also runs a
+focused imported-gait restoration check before the existing physics motion check.
+It sets the imported base pivot on the synthetic floor, retires the model, restores
+it through a visible area's membership, records recovery/geometry/input facts and
+requires a completed walk. `native-gait-restoration.json` preserves the diagnostic
+even when admission fails. Base-pivot automatic collider padding must not extend
+below the support plane; genuine overlaps still require explicit recovery.
+
 ### Physics input ownership coverage
 
 The native-room journey starts physics through the shared catalog, then reads

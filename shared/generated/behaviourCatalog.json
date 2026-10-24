@@ -50389,7 +50389,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreatedModelGeometry.cs",
-      "sha256": "1a5636fecd99eadedc47d481221bd43ec77c9453fb6f913ba9c3557b0080170f"
+      "sha256": "595b3a33da71e9d8fcfdc67344f4f885d703c5a212493080703470b3b3a0a23e"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreatedRoomObject.cs",
@@ -51665,7 +51665,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/GroundedMovement.cs",
-      "sha256": "54fe56d9fc41ec59912ef2b1353332d8f7222807b5848e66f04ba9259a310d8f"
+      "sha256": "40d81c35a0c87130a9bc75ecc258a8e86300131ebc011a801086e11e80a6f64e"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/GroundedTravel.cs",

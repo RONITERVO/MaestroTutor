@@ -16668,8 +16668,49 @@ that exposed blocked grab repair and the corrected test setup/inventory checks.
 Preceding commit `9d632ba8` also passed release gate 40059877591 and native echo
 40059877645.
 
-This is focused offline native/web evidence, not a fresh Headless or rendered
-Book journey, Android build, provider or headset result. Next, exercise recovery
-through both integration clients and complete the versioned collision-profile
-summary/atomic dormant-member edit contract before raising its 16-member limit.
+Recovery now has one shared integration scenario for Headless and the rendered
+Book. It creates an obstructed saved object, retires it, restores it through an
+ordinary together-area edit and checks explicit repair/retry. Passive inspection
+cannot load it. Stale saved revisions and native state IDs refuse without effects;
+a successful retry preserves placement and leaves physics paused. Headless also
+checks replay of the exact completed receipt. Book uses generated repair/retry
+fields and the visible source editor for deliberately stale requests.
+
+The Book source editor now uses the same current-room identity as generated
+inputs and discards its previous loaded read context when explicit arguments
+replace it. Submitted revision/state guards remain unchanged; the outer object
+read set is freshly prepared. Both normal and temporary scopes have regressions.
+Imported base-pivot models retain automatic box padding on the sides and top,
+without an artificial centimetre beneath their support plane. Center/source
+pivots keep symmetric padding. A held walking actor reports its actual recovery
+reason instead of a generic physics-readiness message.
+
+The corrected build passed **1,663 EditMode + 209 selected PlayMode** cases,
+including the imported-floor restoration and blocked-walk reason regressions.
+Focused Headless run `4adb3c1f83574c6f945e52b46c30866b` restores the imported
+character without a false hold and completes its assigned gait walk. Rendered
+Book run `117ca48363f1440e997ff92740c16a9d` passed with 1,653 requests, 5,140
+observations, no browser errors and clean client/Editor exits. Full Headless run
+`b78bba68f6364f999558db71691dfbef` passed with 2,665 observations and 2,664 read
+sets, including the completed imported gait walk. Both clients prove that stale
+recovery guards are refused despite fresh outer read sets. The blocked, stale and
+repaired Book screenshots were reviewed on desktop. All 59 capability-browser
+tests passed;
+the broader Quest UI run passed 357/358, with one visual-program-authoring failure
+at 11 seconds. The unchanged affected file then passed 39/39 at the original
+deadline. App/probe TypeScript passed. These are offline synthetic-fixture results,
+not Android, device or real-provider acceptance. Evidence and initial failure
+records are in `.quest-evidence/environment-recovery-integration-20261024/`.
+All 3,568 native, 740 client/tool/catalog and 14 protected inputs stayed unchanged.
+Catalog definitions and limits are unchanged; only native source fingerprints
+changed. Preceding head `413eafcf` passed release gate 40062672343 and native echo
+40062672351; those CI runs precede these corrections.
+
+Before increasing collision-profile membership, add a compact versioned profile
+summary and an atomic edit contract using coherent membership plus exact object
+revisions. Reuse canonical metadata, the accepted-save journal and this physical
+admission/recovery path. Unloaded members must stay unloaded; live members require
+current clearance and ownership, while later restoration must enforce the saved
+policy before motion. Group edits, Undo/Redo, temporary scopes and save failures
+need the same user/agent evidence before raising the current 16-member limit.
 Device/provider holds and the broader v1 release gates remain active.

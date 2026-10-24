@@ -828,6 +828,12 @@ pivot calculation as the native import. Values are in object-local metres before
 placement/scale. Changing the saved geometry settings changes the projection at
 the reported object revision, without loading an unloaded model.
 
+For a model with the **base** pivot, the automatic box collider shares the model's
+bottom support plane. Its small side/top padding does not extend below that base
+and create an artificial floor overlap on restoration. Center/source pivots retain
+symmetric padding. Explicit collision shapes and imported mesh collision keep
+their own declared geometry; changing the pivot does not authorize motion.
+
 The content-hash metadata cache is bounded and populated by ordinary model-library
 reads/saves. A cache miss, animation, skin, deformation or unsupported/unstable
 transform is explicitly unknown. The imported asset envelope excludes authored

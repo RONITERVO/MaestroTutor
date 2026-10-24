@@ -1,5 +1,6 @@
 import {validFactValue} from '../shared/behaviourFacts';
 import {nativeBookObjects,readNativeBookObjects} from './native-book-objects';
+import {probeBookEnvironmentRecovery} from './probe-book-environment-recovery';
 import {readObjectReference} from '../shared/objectReference';
 import {chatSoundFixture} from './probe-chat-audio';
 // Copyright 2026 Roni Tervo
@@ -310,6 +311,8 @@ try{
   assert.equal(state.execution?.selected?.capability,id);assert.equal(state.execution?.selected?.phase,'completed',state.execution?.selected?.status);
   return state.execution!.selected!;
  };
+ await probeBookEnvironmentRecovery(page,directory);
+ await page.getByRole('button',{name:'Action catalog',exact:true}).click();
  // Navigate through visible generated forms, then return to the starting location.
  const locationBefore=await readResourceFact('world.viewpoint','Your world location') as unknown as WorldLocation;
  assert.equal(locationBefore.located,true);
