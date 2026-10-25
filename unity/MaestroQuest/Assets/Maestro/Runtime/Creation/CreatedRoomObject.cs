@@ -27,7 +27,7 @@ namespace Maestro.Quest.Creation
         ItemCollider collisionShape;
         CollisionGeometry customGeometry;
         string collisionEncoded;
-        public int CollisionPieces => GetComponent<RoomItem>()?.Grab.colliders.Count??0;
+        public int CollisionPieces => GetComponent<RoomItem>()?.SolidColliderCount??0;
         Bounds geometryBounds;
         bool pendingCollider;
         public ImportedModel Model { get; private set; }
@@ -145,7 +145,7 @@ namespace Maestro.Quest.Creation
             collisionShape=shape;
             if (item.Grab.isSelected) { pendingCollider=true; return; }
             pendingCollider=false;item.Grab.enabled=false;
-            foreach(var old in item.Grab.colliders)if(old)old.enabled=false;
+            foreach(var old in item.SolidColliders)if(old)old.enabled=false;
             if(chosenCollider&&chosenCollider!=originalCollider)ArtResources.Release(chosenCollider);
             chosenCollider=null;customGeometry?.SetActive(false);importedCollision?.SetActive(false);
             Collider[] active;
@@ -160,7 +160,7 @@ namespace Maestro.Quest.Creation
             }
             var field=GetComponent<HeightFieldView>();if(field&&field.Collision&&field.Collision.gameObject.activeSelf)active=active.Append(field.Collision).ToArray();
             foreach(var collider in active){collider.gameObject.layer=RoomPhysicsLayers.Item;collider.enabled=true;collider.sharedMaterial=originalCollider.sharedMaterial;}
-            item.Grab.colliders.Clear();item.Grab.colliders.AddRange(active);item.Grab.enabled=active.Length>0;
+            item.ReplaceSolidColliders(active);item.Grab.enabled=item.Grab.colliders.Count>0;
             var body=GetComponent<Rigidbody>();body.ResetCenterOfMass();body.ResetInertiaTensor();
         }
 

@@ -144,14 +144,14 @@ namespace Maestro.Quest.Tests {
                 item.gameObject.layer=RoomPhysicsLayers.Environment;CollisionAvailabilityIs(id,"ready");
             }
             var book=editor.Find("book");book.gameObject.AddComponent<IllustratedBook>().Build();
-            // The fixture's RoomItem.Start has already run. Reproduce its exact
-            // production registration for the book's newly built pointer pages.
+            // The fixture's RoomItem.Start has already run. Register the newly
+            // built pages through the same production path.
             var pages=book.GetComponentsInChildren<BookPageTarget>().Select(p=>p.GetComponent<Collider>()).ToArray();Assert.That(pages.Length,Is.EqualTo(2));
-            book.Grab.enabled=false;book.Grab.colliders.AddRange(pages);book.Grab.enabled=true;
+            book.SendMessage("Start");
             Assert.That(pages.All(p=>p.enabled&&!p.isTrigger&&p.gameObject.layer==0),Is.True);
-            CollisionAvailabilityIs("book","unavailable");
-            foreach(var page in pages)page.gameObject.layer=RoomPhysicsLayers.Environment;
-            CollisionAvailabilityIs("book","ready");yield return null;
+            CollisionAvailabilityIs("book","ready");
+            Assert.That(pages.All(RoomItem.IsPointerOnly),Is.True);
+            Assert.That(book.SolidColliderCount,Is.EqualTo(1));yield return null;
         }
         [UnityTest]public IEnumerator CollisionAvailabilityMissingTargetAndPausedAppUseOuterFactUnavailability() {
             string missing=Guid.NewGuid().ToString("N"),id=editor.Identity(block);

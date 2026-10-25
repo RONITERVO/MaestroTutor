@@ -1,10 +1,10 @@
 {
   "trace": [
     {
-      "step": 935,
+      "step": 479,
       "rooms": [
         {
-          "worldId": "9c1661d844f6482b940ef204abddc8fd",
+          "worldId": "be109fa5424a4f538e5693685f765d69",
           "vessels": 16,
           "nativeVessels": 4,
           "dormantVessels": 12,
@@ -12,10 +12,10 @@
           "ready": true,
           "sources": [
             {
-              "sessionId": "ce5124ee4ffc416c914f10f77571f52a",
+              "sessionId": "df2502783b45482fab277341f3bbd451",
               "phase": "flowing",
               "contents": {
-                "amountMl": 383.9616933816729,
+                "amountMl": 383.96169338167289,
                 "savedAmountMl": 400.0,
                 "capacityMl": 500.0,
                 "transferredMl": 16.038306618327088,
@@ -25,10 +25,10 @@
               "error": ""
             },
             {
-              "sessionId": "ce5124ee4ffc416c914f10f77571f52a",
+              "sessionId": "df2502783b45482fab277341f3bbd451",
               "phase": "flowing",
               "contents": {
-                "amountMl": 383.9616933816729,
+                "amountMl": 383.96169338167289,
                 "savedAmountMl": 400.0,
                 "capacityMl": 500.0,
                 "transferredMl": 16.038306618327088,
@@ -40,7 +40,7 @@
           ],
           "receivers": [
             {
-              "sessionId": "ce5124ee4ffc416c914f10f77571f52a",
+              "sessionId": "df2502783b45482fab277341f3bbd451",
               "phase": "flowing",
               "contents": {
                 "amountMl": 16.038306618327088,
@@ -53,7 +53,7 @@
               "error": ""
             },
             {
-              "sessionId": "ce5124ee4ffc416c914f10f77571f52a",
+              "sessionId": "df2502783b45482fab277341f3bbd451",
               "phase": "flowing",
               "contents": {
                 "amountMl": 16.038306618327088,
@@ -70,6 +70,10 @@
           "executedMembers": 4,
           "pourOriginQueries": 2,
           "pourOriginCandidates": 0,
+          "pourRayQueries": 28,
+          "pourHitCandidates": 2,
+          "scoopPathQueries": 0,
+          "scoopPathCandidates": 0,
           "pourSegments": 28,
           "pourCandidates": 56,
           "scoopCandidates": 8,
@@ -78,7 +82,7 @@
           "cavityReads": 16
         },
         {
-          "worldId": "26b3527a1d374dde860d0888c2ce5d75",
+          "worldId": "68fef273aa244ee0ac71deeaa4fe334d",
           "vessels": 16,
           "nativeVessels": 2,
           "dormantVessels": 14,
@@ -86,10 +90,10 @@
           "ready": true,
           "sources": [
             {
-              "sessionId": "95f5eb33c54a4c5e975be84637dc621d",
+              "sessionId": "04ab38d2107640a9a8988b782ac06c2d",
               "phase": "flowing",
               "contents": {
-                "amountMl": 383.9616933816729,
+                "amountMl": 383.96169338167289,
                 "savedAmountMl": 400.0,
                 "capacityMl": 500.0,
                 "transferredMl": 16.038306618327088,
@@ -101,7 +105,7 @@
           ],
           "receivers": [
             {
-              "sessionId": "95f5eb33c54a4c5e975be84637dc621d",
+              "sessionId": "04ab38d2107640a9a8988b782ac06c2d",
               "phase": "flowing",
               "contents": {
                 "amountMl": 16.038306618327088,
@@ -118,6 +122,10 @@
           "executedMembers": 2,
           "pourOriginQueries": 1,
           "pourOriginCandidates": 0,
+          "pourRayQueries": 14,
+          "pourHitCandidates": 1,
+          "scoopPathQueries": 0,
+          "scoopPathCandidates": 0,
           "pourSegments": 14,
           "pourCandidates": 28,
           "scoopCandidates": 4,
@@ -126,7 +134,7 @@
           "cavityReads": 16
         },
         {
-          "worldId": "938e99d5725a4ba4bf879b012a7443ce",
+          "worldId": "6f2a6cf609ba4f88aed92072c7c4e256",
           "vessels": 16,
           "nativeVessels": 2,
           "dormantVessels": 14,
@@ -134,10 +142,10 @@
           "ready": true,
           "sources": [
             {
-              "sessionId": "fadd430d3a48438fbac29be0b97997cb",
+              "sessionId": "a97fe6d848434972a136bdb3edefbb5f",
               "phase": "flowing",
               "contents": {
-                "amountMl": 383.9616933816729,
+                "amountMl": 383.96169338167289,
                 "savedAmountMl": 400.0,
                 "capacityMl": 500.0,
                 "transferredMl": 16.038306618327088,
@@ -149,7 +157,7 @@
           ],
           "receivers": [
             {
-              "sessionId": "fadd430d3a48438fbac29be0b97997cb",
+              "sessionId": "a97fe6d848434972a136bdb3edefbb5f",
               "phase": "flowing",
               "contents": {
                 "amountMl": 16.038306618327088,
@@ -166,6 +174,10 @@
           "executedMembers": 2,
           "pourOriginQueries": 1,
           "pourOriginCandidates": 0,
+          "pourRayQueries": 14,
+          "pourHitCandidates": 1,
+          "scoopPathQueries": 0,
+          "scoopPathCandidates": 0,
           "pourSegments": 14,
           "pourCandidates": 28,
           "scoopCandidates": 4,
@@ -174,7 +186,7 @@
           "cavityReads": 16
         },
         {
-          "worldId": "f7f9b4b54fa6486c8f4a3d434d088f1a",
+          "worldId": "7564b460882447f8bf391b59c2f91ef2",
           "vessels": 16,
           "nativeVessels": 2,
           "dormantVessels": 14,
@@ -182,10 +194,10 @@
           "ready": true,
           "sources": [
             {
-              "sessionId": "590ccc7fef7a417687f698530fba41db",
+              "sessionId": "463c11e612c64d12bf1b138692d8e224",
               "phase": "flowing",
               "contents": {
-                "amountMl": 383.9616933816729,
+                "amountMl": 383.96169338167289,
                 "savedAmountMl": 400.0,
                 "capacityMl": 500.0,
                 "transferredMl": 16.038306618327088,
@@ -197,7 +209,7 @@
           ],
           "receivers": [
             {
-              "sessionId": "590ccc7fef7a417687f698530fba41db",
+              "sessionId": "463c11e612c64d12bf1b138692d8e224",
               "phase": "flowing",
               "contents": {
                 "amountMl": 16.038306618327088,
@@ -214,6 +226,10 @@
           "executedMembers": 2,
           "pourOriginQueries": 1,
           "pourOriginCandidates": 0,
+          "pourRayQueries": 14,
+          "pourHitCandidates": 1,
+          "scoopPathQueries": 0,
+          "scoopPathCandidates": 0,
           "pourSegments": 14,
           "pourCandidates": 28,
           "scoopCandidates": 4,
@@ -222,7 +238,7 @@
           "cavityReads": 16
         },
         {
-          "worldId": "70d877e34c64427bab711598af63de28",
+          "worldId": "31c74ab848ce40a98ac7668d7625cefd",
           "vessels": 16,
           "nativeVessels": 2,
           "dormantVessels": 14,
@@ -230,10 +246,10 @@
           "ready": true,
           "sources": [
             {
-              "sessionId": "9f1b0ea5e1f341148eb7ae41ddc36f99",
+              "sessionId": "5f51da5b575b43b78b9f9776c50fc534",
               "phase": "flowing",
               "contents": {
-                "amountMl": 383.9616933816729,
+                "amountMl": 383.96169338167289,
                 "savedAmountMl": 400.0,
                 "capacityMl": 500.0,
                 "transferredMl": 16.038306618327088,
@@ -245,7 +261,7 @@
           ],
           "receivers": [
             {
-              "sessionId": "9f1b0ea5e1f341148eb7ae41ddc36f99",
+              "sessionId": "5f51da5b575b43b78b9f9776c50fc534",
               "phase": "flowing",
               "contents": {
                 "amountMl": 16.038306618327088,
@@ -262,6 +278,10 @@
           "executedMembers": 2,
           "pourOriginQueries": 1,
           "pourOriginCandidates": 0,
+          "pourRayQueries": 14,
+          "pourHitCandidates": 1,
+          "scoopPathQueries": 0,
+          "scoopPathCandidates": 0,
           "pourSegments": 14,
           "pourCandidates": 28,
           "scoopCandidates": 4,
@@ -270,7 +290,7 @@
           "cavityReads": 16
         },
         {
-          "worldId": "6a3bef2d95fc44d994ccc29b61a3f659",
+          "worldId": "d5653b32209c4cbfa15a0b01e229d85e",
           "vessels": 16,
           "nativeVessels": 2,
           "dormantVessels": 14,
@@ -278,10 +298,10 @@
           "ready": true,
           "sources": [
             {
-              "sessionId": "87b0f73bc80b4d8d91161154cf2d3cc0",
+              "sessionId": "fd0009ad78e5410bb74722ee4f0308e9",
               "phase": "flowing",
               "contents": {
-                "amountMl": 383.9616933816729,
+                "amountMl": 383.96169338167289,
                 "savedAmountMl": 400.0,
                 "capacityMl": 500.0,
                 "transferredMl": 16.038306618327088,
@@ -293,7 +313,7 @@
           ],
           "receivers": [
             {
-              "sessionId": "87b0f73bc80b4d8d91161154cf2d3cc0",
+              "sessionId": "fd0009ad78e5410bb74722ee4f0308e9",
               "phase": "flowing",
               "contents": {
                 "amountMl": 16.038306618327088,
@@ -310,6 +330,10 @@
           "executedMembers": 2,
           "pourOriginQueries": 1,
           "pourOriginCandidates": 0,
+          "pourRayQueries": 14,
+          "pourHitCandidates": 1,
+          "scoopPathQueries": 0,
+          "scoopPathCandidates": 0,
           "pourSegments": 14,
           "pourCandidates": 28,
           "scoopCandidates": 4,
@@ -318,7 +342,7 @@
           "cavityReads": 16
         },
         {
-          "worldId": "c033161965a84fda84971d0e9e899ade",
+          "worldId": "c0af818a790a4fcf8afed21c8b519931",
           "vessels": 16,
           "nativeVessels": 2,
           "dormantVessels": 14,
@@ -326,10 +350,10 @@
           "ready": true,
           "sources": [
             {
-              "sessionId": "d7c06fac013643ba9a7a97685bf194df",
+              "sessionId": "23bfbdb5d4c04d15bc325ab84fa372ce",
               "phase": "flowing",
               "contents": {
-                "amountMl": 383.9616933816729,
+                "amountMl": 383.96169338167289,
                 "savedAmountMl": 400.0,
                 "capacityMl": 500.0,
                 "transferredMl": 16.038306618327088,
@@ -341,7 +365,7 @@
           ],
           "receivers": [
             {
-              "sessionId": "d7c06fac013643ba9a7a97685bf194df",
+              "sessionId": "23bfbdb5d4c04d15bc325ab84fa372ce",
               "phase": "flowing",
               "contents": {
                 "amountMl": 16.038306618327088,
@@ -358,6 +382,10 @@
           "executedMembers": 2,
           "pourOriginQueries": 1,
           "pourOriginCandidates": 0,
+          "pourRayQueries": 14,
+          "pourHitCandidates": 1,
+          "scoopPathQueries": 0,
+          "scoopPathCandidates": 0,
           "pourSegments": 14,
           "pourCandidates": 28,
           "scoopCandidates": 4,
@@ -366,7 +394,7 @@
           "cavityReads": 16
         },
         {
-          "worldId": "388d560f13aa45459ce4626368feefb4",
+          "worldId": "417f9179d28143e991f6746601edf83d",
           "vessels": 16,
           "nativeVessels": 2,
           "dormantVessels": 14,
@@ -374,10 +402,10 @@
           "ready": true,
           "sources": [
             {
-              "sessionId": "5617ea40f941498586a928cfa1eb8af1",
+              "sessionId": "1599eab9650645a99495247c2e5d4274",
               "phase": "flowing",
               "contents": {
-                "amountMl": 383.9616933816729,
+                "amountMl": 383.96169338167289,
                 "savedAmountMl": 400.0,
                 "capacityMl": 500.0,
                 "transferredMl": 16.038306618327088,
@@ -389,7 +417,7 @@
           ],
           "receivers": [
             {
-              "sessionId": "5617ea40f941498586a928cfa1eb8af1",
+              "sessionId": "1599eab9650645a99495247c2e5d4274",
               "phase": "flowing",
               "contents": {
                 "amountMl": 16.038306618327088,
@@ -406,6 +434,10 @@
           "executedMembers": 2,
           "pourOriginQueries": 1,
           "pourOriginCandidates": 0,
+          "pourRayQueries": 14,
+          "pourHitCandidates": 1,
+          "scoopPathQueries": 0,
+          "scoopPathCandidates": 0,
           "pourSegments": 14,
           "pourCandidates": 28,
           "scoopCandidates": 4,
@@ -414,7 +446,7 @@
           "cavityReads": 16
         },
         {
-          "worldId": "b8b2c02ecb704acd9e2bcdaf0f426126",
+          "worldId": "a043a4aaefe148b299602480f1bcc0b9",
           "vessels": 16,
           "nativeVessels": 2,
           "dormantVessels": 14,
@@ -422,10 +454,10 @@
           "ready": true,
           "sources": [
             {
-              "sessionId": "6c2624a4f30643f78d2c8be9813f5d0f",
+              "sessionId": "47e2a7fbe9004ee7a27b212c1e360ce8",
               "phase": "flowing",
               "contents": {
-                "amountMl": 383.9616933816729,
+                "amountMl": 383.96169338167289,
                 "savedAmountMl": 400.0,
                 "capacityMl": 500.0,
                 "transferredMl": 16.038306618327088,
@@ -437,7 +469,7 @@
           ],
           "receivers": [
             {
-              "sessionId": "6c2624a4f30643f78d2c8be9813f5d0f",
+              "sessionId": "47e2a7fbe9004ee7a27b212c1e360ce8",
               "phase": "flowing",
               "contents": {
                 "amountMl": 16.038306618327088,
@@ -454,6 +486,10 @@
           "executedMembers": 2,
           "pourOriginQueries": 1,
           "pourOriginCandidates": 0,
+          "pourRayQueries": 14,
+          "pourHitCandidates": 1,
+          "scoopPathQueries": 0,
+          "scoopPathCandidates": 0,
           "pourSegments": 14,
           "pourCandidates": 28,
           "scoopCandidates": 4,
@@ -464,7 +500,7 @@
       ],
       "flowBudget": {
         "reservations": 9,
-        "units": 54560,
+        "units": 92960,
         "reservationLimit": 64,
         "unitLimit": 524288,
         "streamSegments": 32,
@@ -473,7 +509,7 @@
         "rainSamples": 5
       },
       "discoveryBudget": {
-        "step": 935,
+        "step": 479,
         "reservations": 9,
         "executions": 9,
         "units": 65124,
@@ -490,10 +526,10 @@
       }
     },
     {
-      "step": 936,
+      "step": 480,
       "rooms": [
         {
-          "worldId": "9c1661d844f6482b940ef204abddc8fd",
+          "worldId": "be109fa5424a4f538e5693685f765d69",
           "vessels": 16,
           "nativeVessels": 4,
           "dormantVessels": 12,
@@ -501,10 +537,10 @@
           "ready": true,
           "sources": [
             {
-              "sessionId": "ce5124ee4ffc416c914f10f77571f52a",
+              "sessionId": "df2502783b45482fab277341f3bbd451",
               "phase": "flowing",
               "contents": {
-                "amountMl": 368.2788892795238,
+                "amountMl": 368.27888927952381,
                 "savedAmountMl": 400.0,
                 "capacityMl": 500.0,
                 "transferredMl": 16.038306618327088,
@@ -514,10 +550,10 @@
               "error": ""
             },
             {
-              "sessionId": "ce5124ee4ffc416c914f10f77571f52a",
+              "sessionId": "df2502783b45482fab277341f3bbd451",
               "phase": "flowing",
               "contents": {
-                "amountMl": 368.2788892795238,
+                "amountMl": 368.27888927952381,
                 "savedAmountMl": 400.0,
                 "capacityMl": 500.0,
                 "transferredMl": 31.721110720476176,
@@ -529,10 +565,10 @@
           ],
           "receivers": [
             {
-              "sessionId": "ce5124ee4ffc416c914f10f77571f52a",
+              "sessionId": "df2502783b45482fab277341f3bbd451",
               "phase": "flowing",
               "contents": {
-                "amountMl": 31.721110720476176,
+                "amountMl": 16.038306618327088,
                 "savedAmountMl": 0.0,
                 "capacityMl": 500.0,
                 "transferredMl": 0.0,
@@ -542,10 +578,10 @@
               "error": ""
             },
             {
-              "sessionId": "ce5124ee4ffc416c914f10f77571f52a",
+              "sessionId": "df2502783b45482fab277341f3bbd451",
               "phase": "flowing",
               "contents": {
-                "amountMl": 16.038306618327088,
+                "amountMl": 31.721110720476176,
                 "savedAmountMl": 0.0,
                 "capacityMl": 500.0,
                 "transferredMl": 0.0,
@@ -559,6 +595,10 @@
           "executedMembers": 4,
           "pourOriginQueries": 2,
           "pourOriginCandidates": 0,
+          "pourRayQueries": 46,
+          "pourHitCandidates": 2,
+          "scoopPathQueries": 0,
+          "scoopPathCandidates": 0,
           "pourSegments": 46,
           "pourCandidates": 74,
           "scoopCandidates": 10,
@@ -567,7 +607,7 @@
           "cavityReads": 16
         },
         {
-          "worldId": "26b3527a1d374dde860d0888c2ce5d75",
+          "worldId": "68fef273aa244ee0ac71deeaa4fe334d",
           "vessels": 16,
           "nativeVessels": 2,
           "dormantVessels": 14,
@@ -575,10 +615,10 @@
           "ready": true,
           "sources": [
             {
-              "sessionId": "95f5eb33c54a4c5e975be84637dc621d",
+              "sessionId": "04ab38d2107640a9a8988b782ac06c2d",
               "phase": "flowing",
               "contents": {
-                "amountMl": 368.2788892795238,
+                "amountMl": 368.27888927952381,
                 "savedAmountMl": 400.0,
                 "capacityMl": 500.0,
                 "transferredMl": 31.721110720476176,
@@ -590,7 +630,7 @@
           ],
           "receivers": [
             {
-              "sessionId": "95f5eb33c54a4c5e975be84637dc621d",
+              "sessionId": "04ab38d2107640a9a8988b782ac06c2d",
               "phase": "flowing",
               "contents": {
                 "amountMl": 31.721110720476176,
@@ -607,6 +647,10 @@
           "executedMembers": 2,
           "pourOriginQueries": 1,
           "pourOriginCandidates": 0,
+          "pourRayQueries": 14,
+          "pourHitCandidates": 1,
+          "scoopPathQueries": 0,
+          "scoopPathCandidates": 0,
           "pourSegments": 14,
           "pourCandidates": 28,
           "scoopCandidates": 4,
@@ -615,7 +659,7 @@
           "cavityReads": 16
         },
         {
-          "worldId": "938e99d5725a4ba4bf879b012a7443ce",
+          "worldId": "6f2a6cf609ba4f88aed92072c7c4e256",
           "vessels": 16,
           "nativeVessels": 2,
           "dormantVessels": 14,
@@ -623,10 +667,10 @@
           "ready": true,
           "sources": [
             {
-              "sessionId": "fadd430d3a48438fbac29be0b97997cb",
+              "sessionId": "a97fe6d848434972a136bdb3edefbb5f",
               "phase": "flowing",
               "contents": {
-                "amountMl": 368.2788892795238,
+                "amountMl": 368.27888927952381,
                 "savedAmountMl": 400.0,
                 "capacityMl": 500.0,
                 "transferredMl": 31.721110720476176,
@@ -638,7 +682,7 @@
           ],
           "receivers": [
             {
-              "sessionId": "fadd430d3a48438fbac29be0b97997cb",
+              "sessionId": "a97fe6d848434972a136bdb3edefbb5f",
               "phase": "flowing",
               "contents": {
                 "amountMl": 31.721110720476176,
@@ -655,6 +699,10 @@
           "executedMembers": 2,
           "pourOriginQueries": 1,
           "pourOriginCandidates": 0,
+          "pourRayQueries": 14,
+          "pourHitCandidates": 1,
+          "scoopPathQueries": 0,
+          "scoopPathCandidates": 0,
           "pourSegments": 14,
           "pourCandidates": 28,
           "scoopCandidates": 4,
@@ -663,7 +711,7 @@
           "cavityReads": 16
         },
         {
-          "worldId": "f7f9b4b54fa6486c8f4a3d434d088f1a",
+          "worldId": "7564b460882447f8bf391b59c2f91ef2",
           "vessels": 16,
           "nativeVessels": 2,
           "dormantVessels": 14,
@@ -671,10 +719,10 @@
           "ready": true,
           "sources": [
             {
-              "sessionId": "590ccc7fef7a417687f698530fba41db",
+              "sessionId": "463c11e612c64d12bf1b138692d8e224",
               "phase": "flowing",
               "contents": {
-                "amountMl": 368.2788892795238,
+                "amountMl": 368.27888927952381,
                 "savedAmountMl": 400.0,
                 "capacityMl": 500.0,
                 "transferredMl": 31.721110720476176,
@@ -686,7 +734,7 @@
           ],
           "receivers": [
             {
-              "sessionId": "590ccc7fef7a417687f698530fba41db",
+              "sessionId": "463c11e612c64d12bf1b138692d8e224",
               "phase": "flowing",
               "contents": {
                 "amountMl": 31.721110720476176,
@@ -703,6 +751,10 @@
           "executedMembers": 2,
           "pourOriginQueries": 1,
           "pourOriginCandidates": 0,
+          "pourRayQueries": 14,
+          "pourHitCandidates": 1,
+          "scoopPathQueries": 0,
+          "scoopPathCandidates": 0,
           "pourSegments": 14,
           "pourCandidates": 28,
           "scoopCandidates": 4,
@@ -711,7 +763,7 @@
           "cavityReads": 16
         },
         {
-          "worldId": "70d877e34c64427bab711598af63de28",
+          "worldId": "31c74ab848ce40a98ac7668d7625cefd",
           "vessels": 16,
           "nativeVessels": 2,
           "dormantVessels": 14,
@@ -719,10 +771,10 @@
           "ready": true,
           "sources": [
             {
-              "sessionId": "9f1b0ea5e1f341148eb7ae41ddc36f99",
+              "sessionId": "5f51da5b575b43b78b9f9776c50fc534",
               "phase": "flowing",
               "contents": {
-                "amountMl": 368.2788892795238,
+                "amountMl": 368.27888927952381,
                 "savedAmountMl": 400.0,
                 "capacityMl": 500.0,
                 "transferredMl": 31.721110720476176,
@@ -734,7 +786,7 @@
           ],
           "receivers": [
             {
-              "sessionId": "9f1b0ea5e1f341148eb7ae41ddc36f99",
+              "sessionId": "5f51da5b575b43b78b9f9776c50fc534",
               "phase": "flowing",
               "contents": {
                 "amountMl": 31.721110720476176,
@@ -751,6 +803,10 @@
           "executedMembers": 2,
           "pourOriginQueries": 1,
           "pourOriginCandidates": 0,
+          "pourRayQueries": 14,
+          "pourHitCandidates": 1,
+          "scoopPathQueries": 0,
+          "scoopPathCandidates": 0,
           "pourSegments": 14,
           "pourCandidates": 28,
           "scoopCandidates": 4,
@@ -759,7 +815,7 @@
           "cavityReads": 16
         },
         {
-          "worldId": "6a3bef2d95fc44d994ccc29b61a3f659",
+          "worldId": "d5653b32209c4cbfa15a0b01e229d85e",
           "vessels": 16,
           "nativeVessels": 2,
           "dormantVessels": 14,
@@ -767,10 +823,10 @@
           "ready": true,
           "sources": [
             {
-              "sessionId": "87b0f73bc80b4d8d91161154cf2d3cc0",
+              "sessionId": "fd0009ad78e5410bb74722ee4f0308e9",
               "phase": "flowing",
               "contents": {
-                "amountMl": 368.2788892795238,
+                "amountMl": 368.27888927952381,
                 "savedAmountMl": 400.0,
                 "capacityMl": 500.0,
                 "transferredMl": 31.721110720476176,
@@ -782,7 +838,7 @@
           ],
           "receivers": [
             {
-              "sessionId": "87b0f73bc80b4d8d91161154cf2d3cc0",
+              "sessionId": "fd0009ad78e5410bb74722ee4f0308e9",
               "phase": "flowing",
               "contents": {
                 "amountMl": 31.721110720476176,
@@ -799,6 +855,10 @@
           "executedMembers": 2,
           "pourOriginQueries": 1,
           "pourOriginCandidates": 0,
+          "pourRayQueries": 14,
+          "pourHitCandidates": 1,
+          "scoopPathQueries": 0,
+          "scoopPathCandidates": 0,
           "pourSegments": 14,
           "pourCandidates": 28,
           "scoopCandidates": 4,
@@ -807,7 +867,7 @@
           "cavityReads": 16
         },
         {
-          "worldId": "c033161965a84fda84971d0e9e899ade",
+          "worldId": "c0af818a790a4fcf8afed21c8b519931",
           "vessels": 16,
           "nativeVessels": 2,
           "dormantVessels": 14,
@@ -815,10 +875,10 @@
           "ready": true,
           "sources": [
             {
-              "sessionId": "d7c06fac013643ba9a7a97685bf194df",
+              "sessionId": "23bfbdb5d4c04d15bc325ab84fa372ce",
               "phase": "flowing",
               "contents": {
-                "amountMl": 368.2788892795238,
+                "amountMl": 368.27888927952381,
                 "savedAmountMl": 400.0,
                 "capacityMl": 500.0,
                 "transferredMl": 31.721110720476176,
@@ -830,7 +890,7 @@
           ],
           "receivers": [
             {
-              "sessionId": "d7c06fac013643ba9a7a97685bf194df",
+              "sessionId": "23bfbdb5d4c04d15bc325ab84fa372ce",
               "phase": "flowing",
               "contents": {
                 "amountMl": 31.721110720476176,
@@ -847,6 +907,10 @@
           "executedMembers": 2,
           "pourOriginQueries": 1,
           "pourOriginCandidates": 0,
+          "pourRayQueries": 14,
+          "pourHitCandidates": 1,
+          "scoopPathQueries": 0,
+          "scoopPathCandidates": 0,
           "pourSegments": 14,
           "pourCandidates": 28,
           "scoopCandidates": 4,
@@ -855,7 +919,7 @@
           "cavityReads": 16
         },
         {
-          "worldId": "388d560f13aa45459ce4626368feefb4",
+          "worldId": "417f9179d28143e991f6746601edf83d",
           "vessels": 16,
           "nativeVessels": 2,
           "dormantVessels": 14,
@@ -863,10 +927,10 @@
           "ready": true,
           "sources": [
             {
-              "sessionId": "5617ea40f941498586a928cfa1eb8af1",
+              "sessionId": "1599eab9650645a99495247c2e5d4274",
               "phase": "flowing",
               "contents": {
-                "amountMl": 368.2788892795238,
+                "amountMl": 368.27888927952381,
                 "savedAmountMl": 400.0,
                 "capacityMl": 500.0,
                 "transferredMl": 31.721110720476176,
@@ -878,7 +942,7 @@
           ],
           "receivers": [
             {
-              "sessionId": "5617ea40f941498586a928cfa1eb8af1",
+              "sessionId": "1599eab9650645a99495247c2e5d4274",
               "phase": "flowing",
               "contents": {
                 "amountMl": 31.721110720476176,
@@ -895,6 +959,10 @@
           "executedMembers": 2,
           "pourOriginQueries": 1,
           "pourOriginCandidates": 0,
+          "pourRayQueries": 14,
+          "pourHitCandidates": 1,
+          "scoopPathQueries": 0,
+          "scoopPathCandidates": 0,
           "pourSegments": 14,
           "pourCandidates": 28,
           "scoopCandidates": 4,
@@ -903,7 +971,7 @@
           "cavityReads": 16
         },
         {
-          "worldId": "b8b2c02ecb704acd9e2bcdaf0f426126",
+          "worldId": "a043a4aaefe148b299602480f1bcc0b9",
           "vessels": 16,
           "nativeVessels": 2,
           "dormantVessels": 14,
@@ -911,10 +979,10 @@
           "ready": true,
           "sources": [
             {
-              "sessionId": "6c2624a4f30643f78d2c8be9813f5d0f",
+              "sessionId": "47e2a7fbe9004ee7a27b212c1e360ce8",
               "phase": "flowing",
               "contents": {
-                "amountMl": 368.2788892795238,
+                "amountMl": 368.27888927952381,
                 "savedAmountMl": 400.0,
                 "capacityMl": 500.0,
                 "transferredMl": 31.721110720476176,
@@ -926,7 +994,7 @@
           ],
           "receivers": [
             {
-              "sessionId": "6c2624a4f30643f78d2c8be9813f5d0f",
+              "sessionId": "47e2a7fbe9004ee7a27b212c1e360ce8",
               "phase": "flowing",
               "contents": {
                 "amountMl": 31.721110720476176,
@@ -943,6 +1011,10 @@
           "executedMembers": 2,
           "pourOriginQueries": 1,
           "pourOriginCandidates": 0,
+          "pourRayQueries": 14,
+          "pourHitCandidates": 1,
+          "scoopPathQueries": 0,
+          "scoopPathCandidates": 0,
           "pourSegments": 14,
           "pourCandidates": 28,
           "scoopCandidates": 4,
@@ -953,7 +1025,7 @@
       ],
       "flowBudget": {
         "reservations": 9,
-        "units": 54728,
+        "units": 96968,
         "reservationLimit": 64,
         "unitLimit": 524288,
         "streamSegments": 32,
@@ -962,7 +1034,7 @@
         "rainSamples": 5
       },
       "discoveryBudget": {
-        "step": 936,
+        "step": 480,
         "reservations": 9,
         "executions": 9,
         "units": 65124,
@@ -980,10 +1052,10 @@
       "topology": "merged"
     },
     {
-      "step": 937,
+      "step": 481,
       "rooms": [
         {
-          "worldId": "9c1661d844f6482b940ef204abddc8fd",
+          "worldId": "be109fa5424a4f538e5693685f765d69",
           "vessels": 16,
           "nativeVessels": 4,
           "dormantVessels": 12,
@@ -991,23 +1063,23 @@
           "ready": true,
           "sources": [
             {
-              "sessionId": "ce5124ee4ffc416c914f10f77571f52a",
+              "sessionId": "df2502783b45482fab277341f3bbd451",
               "phase": "flowing",
               "contents": {
-                "amountMl": 352.9516790785958,
+                "amountMl": 352.95167907859582,
                 "savedAmountMl": 400.0,
                 "capacityMl": 500.0,
-                "transferredMl": 31.36551681925509,
+                "transferredMl": 31.365516819255092,
                 "spilledMl": 15.68280410214909
               },
               "temporary": false,
               "error": ""
             },
             {
-              "sessionId": "ce5124ee4ffc416c914f10f77571f52a",
+              "sessionId": "df2502783b45482fab277341f3bbd451",
               "phase": "flowing",
               "contents": {
-                "amountMl": 352.9516790785958,
+                "amountMl": 352.95167907859582,
                 "savedAmountMl": 400.0,
                 "capacityMl": 500.0,
                 "transferredMl": 47.048320921404176,
@@ -1019,10 +1091,10 @@
           ],
           "receivers": [
             {
-              "sessionId": "ce5124ee4ffc416c914f10f77571f52a",
+              "sessionId": "df2502783b45482fab277341f3bbd451",
               "phase": "flowing",
               "contents": {
-                "amountMl": 47.048320921404176,
+                "amountMl": 31.365516819255092,
                 "savedAmountMl": 0.0,
                 "capacityMl": 500.0,
                 "transferredMl": 0.0,
@@ -1032,10 +1104,10 @@
               "error": ""
             },
             {
-              "sessionId": "ce5124ee4ffc416c914f10f77571f52a",
+              "sessionId": "df2502783b45482fab277341f3bbd451",
               "phase": "flowing",
               "contents": {
-                "amountMl": 31.36551681925509,
+                "amountMl": 47.048320921404176,
                 "savedAmountMl": 0.0,
                 "capacityMl": 500.0,
                 "transferredMl": 0.0,
@@ -1049,6 +1121,10 @@
           "executedMembers": 4,
           "pourOriginQueries": 2,
           "pourOriginCandidates": 0,
+          "pourRayQueries": 28,
+          "pourHitCandidates": 2,
+          "scoopPathQueries": 0,
+          "scoopPathCandidates": 0,
           "pourSegments": 28,
           "pourCandidates": 56,
           "scoopCandidates": 8,
@@ -1057,7 +1133,7 @@
           "cavityReads": 16
         },
         {
-          "worldId": "26b3527a1d374dde860d0888c2ce5d75",
+          "worldId": "68fef273aa244ee0ac71deeaa4fe334d",
           "vessels": 16,
           "nativeVessels": 2,
           "dormantVessels": 14,
@@ -1065,10 +1141,10 @@
           "ready": true,
           "sources": [
             {
-              "sessionId": "95f5eb33c54a4c5e975be84637dc621d",
+              "sessionId": "04ab38d2107640a9a8988b782ac06c2d",
               "phase": "flowing",
               "contents": {
-                "amountMl": 352.9516790785958,
+                "amountMl": 352.95167907859582,
                 "savedAmountMl": 400.0,
                 "capacityMl": 500.0,
                 "transferredMl": 47.048320921404176,
@@ -1080,7 +1156,7 @@
           ],
           "receivers": [
             {
-              "sessionId": "95f5eb33c54a4c5e975be84637dc621d",
+              "sessionId": "04ab38d2107640a9a8988b782ac06c2d",
               "phase": "flowing",
               "contents": {
                 "amountMl": 47.048320921404176,
@@ -1097,6 +1173,10 @@
           "executedMembers": 2,
           "pourOriginQueries": 1,
           "pourOriginCandidates": 0,
+          "pourRayQueries": 14,
+          "pourHitCandidates": 1,
+          "scoopPathQueries": 0,
+          "scoopPathCandidates": 0,
           "pourSegments": 14,
           "pourCandidates": 28,
           "scoopCandidates": 4,
@@ -1105,7 +1185,7 @@
           "cavityReads": 16
         },
         {
-          "worldId": "938e99d5725a4ba4bf879b012a7443ce",
+          "worldId": "6f2a6cf609ba4f88aed92072c7c4e256",
           "vessels": 16,
           "nativeVessels": 2,
           "dormantVessels": 14,
@@ -1113,10 +1193,10 @@
           "ready": true,
           "sources": [
             {
-              "sessionId": "fadd430d3a48438fbac29be0b97997cb",
+              "sessionId": "a97fe6d848434972a136bdb3edefbb5f",
               "phase": "flowing",
               "contents": {
-                "amountMl": 352.9516790785958,
+                "amountMl": 352.95167907859582,
                 "savedAmountMl": 400.0,
                 "capacityMl": 500.0,
                 "transferredMl": 47.048320921404176,
@@ -1128,7 +1208,7 @@
           ],
           "receivers": [
             {
-              "sessionId": "fadd430d3a48438fbac29be0b97997cb",
+              "sessionId": "a97fe6d848434972a136bdb3edefbb5f",
               "phase": "flowing",
               "contents": {
                 "amountMl": 47.048320921404176,
@@ -1145,6 +1225,10 @@
           "executedMembers": 2,
           "pourOriginQueries": 1,
           "pourOriginCandidates": 0,
+          "pourRayQueries": 14,
+          "pourHitCandidates": 1,
+          "scoopPathQueries": 0,
+          "scoopPathCandidates": 0,
           "pourSegments": 14,
           "pourCandidates": 28,
           "scoopCandidates": 4,
@@ -1153,7 +1237,7 @@
           "cavityReads": 16
         },
         {
-          "worldId": "f7f9b4b54fa6486c8f4a3d434d088f1a",
+          "worldId": "7564b460882447f8bf391b59c2f91ef2",
           "vessels": 16,
           "nativeVessels": 2,
           "dormantVessels": 14,
@@ -1161,10 +1245,10 @@
           "ready": true,
           "sources": [
             {
-              "sessionId": "590ccc7fef7a417687f698530fba41db",
+              "sessionId": "463c11e612c64d12bf1b138692d8e224",
               "phase": "flowing",
               "contents": {
-                "amountMl": 352.9516790785958,
+                "amountMl": 352.95167907859582,
                 "savedAmountMl": 400.0,
                 "capacityMl": 500.0,
                 "transferredMl": 47.048320921404176,
@@ -1176,7 +1260,7 @@
           ],
           "receivers": [
             {
-              "sessionId": "590ccc7fef7a417687f698530fba41db",
+              "sessionId": "463c11e612c64d12bf1b138692d8e224",
               "phase": "flowing",
               "contents": {
                 "amountMl": 47.048320921404176,
@@ -1193,6 +1277,10 @@
           "executedMembers": 2,
           "pourOriginQueries": 1,
           "pourOriginCandidates": 0,
+          "pourRayQueries": 14,
+          "pourHitCandidates": 1,
+          "scoopPathQueries": 0,
+          "scoopPathCandidates": 0,
           "pourSegments": 14,
           "pourCandidates": 28,
           "scoopCandidates": 4,
@@ -1201,7 +1289,7 @@
           "cavityReads": 16
         },
         {
-          "worldId": "70d877e34c64427bab711598af63de28",
+          "worldId": "31c74ab848ce40a98ac7668d7625cefd",
           "vessels": 16,
           "nativeVessels": 2,
           "dormantVessels": 14,
@@ -1209,10 +1297,10 @@
           "ready": true,
           "sources": [
             {
-              "sessionId": "9f1b0ea5e1f341148eb7ae41ddc36f99",
+              "sessionId": "5f51da5b575b43b78b9f9776c50fc534",
               "phase": "flowing",
               "contents": {
-                "amountMl": 352.9516790785958,
+                "amountMl": 352.95167907859582,
                 "savedAmountMl": 400.0,
                 "capacityMl": 500.0,
                 "transferredMl": 47.048320921404176,
@@ -1224,7 +1312,7 @@
           ],
           "receivers": [
             {
-              "sessionId": "9f1b0ea5e1f341148eb7ae41ddc36f99",
+              "sessionId": "5f51da5b575b43b78b9f9776c50fc534",
               "phase": "flowing",
               "contents": {
                 "amountMl": 47.048320921404176,
@@ -1241,6 +1329,10 @@
           "executedMembers": 2,
           "pourOriginQueries": 1,
           "pourOriginCandidates": 0,
+          "pourRayQueries": 14,
+          "pourHitCandidates": 1,
+          "scoopPathQueries": 0,
+          "scoopPathCandidates": 0,
           "pourSegments": 14,
           "pourCandidates": 28,
           "scoopCandidates": 4,
@@ -1249,7 +1341,7 @@
           "cavityReads": 16
         },
         {
-          "worldId": "6a3bef2d95fc44d994ccc29b61a3f659",
+          "worldId": "d5653b32209c4cbfa15a0b01e229d85e",
           "vessels": 16,
           "nativeVessels": 2,
           "dormantVessels": 14,
@@ -1257,10 +1349,10 @@
           "ready": true,
           "sources": [
             {
-              "sessionId": "87b0f73bc80b4d8d91161154cf2d3cc0",
+              "sessionId": "fd0009ad78e5410bb74722ee4f0308e9",
               "phase": "flowing",
               "contents": {
-                "amountMl": 352.9516790785958,
+                "amountMl": 352.95167907859582,
                 "savedAmountMl": 400.0,
                 "capacityMl": 500.0,
                 "transferredMl": 47.048320921404176,
@@ -1272,7 +1364,7 @@
           ],
           "receivers": [
             {
-              "sessionId": "87b0f73bc80b4d8d91161154cf2d3cc0",
+              "sessionId": "fd0009ad78e5410bb74722ee4f0308e9",
               "phase": "flowing",
               "contents": {
                 "amountMl": 47.048320921404176,
@@ -1289,6 +1381,10 @@
           "executedMembers": 2,
           "pourOriginQueries": 1,
           "pourOriginCandidates": 0,
+          "pourRayQueries": 14,
+          "pourHitCandidates": 1,
+          "scoopPathQueries": 0,
+          "scoopPathCandidates": 0,
           "pourSegments": 14,
           "pourCandidates": 28,
           "scoopCandidates": 4,
@@ -1297,7 +1393,7 @@
           "cavityReads": 16
         },
         {
-          "worldId": "c033161965a84fda84971d0e9e899ade",
+          "worldId": "c0af818a790a4fcf8afed21c8b519931",
           "vessels": 16,
           "nativeVessels": 2,
           "dormantVessels": 14,
@@ -1305,10 +1401,10 @@
           "ready": true,
           "sources": [
             {
-              "sessionId": "d7c06fac013643ba9a7a97685bf194df",
+              "sessionId": "23bfbdb5d4c04d15bc325ab84fa372ce",
               "phase": "flowing",
               "contents": {
-                "amountMl": 352.9516790785958,
+                "amountMl": 352.95167907859582,
                 "savedAmountMl": 400.0,
                 "capacityMl": 500.0,
                 "transferredMl": 47.048320921404176,
@@ -1320,7 +1416,7 @@
           ],
           "receivers": [
             {
-              "sessionId": "d7c06fac013643ba9a7a97685bf194df",
+              "sessionId": "23bfbdb5d4c04d15bc325ab84fa372ce",
               "phase": "flowing",
               "contents": {
                 "amountMl": 47.048320921404176,
@@ -1337,6 +1433,10 @@
           "executedMembers": 2,
           "pourOriginQueries": 1,
           "pourOriginCandidates": 0,
+          "pourRayQueries": 14,
+          "pourHitCandidates": 1,
+          "scoopPathQueries": 0,
+          "scoopPathCandidates": 0,
           "pourSegments": 14,
           "pourCandidates": 28,
           "scoopCandidates": 4,
@@ -1345,7 +1445,7 @@
           "cavityReads": 16
         },
         {
-          "worldId": "388d560f13aa45459ce4626368feefb4",
+          "worldId": "417f9179d28143e991f6746601edf83d",
           "vessels": 16,
           "nativeVessels": 2,
           "dormantVessels": 14,
@@ -1353,10 +1453,10 @@
           "ready": true,
           "sources": [
             {
-              "sessionId": "5617ea40f941498586a928cfa1eb8af1",
+              "sessionId": "1599eab9650645a99495247c2e5d4274",
               "phase": "flowing",
               "contents": {
-                "amountMl": 352.9516790785958,
+                "amountMl": 352.95167907859582,
                 "savedAmountMl": 400.0,
                 "capacityMl": 500.0,
                 "transferredMl": 47.048320921404176,
@@ -1368,7 +1468,7 @@
           ],
           "receivers": [
             {
-              "sessionId": "5617ea40f941498586a928cfa1eb8af1",
+              "sessionId": "1599eab9650645a99495247c2e5d4274",
               "phase": "flowing",
               "contents": {
                 "amountMl": 47.048320921404176,
@@ -1385,6 +1485,10 @@
           "executedMembers": 2,
           "pourOriginQueries": 1,
           "pourOriginCandidates": 0,
+          "pourRayQueries": 14,
+          "pourHitCandidates": 1,
+          "scoopPathQueries": 0,
+          "scoopPathCandidates": 0,
           "pourSegments": 14,
           "pourCandidates": 28,
           "scoopCandidates": 4,
@@ -1393,7 +1497,7 @@
           "cavityReads": 16
         },
         {
-          "worldId": "b8b2c02ecb704acd9e2bcdaf0f426126",
+          "worldId": "a043a4aaefe148b299602480f1bcc0b9",
           "vessels": 16,
           "nativeVessels": 2,
           "dormantVessels": 14,
@@ -1401,10 +1505,10 @@
           "ready": true,
           "sources": [
             {
-              "sessionId": "6c2624a4f30643f78d2c8be9813f5d0f",
+              "sessionId": "47e2a7fbe9004ee7a27b212c1e360ce8",
               "phase": "flowing",
               "contents": {
-                "amountMl": 352.9516790785958,
+                "amountMl": 352.95167907859582,
                 "savedAmountMl": 400.0,
                 "capacityMl": 500.0,
                 "transferredMl": 47.048320921404176,
@@ -1416,7 +1520,7 @@
           ],
           "receivers": [
             {
-              "sessionId": "6c2624a4f30643f78d2c8be9813f5d0f",
+              "sessionId": "47e2a7fbe9004ee7a27b212c1e360ce8",
               "phase": "flowing",
               "contents": {
                 "amountMl": 47.048320921404176,
@@ -1433,6 +1537,10 @@
           "executedMembers": 2,
           "pourOriginQueries": 1,
           "pourOriginCandidates": 0,
+          "pourRayQueries": 14,
+          "pourHitCandidates": 1,
+          "scoopPathQueries": 0,
+          "scoopPathCandidates": 0,
           "pourSegments": 14,
           "pourCandidates": 28,
           "scoopCandidates": 4,
@@ -1443,7 +1551,7 @@
       ],
       "flowBudget": {
         "reservations": 9,
-        "units": 54560,
+        "units": 92960,
         "reservationLimit": 64,
         "unitLimit": 524288,
         "streamSegments": 32,
@@ -1452,7 +1560,7 @@
         "rainSamples": 5
       },
       "discoveryBudget": {
-        "step": 937,
+        "step": 481,
         "reservations": 9,
         "executions": 9,
         "units": 65124,
@@ -1474,9 +1582,9 @@
   "savedContainers": 144,
   "nativeContainers": 20,
   "dormantContainers": 124,
-  "hostUnits": 562176,
+  "hostUnits": 4709376,
   "flowUnitLimit": 524288,
-  "groupUnits": 54560,
+  "groupUnits": 92960,
   "resourceBudgets": {
     "objects": {
       "instances": 20,

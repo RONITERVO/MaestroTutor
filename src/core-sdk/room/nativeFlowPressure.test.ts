@@ -12,7 +12,7 @@ it('reads real native room pressure without equating saved inventory and native 
  expect(first.rooms.reduce((sum,room)=>sum+room.nativeVessels,0)).toBe(20);
  expect(first.rooms.reduce((sum,room)=>sum+room.dormantVessels,0)).toBe(124);
  expect(native.hostUnits).toBeGreaterThan(native.flowUnitLimit);
- expect(native.groupUnits).toBe(54560);
+ expect(native.groupUnits).toBe(92960);
  expect(first.flowBudget.units).toBe(native.groupUnits);
  expect(native.discoveryUnits).toBeLessThan(native.discoveryUnitLimit);
  expect(native.resourceBudgets.liquids.instances).toBeLessThan(native.resourceBudgets.liquids.instanceLimit);
@@ -31,13 +31,22 @@ it('accepts the same native waiting and flowing facts for shared user and agent 
   expect(sample.nativeBudget).toMatchObject({instances:20,preparing:0,retiring:0});
   for(const room of sample.rooms){
    expect(room.pending).toBe(false);
+   // Captured query visits stay within the complete-pass reservation; these
+   // counters are not measured CPU/GPU time or a particle-simulation claim.
+   for(const key of ['pourRayQueries','pourHitCandidates','scoopPathQueries','scoopPathCandidates'] as const){
+    expect(Number.isInteger(room[key])).toBe(true);expect(room[key]).toBeGreaterThanOrEqual(0);
+   }
+   expect(room.pourRayQueries).toBeLessThanOrEqual(room.executedMembers*sample.flowBudget.streamSegments);
+   expect(room.pourHitCandidates).toBeLessThanOrEqual(room.pourRayQueries*sample.flowBudget.queryHits);
+   expect(room.scoopPathQueries).toBeLessThanOrEqual(room.scoopCandidates*sample.flowBudget.scoopSamples*3);
+   expect(room.scoopPathCandidates).toBeLessThanOrEqual(room.scoopPathQueries*sample.flowBudget.queryHits);
    for(const value of [...room.sources,...room.receivers]){
     expect(validFactValue('object.container.live',value)).toBe(true);
     expect(value.contents.amountMl).toBeGreaterThanOrEqual(0);
     expect(value.contents.amountMl).toBeLessThanOrEqual(value.contents.capacityMl);
    }
    if(!room.ready){
-    expect(room).toMatchObject({discoveryCaptures:1,executedGroups:0,executedMembers:0,pourCandidates:0});
+    expect(room).toMatchObject({discoveryCaptures:1,executedGroups:0,executedMembers:0,pourCandidates:0,pourRayQueries:0,pourHitCandidates:0,scoopPathQueries:0,scoopPathCandidates:0});
     expect(room.sources[0].phase).toBe('waiting');
    }
   }
@@ -45,6 +54,8 @@ it('accepts the same native waiting and flowing facts for shared user and agent 
  const first=native.trace[0];
  expect(first.rooms.every(room=>room.ready)).toBe(true);
  expect(first.rooms.reduce((count,room)=>count+room.executedGroups,0)).toBe(10);
+ expect(first.rooms.reduce((count,room)=>count+room.pourRayQueries,0)).toBeGreaterThan(0);
+ expect(first.rooms.reduce((count,room)=>count+room.pourHitCandidates,0)).toBeGreaterThan(0);
  for(const room of first.rooms){
   expect(room.receivers[0].contents.amountMl).toBeGreaterThan(0);
   expect(room.receivers[0].contents.amountMl).toBeLessThanOrEqual(18.75);

@@ -9,7 +9,7 @@ namespace Maestro.Quest.Creation {
             local=default;var item=Find(target);
             if(!item||!item.isActiveAndEnabled||journal==null||!journal.NativeCollisionMetadata(target,out var kind,out _))return false;
             bool solid=false;
-            foreach(var c in item.Grab.colliders)if(c&&c.enabled&&!c.isTrigger&&c.gameObject.activeInHierarchy&&c.gameObject.layer!=RoomPhysicsLayers.Pending){solid=true;break;}
+            foreach(var c in item.SolidColliders)if(c&&c.enabled&&!c.isTrigger&&c.gameObject.activeInHierarchy&&c.gameObject.layer!=RoomPhysicsLayers.Pending){solid=true;break;}
             if(!solid)return false;
             var shape=RoomSpatialBounds.CaptureCollision(item,kind);
             if(!shape.Known||!shape.HasBounds||!RoomRecipe.Finite(shape.Bounds.center)||!RoomRecipe.Finite(shape.Bounds.extents))return false;

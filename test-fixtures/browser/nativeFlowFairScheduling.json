@@ -1,11 +1,13 @@
 {
-  "incumbents": 7,
+  "incumbents": 1,
   "vesselsPerGroup": 16,
   "trace": [
     {
       "frame": 0,
+      "incumbentQueued": 1,
+      "incumbentGranted": 1,
       "contents": {
-        "sessionId": "ab2767fb3fb84eb68a8e0d246522850d",
+        "sessionId": "0766f8c0d1bf41588b6bb39adb3af1b2",
         "phase": "waiting",
         "contents": {
           "amountMl": 400.0,
@@ -28,7 +30,7 @@
         "rainSamples": 5
       },
       "schedule": {
-        "step": 693,
+        "step": 72,
         "executions": 0,
         "executionLimit": 32,
         "queued": 1,
@@ -39,11 +41,13 @@
     },
     {
       "frame": 1,
+      "incumbentQueued": 1,
+      "incumbentGranted": 0,
       "contents": {
-        "sessionId": "5f57d955aa674657bc7e9fc3d147ea9c",
+        "sessionId": "9dc37e191b044891b57e4c859bfed2e3",
         "phase": "flowing",
         "contents": {
-          "amountMl": 383.9616933816729,
+          "amountMl": 383.96169338167289,
           "savedAmountMl": 400.0,
           "capacityMl": 500.0,
           "transferredMl": 16.038306618327088,
@@ -54,7 +58,7 @@
       },
       "budget": {
         "reservations": 1,
-        "units": 62464,
+        "units": 523264,
         "reservationLimit": 64,
         "unitLimit": 524288,
         "streamSegments": 32,
@@ -63,12 +67,12 @@
         "rainSamples": 5
       },
       "schedule": {
-        "step": 694,
+        "step": 73,
         "executions": 1,
         "executionLimit": 32,
         "queued": 0,
         "queueLimit": 64,
-        "units": 62464,
+        "units": 523264,
         "unitLimit": 524288
       }
     }

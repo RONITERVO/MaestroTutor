@@ -9,12 +9,12 @@ import {validFactValue,validateFactArguments} from '../../../shared/behaviourFac
 
 it('reads native complete-group admission and member identity through the shared catalog',()=>{
  expect(validFactValue('runtime.flowGroupSchedule',native.schedule)).toBe(true);
- expect(native.schedule).toMatchObject({groups:2,active:2,booked:2,ready:2,executionLimit:32,groupLimit:1024,units:10912,unitLimit:524288});
+ expect(native.schedule).toMatchObject({groups:2,active:2,booked:2,ready:2,executionLimit:32,groupLimit:1024,units:18592,unitLimit:524288});
  expect(native.groups).toHaveLength(2);expect(native.members).toHaveLength(4);
  expect(new Set(native.members.map(member=>member.target)).size).toBe(4);
  for(const group of native.groups){
   expect(validFactValue('runtime.flowGroup',group)).toBe(true);
-  expect(group).toMatchObject({members:2,units:5456,active:true,discovered:true,booked:true,ready:true,step:native.schedule.step});
+  expect(group).toMatchObject({members:2,units:9296,active:true,discovered:true,booked:true,ready:true,step:native.schedule.step});
   const members=native.members.filter(member=>member.reservationId===group.reservationId&&member.membershipRevision===group.membershipRevision&&member.firstMember===group.firstMember);
   expect(members).toHaveLength(group.members);
   expect(members.reduce((sum,member)=>sum+member.units,0)).toBe(group.units);

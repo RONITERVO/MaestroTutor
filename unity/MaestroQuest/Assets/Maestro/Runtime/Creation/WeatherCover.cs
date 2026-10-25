@@ -57,10 +57,16 @@ namespace Maestro.Quest.Creation
             return unknown?RainExposure.Unknown:RainExposure.Open;
         }
         static RainExposure Contact(Collider collider,RoomEditor editor,bool real){
-            if(!collider)return RainExposure.Open;
+            if(!collider||RoomItem.IsPointerOnly(collider))return RainExposure.Open;
             if(collider.gameObject.layer==RoomPhysicsLayers.Scanned)return real?RainExposure.Covered:RainExposure.Open;
-            var item=collider.GetComponentInParent<RoomItem>();
-            if(!item||!item.transform.IsChildOf(editor.transform))return RainExposure.Open;
+            var item=collider.GetComponentInParent<RoomItem>(true);
+            if(!item)return RainExposure.Open;
+            // Shared built-ins are siblings of the selected workspace. Accept
+            // its current registered instance, or locally owned environment;
+            // transform ancestry alone must not admit a nested foreign editor.
+            var id=editor.Identity(item);
+            bool registered=id!=null&&editor.Find(id)==item;
+            if(!registered&&item.GetComponentInParent<RoomEditor>(true)!=editor)return RainExposure.Open;
             return editor.AuthoredCollisionReady(item)&&item.Grab.colliders.Contains(collider)?RainExposure.Covered:RainExposure.Unknown;
         }
         internal static Vector3 Velocity(RoomEditor editor)=>editor.Frame.DirectionToWorld(editor.CurrentWeather.RainVelocity);

@@ -23001,15 +23001,15 @@
         "target": "00000000000000000000000000000000",
         "revision": 1,
         "definition": {
-          "capacityLitres": 1.0,
-          "amountLitres": 0.0,
           "material": "Snow",
           "color": {
             "r": 0.93999999761581421,
             "g": 0.97000002861022949,
             "b": 1.0,
             "a": 1.0
-          }
+          },
+          "capacityLitres": 1.0,
+          "amountLitres": 0.0
         }
       }
     },
@@ -49661,7 +49661,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Avatar/AvatarSpatialMotion.Attention.cs",
-      "sha256": "dec7d2b7d150c957e483f14d763068a64d0eb919263d8016a5aeb0c7555690a6"
+      "sha256": "c79d12331b29b6a0686a70127490b08f128587ee59c8c54ba771cf21e0b4b98b"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Avatar/AvatarSpatialMotion.cs",
@@ -50053,7 +50053,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CreationPrototypeSchema.cs",
-      "sha256": "cbb17283c7a24ee9d28d569a468198cc91158de68d0c7290cc5f8b3d47957fa2"
+      "sha256": "bc44ef151d0761c19b5c4856e3a13f24edf69b51ccd039b38a5baea8a0fc72d8"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CreationResourcesSchema.cs",
@@ -50189,7 +50189,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/MaterialStoreCapability.cs",
-      "sha256": "25003bcc4c655d34dfd4fad6f092fc838778f173b6a61dae2230e10304687563"
+      "sha256": "ee009e30e7f91d1ecb53f20b597fd97935ea6470afef318bd72657a30bfb718c"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/MaterialTransferCapability.cs",
@@ -50617,7 +50617,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreatedRoomObject.cs",
-      "sha256": "7c1ba9d88f2f1e724e749574e3a2fcc79e0cb54555ad683de8bb868ec47a1137"
+      "sha256": "7aed8deb7ef2120166f220a08b50d33a4c029e07cac8d1a935b3e6dc2205d54d"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreationBatch.cs",
@@ -50625,7 +50625,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreationPrototype.cs",
-      "sha256": "b0d198bc564767b33583e6454918e4f066bd1092753d72e7f9f7964a0a75f121"
+      "sha256": "054ab2354c2db6d8dc593e102288f53599b41d5f38dacd32e292779b1abecd5d"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreationResources.cs",
@@ -50633,7 +50633,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreationTemplates.cs",
-      "sha256": "99ee78d1607a5c08205227bbd772af871aea4d1240055ff9e50081d281994b97"
+      "sha256": "fa2d4bd5e53ab94cf6a23055d27623af8d6ffea8027ace58662e8d26273e9fb2"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/DrawingSurface.cs",
@@ -50645,7 +50645,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/DrawingSurfaceOcclusion.cs",
-      "sha256": "aa910576ee19cc0768a9310ba486bb8f92200d5a9547627f3d2f9f5a5c23f7b6"
+      "sha256": "cadf9b7ee38df1a071e2fe9ed2c8ac3c517755a06fbb6a3d9816f00ffaedd1dd"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/DrawingSurfaceView.cs",
@@ -50669,7 +50669,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/FlowWorkResources.cs",
-      "sha256": "fa3e00a0d11a06b37130904ddce1d77c6afc2652f1c46df6d06b47676be7f611"
+      "sha256": "b4e12336dd986a94fcd7b05fc79d4990116ec89d1cdba18672b57d16e7d328cc"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/HeightFieldGeometry.cs",
@@ -50729,7 +50729,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidFlowWork.cs",
-      "sha256": "1de37de9d2dd02d4619d6724d10b5c6f891a7d22a8c3150e2ac3b566928f79ef"
+      "sha256": "437d594ce519a0f323add6bea46ed7d95432f7cc0e4123f9d088a73c95adf240"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidGroupWork.cs",
@@ -50749,7 +50749,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidPouring.cs",
-      "sha256": "9f8f39104add323b1056e2d6031870269688faf2fda58435f0fb04f8050aeec0"
+      "sha256": "ef5a1975833d294ae068b224beae0bfa4dddd0fe9b1a20b48570484628452cb6"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidRainCollection.cs",
@@ -50777,7 +50777,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/MediumDisplacement.cs",
-      "sha256": "fefee9291a6b9aff0f597e80e7811e240871ecad29b02d93f93af50a70ad42d3"
+      "sha256": "317e00f72e89a358f6d8429bdd5539fbbdd32684db9244209863980ab5c53e70"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/NativeObjectResources.cs",
@@ -51113,7 +51113,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomHabitatQueries.cs",
-      "sha256": "1a044ffbef592446a46c20fd93710d20b8c4dbe4410bfa88f3153d2c4f317553"
+      "sha256": "b6ea4960e852df65b19d25cbdecee1ba7bf098916fa787d047d48f0d5c661a99"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomHeightField.cs",
@@ -51125,7 +51125,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomHeightFieldEdits.cs",
-      "sha256": "c3e876daf08c88bac7b494bd575a57e0cc1f2c4b6367c9117bc6cd73afdf12c6"
+      "sha256": "744555b1f7876ab57a0658570f7bc09c66d40c073d2b05fab3dd007d2d729385"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomHeightFieldTransfer.cs",
@@ -51173,7 +51173,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomLiquidCodec.cs",
-      "sha256": "bdc066719c4f7132e8949de7c271f65c747ae0501586de6a9312d24bb64fb5cf"
+      "sha256": "e41c6a565ae32506fc6d4444e256b353f7c3958164af53ee6ef550bb690a2609"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomLiquidEdits.cs",
@@ -51401,7 +51401,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomSpatialBounds.cs",
-      "sha256": "7025c6ec467b45581a0a523d1dbc1d894768dfbaff58a47d1ac0dec53ef82491"
+      "sha256": "fa3615620f94bdf6ba3b6b32e649db74c9329bd47e5554e6967c57a862598353"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomSpatialChanges.cs",
@@ -51429,7 +51429,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomSpatialReadiness.cs",
-      "sha256": "4f713483402a1541ad8b6fc6a706a5fcc5823f0bc9003946e87291bcdbaff1f6"
+      "sha256": "26bd43d4b76c10356b552ba510292c45cc69c27e4f2bdd6f054b7a28b587eaeb"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomStagingMaintenance.cs",
@@ -51509,7 +51509,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomWaterTraversalEdits.cs",
-      "sha256": "456dc46e069f0680e81ce774b739ab1b54e21c3ee6fc4badc7aee4ca7bc1b25f"
+      "sha256": "1f33651619402722f23473ca110b396d794e6cf52d701a1075230d3e0e22f7f2"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomWeather.cs",
@@ -51577,7 +51577,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/SpatialSculpting.Packing.cs",
-      "sha256": "7b9db1db927c81f02bd820c25a4e1dedd1978aa66bec39113deef479f1d5e99b"
+      "sha256": "90ffc1b4f7768bbebe78f581dfd8bfb65d93a0bc7e1ec16c9f8b66b8c091636c"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/SpatialSculpting.Resolution.cs",
@@ -51613,7 +51613,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/WeatherCover.cs",
-      "sha256": "d3db8a369713b80e04c6f9a00e0870586ed0fbf9adbf3434529b39e1f915f42c"
+      "sha256": "3d75bf99d04afbeb9e59c530bbcc9b967c13e74bc5edda7d7b409b6ed746bd21"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/WindowResources.cs",
@@ -51865,7 +51865,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/CatchClearance.cs",
-      "sha256": "d96ea7e3d167dd7d0abafe88251b95085b7d0667f7ebeb725306df202c9aae67"
+      "sha256": "e32dae942827de7b9078b9a16cb511f34a8eee6ece884b8369b5140d133a678f"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/CatchGeometry.cs",
@@ -51897,7 +51897,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/GroundedMovement.cs",
-      "sha256": "40d81c35a0c87130a9bc75ecc258a8e86300131ebc011a801086e11e80a6f64e"
+      "sha256": "e4119257a51e557abc824dd7dd360941611abc81bfca42d6d22fe4c3ead920bb"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/GroundedTravel.cs",
@@ -51905,7 +51905,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/HeldRoomProp.cs",
-      "sha256": "fffa849a6992ad924ead5b95b50772b7887648307b10c4791d6679087d9fea3c"
+      "sha256": "05c26e01738208a2c3438ed1ba81264bc74ef83a2ba30c18ddc21685c7efa059"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/ImportedLocomotionPose.cs",
@@ -51961,11 +51961,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RigidRoomItem.Inputs.cs",
-      "sha256": "6761beee6cb1a193084bbcabe598af9d83f6209a01e35da3f14c5a33d3c93530"
+      "sha256": "2d7768b7ca4ea71bf09a8d568f5992997883a210e1ac6e937708e89b121d3f15"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RigidRoomItem.cs",
-      "sha256": "f376d1fdd402f51bdcf14dc448eac766b173af8b9529f9d1f70bdbf13b2ebc91"
+      "sha256": "f9e74a78210416381041f6e7c671ccca1037bc7832883138960d9b7dd96bbd9c"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomAnchorProbe.cs",
@@ -51981,11 +51981,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomBallistics.cs",
-      "sha256": "cf7330a5c7c2d9ae61fe969cf38b2fd7b39c04728d8f1505d2e1ae83f85818d9"
+      "sha256": "3997fc6eb01e1a4cebdc1f1e7cc1b4a70dacbb5a07b53013d9d126fec9d11ef2"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomBoxMotor.cs",
-      "sha256": "0836e10d686d72181c796857c6721c8cdfde3771714c79b462b0d415507a297c"
+      "sha256": "6694a08988d8c89965901c28df348228ce693e5bb9c024af66eadb70ba8da63e"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomCatch.cs",
@@ -51997,7 +51997,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomCollisionVolume.cs",
-      "sha256": "af1b641347db3abb6ab44c9be970ace25cdb8f4918dd4363e7e743f5c96a94c5"
+      "sha256": "7852893d554fae57d0da6969d75fe84676cba054763deda8146665a15546baf7"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomConnectionView.cs",
@@ -52005,7 +52005,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomContactInputs.cs",
-      "sha256": "7472233f18370f7c13890b6b4408c667e29ee40116d6ad93ffbf1fbb4ad5b093"
+      "sha256": "25b4bcf85bbe8bea5b0d8923b16764fe98ecb7f8a71cb27a042c73a584b312ab"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomDepthOcclusion.cs",
@@ -52021,7 +52021,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomEnvironmentClearance.cs",
-      "sha256": "cbbe5707d66aa5dff6c3cc4ff59d56d0641b3a63c226b8e04670297ee3eb38cb"
+      "sha256": "aafac55c183ca39ffa6e4dfc898234f92d86edaf1f6979efda1db4f62cdd6f6e"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomEnvironmentQueries.cs",
@@ -52033,11 +52033,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomGroundMotor.cs",
-      "sha256": "99a96498967458c296e99d6463f1a1b902682a6f7de0a81821ea2c86fa35f05c"
+      "sha256": "80be6e2d6c5374f3f67fb403f688e2cf409f3a41d7db5e7ff791d862f5ec1daa"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomGroundQuery.cs",
-      "sha256": "6da637f831550d3086b904f94cde9d719dbd67ea77985930a54e643c7308a1ac"
+      "sha256": "43c337949157105eb516556da3a053e5d370af712cee124ccab0b8b05f354d54"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomInteraction.cs",
@@ -52045,7 +52045,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomItem.cs",
-      "sha256": "cd3f630923aaa2968462486953f1e268e1c2686a9a896c054db81925346dac4f"
+      "sha256": "122af8c7f61a07046b6829299b6ee9e583dd5fc6ce2f8f87db450e743312326f"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomLocomotionBudget.cs",
@@ -52073,7 +52073,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomNavigationObstacle.cs",
-      "sha256": "75ec5edd4fbed2b03e065435b1a30288fb13ed5bb004b7dfbb7081d7bb2e83fa"
+      "sha256": "6bb8527c3c77ae94f387ee6fcdd4dc7e80f6942af3f2da7281932bf363f2d341"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomNavigationRetention.cs",
@@ -52161,11 +52161,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomWalkableSurface.cs",
-      "sha256": "7c353736d317c71ba5ecbe1360298f6d50d70eece83fbf3689ec839867f1ed77"
+      "sha256": "5430f10771cb4b4cb42e77ed2405e273cceb9ba11afe6e30435a0345705d5357"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomWalkingObstacle.cs",
-      "sha256": "a47efba46a0a78ad666ea7063daebbb5a708c1d4d91a138c36c52e09c43b8ec9"
+      "sha256": "56ff79df423e48f0b700a1b3ef7208effa3101fa192ec461fff857d6ad087b88"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomWalkingPreparation.cs",
@@ -52181,7 +52181,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomWorldSweep.cs",
-      "sha256": "f287b0e6ef3ca128c7b33177d8f2522487938cfaa05079496dcd18aa33255f14"
+      "sha256": "66e8b0ee3758081e378edaaec332183f014d59a278c9057f268433c84ef38a53"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/ScannedRoom.cs",
@@ -52205,7 +52205,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/ScannedRoomPlacement.cs",
-      "sha256": "8b2f89b8e0eda82b8853bb79d47b5f7dd369c3ba423679d04b4ae4ae25b2e659"
+      "sha256": "8120ce90f84f7f397cbb567b84d70140c06c3156342e10b2d0e4b8070c3a071b"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/ScannedRoomRequests.cs",
@@ -52229,7 +52229,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/VirtualRoomView.cs",
-      "sha256": "749b1819f9599b3df4d7f2d7585ccf274b52691fc10526a116d22eb3d118cd11"
+      "sha256": "a6ce1dc023a394e93d4b9e853fdbcf180682c49feb762b9b7546b7a112316776"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/WaterFollowing.cs",
@@ -52289,11 +52289,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceArchiveCapture.cs",
-      "sha256": "e83f17a7a91de45e53c2eb93ac654e6988866d48d759df7fc36524c47f3abde7"
+      "sha256": "4e9d242e07e69b30b4552b8da66c80a34f8ba9ebd150a720e1d75f003b26a960"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceArchiveSnapshot.cs",
-      "sha256": "9fdc264928a55805df5fe1c3952ce5a20cde986e6113e3d180dbabccd72df36c"
+      "sha256": "e69af2d70c2aa39c387c0f14518c9e67e4740821756d395332d556c6892dab01"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceContent.cs",
@@ -52417,7 +52417,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/CapabilityArguments.cs",
-      "sha256": "cbdbc5237dd19b30f70a7217ae692917d1866b38a8bc767fc64232c956904caa"
+      "sha256": "34a5c1e6b6cd5623f11aa42c03aacaca1218636fdb81a35041b44c0cd22dd6c8"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/ConditionSubscription.cs",

@@ -46,7 +46,7 @@ namespace Maestro.Quest.Creation
             var rigid=item.GetComponent<RigidRoomItem>();
             reason="Registered collision geometry is incomplete";
             if(rigid&&!rigid.GeometryReady)return RoomSpatialReadiness.Unavailable;
-            foreach(var collider in item.Grab.colliders){
+            foreach(var collider in item.SolidColliders){
                 if(!collider)return RoomSpatialReadiness.Unavailable;if(collider.isTrigger)continue;
                 int layer=collider.gameObject.layer;
                 if(!collider.enabled||!collider.gameObject.activeInHierarchy||layer!=RoomPhysicsLayers.Environment&&layer!=RoomPhysicsLayers.Item)return RoomSpatialReadiness.Unavailable;

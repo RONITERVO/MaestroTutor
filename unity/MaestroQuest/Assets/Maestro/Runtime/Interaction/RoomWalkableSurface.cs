@@ -12,10 +12,10 @@ namespace Maestro.Quest.Interaction
         internal Collider Collision { get; private set; }
         internal uint Revision { get; private set; }
         internal void Publish(Collider collision) { Collision=collision; Revision++; }
-        internal bool Available => isActiveAndEnabled && Collision && Collision.enabled &&
+        internal bool Available => isActiveAndEnabled && Collision && !RoomItem.IsPointerOnly(Collision) && Collision.enabled &&
             !Collision.isTrigger && Collision.gameObject.activeInHierarchy &&
             (Collision is BoxCollider box && box.size.x>0 && box.size.y>0 && box.size.z>0 || Collision is MeshCollider mesh && mesh.sharedMesh && mesh.sharedMesh.vertexCount>0) &&
             (!Collision.attachedRigidbody || Collision.attachedRigidbody.isKinematic) &&
-            GetComponentInParent<RoomItem>()?.Grab?.isSelected != true;
+            GetComponentInParent<RoomItem>(true)?.Grab?.isSelected != true;
     }
 }

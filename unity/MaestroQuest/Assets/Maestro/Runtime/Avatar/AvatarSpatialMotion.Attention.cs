@@ -24,7 +24,7 @@ namespace Maestro.Quest.Avatar {
                 if(!item||!item.isActiveAndEnabled||editor.Find(ObjectId)!=item||!item.Grab)return false;
                 var avatar=item.GetComponent<MaestroAvatar>();if(avatar&&avatar.ModelBusy)return false;
                 bool found=false;Bounds bounds=default;
-                foreach(var c in item.Grab.colliders){
+                foreach(var c in item.SolidColliders){
                     if(!c||!c.enabled||c.isTrigger||!c.gameObject.activeInHierarchy||c.gameObject.layer==RoomPhysicsLayers.Pending)continue;
                     if(!found){bounds=c.bounds;found=true;}else bounds.Encapsulate(c.bounds);
                 }

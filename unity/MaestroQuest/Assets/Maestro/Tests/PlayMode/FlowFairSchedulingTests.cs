@@ -21,8 +21,12 @@ namespace Maestro.Quest.Tests {
     Assert.That(editor.MissingLiquidExtent(id,editor.Read(id).containers[0],out _).Bounds.Intersects(editor.MissingLiquidExtent(to,editor.Read(to).containers[0],out _).Bounds),Is.True,"The complete receiving group must stay coupled");
    }
    Assert.That(editor.Liquids.FlowWorkVessels,Is.EqualTo(16));physics.StartPhysics();editor.Liquids.Tick(.05f);Assert.That(Liquid(from),Is.LessThan(400),"The actual native group must be able to flow before adding pressure");physics.PausePhysics();editor.Undo();Assert.That(Liquid(from),Is.EqualTo(400));physics.StartPhysics();FlowWorkResources.Release(editor.Liquids);
+   // Preflight consumed a complete 16-vessel pass. Its retired charge belongs
+   // to that opportunity, not the continuing competitors tested below.
+   FlowWorkResources.Advance(.05f);
    var held=FillFlowWork();foreach(var claim in held)Assert.That(SimulationWorkSchedule.TryAdmit(claim),Is.True);var trace=new JArray();
    try{
+    Assert.That(held.Count,Is.GreaterThan(0),"The fairness trace requires continuing eligible competitors");
     Assert.That(held.Count,Is.LessThan(FlowWorkResources.MaximumReservations),"Exercise work-unit pressure, not the owner-count ceiling");
     var before=FlowWorkResources.ObserveBudget();bool admitted=FlowWorkResources.TryAdmit(editor.Liquids,out var denial);
     Assert.That(admitted,Is.False,$"Incumbents initially own the available work: held={held.Count}, vessels={editor.Liquids.FlowWorkVessels}, before={before}, after={FlowWorkResources.ObserveBudget()}, reason={denial}");
@@ -31,7 +35,9 @@ namespace Maestro.Quest.Tests {
      // waiting for them to disappear. Reading facts never advances the queue.
      foreach(var go in (frame%2==0?held:held.AsEnumerable().Reverse()))SimulationWorkSchedule.TryAdmit(go);
      for(int read=0;read<8;read++){FlowWorkResources.ObserveBudget();editor.Liquids.Observe(from);}
-     editor.Liquids.Tick(.05f);trace.Add(new JObject{["frame"]=frame,["contents"]=editor.Liquids.Observe(from),["budget"]=FlowWorkResources.ObserveBudget(),["schedule"]=FlowWorkResources.ObserveSchedule()});yield return new WaitForFixedUpdate();
+     editor.Liquids.Tick(.05f);
+     int queued=held.Count(SimulationWorkSchedule.Queued);Assert.That(queued,Is.EqualTo(held.Count),"Competing claims must remain eligible while the host receives service");
+     trace.Add(new JObject{["frame"]=frame,["incumbentQueued"]=queued,["incumbentGranted"]=held.Count(claim=>claim.Granted),["contents"]=editor.Liquids.Observe(from),["budget"]=FlowWorkResources.ObserveBudget(),["schedule"]=FlowWorkResources.ObserveSchedule()});yield return new WaitForFixedUpdate();
     }
     string output=Environment.GetEnvironmentVariable("MAESTRO_FLOW_FAIR_EVIDENCE");if(!string.IsNullOrEmpty(output))File.WriteAllText(output,new JObject{["incumbents"]=held.Count,["vesselsPerGroup"]=16,["trace"]=trace}.ToString());
     Assert.That(Liquid(from),Is.LessThan(400),"A later complete group must receive a bounded opportunity even while incumbents stay eligible");

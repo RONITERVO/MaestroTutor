@@ -19,7 +19,7 @@ namespace Maestro.Quest.Interaction
         Transform content;
         IReadOnlyDictionary<Rigidbody,bool> physical;
         bool Obstacle(Collider other,Collider own) {
-            if(!other||other==own||other.isTrigger||Physics.GetIgnoreLayerCollision(own.gameObject.layer,other.gameObject.layer)||Physics.GetIgnoreCollision(own,other))return false;
+            if(!other||RoomItem.IsPointerOnly(other)||other==own||other.isTrigger||Physics.GetIgnoreLayerCollision(own.gameObject.layer,other.gameObject.layer)||Physics.GetIgnoreCollision(own,other))return false;
             if(!other.transform.IsChildOf(content))return true;
             return other.attachedRigidbody&&physical.TryGetValue(other.attachedRigidbody,out var fixedPose)&&fixedPose;
         }
@@ -61,7 +61,7 @@ namespace Maestro.Quest.Interaction
             }
             frame.GetComponentsInChildren(false,shapes);
             foreach(var own in shapes) {
-                if(!own||!own.enabled||own.isTrigger||own.gameObject.layer==RoomPhysicsLayers.Pending)continue;
+                if(!own||RoomItem.IsPointerOnly(own)||!own.enabled||own.isTrigger||own.gameObject.layer==RoomPhysicsLayers.Pending)continue;
                 var body=own.attachedRigidbody;
                 if(body&&fixedBodies.TryGetValue(body,out var anchored)&&anchored)continue;
                 var item=body?body.GetComponent<RoomItem>():null;

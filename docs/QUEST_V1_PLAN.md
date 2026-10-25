@@ -5,6 +5,7 @@ Status: active implementation. Nothing in this document claims store readiness.
 Start with the [accepted product scope](#accepted-product-scope) and
 [release evidence checklist](#release-evidence-still-required) and the latest
 [complete integration checkpoint](#complete-native-book-and-android-integration-2026-10-24). The current
+[pointer and solid geometry checkpoint](#shared-pointer-and-solid-geometry--2026-10-25) separates book interaction from physical queries. The preceding
 [collision availability checkpoint](#shared-passive-collision-availability--2026-10-25) adds explicit user/program/agent inspection. The preceding
 [saved-world rain checkpoint](#passive-saved-world-rain-cover--2026-10-25) extends exposure readiness;
 its native, rendered Book and headless checks are recorded below. The preceding
@@ -17250,3 +17251,93 @@ ancestry; shared built-ins are siblings. A follow-up must give solid and pointer
 geometry explicit shared roles, preserve pointer/grab behavior, recognize only
 the current workspace's built-in identities and test exact cover/flow outcomes.
 This increment does not change those physical or pointer semantics.
+
+
+## Shared pointer and solid geometry — 2026-10-25
+
+RoomItem now explicitly registers page and control pointer targets separately
+from configured solid handles while preserving the existing XRI registration and
+layers. Startup discovers initially hidden notice and bookmark targets too.
+Pointer registration refuses selected owners rather than dropping a held object;
+a configured solid cannot acquire an exemption from an action component. Native
+geometry replacement preserves live pointer targets, promotes explicitly supplied
+handles to solid and removes retired pointer registrations on that explicit
+mutation. Passive enumeration preserves null/destroyed solid failures and does
+not allocate an iterator for physical sampling.
+
+The common solid view now drives readiness, physical envelopes, held and recorded
+motion, placement, water displacement and attention bounds. Exact rain, liquid,
+ground/navigation, world movement, drawing and material-packing queries skip
+explicit pointer targets after rejecting saturated buffers. Thus a visible token
+cannot become an unintended roof or expand the cover's collision envelope.
+Exact rain proof accepts the selected workspace's current shared book by identity
+although it is a sibling in the scene, and rejects nested foreign workspaces.
+The book's collision fact uses this same authority through the generated user,
+program and agent interfaces. No saved schema or separate client policy is added.
+
+Liquid execution now records scoop-path and stream-ray query/hit visits. The
+additional scoop reservation covers both ordered-pair phases, five samples and
+all three bounded buffers per sample. Demand remains 2,644 for one vessel, is
+9,296 for two and 523,264 for sixteen, beneath the unchanged 524,288 ceiling.
+The growth-pressure fixture uses ten starting vessels so a competing reservation
+still exists and both admitted and refused growth remain exercised. This is
+logical work accounting, not measured Quest CPU or frame-time evidence.
+
+Baseline execution against 92f0ebbe reproduced six failures. The first fixture
+revealed missing hidden-target registration; moving that assertion into its own
+case exposed the independent wrong bounds, unavailable cover, missing sibling
+proof and foreign-workspace proof failures. The first implementation build needed
+only NUnit collection-assertion syntax corrections. Runtime compilation succeeded;
+a later configure/export required the normal catalog provenance refresh. The
+frozen focused runtime then passed all 43 selected PlayMode cases. Broader
+verification passed all 1,696 EditMode tests and 1,025 distinct selected PlayMode
+cases after the targeted corrections below. The unchanged strict packing test
+passes. Shared web coverage passed 151 cases across eleven suites, including
+fresh native flow fixtures and continuing-competing-demand evidence. Application
+and probe types, catalog provenance/export and ten-guide equality passed.
+The rendered Book journey `c9bc04cb` passed 2,400 requests and 7,076 observations,
+with zero browser errors and reload without replay. Headless `8540791c` passed
+2,888 observations and 2,887 read sets. Both execute the actual Unity app/shared
+protocol with explicitly scripted offline providers/media and verify the book's
+ready collision fact without changing its saved definition, alongside dormant,
+restoration and recovery scenarios. Cleanup and client/Editor/wrapper exits
+passed; all 3,604 native inputs stayed unchanged through final integration.
+Evidence is under `.quest-evidence/book-collision-roles-20261025/`.
+
+The broad run exposed an existing one-ULP material persistence error: a packed
+amount of 0.49999987822957331 reopened as 0.49999987822957326. The strict packing
+assertion is retained. Material stores now use the existing exact measured-value
+codec alongside liquid containers across disk/prepared saves, paired snapshots,
+configuration, facts, prototypes and template getters. Review also found that
+portable archive capture and validation bypassed this codec; both now use the
+same exact-number path, with a real capture/stage round-trip regression.
+Validation reads the same
+exact number as execution, so an adjacent over-capacity value cannot be rounded
+into acceptance. Room format 44 and existing recovery behavior are unchanged.
+The regression set includes the observed quantity and its adjacent values,
+resaving, detached template copies and unsupported-version preservation.
+
+Failed reports remain retained. Follow-up test corrections qualified the ZIP
+compression enum, created the archive API's required private staging parent and
+sent the intentionally invalid material call without the fixture helper that
+requires valid input. The fairness fixture now begins a fresh logical opportunity
+after preflight's consumed work, requires a positive competitor count and records
+continuing eligibility while the actual 16-vessel host receives service. The
+runtime allowance and conservative admission rules were not weakened.
+
+The role describes application queries and XRI targeting. Included pointers keep
+their non-contact layers; this does not provide arbitrary-layer PhysX contact or
+compound-mass suppression. Missing imported geometry, collision participation,
+real-room alignment and restoration holds retain their separate existing rules.
+Device/provider tests, signing, deployments and Meta changes remain on hold. The
+complete release checklist, including physical appearance/performance and audio
+quality, remains open.
+
+
+Next visible immersion target: rain meeting measured water. Source review shows
+that decorative streaks can cross the collider-free water surface before hitting
+the bed. The planned bounded fix will reuse the same finite water/terrain
+geometry, choose first contact before checking solid cover and missing geometry,
+and drive existing bounded ripples without changing quantities, save revisions
+or gameplay contacts. This remains planned, not verified behavior; a fixed-seed
+actual rain-mesh regression comes first.

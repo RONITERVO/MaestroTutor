@@ -14,7 +14,12 @@ namespace Maestro.Quest.Creation {
   internal const string Waiting="Liquid flow is waiting for work capacity. Ready groups take turns automatically; saved quantities are preserved.";
   internal static int Demand(int vessels){
    if(vessels<=0)return 0;if(vessels>1024)return int.MaxValue;long n=vessels;
-   return (int)Math.Min(int.MaxValue,n*(16+QueryHits+1+LiquidPouring.Segments*(n+QueryHits+3)+2*n*(1+ScoopSamples*5)+RainSamples*(QueryHits+3)));
+   // Immersion and scooping each test distinct ordered vessel pairs. Every
+   // sample can visit both endpoint buffers and the intervening ray buffer.
+   // Self-pairs are skipped before exact queries; pour-hit work is already
+   // reserved in the origin and per-segment terms.
+   long scoopHits=2*n*(n-1)*ScoopSamples*3*QueryHits;
+   return (int)Math.Min(int.MaxValue,n*(16+QueryHits+1+LiquidPouring.Segments*(n+QueryHits+3)+2*n*(1+ScoopSamples*5)+RainSamples*(QueryHits+3))+scoopHits);
   }
   sealed class Member {
    internal string Target;internal string[] Peers=Array.Empty<string>();internal bool Requested,Discovered;

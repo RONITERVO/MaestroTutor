@@ -28,6 +28,16 @@ export async function probeEnvironmentRecovery(driver:RecoveryDriver,directory:s
  const checkpoint=async(phase:string)=>{evidence.phase=phase;await writeFile(join(directory,client+'-environment-recovery.json'),JSON.stringify(evidence,null,2));await driver.capture?.(phase);};
  const fact=async(id:string,args?:Record<string,unknown>)=>{const result=await driver.fact(id,args);assert.equal(result.available,true,id);assert.ok(result.value&&typeof result.value==='object'&&!Array.isArray(result.value));return result.value as Record<string,unknown>;};
  const invoke=driver.invoke,initialCount=await driver.count();
+ // The real Book client owns page/control pointers as well as a solid cover.
+ // Its public collision fact must use the same physical role contract as the
+ // headless client without changing the user's built-in or starting physics.
+ const bookBefore=await fact('object.definition',{target:'book'});
+ const bookCollision=await fact('object.collision.availability',{target:'book'});
+ assert.ok(validFactValue('object.collision.availability',bookCollision));
+ assert.deepEqual(bookCollision,{target:'book',state:'ready',reason:''});
+ const bookAfter=await fact('object.definition',{target:'book'});
+ assert.deepEqual(bookAfter,bookBefore,'Passive built-in collision inspection changed the saved book');
+ evidence.bookCollision={before:bookBefore,value:bookCollision,after:bookAfter};
  const environment=await fact('physics.environment'),simulation=await fact('physics.simulation');
  assert.equal(environment.realCollisions,true);assert.equal(environment.scanReady,true);assert.equal(simulation.running,false);
  const viewer=await fact('world.viewpoint');assert.equal(viewer.located,true);

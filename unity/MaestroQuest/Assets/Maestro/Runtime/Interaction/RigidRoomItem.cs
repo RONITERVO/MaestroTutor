@@ -96,7 +96,7 @@ namespace Maestro.Quest.Interaction
             body.maxLinearVelocity = 15; body.maxAngularVelocity = 30;
             body.solverIterations = 8; body.solverVelocityIterations = 3;
             material = new PhysicsMaterial("User item physics");nativeBody?.OwnMaterial(material);
-            foreach (var collider in item.Grab.colliders) collider.sharedMaterial = material;
+            foreach (var collider in item.SolidColliders) collider.sharedMaterial = material;
             item.Grab.firstSelectEntered.AddListener(Grabbed);
             item.Grab.lastSelectExited.AddListener(Released);
             lastGoodPosition = transform.position; lastGoodRotation = transform.rotation;
@@ -111,7 +111,7 @@ namespace Maestro.Quest.Interaction
             material.staticFriction = .65f;
             material.bounceCombine = PhysicsMaterialCombine.Maximum;
             material.frictionCombine = PhysicsMaterialCombine.Average;
-            foreach (var collider in item.Grab.colliders) if (collider) collider.sharedMaterial = material;
+            foreach (var collider in item.SolidColliders) if (collider) collider.sharedMaterial = material;
             Refresh();
         }
         public void SetGeometryReady(bool ready) { if(geometryReady!=ready){grabInputs?.Suspend();InterruptPhysicsInputs();MotionRevision++;}geometryReady = ready; Refresh(); }

@@ -6,15 +6,21 @@ import {behaviourFact} from '../../../shared/behaviourCatalog';
 import {validFactValue} from '../../../shared/behaviourFacts';
 
 it('accepts the real native waiting-to-flow transition under continuing competing demand',()=>{
- // Earlier consumed allowances can reduce the number of synthetic contenders.
+ // The native fixture starts a fresh opportunity after preflight and keeps
+ // real eligible competing claims throughout the waiting-to-flow transition.
  expect(native.incumbents).toBeGreaterThan(0);expect(native.incumbents).toBeLessThanOrEqual(8);expect(native.vesselsPerGroup).toBe(16);
  expect(native.trace.length).toBeLessThanOrEqual(32);
  expect(native.trace[0].contents.phase).toBe('waiting');
  expect(native.trace[0].contents.contents.amountMl).toBe(400);
+ expect(native.trace[0].incumbentGranted).toBeGreaterThan(0);
  const last=native.trace[native.trace.length-1];
  expect(last.contents.phase).toBe('flowing');expect(last.contents.contents.amountMl).toBeLessThan(400);
  expect(last.schedule.step).toBeGreaterThan(native.trace[0].schedule.step);
  for(const sample of native.trace){
+  expect(sample.incumbentQueued).toBe(native.incumbents);
+  expect(Number.isInteger(sample.incumbentGranted)).toBe(true);
+  expect(sample.incumbentGranted).toBeGreaterThanOrEqual(0);
+  expect(sample.incumbentGranted).toBeLessThanOrEqual(sample.incumbentQueued);
   expect(validFactValue('runtime.flowWorkBudget',sample.budget)).toBe(true);
   expect(validFactValue('runtime.flowWorkSchedule',sample.schedule)).toBe(true);
   expect(sample.schedule.executions).toBeLessThanOrEqual(sample.schedule.executionLimit);

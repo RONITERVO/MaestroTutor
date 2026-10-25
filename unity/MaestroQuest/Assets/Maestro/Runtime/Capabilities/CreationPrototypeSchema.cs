@@ -46,6 +46,7 @@ namespace Maestro.Quest.Programs
         internal static JObject Encode(Creation.CreationPrototype prototype) {
             var value=JObject.Parse(UnityEngine.JsonUtility.ToJson(prototype));
             Maestro.Quest.Creation.RoomLiquidCodec.Containers(prototype.containers,value["containers"],true);
+            Maestro.Quest.Creation.RoomLiquidCodec.MaterialStores(prototype.materialStores,value["materialStores"],true);
             var geometry=new JObject {["kind"]=prototype.kind};
             foreach(var key in new[]{"kind","recipe","modelHash","points","radius"}) {
                 bool include=key=="kind"||key=="recipe"&&prototype.kind=="recipe"||key=="modelHash"&&prototype.kind=="model"||(key=="points"||key=="radius")&&prototype.kind=="drawing";

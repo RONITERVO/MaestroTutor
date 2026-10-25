@@ -66,7 +66,7 @@ namespace Maestro.Quest.Interaction
             if(count==overlaps.Length){error="The destination is too crowded to verify clearance";return false;}
             for(int i=0;i<count;i++){
                 var hit=overlaps[i];
-                if(hit&&hit.transform.IsChildOf(content)&&hit.attachedRigidbody?.GetComponent<IPhysicalRoomBinding>()?.PhysicalFrame!=true){
+                if(hit&&!RoomItem.IsPointerOnly(hit)&&hit.transform.IsChildOf(content)&&hit.attachedRigidbody?.GetComponent<IPhysicalRoomBinding>()?.PhysicalFrame!=true){
                     error="The requested world location is occupied; choose a clear place";return false;
                 }
             }

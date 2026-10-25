@@ -18,7 +18,7 @@ namespace Maestro.Quest.Interaction
         internal static bool Accepted(Collider collision,bool includeScan,out RoomWalkableSurface surface)
         {
             surface=null;
-            if(!collision||!collision.enabled||collision.isTrigger||!collision.gameObject.activeInHierarchy||
+            if(!collision||RoomItem.IsPointerOnly(collision)||!collision.enabled||collision.isTrigger||!collision.gameObject.activeInHierarchy||
                 collision.attachedRigidbody&&!collision.attachedRigidbody.isKinematic)return false;
             if(collision is BoxCollider box ? box.size.x<=0||box.size.y<=0||box.size.z<=0 :
                 collision is not MeshCollider mesh||!mesh.sharedMesh||mesh.sharedMesh.vertexCount==0)return false;

@@ -71,20 +71,23 @@ namespace Maestro.Quest.Interaction
             if (!CanAttach(editor,attachment,anchor,out error) || attachment == null) return null;
             var item=editor.Find(attachment.ObjectId); var rigid=item.GetComponent<RigidRoomItem>();
             if (rigid.AnimationOwned) { error="Another animation owns this prop"; return null; }
+            Physics.SyncTransforms();Bounds bounds=default;bool found=false;
+            foreach(var collider in item.SolidColliders)if(collider&&collider.enabled&&collider.gameObject.activeInHierarchy&&!collider.isTrigger){
+                if(!found)bounds=collider.bounds;else bounds.Encapsulate(collider.bounds);found=true;
+            }
+            if(!found){error="The prop has no ready solid collision bounds";return null;}
             var value=item.gameObject.AddComponent<HeldRoomProp>(); value.editor=editor; value.space=new RoomMotionFrame(editor.transform); value.item=item; value.rigid=rigid; value.body=item.GetComponent<Rigidbody>();
             value.anchor=anchor;value.attachment=attachment;
             if(!anchor.Resolve(editor,out value.holder,out value.hand,out error)){Destroy(value);return null;}
             value.homePosition=item.transform.localPosition; value.homeRotation=item.transform.localRotation;
             value.duration=duration; value.playback=playback; playback.Start(); value.requiresRoom=editor.PhysicsWorld && editor.PhysicsWorld.Running;
-            Physics.SyncTransforms(); var bounds=item.Grab.colliders[0].bounds;
-            foreach (var collider in item.Grab.colliders) if (collider && collider.enabled) bounds.Encapsulate(collider.bounds);
             value.centre=item.transform.InverseTransformPoint(bounds.center); value.radius=bounds.extents.magnitude;
             rigid.SetAnimationOwner(value,true); value.holding=true;
             value.RenewInputs();
             if (!value.Follow()&&value.Error!=null) { error=value.Error; value.End(false); return null; }
             return value;
         }
-        bool Obstacle(Collider collider,bool includeAvatar) => collider && !collider.isTrigger && !collider.transform.IsChildOf(item.transform) && (includeAvatar || !collider.transform.IsChildOf(holder.transform));
+        bool Obstacle(Collider collider,bool includeAvatar) => collider && !RoomItem.IsPointerOnly(collider) && !collider.isTrigger && !collider.transform.IsChildOf(item.transform) && (includeAvatar || !collider.transform.IsChildOf(holder.transform));
         bool Clear(Vector3 position,Quaternion rotation,bool includeAvatar,bool sweep)
         {
             Physics.SyncTransforms();
@@ -101,7 +104,7 @@ namespace Maestro.Quest.Interaction
             }
             int found=Physics.OverlapSphereNonAlloc(newCentre,radius,overlaps,mask,QueryTriggerInteraction.Ignore);
             if (found == overlaps.Length) return false;
-            foreach (var collider in item.Grab.colliders)
+            foreach (var collider in item.SolidColliders)
             {
                 if (!collider || !collider.enabled) continue;
                 var relative=Quaternion.Inverse(item.transform.rotation)*(collider.transform.position-item.transform.position);

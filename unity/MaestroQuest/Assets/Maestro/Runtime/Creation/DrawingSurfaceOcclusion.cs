@@ -34,7 +34,7 @@ namespace Maestro.Quest.Creation
         }
         static bool Blocks(Collider collider,Transform owner,Transform tool)
         {
-            if(!collider||!collider.enabled||!collider.gameObject.activeInHierarchy||collider.isTrigger)return false;
+            if(!collider||RoomItem.IsPointerOnly(collider)||!collider.enabled||!collider.gameObject.activeInHierarchy||collider.isTrigger)return false;
             var at=collider.transform;
             // Explicit patches need not coincide with their owner's approximate collision proxy.
             return !at.IsChildOf(owner)&&(!tool||!at.IsChildOf(tool));

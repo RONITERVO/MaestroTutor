@@ -15,7 +15,7 @@ namespace Maestro.Quest.Tests {
   void CaptureFlowExecution(string name){
    string directory=Environment.GetEnvironmentVariable("MAESTRO_FLOW_EXECUTION_EVIDENCE");if(string.IsNullOrEmpty(directory))return;
    Directory.CreateDirectory(directory);var w=editor.Liquids.LastFlowExecution;
-   File.WriteAllText(Path.Combine(directory,name+".json"),new JObject{["groups"]=w.Groups,["members"]=w.Members,["pourOriginQueries"]=w.PourOriginQueries,["pourOriginCandidates"]=w.PourOriginCandidates,["pourSegments"]=w.PourSegments,["pourCandidates"]=w.PourCandidates,["immersionChecks"]=w.ImmersionChecks,["immersionCandidates"]=w.ImmersionCandidates,["scoopRecipients"]=w.ScoopRecipients,["scoopCandidates"]=w.ScoopCandidates,["rainSamples"]=w.RainSamples}.ToString());
+   File.WriteAllText(Path.Combine(directory,name+".json"),new JObject{["groups"]=w.Groups,["members"]=w.Members,["pourOriginQueries"]=w.PourOriginQueries,["pourOriginCandidates"]=w.PourOriginCandidates,["pourSegments"]=w.PourSegments,["pourCandidates"]=w.PourCandidates,["pourRayQueries"]=w.PourRayQueries,["pourHitCandidates"]=w.PourHitCandidates,["immersionChecks"]=w.ImmersionChecks,["immersionCandidates"]=w.ImmersionCandidates,["scoopRecipients"]=w.ScoopRecipients,["scoopCandidates"]=w.ScoopCandidates,["scoopPathQueries"]=w.ScoopPathQueries,["scoopPathCandidates"]=w.ScoopPathCandidates,["rainSamples"]=w.RainSamples}.ToString());
   }
   [UnityTest]public IEnumerator FlowExecutionIndependentCircuitsUseLocalCandidatesAndOneUndo(){
    var(a,b,c,d)=IndependentFlowCups();Assert.That(editor.SetWeather(editor.WeatherRevision,1,new(){rainMmPerHour=60},0,out var error),Is.True,error);

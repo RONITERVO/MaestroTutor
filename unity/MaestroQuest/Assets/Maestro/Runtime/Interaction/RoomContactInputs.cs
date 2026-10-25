@@ -38,7 +38,7 @@ namespace Maestro.Quest.Interaction {
         internal static bool Item(RoomItem item,Pose target,Vector3 localScale,out Bounds sweep){
             sweep=default;
             if(!item||!item.Grab||!RoomRecipe.Finite(target.position)||!Creation.MotionFrame.ValidRotation(target.rotation)||!RoomRecipe.Finite(localScale)||localScale.x<=0||localScale.y<=0||localScale.z<=0)return false;
-            foreach(var c in item.Grab.colliders)if(!c||!c.isTrigger&&(!c.enabled||!c.gameObject.activeInHierarchy))return false;
+            foreach(var c in item.SolidColliders)if(!c||!c.isTrigger&&(!c.enabled||!c.gameObject.activeInHierarchy))return false;
             var shape=RoomSpatialBounds.CaptureCollision(item,RoomObjectKind.Block);if(!shape.Known||!shape.HasBounds)return false;
             var parent=item.transform.parent?item.transform.parent.lossyScale:Vector3.one;
             var before=item.transform.lossyScale;var after=Vector3.Scale(parent,localScale);

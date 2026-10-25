@@ -32,9 +32,17 @@ namespace Maestro.Quest.Creation
             public DrawingTip[] DrawingTips=>source["definition"]["drawingTips"] is JArray tips?JsonUtility.FromJson<RoomObjectData>(new JObject {["drawingTips"]=tips.DeepClone()}.ToString()).drawingTips:Array.Empty<DrawingTip>();
             public RoomSnapPoint[] SnapPoints=>source["definition"]["snapPoints"] is JArray points?JsonUtility.FromJson<RoomObjectData>(new JObject {["snapPoints"]=points.DeepClone()}.ToString()).snapPoints:Array.Empty<RoomSnapPoint>();
             public SculptTip[] SculptTips=>source["definition"]["sculptTips"] is JArray tips?JsonUtility.FromJson<RoomObjectData>(new JObject{["sculptTips"]=tips.DeepClone()}.ToString()).sculptTips:Array.Empty<SculptTip>();
-            public RoomMaterialStore[] MaterialStores=>source["definition"]["materialStores"] is JArray stores?JsonUtility.FromJson<RoomObjectData>(new JObject{["materialStores"]=stores.DeepClone()}.ToString()).materialStores:Array.Empty<RoomMaterialStore>();
+            public RoomMaterialStore[] MaterialStores {get {
+                if(source["definition"]["materialStores"] is not JArray stores)return Array.Empty<RoomMaterialStore>();
+                var result=JsonUtility.FromJson<RoomObjectData>(new JObject{["materialStores"]=stores.DeepClone()}.ToString()).materialStores;
+                RoomLiquidCodec.MaterialStores(result,stores,false);return result;
+            }}
             public RoomHeightField[] HeightFields=>source["definition"]["heightFields"] is JArray fields?JsonUtility.FromJson<RoomObjectData>(new JObject{["heightFields"]=fields.DeepClone()}.ToString()).heightFields:Array.Empty<RoomHeightField>();
-            public RoomContainer[] Containers=>source["definition"]["containers"] is JArray items?JsonUtility.FromJson<RoomObjectData>(new JObject{["containers"]=items.DeepClone()}.ToString()).containers:Array.Empty<RoomContainer>();
+            public RoomContainer[] Containers {get {
+                if(source["definition"]["containers"] is not JArray items)return Array.Empty<RoomContainer>();
+                var result=JsonUtility.FromJson<RoomObjectData>(new JObject{["containers"]=items.DeepClone()}.ToString()).containers;
+                RoomLiquidCodec.Containers(result,items,false);return result;
+            }}
             public CollisionRecipe Collision=>JsonUtility.FromJson<CollisionRecipe>(source["definition"]["collision"].ToString());
             public ObjectPhysicsSettings Physics=>JsonUtility.FromJson<ObjectPhysicsSettings>(source["definition"]["physics"].ToString());
             internal Entry(byte[] bytes) {

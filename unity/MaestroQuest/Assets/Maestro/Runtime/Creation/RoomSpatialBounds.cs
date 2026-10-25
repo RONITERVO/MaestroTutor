@@ -96,7 +96,7 @@ namespace Maestro.Quest.Creation
             var created=kind==RoomObjectKind.ImportedModel?item.GetComponent<CreatedRoomObject>():null;
             if(kind==RoomObjectKind.ImportedModel&&(!created||!created.ModelGeometryReady))return default;
             var result=RoomSpatialExtent.Empty;var inverse=item.transform.worldToLocalMatrix;
-            foreach(var collider in item.Grab.colliders){
+            foreach(var collider in item.SolidColliders){
                 if(!collider){result.Known=false;continue;}
                 if(collider.isTrigger)continue;
                 var mapping=inverse*collider.transform.localToWorldMatrix;

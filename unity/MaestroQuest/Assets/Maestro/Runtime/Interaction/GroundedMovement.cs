@@ -48,7 +48,7 @@ namespace Maestro.Quest.Interaction {
             if(item.GetComponent<MaestroAvatar>()) {float scale=item.transform.lossyScale.y;radius=.25f*scale;height=1.7f*scale;foot=item.transform.position;}
             else {
                 Bounds bounds=default;bool found=false;
-                foreach(var c in item.Grab.colliders){if(!c||!c.enabled||c.isTrigger||!c.gameObject.activeInHierarchy||c.gameObject.layer==RoomPhysicsLayers.Pending)continue;if(!found){bounds=c.bounds;found=true;}else bounds.Encapsulate(c.bounds);}
+                foreach(var c in item.SolidColliders){if(!c||!c.enabled||c.isTrigger||!c.gameObject.activeInHierarchy||c.gameObject.layer==RoomPhysicsLayers.Pending)continue;if(!found){bounds=c.bounds;found=true;}else bounds.Encapsulate(c.bounds);}
                 if(!found||!RoomRecipe.Finite(bounds.center)||!RoomRecipe.Finite(bounds.extents))return false;
                 radius=new Vector2(bounds.extents.x,bounds.extents.z).magnitude;
                 height=Mathf.Max(bounds.size.y,2*radius+RoomGroundQuery.Skin+.01f);
@@ -105,7 +105,7 @@ namespace Maestro.Quest.Interaction {
             foot=default;if(!value||!value.isActiveAndEnabled)return false;
             if(value.GetComponent<MaestroAvatar>()){foot=value.transform.position;return RoomRecipe.Finite(foot);}
             Bounds bounds=default;bool found=false;
-            foreach(var c in value.Grab.colliders){if(!c||!c.enabled||c.isTrigger||!c.gameObject.activeInHierarchy||c.gameObject.layer==RoomPhysicsLayers.Pending)continue;if(!found){bounds=c.bounds;found=true;}else bounds.Encapsulate(c.bounds);}
+            foreach(var c in value.SolidColliders){if(!c||!c.enabled||c.isTrigger||!c.gameObject.activeInHierarchy||c.gameObject.layer==RoomPhysicsLayers.Pending)continue;if(!found){bounds=c.bounds;found=true;}else bounds.Encapsulate(c.bounds);}
             foot=new(bounds.center.x,bounds.min.y,bounds.center.z);return found&&RoomRecipe.Finite(foot);
         }
         internal static JObject Observe(RoomEditor editor,RoomItem item){

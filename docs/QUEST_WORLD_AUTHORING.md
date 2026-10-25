@@ -2465,6 +2465,10 @@ querying transfer geometry or changing live quantities. Process-wide limits are
 units, independently of saved or native object capacity. Demand counts all registered vessels, including empty receiving cups
 and temporarily missing views. It includes potential vessel pairs, 32 stream
 segments, bounded hit/candidate searches, five scoop paths and five rain samples.
+Each scoop path reserves visits for both endpoint overlap buffers and its ray
+buffer in both immersion and scoop phases. A one-vessel group reserves 2,644
+units, two vessels 9,296, and the supported 16-vessel group 523,264; the shared
+524,288-unit ceiling is unchanged. These are upper-bound work allowances.
 This is a logical allowance, not measured CPU time, memory, frame time or PhysX
 cost. Geometry/proof internals and external observations are not included.
 
@@ -3633,6 +3637,24 @@ path, water, active simulation or real-room collision participation. Use the
 specific physics, movement and environment facts for those questions. Built-in
 objects obey the same checks as creations.
 
+The book's page and control selection volumes have an explicit pointer role.
+They remain XRI targets, including the initially hidden notice and bookmark,
+while the configured cover supplies the solid envelope. The same role is used
+by collision availability, rain, liquid paths, movement/clearance and physical
+creation queries. Showing a token cannot enlarge the book's collision envelope
+or turn it into a roof. The selected workspace recognizes its shared book by
+current registered identity; a different workspace cannot supply its cover proof.
+Configured solid handles cannot acquire a pointer exemption from a nearby action
+component. Missing, destroyed or disabled solid records remain conservative.
+
+This is an application-query distinction, not a general PhysX material or layer
+policy. Included targets keep their existing non-contact layers. Arbitrarily
+moving a target onto physical collision layers can still affect native solver
+contacts and compound-body mass; that is outside this pointer registration API.
+Changing room collision participation still uses the shared environment policy.
+Exact query buffers stay bounded and saturation remains unavailable/blocked even
+if the hits returned so far are pointer targets.
+
 Pending requires current demand for this target's native load or initial imported
 geometry preparation. A dormant object does not become pending just because it
 could be loaded. Disabled, incomplete or lost geometry stays unavailable even
@@ -3644,3 +3666,16 @@ Reading does not load, retry, resume physics, acquire ownership, publish collisi
 guards or change saved content. The result is a momentary observation, not an edit
 revision or permission to act. Existing saved collision recipes and imported-model
 facts retain their narrower meanings.
+
+
+### Exact measured quantities
+
+Material-store and liquid-container amounts and capacities retain their exact
+finite JSON numbers through configuration, facts, copies, template/prototype
+expansion, room saves, paired room/program snapshots and portable workspace
+archives. Saving and reopening
+must not create or lose content through numeric rounding. A quantity above its
+capacity is rejected, including a difference of one binary step; it is never
+silently clamped. Authoring an amount remains an explicit edit, separate from
+simulation or a measured transfer. These guarantees concern carried contents,
+not mass, granular physics or the visual volume of a shape.

@@ -32,7 +32,7 @@ namespace Maestro.Quest.Creation {
             else{
                 bool found=false;Bounds bounds=default;
                 if(!item.Grab){result=WaterTraversalResult.Refused("Water traversal needs ready collision geometry");return false;}
-                foreach(var c in item.Grab.colliders){if(!c||!c.enabled||c.isTrigger)continue;if(found)bounds.Encapsulate(c.bounds);else{bounds=c.bounds;found=true;}}
+                foreach(var c in item.SolidColliders){if(!c||!c.enabled||c.isTrigger)continue;if(found)bounds.Encapsulate(c.bounds);else{bounds=c.bounds;found=true;}}
                 if(!found){result=WaterTraversalResult.Refused("Water traversal needs ready collision geometry");return false;}
                 var offset=new Vector3(bounds.center.x,bounds.min.y,bounds.center.z)-from;from+=offset;to+=offset;
                 radius=new Vector2(bounds.extents.x,bounds.extents.z).magnitude;height=bounds.size.y;

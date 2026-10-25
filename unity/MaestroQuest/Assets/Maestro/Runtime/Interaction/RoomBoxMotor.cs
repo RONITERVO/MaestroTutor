@@ -9,7 +9,7 @@ namespace Maestro.Quest.Interaction {
         bool Empty(Vector3 point,Vector3 extents,int mask,Func<Collider,bool> blocks){
             int count=Physics.OverlapBoxNonAlloc(point,extents,overlaps,Quaternion.identity,mask,QueryTriggerInteraction.Ignore);
             if(count==overlaps.Length)return false;
-            for(int i=0;i<count;i++)if(overlaps[i]&&blocks(overlaps[i]))return false;
+            for(int i=0;i<count;i++)if(overlaps[i]&&!RoomItem.IsPointerOnly(overlaps[i])&&blocks(overlaps[i]))return false;
             return true;
         }
         internal bool Clear(RoomSweptBody body,int mask,Func<Collider,bool> blocks){
@@ -17,7 +17,7 @@ namespace Maestro.Quest.Interaction {
             var delta=body.To-body.From;if(delta.sqrMagnitude<1e-10f)return true;
             int count=Physics.BoxCastNonAlloc(body.From,body.Extents,delta.normalized,hits,Quaternion.identity,delta.magnitude,mask,QueryTriggerInteraction.Ignore);
             if(count==hits.Length)return false;
-            for(int i=0;i<count;i++)if(hits[i].collider&&blocks(hits[i].collider))return false;
+            for(int i=0;i<count;i++)if(hits[i].collider&&!RoomItem.IsPointerOnly(hits[i].collider)&&blocks(hits[i].collider))return false;
             return true;
         }
         internal void Release(){Array.Clear(overlaps,0,overlaps.Length);Array.Clear(hits,0,hits.Length);}

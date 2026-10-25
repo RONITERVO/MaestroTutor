@@ -12,7 +12,7 @@ namespace Maestro.Quest.Creation
         // Actual visits in the last quantity pass, not discovery/PhysX time or
         // a scheduling allowance. A value copy cannot alter the running sample.
         internal struct FlowExecutionWork {
-            internal int Groups,Members,PourOriginQueries,PourOriginCandidates,PourSegments,PourCandidates,ImmersionChecks,ImmersionCandidates,ScoopRecipients,ScoopCandidates,RainSamples;
+            internal int Groups,Members,PourOriginQueries,PourOriginCandidates,PourSegments,PourCandidates,PourRayQueries,PourHitCandidates,ImmersionChecks,ImmersionCandidates,ScoopRecipients,ScoopCandidates,ScoopPathQueries,ScoopPathCandidates,RainSamples;
         }
         FlowExecutionWork flowExecutionWork;
         internal FlowExecutionWork LastFlowExecution=>flowExecutionWork;

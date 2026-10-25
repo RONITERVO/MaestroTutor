@@ -21,7 +21,7 @@ namespace Maestro.Quest.Creation {
                 if(!item||item==owner||!item.isActiveAndEnabled||!item.Grab||item.Grab.isSelected)continue;
                 var rigid=item.GetComponent<RigidRoomItem>();var body=item.GetComponent<Rigidbody>();
                 if(!rigid||!rigid.Simulating||rigid.AnimationOwned||!body||!body.IsSleeping())continue;
-                foreach(var collider in item.Grab.colliders)
+                foreach(var collider in item.SolidColliders)
                     if(collider&&collider.enabled&&collider.gameObject.activeInHierarchy&&area.Intersects(collider.bounds)){body.WakeUp();break;}
             }
             return view;

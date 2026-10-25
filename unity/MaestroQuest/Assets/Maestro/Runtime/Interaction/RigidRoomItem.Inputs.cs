@@ -16,7 +16,7 @@ namespace Maestro.Quest.Interaction {
         internal static bool Bounds(RoomItem item,Rigidbody body,float seconds,out Bounds motion,out Bounds ground){
             motion=ground=default;
             if(!item||!item.Grab||!body||!float.IsFinite(seconds)||seconds<=0||!float.IsFinite(Physics.gravity.sqrMagnitude))return false;
-            foreach(var collider in item.Grab.colliders){
+            foreach(var collider in item.SolidColliders){
                 if(!collider)return false;
                 if(!collider.isTrigger&&(!collider.enabled||!collider.gameObject.activeInHierarchy))return false;
             }
@@ -56,7 +56,7 @@ namespace Maestro.Quest.Interaction {
         bool InputOwner=>isActiveAndEnabled&&item&&item.isActiveAndEnabled&&item.Grab&&!item.Grab.isSelected&&PhysicsPreparationEnabled;
         internal bool PhysicsWorkEligible=>InputOwner&&(!InputEditor||InputEditor.isActiveAndEnabled&&InputEditor.Identity(item)!=null);
         internal RoomResourceOwner PhysicsWorkOwner=>new(InputEditor?InputEditor.WorldIdentity:null,InputEditor?InputEditor.Identity(item):null,"physics");
-        internal int PhysicsWorkColliders=>item&&item.Grab?item.Grab.colliders.Count:0;
+        internal int PhysicsWorkColliders=>item&&item.Grab?item.SolidColliderCount:0;
         bool InputsCurrent=>InputEditor?InputEditor.PhysicsIslandReady(item,true,out _):CurrentInputs(out _);
         internal bool CurrentInputs(out string error)=>CurrentInputs(null,out error);
         internal bool CurrentInputs(PhysicsIslandQuery query,out string error,bool requireWork=true){

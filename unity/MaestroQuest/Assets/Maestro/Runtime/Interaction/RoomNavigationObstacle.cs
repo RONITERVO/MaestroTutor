@@ -8,9 +8,9 @@ namespace Maestro.Quest.Interaction {
         internal MeshCollider Collision {get;private set;}
         internal uint Revision {get;private set;}
         internal void Publish(MeshCollider collision){Collision=collision;Revision++;}
-        internal bool Available=>isActiveAndEnabled&&Collision&&Collision.enabled&&!Collision.isTrigger&&!Collision.convex&&
+        internal bool Available=>isActiveAndEnabled&&Collision&&!RoomItem.IsPointerOnly(Collision)&&Collision.enabled&&!Collision.isTrigger&&!Collision.convex&&
             Collision.gameObject.activeInHierarchy&&Collision.sharedMesh&&Collision.sharedMesh.vertexCount>0&&
             (!Collision.attachedRigidbody||Collision.attachedRigidbody.isKinematic)&&
-            GetComponentInParent<RoomItem>()?.Grab?.isSelected!=true;
+            GetComponentInParent<RoomItem>(true)?.Grab?.isSelected!=true;
     }
 }

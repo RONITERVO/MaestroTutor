@@ -11,7 +11,7 @@ namespace Maestro.Quest.Creation {
         internal int Count;internal float CellVolume;internal string Reason="";
         internal void Capture(RoomItem item){
             Count=0;CellVolume=0;Reason="No supported solid collider displacement";
-            var colliders=item.Grab.colliders;if(colliders.Count==0||colliders.Count>MaximumColliders)return;
+            var colliders=item.SolidColliders;int colliderCount=item.SolidColliderCount;if(colliderCount==0||colliderCount>MaximumColliders)return;
             Bounds bounds=default;bool first=true;
             foreach(var c in colliders){
                 if(!Solid(c,item))continue;

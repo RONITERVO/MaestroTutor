@@ -1,11 +1,11 @@
 {
   "flow": {
     "consumed": {
-      "step": 1086,
+      "step": 633,
       "committed": {
         "discoveryUnits": 468,
         "physicsUnits": 0,
-        "liquidUnits": 5456,
+        "liquidUnits": 9296,
         "contactUnits": 0,
         "physicsBodies": 0,
         "liquidPasses": 1,
@@ -14,7 +14,7 @@
       "consumed": {
         "discoveryUnits": 468,
         "physicsUnits": 0,
-        "liquidUnits": 5456,
+        "liquidUnits": 9296,
         "contactUnits": 0,
         "physicsBodies": 0,
         "liquidPasses": 1,
@@ -40,11 +40,11 @@
       }
     },
     "retired": {
-      "step": 1086,
+      "step": 633,
       "committed": {
         "discoveryUnits": 468,
         "physicsUnits": 0,
-        "liquidUnits": 5456,
+        "liquidUnits": 9296,
         "contactUnits": 0,
         "physicsBodies": 0,
         "liquidPasses": 1,
@@ -53,7 +53,7 @@
       "consumed": {
         "discoveryUnits": 468,
         "physicsUnits": 0,
-        "liquidUnits": 5456,
+        "liquidUnits": 9296,
         "contactUnits": 0,
         "physicsBodies": 0,
         "liquidPasses": 1,
@@ -62,7 +62,7 @@
       "retired": {
         "discoveryUnits": 468,
         "physicsUnits": 0,
-        "liquidUnits": 5456,
+        "liquidUnits": 9296,
         "contactUnits": 0,
         "physicsBodies": 0,
         "liquidPasses": 1,
@@ -79,11 +79,11 @@
       }
     },
     "next": {
-      "step": 1087,
+      "step": 634,
       "committed": {
         "discoveryUnits": 0,
         "physicsUnits": 0,
-        "liquidUnits": 518833,
+        "liquidUnits": 514993,
         "contactUnits": 0,
         "physicsBodies": 0,
         "liquidPasses": 0,
@@ -156,7 +156,7 @@
         "liquidPasses": 32,
         "contactPasses": 32
       },
-      "step": 1073
+      "step": 616
     },
     "medium": {
       "applied": true,
@@ -172,7 +172,7 @@
     "contact": {
       "known": true,
       "immersed": true,
-      "bodyId": "3d281ed9708f4378a35a9de13696edf5",
+      "bodyId": "ec00dca2005145aea46b8d163e36f7f8",
       "kind": "hand",
       "liquid": "Water",
       "depthMetres": 0.200000048,
@@ -221,7 +221,7 @@
         "liquidPasses": 32,
         "contactPasses": 32
       },
-      "step": 1073
+      "step": 616
     },
     "next": {
       "committed": {
@@ -260,7 +260,7 @@
         "liquidPasses": 32,
         "contactPasses": 32
       },
-      "step": 1074
+      "step": 617
     }
   }
 }

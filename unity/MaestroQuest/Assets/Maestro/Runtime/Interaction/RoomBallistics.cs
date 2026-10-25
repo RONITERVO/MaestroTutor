@@ -20,7 +20,7 @@ namespace Maestro.Quest.Interaction
         readonly RaycastHit[] hits=new RaycastHit[48];
         const int Mask=(1<<RoomPhysicsLayers.Scanned)|(1<<RoomPhysicsLayers.Item)|(1<<RoomPhysicsLayers.Environment)|(1<<RoomPhysicsLayers.Controller);
         static bool Finite(Vector3 v)=>float.IsFinite(v.sqrMagnitude);
-        static bool Obstacle(Collider c,RoomItem item)=>c&&c.enabled&&!c.isTrigger&&!c.transform.IsChildOf(item.transform);
+        static bool Obstacle(Collider c,RoomItem item)=>c&&!RoomItem.IsPointerOnly(c)&&c.enabled&&!c.isTrigger&&!c.transform.IsChildOf(item.transform);
         static float SegmentDistance(Vector3 p,Vector3 a,Vector3 b) {var d=b-a;return Vector3.Distance(p,a+d*Mathf.Clamp01(d.sqrMagnitude>0?Vector3.Dot(p-a,d)/d.sqrMagnitude:0));}
         public bool Prepare(RoomItem item,RoomPhysicsWorld world,Transform viewer,Vector3 destination,float seconds,float maxSpeed,out string error)
         {

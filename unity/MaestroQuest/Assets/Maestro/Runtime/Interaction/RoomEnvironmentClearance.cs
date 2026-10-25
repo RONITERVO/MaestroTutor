@@ -20,9 +20,9 @@ namespace Maestro.Quest.Interaction
             if(requireGround&&!world.ContainsEnvironment(item.transform.position,physical))return false;
             if(!physical||!world.SurfacesReady){error=null;return true;}
             Physics.SyncTransforms();
-            foreach(var own in item.Grab.colliders){
+            foreach(var own in item.SolidColliders){
                 if(!own){error="Object collision geometry is unavailable";return false;}
-                if(!own.transform.IsChildOf(item.transform)){error="A collision shape is not owned by this object";return false;}
+                if(own.GetComponentInParent<RoomItem>(true)!=item){error="A collision shape is not owned by this object";return false;}
                 if(!own.enabled||own.isTrigger||!ChildEnabled(own.transform,item.transform))continue;
                 var extent=Envelope(own);
                 error="Object collision geometry cannot prove clearance from scanned surfaces";

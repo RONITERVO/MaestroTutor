@@ -46,7 +46,7 @@ namespace Maestro.Quest.Interaction
         internal static bool Bounds(RoomItem item,out Bounds bounds)
         {
             bounds=default;if(!item||!item.Grab)return false;
-            var colliders=item.Grab.colliders.Where(c=>c&&c.enabled&&!c.isTrigger&&c.gameObject.activeInHierarchy).ToArray();
+            var colliders=item.SolidColliders.Where(c=>c&&c.enabled&&!c.isTrigger&&c.gameObject.activeInHierarchy).ToArray();
             if(colliders.Length==0)return false;
             bounds=colliders[0].bounds;foreach(var collider in colliders.Skip(1))bounds.Encapsulate(collider.bounds);
             return Finite(bounds.center)&&Finite(bounds.extents)&&bounds.extents.sqrMagnitude>0;

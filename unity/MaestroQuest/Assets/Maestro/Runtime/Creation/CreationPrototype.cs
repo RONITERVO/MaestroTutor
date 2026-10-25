@@ -63,6 +63,7 @@ namespace Maestro.Quest.Creation
         internal static CreationPrototype Read(JObject value) {
             var flat=(JObject)value.DeepClone();var geometry=(JObject)flat["geometry"];flat.Remove("geometry");foreach(var p in geometry.Properties())flat[p.Name]=p.Value.DeepClone();
             flat.Remove("walking");var result=JsonUtility.FromJson<CreationPrototype>(flat.ToString());RoomLiquidCodec.Containers(result.containers,flat["containers"],false);
+            RoomLiquidCodec.MaterialStores(result.materialStores,flat["materialStores"],false);
             if(value["walking"] is JObject walk){
                 result.walkClip=(string)walk["source"]=="embedded"?(int)walk["clipIndex"]+1:0;
                 result.walkMotionId=(string)walk["source"]=="library"?(string)walk["motionId"]:null;

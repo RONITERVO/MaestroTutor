@@ -16,7 +16,7 @@ it('accepts captured native complete-pass flow reservations independently of geo
  }
  expect(native.current[0]).toMatchObject({current:true,vessels:1,units:2644});
  expect(native.stale[0]).toEqual({...native.current[0],vessels:2,current:false});
- expect(native.resized[0]).toEqual({...native.current[0],vessels:2,units:5456,current:false});
+ expect(native.resized[0]).toEqual({...native.current[0],vessels:2,units:9296,current:false});
  expect(native.released).toEqual([]);
  for(const key of ['reservationId','worldId','regionId'] as const)expect(native.current[0][key]).toHaveLength(32);
 });

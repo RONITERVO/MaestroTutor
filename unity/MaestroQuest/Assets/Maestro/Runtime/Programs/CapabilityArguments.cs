@@ -72,7 +72,7 @@ namespace Maestro.Quest.Programs
                         var p=obj["position"];var d=obj["distance"];
                         if(!string.IsNullOrEmpty((string)obj["part"])&&!string.IsNullOrEmpty((string)obj["joint"])||(double)p["x"]*(double)p["x"]+(double)p["y"]*(double)p["y"]+(double)p["z"]*(double)p["z"]>100||(double)d["minimum"]>(double)d["maximum"]){error=path+" needs one attachment, a bounded offset and ordered distances";return false;}
                     } else if((string)schema["format"]=="materialStore") {
-                        var store=JsonUtility.FromJson<RoomMaterialStore>(obj.ToString());if(!store.Validate(out error))return false;
+                        var store=MaterialStoreCapability.ReadDefinition(obj);if(!store.Validate(out error))return false;
                     } else if((string)schema["format"]=="heightFieldReset") {
                         if((double)obj["fillHeight"]>(double)obj["definition"]["maxHeight"]){error=path+" needs fillHeight within maxHeight";return false;}
                     } else if((string)schema["format"]=="heightFieldDefinition"||(string)schema["format"]=="heightFieldSaved") {

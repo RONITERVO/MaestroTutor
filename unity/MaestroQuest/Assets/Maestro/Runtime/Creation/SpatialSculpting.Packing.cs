@@ -57,7 +57,13 @@ namespace Maestro.Quest.Creation {
         }
         bool PackingSpaceClear(Vector3 position,float size,out string error){
             Physics.SyncTransforms();int count=Physics.OverlapSphereNonAlloc(position,size,packingOverlaps,RoomPhysicsLayers.GeometryQueryMask,QueryTriggerInteraction.Ignore);
-            error=count>0?"The packed ball needs clear space above the surface; move the obstruction or choose a smaller amount":null;
+            // A full query may omit a solid, even when every returned target is
+            // pointer-only. Keep the same bounded buffer and refusal message.
+            bool blocked=count==packingOverlaps.Length;
+            for(int i=0;i<count&&!blocked;i++){
+                var collider=packingOverlaps[i];if(collider&&!RoomItem.IsPointerOnly(collider))blocked=true;
+            }
+            error=blocked?"The packed ball needs clear space above the surface; move the obstruction or choose a smaller amount":null;
             Array.Clear(packingOverlaps,0,packingOverlaps.Length);return error==null;
         }
         static bool SamePackingRotation(Quaternion a,Quaternion b){var av=new Vector4(a.x,a.y,a.z,a.w);var bv=new Vector4(b.x,b.y,b.z,b.w);return (av-bv).sqrMagnitude<1e-10f||(av+bv).sqrMagnitude<1e-10f;}

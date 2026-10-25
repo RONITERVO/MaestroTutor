@@ -1,129 +1,129 @@
 {
   "schedule": {
-    "step": 823,
+    "step": 361,
     "groups": 2,
     "active": 2,
     "booked": 2,
     "ready": 2,
     "executionLimit": 32,
     "groupLimit": 1024,
-    "units": 10912,
+    "units": 18592,
     "unitLimit": 524288
   },
   "groups": [
     {
-      "step": 823,
-      "reservationId": "eb3a355a486e49cf84018ab726ac31e1",
-      "worldId": "14c213998d4a45fda13c9c0cd4b7af15",
-      "regionId": "6bee3d53595d4844bcc3f9558ccfeaf5",
+      "step": 361,
+      "reservationId": "2a2c91d376d149b9b1404d6cba60b95d",
+      "worldId": "4e4da4c44c2a4de3b8094fadc4649a74",
+      "regionId": "766441d596a0494ca7400e91f5d771ef",
       "membershipRevision": 2,
-      "firstMember": "08c8bdf1d6bb46b2b6040a0a807b682f",
+      "firstMember": "1b942f2bd5214b8ea3b679baa1a668be",
       "members": 2,
-      "units": 5456,
+      "units": 9296,
       "active": true,
       "discovered": true,
       "booked": true,
       "ready": true,
-      "lastServed": 823
+      "lastServed": 361
     },
     {
-      "step": 823,
-      "reservationId": "eb3a355a486e49cf84018ab726ac31e1",
-      "worldId": "14c213998d4a45fda13c9c0cd4b7af15",
-      "regionId": "6bee3d53595d4844bcc3f9558ccfeaf5",
+      "step": 361,
+      "reservationId": "2a2c91d376d149b9b1404d6cba60b95d",
+      "worldId": "4e4da4c44c2a4de3b8094fadc4649a74",
+      "regionId": "766441d596a0494ca7400e91f5d771ef",
       "membershipRevision": 2,
-      "firstMember": "530b215c742444d2bb7df35ad5690112",
+      "firstMember": "2de043695ebe4ed0ad740ae8c4721b88",
       "members": 2,
-      "units": 5456,
+      "units": 9296,
       "active": true,
       "discovered": true,
       "booked": true,
       "ready": true,
-      "lastServed": 823
+      "lastServed": 361
     }
   ],
   "members": [
     {
-      "step": 823,
-      "reservationId": "eb3a355a486e49cf84018ab726ac31e1",
+      "step": 361,
+      "reservationId": "2a2c91d376d149b9b1404d6cba60b95d",
       "membershipRevision": 2,
-      "firstMember": "08c8bdf1d6bb46b2b6040a0a807b682f",
-      "target": "08c8bdf1d6bb46b2b6040a0a807b682f",
-      "units": 2728,
-      "lastServed": 823,
-      "order": 531
+      "firstMember": "1b942f2bd5214b8ea3b679baa1a668be",
+      "target": "1b942f2bd5214b8ea3b679baa1a668be",
+      "units": 4648,
+      "lastServed": 361,
+      "order": 438
     },
     {
-      "step": 823,
-      "reservationId": "eb3a355a486e49cf84018ab726ac31e1",
+      "step": 361,
+      "reservationId": "2a2c91d376d149b9b1404d6cba60b95d",
       "membershipRevision": 2,
-      "firstMember": "08c8bdf1d6bb46b2b6040a0a807b682f",
-      "target": "b2508f662be4423fb7d2b040e671c61f",
-      "units": 2728,
-      "lastServed": 823,
-      "order": 532
+      "firstMember": "1b942f2bd5214b8ea3b679baa1a668be",
+      "target": "7422856cbf954b1cb21193f91314bc0d",
+      "units": 4648,
+      "lastServed": 361,
+      "order": 439
     },
     {
-      "step": 823,
-      "reservationId": "eb3a355a486e49cf84018ab726ac31e1",
+      "step": 361,
+      "reservationId": "2a2c91d376d149b9b1404d6cba60b95d",
       "membershipRevision": 2,
-      "firstMember": "530b215c742444d2bb7df35ad5690112",
-      "target": "530b215c742444d2bb7df35ad5690112",
-      "units": 2728,
-      "lastServed": 823,
-      "order": 535
+      "firstMember": "2de043695ebe4ed0ad740ae8c4721b88",
+      "target": "2de043695ebe4ed0ad740ae8c4721b88",
+      "units": 4648,
+      "lastServed": 361,
+      "order": 434
     },
     {
-      "step": 823,
-      "reservationId": "eb3a355a486e49cf84018ab726ac31e1",
+      "step": 361,
+      "reservationId": "2a2c91d376d149b9b1404d6cba60b95d",
       "membershipRevision": 2,
-      "firstMember": "530b215c742444d2bb7df35ad5690112",
-      "target": "b3505865802740df9917e6a9b3d4dda5",
-      "units": 2728,
-      "lastServed": 823,
-      "order": 536
+      "firstMember": "2de043695ebe4ed0ad740ae8c4721b88",
+      "target": "4852e0e56c7741f7a27dd17be901b8c0",
+      "units": 4648,
+      "lastServed": 361,
+      "order": 435
     }
   ],
   "regroup": {
     "before": {
-      "step": 823,
-      "reservationId": "eb3a355a486e49cf84018ab726ac31e1",
-      "worldId": "14c213998d4a45fda13c9c0cd4b7af15",
-      "regionId": "6bee3d53595d4844bcc3f9558ccfeaf5",
+      "step": 361,
+      "reservationId": "2a2c91d376d149b9b1404d6cba60b95d",
+      "worldId": "4e4da4c44c2a4de3b8094fadc4649a74",
+      "regionId": "766441d596a0494ca7400e91f5d771ef",
       "membershipRevision": 2,
-      "firstMember": "08c8bdf1d6bb46b2b6040a0a807b682f",
+      "firstMember": "1b942f2bd5214b8ea3b679baa1a668be",
       "members": 2,
-      "units": 5456,
+      "units": 9296,
       "active": true,
       "discovered": true,
       "booked": true,
       "ready": true,
-      "lastServed": 823
+      "lastServed": 361
     },
     "after": {
-      "step": 823,
-      "reservationId": "eb3a355a486e49cf84018ab726ac31e1",
-      "worldId": "14c213998d4a45fda13c9c0cd4b7af15",
-      "regionId": "6bee3d53595d4844bcc3f9558ccfeaf5",
+      "step": 361,
+      "reservationId": "2a2c91d376d149b9b1404d6cba60b95d",
+      "worldId": "4e4da4c44c2a4de3b8094fadc4649a74",
+      "regionId": "766441d596a0494ca7400e91f5d771ef",
       "membershipRevision": 3,
-      "firstMember": "08c8bdf1d6bb46b2b6040a0a807b682f",
+      "firstMember": "1b942f2bd5214b8ea3b679baa1a668be",
       "members": 4,
-      "units": 11584,
+      "units": 34624,
       "active": true,
       "discovered": true,
       "booked": true,
       "ready": true,
-      "lastServed": 823
+      "lastServed": 361
     },
     "member": {
-      "step": 823,
-      "reservationId": "eb3a355a486e49cf84018ab726ac31e1",
+      "step": 361,
+      "reservationId": "2a2c91d376d149b9b1404d6cba60b95d",
       "membershipRevision": 3,
-      "firstMember": "08c8bdf1d6bb46b2b6040a0a807b682f",
-      "target": "08c8bdf1d6bb46b2b6040a0a807b682f",
-      "units": 2896,
-      "lastServed": 823,
-      "order": 531
+      "firstMember": "1b942f2bd5214b8ea3b679baa1a668be",
+      "target": "1b942f2bd5214b8ea3b679baa1a668be",
+      "units": 8656,
+      "lastServed": 361,
+      "order": 438
     }
   }
 }

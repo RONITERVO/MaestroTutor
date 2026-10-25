@@ -134,12 +134,32 @@ namespace Maestro.Quest.Creation {
             for(int sample=0;sample<5;sample++){
                 if(!contact.Path(sample,out var from,out var to)||!world.CanSimulate(from,source)||!world.CanSimulate(to,recipient))continue;
                 // Raycasts alone miss a ray starting inside a solid. Check both
-                // ends too; saturation and any obstruction reject this path.
-                if(Physics.OverlapSphereNonAlloc(from,.0005f,immersionHits,mask,QueryTriggerInteraction.Ignore)>0||Physics.OverlapSphereNonAlloc(to,.0005f,immersionHits,mask,QueryTriggerInteraction.Ignore)>0)continue;
+                // ends too; full buffers remain inconclusive before role filtering.
+                if(!ScoopEndpointClear(from,mask)||!ScoopEndpointClear(to,mask))continue;
                 var delta=to-from;float distance=delta.magnitude;
-                if(distance>1e-6f&&Physics.RaycastNonAlloc(from,delta/distance,hits,distance,mask,QueryTriggerInteraction.Ignore)==0)return true;
+                if(distance>1e-6f&&ScoopRayClear(from,delta/distance,distance,mask))return true;
             }
             return false;
+        }
+        bool ScoopEndpointClear(Vector3 point,int mask){
+            flowExecutionWork.ScoopPathQueries++;
+            int found=Physics.OverlapSphereNonAlloc(point,.0005f,immersionHits,mask,QueryTriggerInteraction.Ignore);
+            if(found==immersionHits.Length)return false;
+            for(int i=0;i<found;i++){
+                flowExecutionWork.ScoopPathCandidates++;var hit=immersionHits[i];
+                if(hit&&!RoomItem.IsPointerOnly(hit))return false;
+            }
+            return true;
+        }
+        bool ScoopRayClear(Vector3 from,Vector3 direction,float distance,int mask){
+            flowExecutionWork.ScoopPathQueries++;
+            int found=Physics.RaycastNonAlloc(from,direction,hits,distance,mask,QueryTriggerInteraction.Ignore);
+            if(found==hits.Length)return false;
+            for(int i=0;i<found;i++){
+                flowExecutionWork.ScoopPathCandidates++;var hit=hits[i].collider;
+                if(hit&&!RoomItem.IsPointerOnly(hit))return false;
+            }
+            return true;
         }
         bool Available(Vessel v)=>v.Item&&v.Item.isActiveAndEnabled&&v.Item.GetComponent<ContainerFillView>()?.NativeReady==true&&v.Rigid&&v.Rigid.GeometryReady&&(!v.Live.TerrainFloor||RoomTerrainReservoir.Native(v.Live,v.Item.transform)!=null)&&editor.PhysicsWorld.CanSimulate(v.Item.transform.position,v.Item);
         bool Begin(out string issue){issue=null;if(Active)return true;write=editor.WriteGate.TryWrite(out issue);if(write==null)return false;flowEpoch++;session=Guid.NewGuid().ToString("N");quiet=elapsed=0;error="";return true;}
@@ -155,7 +175,7 @@ namespace Maestro.Quest.Creation {
             if(found==immersionHits.Length)return false;
             for(int i=0;i<found;i++){
                 flowExecutionWork.PourOriginCandidates++;var hit=immersionHits[i];
-                if(hit&&!SourceOwnsCollider(source,hit))return false;
+                if(hit&&!RoomItem.IsPointerOnly(hit)&&!SourceOwnsCollider(source,hit))return false;
             }
             return true;
         }
@@ -172,10 +192,12 @@ namespace Maestro.Quest.Creation {
                     if(candidate==source||!candidate.Ready)continue;
                     if(candidate.Opening.Enters(previous,next,up,out float fraction)&&fraction<closest){closest=fraction;entering=candidate;}
                 }
+                flowExecutionWork.PourRayQueries++;
                 int found=Physics.RaycastNonAlloc(previous,delta/length,hits,length,world.CollisionMask(~0,source.Item),QueryTriggerInteraction.Ignore);
                 if(found==hits.Length)return false; // Saturated collision query cannot prove a clear path.
                 foreach(var hit in hits.AsSpan(0,found)){
-                    if(!hit.collider||i==1&&SourceOwnsCollider(source,hit.collider))continue;
+                    flowExecutionWork.PourHitCandidates++;
+                    if(!hit.collider||RoomItem.IsPointerOnly(hit.collider)||i==1&&SourceOwnsCollider(source,hit.collider))continue;
                     float fraction=hit.distance/length;if(fraction<=closest){closest=fraction;entering=null;stopped=true;}
                 }
                 path[count++]=Vector3.LerpUnclamped(previous,next,closest);

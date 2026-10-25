@@ -18,7 +18,7 @@ namespace Maestro.Quest.Interaction
         readonly Collider[] overlaps=new Collider[64];
         Clearance Include(Collider collider,RoomGroundQuery ground,Func<Collider,bool> obstacle,Clearance state)
         {
-            if(!collider||!obstacle(collider))return state;
+            if(!collider||RoomItem.IsPointerOnly(collider)||!obstacle(collider))return state;
             if(!Blocker||ground==null||!ground.Contains(collider))Blocker=collider;
             return ground!=null&&ground.Contains(collider)&&state!=Clearance.Blocked?Clearance.Ground:Clearance.Blocked;
         }

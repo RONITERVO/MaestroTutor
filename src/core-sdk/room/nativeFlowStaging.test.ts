@@ -26,7 +26,7 @@ it('keeps actual native input preparation distinct from execution in shared fact
 });
 
 it('reports later execution without backfilling the interval spent preparing or waiting',()=>{
- expect(native.flowing.execution).toMatchObject({executions:1,queued:0,units:5456});
+ expect(native.flowing.execution).toMatchObject({executions:1,queued:0,units:9296});
  expect(native.flowing.source.phase).toBe('flowing');
  expect(native.flowing.receiver.contents.amountMl).toBeGreaterThan(0);
  expect(native.flowing.receiver.contents.amountMl).toBeLessThanOrEqual(18.75);
