@@ -16,6 +16,9 @@ checkpoints remain separately verified. The
 [world authoring guide](QUEST_WORLD_AUTHORING.md) describes the reusable user/agent
 contract; dated entries below retain the development evidence.
 
+The [audio verification checkpoint](#native-audio-quality-regression-gates--2026-10-25)
+strengthens offline evidence without changing the selected audio path.
+
 The installed development checkpoint remains **D85F3CB7 / f58dab48**. The latest
 packaged development APK is **5899972E / 5100f612**, not installed. Current desktop
 source is later than both. Device and paid-provider testing remain on hold; no
@@ -17014,3 +17017,56 @@ investigation passed all six sampled cases; that production path is unchanged.
 Device/provider work and release operations remain on hold. This increment does
 not establish headset performance, physical alignment, river propagation or
 underwater presentation, and it does not close the audio or Store release gates.
+
+
+### Native audio-quality regression gates — 2026-10-25
+
+Two gaps in the optional native echo evaluation could conceal future regressions.
+The clock-aligned onset score kept only minima, so a doubled 80 ms attack could
+pass the whole 280 ms burst average (projected gain 1.286). It now measures both
+onset gain and baseline-gain maxima and applies the existing 1.5 ceiling. The
+same sample scorer is exercised by 13 native metric contracts, including speech
+loss, shared baseline muting/amplification, distortion and malformed inputs.
+
+The runner previously checked aligned summary counts and hard-gated broadband,
+but could accept losses of individual passes inside a failing tonal/overlap group.
+`QualityResults.py` now verifies all 39 unique case identities per profile, the
+72 per-case onset windows, finite metrics, both onset maxima, result/exit-code
+consistency and each established passing identity. The committed baseline records
+24 passes across stock/stationary32/measured32 (13/3/8) with source and retained CI
+evidence hashes. A previously failing case may improve; it cannot offset a newly
+failing case. Eighteen Python checks cover these rules, including a swapped
+pass/failure pair with an unchanged total. CI runs these checks independently.
+
+Verification is retained in `.quest-evidence/echo-gates-20261025`:
+
+- Fresh Windows builds `echo-native/ga1w`, `ga2w`, `ga3w` execute all three
+  profiles, the 128 existing capture/playback/clock/drain/session contracts per
+  profile, all 13 new metric cases, the existing standalone/aligned quality
+  suites, and six standalone English/Spanish synthesized-speech cases per profile.
+- Every previously emitted aligned metric and verdict is numerically unchanged
+  from the source-matched retained CI evidence. The 24 passing aligned cases stay
+  passing. Known quality failures remain **32 / 56 / 31**, respectively; none is
+  reclassified as a pass. These are synthetic/offline fixtures, not human speech
+  intelligibility or headset evidence.
+- Fresh Android ARM64/API 32 cross-build `echo-native/ga4a` passes the existing
+  export/dependency checks and 16 KiB alignment. It was not installed or executed.
+- Removing each onset ceiling independently in the disposable native build makes
+  its corresponding regression fail. Restoring source passes all 13 contracts;
+  the actual echo library is unchanged. The first mutation helper stopped before
+  mutation on an overly broad replacement assertion; its retained receipt proves
+  restoration. The corrected helper scopes mutations to the acceptance function.
+- All 14 protected unrelated files remain unchanged. Independent review checked
+  all 15 retained baseline logs, three result hashes and 12 relevant source hashes
+  against 9724832c, allowing only recorded LF/CRLF normalization.
+
+No production DSP, capture ownership, selected renderer, provider or device state
+changed. No threshold was relaxed, and no discarded private DSP fork was promoted.
+The audio failure is still a release blocker. Next useful offline qualification
+is real language-shaped synthesized input through the clock-aligned path (the
+existing speech-WAV cases cover only the standalone processor). Whole-window
+scoring still uses nominal output bounds, unlike source-timed onset bounds;
+measure the small skew-boundary difference explicitly before changing that gate.
+Headset/provider work, reflections, release signing, deployments and Meta changes
+remain on hold. Existing full application evidence remains applicable to unchanged
+production code; this increment makes no new full application or acoustic claim.

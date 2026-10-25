@@ -182,8 +182,9 @@ echo audibility, with the pinned dependency's disabled debug-dump setting:
   steady-room near-end preservation but regresses changing-path suppression.
 - `--profile measured32` uses the caller's supplied buffer delay, 4 ms headroom
   and a .95 coarse adaptation rate. The rate matches the upstream multichannel
-  preset while retaining the longer filter. It passes all current generated
-  quality checks, **conditional on the modeled timing supplied by the probe**.
+  preset while retaining the longer filter. It passes the 40 standalone generated
+  quality cases, **conditional on the modeled timing supplied by the probe**.
+  The additional clock-aligned tonal/overlapping cases still fail as recorded below.
 
 All three remain outside Unity. The measured profile accepts delay values in
 [4, 500] ms, rejects values below its headroom and faults the epoch on invalid
@@ -337,14 +338,21 @@ overlaps one render tone but has independent pitch modulation and harmonics; it
 is not a copied reference or a recording of human speech. Bursts additionally
 check 72 early 80 ms windows after a 10 ms fixed-delay allowance, located by
 measured source time under skew. The original echo/correlation/gain/timing gates
-remain, with minimum onset correlation .65 and gain/baseline gain .45. These cases
+remain, with minimum onset correlation .65 and gain/baseline gain in [.45, 1.5].
+Both minima and maxima are measured for every onset: a short amplified attack
+must not disappear into a permissible whole-window average. These cases
 prevent an echo-only improvement from concealing suppression of near-side content.
 They are stress evidence, not intelligibility or actual human-speech acceptance.
 
 All 39 aligned quality outcomes enter receipts and `openQualityFailures`.
-CI hard-gates the established broadband baseline in **every** profile and records
-all tonal/transition failures as warnings and release blockers. No thresholds
-have been reduced. See [the diagnostic decision](TONAL_DIAGNOSIS.md) for the
+CI hard-gates every previously passing aligned case in **every** profile using
+`aligned-quality-baseline.json`, including passes inside otherwise failing groups.
+`QualityResults.py` validates unique case identities, complete outcomes and onset
+coverage, finite measurements and consistent summaries before accepting evidence.
+Missing or duplicated cases and a regression of any recorded pass fail the run.
+Known tonal/transition failures remain warnings and release blockers. No threshold
+has been reduced. Run the evidence-validator checks independently with
+`python -B -m unittest discover -s unity/Tools/EchoProcessing -p test_quality_results.py`. See [the diagnostic decision](TONAL_DIAGNOSIS.md) for the
 controlled upstream investigation and unselected alternative processor. Green
 bounded CI does not approve full-duplex audio.
 

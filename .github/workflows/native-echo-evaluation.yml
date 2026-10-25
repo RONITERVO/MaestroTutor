@@ -20,6 +20,17 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  quality-contracts:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - name: Verify aligned quality evidence and regression gates
+        run: python -B -m unittest discover -s unity/Tools/EchoProcessing -p test_quality_results.py -v
+
   generated-audio:
     strategy:
       fail-fast: false
@@ -60,7 +71,7 @@ jobs:
             --platform windows --profile '${{ matrix.profile }}' --output "$root/ci"
           if($LASTEXITCODE -ne 0){throw 'Native evaluation failed'}
           $result=Get-Content "$root/ci/result.json" -Raw | ConvertFrom-Json
-          "Profile **$($result.profile)**: 27 scripted capture, 22 playback, 31 clock/duplex, 20 nonterminal drain and 28 composed capture-session scenarios passed, including 120,000 concurrent source frames. No microphone or speaker is opened. Seventy-two zero-context termination diagnostics were recorded separately; they are not quality acceptance. Eight core generated-audio cases passed. Three clock-aligned broadband cases: **$($result.alignmentQuality.status)**; three cold-tone cases: **$($result.alignmentTonal.status)**; three tones-after-broadband cases: **$($result.alignmentWarmTonal.status)**; three tonal path-change cases: **$($result.alignmentWarmTonalPathChange.status)**. Twenty-seven overlapping voiced-signal cases (including 72 onset windows): **$($result.alignmentOverlappingSpeech.status)**. Noise-heavy double-talk: **$($result.noiseStress.status)**; five onset cases: **$($result.qualityDiagnostics.onsets.status)**; two changing-path cases: **$($result.qualityDiagnostics.'path-changes'.status)**; 24 delay/reflection variants: **$($result.qualityDiagnostics.'delay-variants'.status)**. Open failing quality cases: **$($result.openQualityFailures)**. All profiles remain outside the app. measured32 retains sustained-tone and overlapping-signal limitations and requires physically validated timing; these scripted/generated inputs do not prove app integration, physical audio quality or Quest release acceptance." >> $env:GITHUB_STEP_SUMMARY
+          "Profile **$($result.profile)**: 27 scripted capture, 22 playback, 31 clock/duplex, 20 nonterminal drain and 28 composed capture-session scenarios passed, including 120,000 concurrent source frames. No microphone or speaker is opened. Seventy-two zero-context termination diagnostics were recorded separately; they are not quality acceptance. Native onset-metric contracts passed, including rejection of short amplified attacks. Every aligned result is checked against unique case identities and the committed passing baseline; known failures remain open. Eight core generated-audio cases passed. Three clock-aligned broadband cases: **$($result.alignmentQuality.status)**; three cold-tone cases: **$($result.alignmentTonal.status)**; three tones-after-broadband cases: **$($result.alignmentWarmTonal.status)**; three tonal path-change cases: **$($result.alignmentWarmTonalPathChange.status)**. Twenty-seven overlapping voiced-signal cases (including 72 onset windows): **$($result.alignmentOverlappingSpeech.status)**. Noise-heavy double-talk: **$($result.noiseStress.status)**; five onset cases: **$($result.qualityDiagnostics.onsets.status)**; two changing-path cases: **$($result.qualityDiagnostics.'path-changes'.status)**; 24 delay/reflection variants: **$($result.qualityDiagnostics.'delay-variants'.status)**. Open failing quality cases: **$($result.openQualityFailures)**. All profiles remain outside the app. measured32 retains sustained-tone and overlapping-signal limitations and requires physically validated timing; these scripted/generated inputs do not prove app integration, physical audio quality or Quest release acceptance." >> $env:GITHUB_STEP_SUMMARY
           if($result.openQualityFailures -gt 0){Write-Output "::warning::Profile $($result.profile) has $($result.openQualityFailures) open audio-quality failures; bounded CI success is not quality acceptance."}
       - name: Preserve native results and failures
         if: always()

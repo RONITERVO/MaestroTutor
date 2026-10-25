@@ -1067,11 +1067,13 @@ including the same changing paths and supplied-delay errors of -4/0/+4 ms.
 Neither modeled timing nor these finite offsets prove actual Quest calibration,
 continuous drift tolerance, immediate recovery or perceptual speech quality.
 
-CI evaluates all profiles, reports exact failing quality cases and hard-gates
-established passing groups; all measured-profile diagnostics are mandatory.
-Core contract errors, crashes, missing results and regressions fail the run.
-The measured profile records zero known generated-quality failures while physical
-speech and Quest acceptance remain false. See the reproduction guide for thresholds
+CI evaluates all profiles and reports exact failing quality cases. Established
+passing standalone groups and every previously passing aligned case are required,
+even when other cases in that aligned group fail. Core contract errors, crashes,
+missing/duplicate/nonfinite results and regressions fail the run. Short onset gain
+and baseline gain have the same 1.5 upper limit as whole-window gain. The measured
+profile passes the 40 standalone cases but retains 31 additional clock-aligned
+quality failures; physical speech and Quest acceptance remain false. See the reproduction guide for thresholds
 and coverage. Source hashes, rejected variants and failed attempts remain in
 `.quest-evidence/echo-native`, `.quest-evidence/echo-quality` and
 `.quest-evidence/echo-path`. A corrected band-limited fixture avoids microphone

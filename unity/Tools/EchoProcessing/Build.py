@@ -21,7 +21,7 @@ INPUTS = {
     "overlay": "12dd8df1488a314c53e3751abd2750cf233b830651d168b6a9f15e7d0cf71f7b",
 }
 APM_MIRROR_SHA256 = "35e86b986d02ea15f3d04741a1a5a735ba399bc0fac0ee089c39480e35fc3253"
-SOURCES = ("EchoProcessor.h", "EchoProcessor.cpp", "Probe.cpp", "meson.build", "Build.py", "Make-SpeechFixtures.ps1",
+SOURCES = ("EchoProcessor.h", "EchoProcessor.cpp", "Probe.cpp", "meson.build", "Build.py", "QualityResults.py", "test_quality_results.py", "aligned-quality-baseline.json", "Make-SpeechFixtures.ps1",
     "CaptureInput.h", "CaptureInput.cpp", "AndroidCaptureDevice.cpp", "CaptureProbe.cpp",
     "CaptureEffects.h", "CaptureEffects.cpp", "DeviceAudioClock.h", "PlaybackOutput.h", "PlaybackOutput.cpp", "AndroidPlaybackDevice.cpp", "PlaybackProbe.cpp",
     "ClockAlignment.h", "ClockAlignment.cpp", "DuplexProcessor.h", "DuplexProcessor.cpp", "AlignmentProbe.cpp", "DrainProbe.cpp", "CaptureSession.h", "CaptureSession.cpp", "SessionProbe.cpp", "TerminationProbe.cpp", "AudioFixture.h")
@@ -100,6 +100,8 @@ def cross_file(ndk, output):
     return path, tool("llvm-readelf"), tool("llvm-nm")
 
 def main():
+    from QualityResults import GROUPS, load_baseline, validate_group, validate_metric_contracts
+
     parser = argparse.ArgumentParser(description=__doc__)
     for name in INPUTS:
         parser.add_argument("--" + name, type=Path, required=True)
@@ -112,6 +114,7 @@ def main():
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
     here = Path(__file__).resolve().parent
+    quality_baseline = load_baseline(here / "aligned-quality-baseline.json", args.profile)
     repo = here.parents[2]
     evidence = repo / ".quest-evidence/echo-native"
     output = args.output.resolve()
@@ -248,21 +251,15 @@ def main():
                     raise RuntimeError("Incomplete scripted " + label + " result")
                 record[label + "Probe"] = device_summary
             alignment_executable = build / "maestro-probe/maestro_alignment_probe.exe"
-            for suffix, option, scope, count in (("Quality", "--quality", "clock-aligned-quality", 3), ("Tonal", "--tonal", "clock-aligned-tonal", 3),
-                                          ("WarmTonal", "--warm-tonal", "clock-aligned-warm-tonal", 3),
-                                          ("WarmTonalPathChange", "--warm-tonal-path-change", "clock-aligned-warm-tonal-path-change", 3),
-                                          ("OverlappingSpeech", "--overlapping-speech", "clock-aligned-overlapping-speech", 27)):
+            metric_code = run([alignment_executable, "--metric-contracts"], "aligned-metric-contracts", 30)
+            record["alignmentMetricContracts"] = validate_metric_contracts(
+                (output / "aligned-metric-contracts.log").read_text(), metric_code)
+            save()
+            for suffix, (option, scope, pattern) in GROUPS.items():
                 label = "aligned-" + suffix.lower()
                 alignment_code = run([alignment_executable, option], label, 180, required=False)
-                detail = json.loads((output / (label + ".log")).read_text().splitlines()[-1])
-                if (alignment_code not in (0, 1) or detail.get("scope") != scope or detail.get("qualityCases") != count or
-                    detail.get("status") != ("passed" if alignment_code == 0 else "failed") or
-                    not isinstance(detail.get("failures"), int) or not 0 <= detail["failures"] <= count or
-                    (detail["failures"] == 0) != (alignment_code == 0) or
-                    detail.get("deviceOpened") is not False or detail.get("physicalAudio") is not False):
-                    raise RuntimeError("Incomplete clock-aligned audio quality result")
-                if suffix == "OverlappingSpeech" and detail.get("onsetWindows") != 72:
-                    raise RuntimeError("Incomplete overlapping-signal onset coverage")
+                detail = validate_group((output / (label + ".log")).read_text(), suffix,
+                                        alignment_code, quality_baseline[suffix])
                 record["alignment" + suffix] = detail
                 save()
                 if suffix == "Quality" and alignment_code != 0:

@@ -138,7 +138,104 @@ struct Broadband {
     }
 };
 struct Quality { double reduction=0,correlation=0,gain=0,absolute_gain=0,max_delay_error_ms=0;
-    double onset_gain=1,onset_correlation=1,onset_baseline_gain=1;int onset_windows=0;uint64_t clipped=0; };
+    double onset_gain=1,onset_correlation=1,onset_baseline_gain=1;
+    double onset_maximum_gain=0,onset_maximum_baseline_gain=0;int onset_windows=0;uint64_t clipped=0; };
+struct OnsetScore { double gain,correlation,baseline_gain; };
+OnsetScore ScoreOnset(const std::vector<double>& combined,const std::vector<double>& baseline,
+                     const std::vector<double>& expected,size_t first,size_t last){
+    if(combined.size()!=baseline.size()||combined.size()!=expected.size()||first>=last||last>combined.size())
+        throw std::invalid_argument("Onset metric requires matching arrays and a complete nonempty window");
+    double cross=0,clean=0,mixed=0,raw=0;
+    for(size_t i=first;i<last;++i){
+        const double x=combined[i],y=baseline[i],source=expected[i];
+        if(!std::isfinite(x)||!std::isfinite(y)||!std::isfinite(source)||std::abs(x)>1||std::abs(y)>1||std::abs(source)>1)
+            throw std::invalid_argument("Onset metric requires finite normalized samples");
+        cross+=x*y;clean+=y*y;mixed+=x*x;raw+=source*source;
+    }
+    if(raw<=0)throw std::invalid_argument("Onset metric requires an audible expected source");
+    // A muted baseline must fail quality even when the mixed output is also
+    // muted. It is not an invalid source fixture and must retain a result row.
+    return {clean>0?cross/clean:0,cross/std::sqrt(std::max(clean*mixed,1e-30)),std::sqrt(clean/raw)};
+}
+void RecordOnset(Quality& q,const OnsetScore& score){
+    // Retain the original reported minima; independent maxima must use actual
+    // windows, including values below one or a negative projected near gain.
+    q.onset_gain=std::min(q.onset_gain,score.gain);
+    q.onset_correlation=std::min(q.onset_correlation,score.correlation);
+    q.onset_baseline_gain=std::min(q.onset_baseline_gain,score.baseline_gain);
+    q.onset_maximum_gain=q.onset_windows?std::max(q.onset_maximum_gain,score.gain):score.gain;
+    q.onset_maximum_baseline_gain=q.onset_windows?std::max(q.onset_maximum_baseline_gain,score.baseline_gain):score.baseline_gain;
+    ++q.onset_windows;
+}
+bool PassOnsets(const Quality& q){
+    return q.onset_gain>=.45&&q.onset_correlation>=.65&&q.onset_baseline_gain>=.45&&
+        q.onset_maximum_gain<=1.5&&q.onset_maximum_baseline_gain<=1.5;
+}
+int MetricContracts(){
+    constexpr size_t count=4480,first=160,last=1440; // 280 ms burst, unchanged 10–90 ms onset window.
+    std::vector<double> expected(count);
+    for(size_t i=0;i<count;++i)expected[i]=.2*std::sin(2*pi*250*i/16000);
+    auto WholeWithinLimits=[](const OnsetScore& score){return score.gain>=.45&&score.gain<=1.5&&score.correlation>=.65&&score.baseline_gain>=.45&&score.baseline_gain<=1.5;};
+    auto Rejected=[](auto action){bool rejected=false;try{action();}catch(const std::invalid_argument&){rejected=true;}Check(rejected,"malformed onset metric input rejected");};
+    {Quality q;RecordOnset(q,ScoreOnset(expected,expected,expected,first,last));
+     Check(PassOnsets(q)&&q.onset_windows==1,"unchanged source accepted");
+     Check(std::abs(q.onset_maximum_gain-1)<1e-12&&std::abs(q.onset_maximum_baseline_gain-1)<1e-12,"unit maxima measured");}
+    Done("metric-unchanged-source");
+    {auto mixed=expected;for(size_t i=first;i<last;++i)mixed[i]*=2;
+     const auto whole=ScoreOnset(mixed,expected,expected,0,count);Quality q;RecordOnset(q,ScoreOnset(mixed,expected,expected,first,last));
+     Check(WholeWithinLimits(whole)&&std::abs(whole.gain-9.0/7)<1e-12,"whole burst can hide doubled attack");
+     Check(q.onset_gain==1&&q.onset_maximum_gain>1.5&&!PassOnsets(q),"actual near maximum rejects attack amplification");}
+    Done("metric-amplified-near-attack");
+    {auto clean=expected;for(size_t i=first;i<last;++i)clean[i]*=2;
+     Quality q;RecordOnset(q,ScoreOnset(clean,clean,expected,first,last));
+     Check(WholeWithinLimits(ScoreOnset(clean,clean,expected,0,count)),"whole baseline energy can hide amplified attack");
+     Check(q.onset_gain==1&&q.onset_baseline_gain==1&&q.onset_maximum_baseline_gain>1.5&&!PassOnsets(q),"baseline maximum rejects shared amplification");}
+    Done("metric-amplified-baseline-attack");
+    {auto mixed=expected;std::fill(mixed.begin()+first,mixed.begin()+last,0);Quality q;
+     RecordOnset(q,ScoreOnset(mixed,expected,expected,first,last));
+     Check(q.onset_gain==0&&q.onset_maximum_gain==0&&!PassOnsets(q),"dropped near attack rejected");}
+    Done("metric-dropped-near-attack");
+    {auto muted=expected;std::fill(muted.begin()+first,muted.begin()+last,0);Quality q;
+     RecordOnset(q,ScoreOnset(muted,muted,expected,first,last));
+     Check(q.onset_baseline_gain==0&&q.onset_maximum_baseline_gain==0&&!PassOnsets(q),"mutually muted outputs cannot hide source loss");}
+    Done("metric-mutually-muted-attack");
+    {auto mixed=expected;for(size_t i=first;i<last;++i)mixed[i]+=.4*std::sin(2*pi*500*i/16000);
+     Quality q;RecordOnset(q,ScoreOnset(mixed,expected,expected,first,last));
+     Check(std::abs(q.onset_gain-1)<1e-12&&q.onset_maximum_gain<=1.5&&q.onset_correlation<.65&&!PassOnsets(q),"correlation rejects distortion with preserved projected gain");}
+    Done("metric-correlated-gain-is-insufficient");
+    {auto clean=expected,mixed=expected;for(size_t i=0;i<count;++i){clean[i]*=.8;mixed[i]*=.6;}
+     Quality q;RecordOnset(q,ScoreOnset(mixed,clean,expected,first,last));
+     Check(PassOnsets(q)&&std::abs(q.onset_maximum_gain-.75)<1e-12&&std::abs(q.onset_maximum_baseline_gain-.8)<1e-12,"maxima below one are not clipped to one");}
+    Done("metric-actual-subunit-maxima");
+    {auto mixed=expected;for(size_t i=first;i<last;++i)mixed[i]*=2;Quality q;
+     RecordOnset(q,ScoreOnset(mixed,expected,expected,first,last));RecordOnset(q,ScoreOnset(mixed,expected,expected,1600,2880));
+     Check(q.onset_windows==2&&q.onset_maximum_gain>1.5&&!PassOnsets(q),"later passing window cannot erase amplified attack");}
+    Done("metric-maximum-survives-later-window");
+    {Rejected([&]{ScoreOnset(expected,expected,expected,first,first);});
+     Rejected([&]{ScoreOnset(expected,expected,expected,last,first);});
+     Rejected([&]{ScoreOnset(expected,expected,expected,first,count+1);});}
+    Done("metric-window-bounds");
+    {auto short_input=expected;short_input.pop_back();
+     Rejected([&]{ScoreOnset(short_input,expected,expected,first,last);});
+     Rejected([&]{ScoreOnset(expected,short_input,expected,first,last);});
+     Rejected([&]{ScoreOnset(expected,expected,short_input,first,last);});}
+    Done("metric-shape-mismatch");
+    {for(double value:{std::numeric_limits<double>::quiet_NaN(),std::numeric_limits<double>::infinity(),-std::numeric_limits<double>::infinity(),1.1,-1.1}){
+      auto bad=expected;bad[first]=value;
+      Rejected([&]{ScoreOnset(bad,expected,expected,first,last);});
+      Rejected([&]{ScoreOnset(expected,bad,expected,first,last);});
+      Rejected([&]{ScoreOnset(expected,expected,bad,first,last);});}}
+    Done("metric-nonfinite-or-unnormalized-samples");
+    {auto silent=expected;std::fill(silent.begin()+first,silent.begin()+last,0);
+     Rejected([&]{ScoreOnset(expected,expected,silent,first,last);});}
+    Done("metric-silent-source");
+    {auto inverted=expected;for(auto& sample:inverted)sample=-sample;Quality q;
+     RecordOnset(q,ScoreOnset(inverted,expected,expected,first,last));
+     Check(std::abs(q.onset_maximum_gain+1)<1e-12&&!PassOnsets(q),"negative projected maximum remains an actual observation");}
+    Done("metric-negative-gain-maximum");
+    Check(cases==13,"complete onset metric contracts");
+    std::printf("{\"status\":\"passed\",\"scope\":\"clock-aligned-metric-contracts\",\"metricCases\":13,\"assertions\":%d,\"physicalAudio\":false,\"deviceOpened\":false}\n",checks);return 0;
+}
 enum class Pattern { Broadband, Tonal, WarmTonal, WarmTonalPathChange };
 const char* Name(Pattern pattern){
     switch(pattern){case Pattern::Broadband:return "broadband";case Pattern::Tonal:return "cold-tone";
@@ -209,13 +306,7 @@ Quality AudioCase(double capture_ppm,double render_ppm,int jitter_us,Pattern pat
             const auto begin=std::lower_bound(sample_times.begin(),sample_times.end(),second+.01)-sample_times.begin();
             const auto end=std::lower_bound(sample_times.begin(),sample_times.end(),second+.09)-sample_times.begin();
             Check(end>begin&&end<static_cast<decltype(end)>(sample_times.size()),"complete onset window");
-            double window_cross=0,window_baseline=0,window_combined=0,window_raw=0;
-            for(auto i=begin;i<end;++i){window_cross+=combined[i]*baseline[i];window_baseline+=baseline[i]*baseline[i];window_combined+=combined[i]*combined[i];window_raw+=expected_near[i]*expected_near[i];}
-            Check(window_baseline>0&&window_raw>0,"nonempty near onset");
-            q.onset_gain=std::min(q.onset_gain,window_cross/window_baseline);
-            q.onset_correlation=std::min(q.onset_correlation,window_cross/std::sqrt(std::max(window_baseline*window_combined,1e-30)));
-            q.onset_baseline_gain=std::min(q.onset_baseline_gain,std::sqrt(window_baseline/window_raw));
-            ++q.onset_windows;
+            RecordOnset(q,ScoreOnset(combined,baseline,expected_near,static_cast<size_t>(begin),static_cast<size_t>(end)));
         }
     }
     return q;
@@ -231,9 +322,9 @@ int OverlappingSpeechCases(){
             const auto q=AudioCase(c[0],c[1],static_cast<int>(c[2]),pattern,signal);
             const int expected_onsets=signal==NearSignal::BurstyOverlapping?(pattern==Pattern::WarmTonalPathChange?6:9):0;
             Check(q.onset_windows==expected_onsets,"complete overlap onset coverage");onsets+=q.onset_windows;
-            const bool pass=Pass(q)&&q.onset_gain>=.45&&q.onset_correlation>=.65&&q.onset_baseline_gain>=.45;
+            const bool pass=Pass(q)&&PassOnsets(q);
             ++total;if(!pass)++failures;
-            std::printf("{\"nearSignal\":\"%s\",\"pattern\":\"%s\",\"capturePpm\":%.0f,\"renderPpm\":%.0f,\"timestampJitterUs\":%.0f,\"echoReductionDb\":%.6f,\"nearCorrelation\":%.6f,\"nearGain\":%.6f,\"baselineGain\":%.6f,\"maxDelayErrorMs\":%.6f,\"onsetGain\":%.6f,\"onsetCorrelation\":%.6f,\"onsetBaselineGain\":%.6f,\"onsetWindows\":%d,\"clipped\":%llu,\"status\":\"%s\"}\n",Name(signal),Name(pattern),c[0],c[1],c[2],q.reduction,q.correlation,q.gain,q.absolute_gain,q.max_delay_error_ms,q.onset_gain,q.onset_correlation,q.onset_baseline_gain,q.onset_windows,static_cast<unsigned long long>(q.clipped),pass?"passed":"failed");
+            std::printf("{\"nearSignal\":\"%s\",\"pattern\":\"%s\",\"capturePpm\":%.0f,\"renderPpm\":%.0f,\"timestampJitterUs\":%.0f,\"echoReductionDb\":%.6f,\"nearCorrelation\":%.6f,\"nearGain\":%.6f,\"baselineGain\":%.6f,\"maxDelayErrorMs\":%.6f,\"onsetGain\":%.6f,\"onsetCorrelation\":%.6f,\"onsetBaselineGain\":%.6f,\"onsetMaximumGain\":%.6f,\"onsetMaximumBaselineGain\":%.6f,\"onsetWindows\":%d,\"clipped\":%llu,\"status\":\"%s\"}\n",Name(signal),Name(pattern),c[0],c[1],c[2],q.reduction,q.correlation,q.gain,q.absolute_gain,q.max_delay_error_ms,q.onset_gain,q.onset_correlation,q.onset_baseline_gain,q.onset_maximum_gain,q.onset_maximum_baseline_gain,q.onset_windows,static_cast<unsigned long long>(q.clipped),pass?"passed":"failed");
         }
     Check(total==27&&onsets==72,"complete overlapping voiced-signal matrix");
     std::printf("{\"status\":\"%s\",\"scope\":\"clock-aligned-overlapping-speech\",\"qualityCases\":27,\"onsetWindows\":72,\"failures\":%d,\"physicalAudio\":false,\"deviceOpened\":false}\n",failures?"failed":"passed",failures);
@@ -253,6 +344,7 @@ int QualityCases(Pattern pattern){
 }
 }
 int main(int argc,char** argv){try{
+    if(argc==2&&std::strcmp(argv[1],"--metric-contracts")==0){return MetricContracts();}
     if(argc==2&&std::strcmp(argv[1],"--quality")==0){return QualityCases(Pattern::Broadband);}
     if(argc==2&&std::strcmp(argv[1],"--tonal")==0){return QualityCases(Pattern::Tonal);}
     if(argc==2&&std::strcmp(argv[1],"--warm-tonal")==0){return QualityCases(Pattern::WarmTonal);}
