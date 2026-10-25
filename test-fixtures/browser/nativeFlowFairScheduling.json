@@ -5,7 +5,7 @@
     {
       "frame": 0,
       "contents": {
-        "sessionId": "499cd03044194eb78df4fadd9ef07425",
+        "sessionId": "ab2767fb3fb84eb68a8e0d246522850d",
         "phase": "waiting",
         "contents": {
           "amountMl": 400.0,
@@ -28,7 +28,7 @@
         "rainSamples": 5
       },
       "schedule": {
-        "step": 5219,
+        "step": 693,
         "executions": 0,
         "executionLimit": 32,
         "queued": 1,
@@ -40,7 +40,7 @@
     {
       "frame": 1,
       "contents": {
-        "sessionId": "a777bf60fb6f4781848f3349fbe21e94",
+        "sessionId": "5f57d955aa674657bc7e9fc3d147ea9c",
         "phase": "flowing",
         "contents": {
           "amountMl": 383.9616933816729,
@@ -54,7 +54,7 @@
       },
       "budget": {
         "reservations": 1,
-        "units": 61424,
+        "units": 62464,
         "reservationLimit": 64,
         "unitLimit": 524288,
         "streamSegments": 32,
@@ -63,12 +63,12 @@
         "rainSamples": 5
       },
       "schedule": {
-        "step": 5220,
+        "step": 694,
         "executions": 1,
         "executionLimit": 32,
         "queued": 0,
         "queueLimit": 64,
-        "units": 61424,
+        "units": 62464,
         "unitLimit": 524288
       }
     }

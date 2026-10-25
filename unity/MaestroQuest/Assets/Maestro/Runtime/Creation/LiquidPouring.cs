@@ -144,13 +144,29 @@ namespace Maestro.Quest.Creation {
         bool Available(Vessel v)=>v.Item&&v.Item.isActiveAndEnabled&&v.Item.GetComponent<ContainerFillView>()?.NativeReady==true&&v.Rigid&&v.Rigid.GeometryReady&&(!v.Live.TerrainFloor||RoomTerrainReservoir.Native(v.Live,v.Item.transform)!=null)&&editor.PhysicsWorld.CanSimulate(v.Item.transform.position,v.Item);
         bool Begin(out string issue){issue=null;if(Active)return true;write=editor.WriteGate.TryWrite(out issue);if(write==null)return false;flowEpoch++;session=Guid.NewGuid().ToString("N");quiet=elapsed=0;error="";return true;}
         void Touch(Vessel v){if(contents.ContainsKey(v.Id))return;original[v.Id]=v.Saved.Copy();contents[v.Id]=v.Live;}
+        static bool SourceOwnsCollider(Vessel source,Collider collider)=>collider&&((source.Body&&collider.attachedRigidbody==source.Body)||collider.transform.IsChildOf(source.Item.transform));
+        bool StreamOriginClear(Vessel source,Vector3 origin){
+            // Rays do not report solids containing their origin. Prove the outlet
+            // first, using the same actor collision policy as the rest of the path.
+            // A deliberately configured source lip may touch its own geometry;
+            // no other solid is exempt, and a full buffer is inconclusive.
+            flowExecutionWork.PourOriginQueries++;
+            int found=Physics.OverlapSphereNonAlloc(origin,.0005f,immersionHits,world.CollisionMask(~0,source.Item),QueryTriggerInteraction.Ignore);
+            if(found==immersionHits.Length)return false;
+            for(int i=0;i<found;i++){
+                flowExecutionWork.PourOriginCandidates++;var hit=immersionHits[i];
+                if(hit&&!SourceOwnsCollider(source,hit))return false;
+            }
+            return true;
+        }
         bool Trace(Vessel source,Vessel[] members,Vector3 origin,Vector3 velocity,Vector3 gravity,Vector3 up,out Vessel receiver,out int count){
             receiver=null;count=1;path[0]=origin;const float step=.025f;
+            if(!StreamOriginClear(source,origin))return false;
             for(int i=1;i<=Segments;i++){
                 float t=i*step;var next=origin+velocity*t+gravity*(.5f*t*t);var previous=path[count-1];var delta=next-previous;float length=delta.magnitude;
                 if(length<1e-6f)continue;
                 flowExecutionWork.PourSegments++;
-                float closest=1;Vessel entering=null;
+                float closest=1;Vessel entering=null;bool stopped=false;
                 foreach(var candidate in members){
                     flowExecutionWork.PourCandidates++;
                     if(candidate==source||!candidate.Ready)continue;
@@ -159,11 +175,11 @@ namespace Maestro.Quest.Creation {
                 int found=Physics.RaycastNonAlloc(previous,delta/length,hits,length,world.CollisionMask(~0,source.Item),QueryTriggerInteraction.Ignore);
                 if(found==hits.Length)return false; // Saturated collision query cannot prove a clear path.
                 foreach(var hit in hits.AsSpan(0,found)){
-                    if(!hit.collider||i==1&&(hit.collider.attachedRigidbody==source.Body||hit.collider.transform.IsChildOf(source.Item.transform)))continue;
-                    float fraction=hit.distance/length;if(fraction<=closest){closest=fraction;entering=null;}
+                    if(!hit.collider||i==1&&SourceOwnsCollider(source,hit.collider))continue;
+                    float fraction=hit.distance/length;if(fraction<=closest){closest=fraction;entering=null;stopped=true;}
                 }
                 path[count++]=Vector3.LerpUnclamped(previous,next,closest);
-                if(closest<1){receiver=entering!=null&&editor.PhysicsWorld.CanSimulate(path[count-1],entering.Item)&&editor.PhysicsWorld.CanSimulate(path[count-1],source.Item)?entering:null;return true;}
+                if(stopped||closest<1){receiver=entering!=null&&editor.PhysicsWorld.CanSimulate(path[count-1],entering.Item)&&editor.PhysicsWorld.CanSimulate(path[count-1],source.Item)?entering:null;return true;}
                 if(!editor.PhysicsWorld.CanSimulate(next,source.Item))return true;
             }
             return true; // The bounded stream ends as uncollected spill; no persistent pool is implied.

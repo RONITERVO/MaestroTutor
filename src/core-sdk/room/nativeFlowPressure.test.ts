@@ -12,7 +12,7 @@ it('reads real native room pressure without equating saved inventory and native 
  expect(first.rooms.reduce((sum,room)=>sum+room.nativeVessels,0)).toBe(20);
  expect(first.rooms.reduce((sum,room)=>sum+room.dormantVessels,0)).toBe(124);
  expect(native.hostUnits).toBeGreaterThan(native.flowUnitLimit);
- expect(native.groupUnits).toBe(53260);
+ expect(native.groupUnits).toBe(54560);
  expect(first.flowBudget.units).toBe(native.groupUnits);
  expect(native.discoveryUnits).toBeLessThan(native.discoveryUnitLimit);
  expect(native.resourceBudgets.liquids.instances).toBeLessThan(native.resourceBudgets.liquids.instanceLimit);

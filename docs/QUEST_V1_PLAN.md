@@ -5,7 +5,8 @@ Status: active implementation. Nothing in this document claims store readiness.
 Start with the [accepted product scope](#accepted-product-scope) and
 [release evidence checklist](#release-evidence-still-required) and the latest
 [complete integration checkpoint](#complete-native-book-and-android-integration-2026-10-24). The current
-[terrain-overflow checkpoint](#explicit-terrain-overflow-and-exact-liquid-persistence--2026-10-24) builds on the
+[outlet and recovery checkpoint](#liquid-outlet-clearance-and-live-recovery-holds--2026-10-25) hardens the
+[terrain-overflow checkpoint](#explicit-terrain-overflow-and-exact-liquid-persistence--2026-10-24), which builds on the
 [whole-world collision checkpoint](#shared-collision-policies-across-the-saved-world--2026-10-24) and follows the [shared visual metadata checkpoint](#shared-visual-metadata-across-unloaded-world-objects-2026-10-24). The [saved-world capacity checkpoint](#saved-world-capacity-and-deferred-creation--2026-10-23) records its
 creation and residency foundation. The preceding
 [restoration](#restoring-unloaded-objects--2026-10-23),
@@ -16954,3 +16955,62 @@ connected same-level lakes, erosion or persistent puddles. Uncollected spill is
 explicit loss from the finite-container system. The current native capacity,
 spatial limits, audio failures and release checklist remain unchanged. Device,
 paid-provider, signing, deployment and Meta holds remain active.
+
+
+### Liquid outlet clearance and live recovery holds — 2026-10-25
+
+The immersion audit reproduced two native admission defects against afcc9526.
+A stream beginning inside a solid could miss that containing collider and credit
+a lower receiver. Batched water queries also skipped the restoration hold checked
+by ordinary physics, allowing visible but held water to report active buoyancy or
+permit a wading route. Six new physical regressions failed on the old runtime;
+the independent scanned-room opt-out control passed.
+
+Streams now prove outlet clearance with one nonallocating 64-collider query under
+the source's accepted collision policy. Own lip geometry remains permitted; any
+other obstruction or saturated query preserves quantities without starting a
+liquid-write episode. Clearing the outlet permits a normal later tick, with no
+catch-up transfer. A downstream collision at an exact segment endpoint now stops
+the trace explicitly. Complete work reservations include 65 additional bounded
+units per source, and native evidence records the actual query/candidate visits.
+
+Batched medium and traversal queries check both participants' live restoration
+holds before using their accepted ground policies. Explicit successful recovery
+becomes visible within the same synchronous batch. Recovered geometry remains
+inspectable while physics is paused; neither inspection nor recovery starts it.
+This extends the existing shared query and physics owners rather than introducing
+an alternate agent or special terrain simulation path.
+
+Evidence is under .quest-evidence/world-continuity-20261025/:
+
+- Native1 passed all 1,677 EditMode and 350 selected PlayMode cases. Native2 passed
+  13 supplemental cases, including the final strengthened growth test. Together
+  these cover 360 distinct PlayMode cases, every one of the prior 68 selected
+  container/flow cases, and all seven new regression/control cases. The growth
+  test now proves both affordable additions and refusal beyond the allowance,
+  while preserving peers and the original reservation after shrinking.
+- Seven real native captures refresh the shared flow/ledger fixtures. All 1,543
+  room web tests, application TypeScript and catalog/ten-guide provenance pass.
+  The 3,290-input record confirms unchanged native production inputs; the later
+  test-only changes are separately covered by Native2 and the web run. All 14
+  unrelated Android, snapshot and Store files retain their protected hashes.
+- Book f238064823274e5890c33129a78548e8 completed the actual Unity/shared-client
+  journey with 2,272 requests, 6,707 observations, zero browser errors, reload
+  without replay and clean client/Editor exits. Its recovery-policy screenshot
+  was visually inspected. Providers and media were scripted offline.
+- The initial combined wrapper stopped before Headless because the strengthened
+  test source no longer matched its build mirror. The completed Book result and
+  native production inputs were unchanged. Native2 synchronized and verified the
+  final test source before the remaining Headless run.
+- Headless 0c869589f69a479c9874c7e49fa3824a completed 2,829 observations and
+  2,828 read sets through the actual Unity app, with clean client/Editor
+  exits. Provider/media behavior remained explicitly scripted offline.
+
+Baseline4 retains the six old-runtime failures and one positive control, with
+clean Editor exits. Baseline2/3 stopped on test-runner source/new-counter mismatches
+before test execution and are retained. The separate template precision
+investigation passed all six sampled cases; that production path is unchanged.
+
+Device/provider work and release operations remain on hold. This increment does
+not establish headset performance, physical alignment, river propagation or
+underwater presentation, and it does not close the audio or Store release gates.

@@ -60,25 +60,28 @@ namespace Maestro.Quest.Tests {
  physics.StartPhysics();editor.Liquids.Tick(.05f);Assert.AreEqual(accepted,Liquid(to));Assert.IsFalse(editor.CanSaveRoom);physics.PausePhysics();
  }
  [UnityTest]public IEnumerator FlowWorkAdmissionGrowthCannotEvictPeersAndShrinkKeepsReservation(){
+   const int baselineVessels=12;
    editor.Liquids.enabled=false;var ex=new RoomAgentExecutor(editor);var initial=new List<string>();
-   for(int i=0;i<13;i++){
+   for(int i=0;i<baselineVessels;i++){
     string id=CreateTemplateFixture(TemplateCall("cup",new Vector3(3+i*.002f,1,0)));initial.Add(id);
     Assert.That(editor.SetItemPhysics(id,new(){mode="fixed",shape="box",mass=1}),Is.True,editor.Status);
    }
    StartIsland();Assert.That(FlowWorkResources.TryAdmit(editor.Liquids,out var error),Is.True,error);var original=FlowGrant();var held=FillFlowWork();
-   var peer=held[0];var cost=peer.FlowUnits;var added=new List<string>();
+   var peer=held[0];var cost=peer.FlowUnits;int available=FlowWorkResources.MaximumUnits-held.Sum(c=>c.FlowUnits);var added=new List<string>();int admittedCount=0,refusedCount=0;
    try{
     for(int i=0;i<3;i++){
-     string id=CreateTemplateFixture(TemplateCall("cup",new Vector3(3+(13+i)*.002f,1,0)));added.Add(id);
+     string id=CreateTemplateFixture(TemplateCall("cup",new Vector3(3+(baselineVessels+i)*.002f,1,0)));added.Add(id);
      Assert.That(editor.SetItemPhysics(id,new(){mode="fixed",shape="box",mass=1}),Is.True,editor.Status);
-     bool admitted=FlowWorkResources.TryAdmit(editor.Liquids,out _);
-     Assert.That(admitted,Is.EqualTo(i<2),"The third complete-group growth exceeds the remaining allowance");
+     bool admitted=FlowWorkResources.TryAdmit(editor.Liquids,out _);if(admitted)admittedCount++;else refusedCount++;
+     Assert.That(admitted,Is.EqualTo(FlowWorkResources.Demand(baselineVessels+i+1)<=available),"Complete-group growth must fit the remaining allowance");
      Assert.That(peer.Granted,Is.True);Assert.That(peer.FlowUnits,Is.EqualTo(cost),"Growth cannot evict or resize peers");
     }
+    Assert.That(admittedCount,Is.GreaterThan(0),"Exercise successful growth under the fixed peer allowance");
+    Assert.That(refusedCount,Is.GreaterThan(0),"Exercise growth refusal without evicting peers");
     foreach(var id in added)Assert.That(editor.DeleteObject(id,out error),Is.True,error);
     Assert.That(FlowWorkResources.TryAdmit(editor.Liquids,out error),Is.True,error);
     Assert.That((string)FlowWorkResources.Observe(0)["reservationId"],Is.EqualTo((string)original["reservationId"]));
-    Assert.That((int)FlowWorkResources.Observe(0)["units"],Is.EqualTo(FlowWorkResources.Demand(13)));
+    Assert.That((int)FlowWorkResources.Observe(0)["units"],Is.EqualTo(FlowWorkResources.Demand(baselineVessels)));
    }finally{ReleaseFlowWork(held);}physics.PausePhysics();yield return LiquidSaved();yield return null;
   }
   [UnityTest]public IEnumerator FlowWorkAdmissionCouplesMovingContainerGroupButLeavesUnrelatedDryBodyActive(){

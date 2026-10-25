@@ -300,3 +300,26 @@ flowing along arbitrary terrain, same-level connected lakes or persistent puddle
 Uncollected spill remains explicitly reported loss from the finite-container
 system. Do not describe it as a complete fluid simulation. Quest visual and
 sustained performance acceptance remain separate.
+
+
+## Outlet clearance and restored water — 2026-10-25
+
+Physical streams prove clearance at their outlet before tracing the gravity path.
+This uses the source object's accepted real-room collision policy, just like the
+rest of the stream: opting out of scanned-room collisions still requires valid
+virtual support. A source may touch its own configured lip. Any other solid at
+the outlet, or a saturated 64-collider query, leaves the quantities unchanged and
+does not open a liquid-write episode. A later clear tick may flow normally; it
+does not backfill the blocked interval. A downstream solid terminates the stream
+even when the hit lands exactly at a segment endpoint.
+
+The work reservation includes one overlap query and up to 64 candidate checks per
+source. Native diagnostics record actual outlet queries and candidates. These
+are bounded work units, not measured CPU time or Quest performance evidence.
+
+Water can remain visible and identifiable while its restored geometry is held
+for collision recovery. Batched medium and traversal queries now check the live
+recovery holds of both participants, matching ordinary physics admission. Such
+water cannot report active buoyancy or permit a wading route until explicit
+recovery succeeds. Readback, geometry inspection and recovery do not start
+physics; paused inspection remains available for recovered objects.

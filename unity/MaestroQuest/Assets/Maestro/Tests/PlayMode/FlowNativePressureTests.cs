@@ -35,6 +35,7 @@ namespace Maestro.Quest.Tests {
     ["sources"]=new JArray(sources.Select(id=>owner.Liquids.Observe(id))),
     ["receivers"]=new JArray(receivers.Select(id=>owner.Liquids.Observe(id))),
     ["executedGroups"]=work.Groups,["executedMembers"]=work.Members,
+    ["pourOriginQueries"]=work.PourOriginQueries,["pourOriginCandidates"]=work.PourOriginCandidates,
     ["pourSegments"]=work.PourSegments,["pourCandidates"]=work.PourCandidates,
     ["scoopCandidates"]=work.ScoopCandidates,["discoveryCaptures"]=discovery.Captures,
     ["collisionReads"]=discovery.CollisionReads,["cavityReads"]=discovery.CavityReads

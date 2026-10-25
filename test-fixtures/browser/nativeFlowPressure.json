@@ -1,10 +1,10 @@
 {
   "trace": [
     {
-      "step": 5323,
+      "step": 935,
       "rooms": [
         {
-          "worldId": "2d2a7acf058a4511b9e272b798bd78ce",
+          "worldId": "9c1661d844f6482b940ef204abddc8fd",
           "vessels": 16,
           "nativeVessels": 4,
           "dormantVessels": 12,
@@ -12,7 +12,7 @@
           "ready": true,
           "sources": [
             {
-              "sessionId": "7852d5e786f7469b83438ca41935a4fb",
+              "sessionId": "ce5124ee4ffc416c914f10f77571f52a",
               "phase": "flowing",
               "contents": {
                 "amountMl": 383.9616933816729,
@@ -25,7 +25,7 @@
               "error": ""
             },
             {
-              "sessionId": "7852d5e786f7469b83438ca41935a4fb",
+              "sessionId": "ce5124ee4ffc416c914f10f77571f52a",
               "phase": "flowing",
               "contents": {
                 "amountMl": 383.9616933816729,
@@ -40,7 +40,7 @@
           ],
           "receivers": [
             {
-              "sessionId": "7852d5e786f7469b83438ca41935a4fb",
+              "sessionId": "ce5124ee4ffc416c914f10f77571f52a",
               "phase": "flowing",
               "contents": {
                 "amountMl": 16.038306618327088,
@@ -53,7 +53,7 @@
               "error": ""
             },
             {
-              "sessionId": "7852d5e786f7469b83438ca41935a4fb",
+              "sessionId": "ce5124ee4ffc416c914f10f77571f52a",
               "phase": "flowing",
               "contents": {
                 "amountMl": 16.038306618327088,
@@ -68,6 +68,8 @@
           ],
           "executedGroups": 2,
           "executedMembers": 4,
+          "pourOriginQueries": 2,
+          "pourOriginCandidates": 0,
           "pourSegments": 28,
           "pourCandidates": 56,
           "scoopCandidates": 8,
@@ -76,7 +78,7 @@
           "cavityReads": 16
         },
         {
-          "worldId": "b673a8218cd5468fbe64cdc1c8174976",
+          "worldId": "26b3527a1d374dde860d0888c2ce5d75",
           "vessels": 16,
           "nativeVessels": 2,
           "dormantVessels": 14,
@@ -84,7 +86,7 @@
           "ready": true,
           "sources": [
             {
-              "sessionId": "c7ea7046c88d442383d817f493e1c5ad",
+              "sessionId": "95f5eb33c54a4c5e975be84637dc621d",
               "phase": "flowing",
               "contents": {
                 "amountMl": 383.9616933816729,
@@ -99,7 +101,7 @@
           ],
           "receivers": [
             {
-              "sessionId": "c7ea7046c88d442383d817f493e1c5ad",
+              "sessionId": "95f5eb33c54a4c5e975be84637dc621d",
               "phase": "flowing",
               "contents": {
                 "amountMl": 16.038306618327088,
@@ -114,6 +116,8 @@
           ],
           "executedGroups": 1,
           "executedMembers": 2,
+          "pourOriginQueries": 1,
+          "pourOriginCandidates": 0,
           "pourSegments": 14,
           "pourCandidates": 28,
           "scoopCandidates": 4,
@@ -122,7 +126,7 @@
           "cavityReads": 16
         },
         {
-          "worldId": "88e67188806346bfad90d552371eb7c5",
+          "worldId": "938e99d5725a4ba4bf879b012a7443ce",
           "vessels": 16,
           "nativeVessels": 2,
           "dormantVessels": 14,
@@ -130,7 +134,7 @@
           "ready": true,
           "sources": [
             {
-              "sessionId": "eb939df1d3e74c88a523fd18fb359e4d",
+              "sessionId": "fadd430d3a48438fbac29be0b97997cb",
               "phase": "flowing",
               "contents": {
                 "amountMl": 383.9616933816729,
@@ -145,7 +149,7 @@
           ],
           "receivers": [
             {
-              "sessionId": "eb939df1d3e74c88a523fd18fb359e4d",
+              "sessionId": "fadd430d3a48438fbac29be0b97997cb",
               "phase": "flowing",
               "contents": {
                 "amountMl": 16.038306618327088,
@@ -160,6 +164,8 @@
           ],
           "executedGroups": 1,
           "executedMembers": 2,
+          "pourOriginQueries": 1,
+          "pourOriginCandidates": 0,
           "pourSegments": 14,
           "pourCandidates": 28,
           "scoopCandidates": 4,
@@ -168,7 +174,7 @@
           "cavityReads": 16
         },
         {
-          "worldId": "677010d6a3de4281bec5cd6dd661ae72",
+          "worldId": "f7f9b4b54fa6486c8f4a3d434d088f1a",
           "vessels": 16,
           "nativeVessels": 2,
           "dormantVessels": 14,
@@ -176,7 +182,7 @@
           "ready": true,
           "sources": [
             {
-              "sessionId": "32213683741f44e5a37a914cd8f7f883",
+              "sessionId": "590ccc7fef7a417687f698530fba41db",
               "phase": "flowing",
               "contents": {
                 "amountMl": 383.9616933816729,
@@ -191,7 +197,7 @@
           ],
           "receivers": [
             {
-              "sessionId": "32213683741f44e5a37a914cd8f7f883",
+              "sessionId": "590ccc7fef7a417687f698530fba41db",
               "phase": "flowing",
               "contents": {
                 "amountMl": 16.038306618327088,
@@ -206,6 +212,8 @@
           ],
           "executedGroups": 1,
           "executedMembers": 2,
+          "pourOriginQueries": 1,
+          "pourOriginCandidates": 0,
           "pourSegments": 14,
           "pourCandidates": 28,
           "scoopCandidates": 4,
@@ -214,7 +222,7 @@
           "cavityReads": 16
         },
         {
-          "worldId": "63debdc9df814167b111a3a0c25bde7e",
+          "worldId": "70d877e34c64427bab711598af63de28",
           "vessels": 16,
           "nativeVessels": 2,
           "dormantVessels": 14,
@@ -222,7 +230,7 @@
           "ready": true,
           "sources": [
             {
-              "sessionId": "f4b4914d98284baf9b8039f2a4fe4aee",
+              "sessionId": "9f1b0ea5e1f341148eb7ae41ddc36f99",
               "phase": "flowing",
               "contents": {
                 "amountMl": 383.9616933816729,
@@ -237,7 +245,7 @@
           ],
           "receivers": [
             {
-              "sessionId": "f4b4914d98284baf9b8039f2a4fe4aee",
+              "sessionId": "9f1b0ea5e1f341148eb7ae41ddc36f99",
               "phase": "flowing",
               "contents": {
                 "amountMl": 16.038306618327088,
@@ -252,6 +260,8 @@
           ],
           "executedGroups": 1,
           "executedMembers": 2,
+          "pourOriginQueries": 1,
+          "pourOriginCandidates": 0,
           "pourSegments": 14,
           "pourCandidates": 28,
           "scoopCandidates": 4,
@@ -260,7 +270,7 @@
           "cavityReads": 16
         },
         {
-          "worldId": "e794295480f948c4a11c10814ecf5978",
+          "worldId": "6a3bef2d95fc44d994ccc29b61a3f659",
           "vessels": 16,
           "nativeVessels": 2,
           "dormantVessels": 14,
@@ -268,7 +278,7 @@
           "ready": true,
           "sources": [
             {
-              "sessionId": "c9141986e9b84b779c2ed7ef4cb4a6de",
+              "sessionId": "87b0f73bc80b4d8d91161154cf2d3cc0",
               "phase": "flowing",
               "contents": {
                 "amountMl": 383.9616933816729,
@@ -283,7 +293,7 @@
           ],
           "receivers": [
             {
-              "sessionId": "c9141986e9b84b779c2ed7ef4cb4a6de",
+              "sessionId": "87b0f73bc80b4d8d91161154cf2d3cc0",
               "phase": "flowing",
               "contents": {
                 "amountMl": 16.038306618327088,
@@ -298,6 +308,8 @@
           ],
           "executedGroups": 1,
           "executedMembers": 2,
+          "pourOriginQueries": 1,
+          "pourOriginCandidates": 0,
           "pourSegments": 14,
           "pourCandidates": 28,
           "scoopCandidates": 4,
@@ -306,7 +318,7 @@
           "cavityReads": 16
         },
         {
-          "worldId": "9e1db2189ec041da8b0d87684b61cf4f",
+          "worldId": "c033161965a84fda84971d0e9e899ade",
           "vessels": 16,
           "nativeVessels": 2,
           "dormantVessels": 14,
@@ -314,7 +326,7 @@
           "ready": true,
           "sources": [
             {
-              "sessionId": "08e1a7393fee4de4b3e57ece31aec6fc",
+              "sessionId": "d7c06fac013643ba9a7a97685bf194df",
               "phase": "flowing",
               "contents": {
                 "amountMl": 383.9616933816729,
@@ -329,7 +341,7 @@
           ],
           "receivers": [
             {
-              "sessionId": "08e1a7393fee4de4b3e57ece31aec6fc",
+              "sessionId": "d7c06fac013643ba9a7a97685bf194df",
               "phase": "flowing",
               "contents": {
                 "amountMl": 16.038306618327088,
@@ -344,6 +356,8 @@
           ],
           "executedGroups": 1,
           "executedMembers": 2,
+          "pourOriginQueries": 1,
+          "pourOriginCandidates": 0,
           "pourSegments": 14,
           "pourCandidates": 28,
           "scoopCandidates": 4,
@@ -352,7 +366,7 @@
           "cavityReads": 16
         },
         {
-          "worldId": "8f70aa74ab3f4573a7a02e74db389e40",
+          "worldId": "388d560f13aa45459ce4626368feefb4",
           "vessels": 16,
           "nativeVessels": 2,
           "dormantVessels": 14,
@@ -360,7 +374,7 @@
           "ready": true,
           "sources": [
             {
-              "sessionId": "bb145e5027b24acfa7e2f73a8848611b",
+              "sessionId": "5617ea40f941498586a928cfa1eb8af1",
               "phase": "flowing",
               "contents": {
                 "amountMl": 383.9616933816729,
@@ -375,7 +389,7 @@
           ],
           "receivers": [
             {
-              "sessionId": "bb145e5027b24acfa7e2f73a8848611b",
+              "sessionId": "5617ea40f941498586a928cfa1eb8af1",
               "phase": "flowing",
               "contents": {
                 "amountMl": 16.038306618327088,
@@ -390,6 +404,8 @@
           ],
           "executedGroups": 1,
           "executedMembers": 2,
+          "pourOriginQueries": 1,
+          "pourOriginCandidates": 0,
           "pourSegments": 14,
           "pourCandidates": 28,
           "scoopCandidates": 4,
@@ -398,7 +414,7 @@
           "cavityReads": 16
         },
         {
-          "worldId": "f7a72d026dfd49d099109c36e442f692",
+          "worldId": "b8b2c02ecb704acd9e2bcdaf0f426126",
           "vessels": 16,
           "nativeVessels": 2,
           "dormantVessels": 14,
@@ -406,7 +422,7 @@
           "ready": true,
           "sources": [
             {
-              "sessionId": "2a8414b8bf634dbe8c990a96a8348776",
+              "sessionId": "6c2624a4f30643f78d2c8be9813f5d0f",
               "phase": "flowing",
               "contents": {
                 "amountMl": 383.9616933816729,
@@ -421,7 +437,7 @@
           ],
           "receivers": [
             {
-              "sessionId": "2a8414b8bf634dbe8c990a96a8348776",
+              "sessionId": "6c2624a4f30643f78d2c8be9813f5d0f",
               "phase": "flowing",
               "contents": {
                 "amountMl": 16.038306618327088,
@@ -436,6 +452,8 @@
           ],
           "executedGroups": 1,
           "executedMembers": 2,
+          "pourOriginQueries": 1,
+          "pourOriginCandidates": 0,
           "pourSegments": 14,
           "pourCandidates": 28,
           "scoopCandidates": 4,
@@ -446,7 +464,7 @@
       ],
       "flowBudget": {
         "reservations": 9,
-        "units": 53260,
+        "units": 54560,
         "reservationLimit": 64,
         "unitLimit": 524288,
         "streamSegments": 32,
@@ -455,12 +473,12 @@
         "rainSamples": 5
       },
       "discoveryBudget": {
-        "step": 5323,
+        "step": 935,
         "reservations": 9,
         "executions": 9,
-        "units": 77670,
+        "units": 65124,
         "unitLimit": 524288,
-        "objectLimit": 66
+        "objectLimit": 4096
       },
       "nativeBudget": {
         "instances": 20,
@@ -472,10 +490,10 @@
       }
     },
     {
-      "step": 5324,
+      "step": 936,
       "rooms": [
         {
-          "worldId": "2d2a7acf058a4511b9e272b798bd78ce",
+          "worldId": "9c1661d844f6482b940ef204abddc8fd",
           "vessels": 16,
           "nativeVessels": 4,
           "dormantVessels": 12,
@@ -483,7 +501,7 @@
           "ready": true,
           "sources": [
             {
-              "sessionId": "7852d5e786f7469b83438ca41935a4fb",
+              "sessionId": "ce5124ee4ffc416c914f10f77571f52a",
               "phase": "flowing",
               "contents": {
                 "amountMl": 368.2788892795238,
@@ -496,7 +514,7 @@
               "error": ""
             },
             {
-              "sessionId": "7852d5e786f7469b83438ca41935a4fb",
+              "sessionId": "ce5124ee4ffc416c914f10f77571f52a",
               "phase": "flowing",
               "contents": {
                 "amountMl": 368.2788892795238,
@@ -511,10 +529,10 @@
           ],
           "receivers": [
             {
-              "sessionId": "7852d5e786f7469b83438ca41935a4fb",
+              "sessionId": "ce5124ee4ffc416c914f10f77571f52a",
               "phase": "flowing",
               "contents": {
-                "amountMl": 16.038306618327088,
+                "amountMl": 31.721110720476176,
                 "savedAmountMl": 0.0,
                 "capacityMl": 500.0,
                 "transferredMl": 0.0,
@@ -524,10 +542,10 @@
               "error": ""
             },
             {
-              "sessionId": "7852d5e786f7469b83438ca41935a4fb",
+              "sessionId": "ce5124ee4ffc416c914f10f77571f52a",
               "phase": "flowing",
               "contents": {
-                "amountMl": 31.721110720476176,
+                "amountMl": 16.038306618327088,
                 "savedAmountMl": 0.0,
                 "capacityMl": 500.0,
                 "transferredMl": 0.0,
@@ -539,15 +557,17 @@
           ],
           "executedGroups": 2,
           "executedMembers": 4,
+          "pourOriginQueries": 2,
+          "pourOriginCandidates": 0,
           "pourSegments": 46,
           "pourCandidates": 74,
           "scoopCandidates": 10,
           "discoveryCaptures": 1,
-          "collisionReads": 18,
+          "collisionReads": 6,
           "cavityReads": 16
         },
         {
-          "worldId": "b673a8218cd5468fbe64cdc1c8174976",
+          "worldId": "26b3527a1d374dde860d0888c2ce5d75",
           "vessels": 16,
           "nativeVessels": 2,
           "dormantVessels": 14,
@@ -555,7 +575,7 @@
           "ready": true,
           "sources": [
             {
-              "sessionId": "c7ea7046c88d442383d817f493e1c5ad",
+              "sessionId": "95f5eb33c54a4c5e975be84637dc621d",
               "phase": "flowing",
               "contents": {
                 "amountMl": 368.2788892795238,
@@ -570,7 +590,7 @@
           ],
           "receivers": [
             {
-              "sessionId": "c7ea7046c88d442383d817f493e1c5ad",
+              "sessionId": "95f5eb33c54a4c5e975be84637dc621d",
               "phase": "flowing",
               "contents": {
                 "amountMl": 31.721110720476176,
@@ -585,15 +605,17 @@
           ],
           "executedGroups": 1,
           "executedMembers": 2,
+          "pourOriginQueries": 1,
+          "pourOriginCandidates": 0,
           "pourSegments": 14,
           "pourCandidates": 28,
           "scoopCandidates": 4,
           "discoveryCaptures": 1,
-          "collisionReads": 18,
+          "collisionReads": 4,
           "cavityReads": 16
         },
         {
-          "worldId": "88e67188806346bfad90d552371eb7c5",
+          "worldId": "938e99d5725a4ba4bf879b012a7443ce",
           "vessels": 16,
           "nativeVessels": 2,
           "dormantVessels": 14,
@@ -601,7 +623,7 @@
           "ready": true,
           "sources": [
             {
-              "sessionId": "eb939df1d3e74c88a523fd18fb359e4d",
+              "sessionId": "fadd430d3a48438fbac29be0b97997cb",
               "phase": "flowing",
               "contents": {
                 "amountMl": 368.2788892795238,
@@ -616,7 +638,7 @@
           ],
           "receivers": [
             {
-              "sessionId": "eb939df1d3e74c88a523fd18fb359e4d",
+              "sessionId": "fadd430d3a48438fbac29be0b97997cb",
               "phase": "flowing",
               "contents": {
                 "amountMl": 31.721110720476176,
@@ -631,15 +653,17 @@
           ],
           "executedGroups": 1,
           "executedMembers": 2,
+          "pourOriginQueries": 1,
+          "pourOriginCandidates": 0,
           "pourSegments": 14,
           "pourCandidates": 28,
           "scoopCandidates": 4,
           "discoveryCaptures": 1,
-          "collisionReads": 18,
+          "collisionReads": 4,
           "cavityReads": 16
         },
         {
-          "worldId": "677010d6a3de4281bec5cd6dd661ae72",
+          "worldId": "f7f9b4b54fa6486c8f4a3d434d088f1a",
           "vessels": 16,
           "nativeVessels": 2,
           "dormantVessels": 14,
@@ -647,7 +671,7 @@
           "ready": true,
           "sources": [
             {
-              "sessionId": "32213683741f44e5a37a914cd8f7f883",
+              "sessionId": "590ccc7fef7a417687f698530fba41db",
               "phase": "flowing",
               "contents": {
                 "amountMl": 368.2788892795238,
@@ -662,7 +686,7 @@
           ],
           "receivers": [
             {
-              "sessionId": "32213683741f44e5a37a914cd8f7f883",
+              "sessionId": "590ccc7fef7a417687f698530fba41db",
               "phase": "flowing",
               "contents": {
                 "amountMl": 31.721110720476176,
@@ -677,15 +701,17 @@
           ],
           "executedGroups": 1,
           "executedMembers": 2,
+          "pourOriginQueries": 1,
+          "pourOriginCandidates": 0,
           "pourSegments": 14,
           "pourCandidates": 28,
           "scoopCandidates": 4,
           "discoveryCaptures": 1,
-          "collisionReads": 18,
+          "collisionReads": 4,
           "cavityReads": 16
         },
         {
-          "worldId": "63debdc9df814167b111a3a0c25bde7e",
+          "worldId": "70d877e34c64427bab711598af63de28",
           "vessels": 16,
           "nativeVessels": 2,
           "dormantVessels": 14,
@@ -693,7 +719,7 @@
           "ready": true,
           "sources": [
             {
-              "sessionId": "f4b4914d98284baf9b8039f2a4fe4aee",
+              "sessionId": "9f1b0ea5e1f341148eb7ae41ddc36f99",
               "phase": "flowing",
               "contents": {
                 "amountMl": 368.2788892795238,
@@ -708,7 +734,7 @@
           ],
           "receivers": [
             {
-              "sessionId": "f4b4914d98284baf9b8039f2a4fe4aee",
+              "sessionId": "9f1b0ea5e1f341148eb7ae41ddc36f99",
               "phase": "flowing",
               "contents": {
                 "amountMl": 31.721110720476176,
@@ -723,15 +749,17 @@
           ],
           "executedGroups": 1,
           "executedMembers": 2,
+          "pourOriginQueries": 1,
+          "pourOriginCandidates": 0,
           "pourSegments": 14,
           "pourCandidates": 28,
           "scoopCandidates": 4,
           "discoveryCaptures": 1,
-          "collisionReads": 18,
+          "collisionReads": 4,
           "cavityReads": 16
         },
         {
-          "worldId": "e794295480f948c4a11c10814ecf5978",
+          "worldId": "6a3bef2d95fc44d994ccc29b61a3f659",
           "vessels": 16,
           "nativeVessels": 2,
           "dormantVessels": 14,
@@ -739,7 +767,7 @@
           "ready": true,
           "sources": [
             {
-              "sessionId": "c9141986e9b84b779c2ed7ef4cb4a6de",
+              "sessionId": "87b0f73bc80b4d8d91161154cf2d3cc0",
               "phase": "flowing",
               "contents": {
                 "amountMl": 368.2788892795238,
@@ -754,7 +782,7 @@
           ],
           "receivers": [
             {
-              "sessionId": "c9141986e9b84b779c2ed7ef4cb4a6de",
+              "sessionId": "87b0f73bc80b4d8d91161154cf2d3cc0",
               "phase": "flowing",
               "contents": {
                 "amountMl": 31.721110720476176,
@@ -769,15 +797,17 @@
           ],
           "executedGroups": 1,
           "executedMembers": 2,
+          "pourOriginQueries": 1,
+          "pourOriginCandidates": 0,
           "pourSegments": 14,
           "pourCandidates": 28,
           "scoopCandidates": 4,
           "discoveryCaptures": 1,
-          "collisionReads": 18,
+          "collisionReads": 4,
           "cavityReads": 16
         },
         {
-          "worldId": "9e1db2189ec041da8b0d87684b61cf4f",
+          "worldId": "c033161965a84fda84971d0e9e899ade",
           "vessels": 16,
           "nativeVessels": 2,
           "dormantVessels": 14,
@@ -785,7 +815,7 @@
           "ready": true,
           "sources": [
             {
-              "sessionId": "08e1a7393fee4de4b3e57ece31aec6fc",
+              "sessionId": "d7c06fac013643ba9a7a97685bf194df",
               "phase": "flowing",
               "contents": {
                 "amountMl": 368.2788892795238,
@@ -800,7 +830,7 @@
           ],
           "receivers": [
             {
-              "sessionId": "08e1a7393fee4de4b3e57ece31aec6fc",
+              "sessionId": "d7c06fac013643ba9a7a97685bf194df",
               "phase": "flowing",
               "contents": {
                 "amountMl": 31.721110720476176,
@@ -815,15 +845,17 @@
           ],
           "executedGroups": 1,
           "executedMembers": 2,
+          "pourOriginQueries": 1,
+          "pourOriginCandidates": 0,
           "pourSegments": 14,
           "pourCandidates": 28,
           "scoopCandidates": 4,
           "discoveryCaptures": 1,
-          "collisionReads": 18,
+          "collisionReads": 4,
           "cavityReads": 16
         },
         {
-          "worldId": "8f70aa74ab3f4573a7a02e74db389e40",
+          "worldId": "388d560f13aa45459ce4626368feefb4",
           "vessels": 16,
           "nativeVessels": 2,
           "dormantVessels": 14,
@@ -831,7 +863,7 @@
           "ready": true,
           "sources": [
             {
-              "sessionId": "bb145e5027b24acfa7e2f73a8848611b",
+              "sessionId": "5617ea40f941498586a928cfa1eb8af1",
               "phase": "flowing",
               "contents": {
                 "amountMl": 368.2788892795238,
@@ -846,7 +878,7 @@
           ],
           "receivers": [
             {
-              "sessionId": "bb145e5027b24acfa7e2f73a8848611b",
+              "sessionId": "5617ea40f941498586a928cfa1eb8af1",
               "phase": "flowing",
               "contents": {
                 "amountMl": 31.721110720476176,
@@ -861,15 +893,17 @@
           ],
           "executedGroups": 1,
           "executedMembers": 2,
+          "pourOriginQueries": 1,
+          "pourOriginCandidates": 0,
           "pourSegments": 14,
           "pourCandidates": 28,
           "scoopCandidates": 4,
           "discoveryCaptures": 1,
-          "collisionReads": 18,
+          "collisionReads": 4,
           "cavityReads": 16
         },
         {
-          "worldId": "f7a72d026dfd49d099109c36e442f692",
+          "worldId": "b8b2c02ecb704acd9e2bcdaf0f426126",
           "vessels": 16,
           "nativeVessels": 2,
           "dormantVessels": 14,
@@ -877,7 +911,7 @@
           "ready": true,
           "sources": [
             {
-              "sessionId": "2a8414b8bf634dbe8c990a96a8348776",
+              "sessionId": "6c2624a4f30643f78d2c8be9813f5d0f",
               "phase": "flowing",
               "contents": {
                 "amountMl": 368.2788892795238,
@@ -892,7 +926,7 @@
           ],
           "receivers": [
             {
-              "sessionId": "2a8414b8bf634dbe8c990a96a8348776",
+              "sessionId": "6c2624a4f30643f78d2c8be9813f5d0f",
               "phase": "flowing",
               "contents": {
                 "amountMl": 31.721110720476176,
@@ -907,17 +941,19 @@
           ],
           "executedGroups": 1,
           "executedMembers": 2,
+          "pourOriginQueries": 1,
+          "pourOriginCandidates": 0,
           "pourSegments": 14,
           "pourCandidates": 28,
           "scoopCandidates": 4,
           "discoveryCaptures": 1,
-          "collisionReads": 18,
+          "collisionReads": 4,
           "cavityReads": 16
         }
       ],
       "flowBudget": {
         "reservations": 9,
-        "units": 53428,
+        "units": 54728,
         "reservationLimit": 64,
         "unitLimit": 524288,
         "streamSegments": 32,
@@ -926,12 +962,12 @@
         "rainSamples": 5
       },
       "discoveryBudget": {
-        "step": 5324,
+        "step": 936,
         "reservations": 9,
         "executions": 9,
-        "units": 77670,
+        "units": 65124,
         "unitLimit": 524288,
-        "objectLimit": 66
+        "objectLimit": 4096
       },
       "nativeBudget": {
         "instances": 20,
@@ -944,10 +980,10 @@
       "topology": "merged"
     },
     {
-      "step": 5325,
+      "step": 937,
       "rooms": [
         {
-          "worldId": "2d2a7acf058a4511b9e272b798bd78ce",
+          "worldId": "9c1661d844f6482b940ef204abddc8fd",
           "vessels": 16,
           "nativeVessels": 4,
           "dormantVessels": 12,
@@ -955,7 +991,7 @@
           "ready": true,
           "sources": [
             {
-              "sessionId": "7852d5e786f7469b83438ca41935a4fb",
+              "sessionId": "ce5124ee4ffc416c914f10f77571f52a",
               "phase": "flowing",
               "contents": {
                 "amountMl": 352.9516790785958,
@@ -968,7 +1004,7 @@
               "error": ""
             },
             {
-              "sessionId": "7852d5e786f7469b83438ca41935a4fb",
+              "sessionId": "ce5124ee4ffc416c914f10f77571f52a",
               "phase": "flowing",
               "contents": {
                 "amountMl": 352.9516790785958,
@@ -983,10 +1019,10 @@
           ],
           "receivers": [
             {
-              "sessionId": "7852d5e786f7469b83438ca41935a4fb",
+              "sessionId": "ce5124ee4ffc416c914f10f77571f52a",
               "phase": "flowing",
               "contents": {
-                "amountMl": 31.36551681925509,
+                "amountMl": 47.048320921404176,
                 "savedAmountMl": 0.0,
                 "capacityMl": 500.0,
                 "transferredMl": 0.0,
@@ -996,10 +1032,10 @@
               "error": ""
             },
             {
-              "sessionId": "7852d5e786f7469b83438ca41935a4fb",
+              "sessionId": "ce5124ee4ffc416c914f10f77571f52a",
               "phase": "flowing",
               "contents": {
-                "amountMl": 47.048320921404176,
+                "amountMl": 31.36551681925509,
                 "savedAmountMl": 0.0,
                 "capacityMl": 500.0,
                 "transferredMl": 0.0,
@@ -1011,15 +1047,17 @@
           ],
           "executedGroups": 2,
           "executedMembers": 4,
+          "pourOriginQueries": 2,
+          "pourOriginCandidates": 0,
           "pourSegments": 28,
           "pourCandidates": 56,
           "scoopCandidates": 8,
           "discoveryCaptures": 1,
-          "collisionReads": 18,
+          "collisionReads": 6,
           "cavityReads": 16
         },
         {
-          "worldId": "b673a8218cd5468fbe64cdc1c8174976",
+          "worldId": "26b3527a1d374dde860d0888c2ce5d75",
           "vessels": 16,
           "nativeVessels": 2,
           "dormantVessels": 14,
@@ -1027,7 +1065,7 @@
           "ready": true,
           "sources": [
             {
-              "sessionId": "c7ea7046c88d442383d817f493e1c5ad",
+              "sessionId": "95f5eb33c54a4c5e975be84637dc621d",
               "phase": "flowing",
               "contents": {
                 "amountMl": 352.9516790785958,
@@ -1042,7 +1080,7 @@
           ],
           "receivers": [
             {
-              "sessionId": "c7ea7046c88d442383d817f493e1c5ad",
+              "sessionId": "95f5eb33c54a4c5e975be84637dc621d",
               "phase": "flowing",
               "contents": {
                 "amountMl": 47.048320921404176,
@@ -1057,15 +1095,17 @@
           ],
           "executedGroups": 1,
           "executedMembers": 2,
+          "pourOriginQueries": 1,
+          "pourOriginCandidates": 0,
           "pourSegments": 14,
           "pourCandidates": 28,
           "scoopCandidates": 4,
           "discoveryCaptures": 1,
-          "collisionReads": 18,
+          "collisionReads": 4,
           "cavityReads": 16
         },
         {
-          "worldId": "88e67188806346bfad90d552371eb7c5",
+          "worldId": "938e99d5725a4ba4bf879b012a7443ce",
           "vessels": 16,
           "nativeVessels": 2,
           "dormantVessels": 14,
@@ -1073,7 +1113,7 @@
           "ready": true,
           "sources": [
             {
-              "sessionId": "eb939df1d3e74c88a523fd18fb359e4d",
+              "sessionId": "fadd430d3a48438fbac29be0b97997cb",
               "phase": "flowing",
               "contents": {
                 "amountMl": 352.9516790785958,
@@ -1088,7 +1128,7 @@
           ],
           "receivers": [
             {
-              "sessionId": "eb939df1d3e74c88a523fd18fb359e4d",
+              "sessionId": "fadd430d3a48438fbac29be0b97997cb",
               "phase": "flowing",
               "contents": {
                 "amountMl": 47.048320921404176,
@@ -1103,15 +1143,17 @@
           ],
           "executedGroups": 1,
           "executedMembers": 2,
+          "pourOriginQueries": 1,
+          "pourOriginCandidates": 0,
           "pourSegments": 14,
           "pourCandidates": 28,
           "scoopCandidates": 4,
           "discoveryCaptures": 1,
-          "collisionReads": 18,
+          "collisionReads": 4,
           "cavityReads": 16
         },
         {
-          "worldId": "677010d6a3de4281bec5cd6dd661ae72",
+          "worldId": "f7f9b4b54fa6486c8f4a3d434d088f1a",
           "vessels": 16,
           "nativeVessels": 2,
           "dormantVessels": 14,
@@ -1119,7 +1161,7 @@
           "ready": true,
           "sources": [
             {
-              "sessionId": "32213683741f44e5a37a914cd8f7f883",
+              "sessionId": "590ccc7fef7a417687f698530fba41db",
               "phase": "flowing",
               "contents": {
                 "amountMl": 352.9516790785958,
@@ -1134,7 +1176,7 @@
           ],
           "receivers": [
             {
-              "sessionId": "32213683741f44e5a37a914cd8f7f883",
+              "sessionId": "590ccc7fef7a417687f698530fba41db",
               "phase": "flowing",
               "contents": {
                 "amountMl": 47.048320921404176,
@@ -1149,15 +1191,17 @@
           ],
           "executedGroups": 1,
           "executedMembers": 2,
+          "pourOriginQueries": 1,
+          "pourOriginCandidates": 0,
           "pourSegments": 14,
           "pourCandidates": 28,
           "scoopCandidates": 4,
           "discoveryCaptures": 1,
-          "collisionReads": 18,
+          "collisionReads": 4,
           "cavityReads": 16
         },
         {
-          "worldId": "63debdc9df814167b111a3a0c25bde7e",
+          "worldId": "70d877e34c64427bab711598af63de28",
           "vessels": 16,
           "nativeVessels": 2,
           "dormantVessels": 14,
@@ -1165,7 +1209,7 @@
           "ready": true,
           "sources": [
             {
-              "sessionId": "f4b4914d98284baf9b8039f2a4fe4aee",
+              "sessionId": "9f1b0ea5e1f341148eb7ae41ddc36f99",
               "phase": "flowing",
               "contents": {
                 "amountMl": 352.9516790785958,
@@ -1180,7 +1224,7 @@
           ],
           "receivers": [
             {
-              "sessionId": "f4b4914d98284baf9b8039f2a4fe4aee",
+              "sessionId": "9f1b0ea5e1f341148eb7ae41ddc36f99",
               "phase": "flowing",
               "contents": {
                 "amountMl": 47.048320921404176,
@@ -1195,15 +1239,17 @@
           ],
           "executedGroups": 1,
           "executedMembers": 2,
+          "pourOriginQueries": 1,
+          "pourOriginCandidates": 0,
           "pourSegments": 14,
           "pourCandidates": 28,
           "scoopCandidates": 4,
           "discoveryCaptures": 1,
-          "collisionReads": 18,
+          "collisionReads": 4,
           "cavityReads": 16
         },
         {
-          "worldId": "e794295480f948c4a11c10814ecf5978",
+          "worldId": "6a3bef2d95fc44d994ccc29b61a3f659",
           "vessels": 16,
           "nativeVessels": 2,
           "dormantVessels": 14,
@@ -1211,7 +1257,7 @@
           "ready": true,
           "sources": [
             {
-              "sessionId": "c9141986e9b84b779c2ed7ef4cb4a6de",
+              "sessionId": "87b0f73bc80b4d8d91161154cf2d3cc0",
               "phase": "flowing",
               "contents": {
                 "amountMl": 352.9516790785958,
@@ -1226,7 +1272,7 @@
           ],
           "receivers": [
             {
-              "sessionId": "c9141986e9b84b779c2ed7ef4cb4a6de",
+              "sessionId": "87b0f73bc80b4d8d91161154cf2d3cc0",
               "phase": "flowing",
               "contents": {
                 "amountMl": 47.048320921404176,
@@ -1241,15 +1287,17 @@
           ],
           "executedGroups": 1,
           "executedMembers": 2,
+          "pourOriginQueries": 1,
+          "pourOriginCandidates": 0,
           "pourSegments": 14,
           "pourCandidates": 28,
           "scoopCandidates": 4,
           "discoveryCaptures": 1,
-          "collisionReads": 18,
+          "collisionReads": 4,
           "cavityReads": 16
         },
         {
-          "worldId": "9e1db2189ec041da8b0d87684b61cf4f",
+          "worldId": "c033161965a84fda84971d0e9e899ade",
           "vessels": 16,
           "nativeVessels": 2,
           "dormantVessels": 14,
@@ -1257,7 +1305,7 @@
           "ready": true,
           "sources": [
             {
-              "sessionId": "08e1a7393fee4de4b3e57ece31aec6fc",
+              "sessionId": "d7c06fac013643ba9a7a97685bf194df",
               "phase": "flowing",
               "contents": {
                 "amountMl": 352.9516790785958,
@@ -1272,7 +1320,7 @@
           ],
           "receivers": [
             {
-              "sessionId": "08e1a7393fee4de4b3e57ece31aec6fc",
+              "sessionId": "d7c06fac013643ba9a7a97685bf194df",
               "phase": "flowing",
               "contents": {
                 "amountMl": 47.048320921404176,
@@ -1287,15 +1335,17 @@
           ],
           "executedGroups": 1,
           "executedMembers": 2,
+          "pourOriginQueries": 1,
+          "pourOriginCandidates": 0,
           "pourSegments": 14,
           "pourCandidates": 28,
           "scoopCandidates": 4,
           "discoveryCaptures": 1,
-          "collisionReads": 18,
+          "collisionReads": 4,
           "cavityReads": 16
         },
         {
-          "worldId": "8f70aa74ab3f4573a7a02e74db389e40",
+          "worldId": "388d560f13aa45459ce4626368feefb4",
           "vessels": 16,
           "nativeVessels": 2,
           "dormantVessels": 14,
@@ -1303,7 +1353,7 @@
           "ready": true,
           "sources": [
             {
-              "sessionId": "bb145e5027b24acfa7e2f73a8848611b",
+              "sessionId": "5617ea40f941498586a928cfa1eb8af1",
               "phase": "flowing",
               "contents": {
                 "amountMl": 352.9516790785958,
@@ -1318,7 +1368,7 @@
           ],
           "receivers": [
             {
-              "sessionId": "bb145e5027b24acfa7e2f73a8848611b",
+              "sessionId": "5617ea40f941498586a928cfa1eb8af1",
               "phase": "flowing",
               "contents": {
                 "amountMl": 47.048320921404176,
@@ -1333,15 +1383,17 @@
           ],
           "executedGroups": 1,
           "executedMembers": 2,
+          "pourOriginQueries": 1,
+          "pourOriginCandidates": 0,
           "pourSegments": 14,
           "pourCandidates": 28,
           "scoopCandidates": 4,
           "discoveryCaptures": 1,
-          "collisionReads": 18,
+          "collisionReads": 4,
           "cavityReads": 16
         },
         {
-          "worldId": "f7a72d026dfd49d099109c36e442f692",
+          "worldId": "b8b2c02ecb704acd9e2bcdaf0f426126",
           "vessels": 16,
           "nativeVessels": 2,
           "dormantVessels": 14,
@@ -1349,7 +1401,7 @@
           "ready": true,
           "sources": [
             {
-              "sessionId": "2a8414b8bf634dbe8c990a96a8348776",
+              "sessionId": "6c2624a4f30643f78d2c8be9813f5d0f",
               "phase": "flowing",
               "contents": {
                 "amountMl": 352.9516790785958,
@@ -1364,7 +1416,7 @@
           ],
           "receivers": [
             {
-              "sessionId": "2a8414b8bf634dbe8c990a96a8348776",
+              "sessionId": "6c2624a4f30643f78d2c8be9813f5d0f",
               "phase": "flowing",
               "contents": {
                 "amountMl": 47.048320921404176,
@@ -1379,17 +1431,19 @@
           ],
           "executedGroups": 1,
           "executedMembers": 2,
+          "pourOriginQueries": 1,
+          "pourOriginCandidates": 0,
           "pourSegments": 14,
           "pourCandidates": 28,
           "scoopCandidates": 4,
           "discoveryCaptures": 1,
-          "collisionReads": 18,
+          "collisionReads": 4,
           "cavityReads": 16
         }
       ],
       "flowBudget": {
         "reservations": 9,
-        "units": 53260,
+        "units": 54560,
         "reservationLimit": 64,
         "unitLimit": 524288,
         "streamSegments": 32,
@@ -1398,12 +1452,12 @@
         "rainSamples": 5
       },
       "discoveryBudget": {
-        "step": 5325,
+        "step": 937,
         "reservations": 9,
         "executions": 9,
-        "units": 77670,
+        "units": 65124,
         "unitLimit": 524288,
-        "objectLimit": 66
+        "objectLimit": 4096
       },
       "nativeBudget": {
         "instances": 20,
@@ -1420,9 +1474,9 @@
   "savedContainers": 144,
   "nativeContainers": 20,
   "dormantContainers": 124,
-  "hostUnits": 552816,
+  "hostUnits": 562176,
   "flowUnitLimit": 524288,
-  "groupUnits": 53260,
+  "groupUnits": 54560,
   "resourceBudgets": {
     "objects": {
       "instances": 20,
@@ -1469,7 +1523,7 @@
       "streamPointLimit": 33
     }
   },
-  "discoveryUnits": 77670,
+  "discoveryUnits": 65124,
   "discoveryUnitLimit": 524288,
   "conservationAndUndo": true
 }

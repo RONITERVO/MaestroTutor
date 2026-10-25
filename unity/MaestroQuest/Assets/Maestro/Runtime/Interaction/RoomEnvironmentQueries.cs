@@ -29,6 +29,10 @@ namespace Maestro.Quest.Interaction {
         }
         bool CanOccupy(uint token,Vector3 point,RoomItem first,RoomItem second){
             if(!Live(token)||!world.EnvironmentActive||!float.IsFinite(point.sqrMagnitude))return false;
+            // Restored geometry may be visible while its collision clearance still
+            // needs explicit recovery. Keep that live hold for both participants,
+            // including paused traversal, instead of borrowing the other's readiness.
+            if(!RoomEnvironmentBinding.RestorationReady(first)||!RoomEnvironmentBinding.RestorationReady(second))return false;
             bool a=world.IncludesRealRoom(first),b=world.IncludesRealRoom(second);
             // Two participants using the same environment need one spatial proof.
             // Mixed policies require both; a virtual actor cannot borrow scan readiness.

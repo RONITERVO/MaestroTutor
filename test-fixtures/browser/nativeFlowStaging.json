@@ -1,15 +1,15 @@
 {
   "loading": {
     "discovery": {
-      "step": 5382,
+      "step": 1099,
       "reservations": 1,
       "executions": 1,
-      "units": 299,
+      "units": 468,
       "unitLimit": 524288,
-      "objectLimit": 66
+      "objectLimit": 4096
     },
     "execution": {
-      "step": 5382,
+      "step": 1099,
       "executions": 0,
       "executionLimit": 32,
       "queued": 1,
@@ -20,7 +20,7 @@
     "pending": true,
     "captures": 1,
     "source": {
-      "sessionId": "71a45edf18524a9db890b63b8f0a64d6",
+      "sessionId": "bcaf5d3bd29846078e2a11765116b057",
       "phase": "waiting",
       "contents": {
         "amountMl": 400.0,
@@ -33,7 +33,7 @@
       "error": "Preparing liquid flow ground, obstacles and water"
     },
     "receiver": {
-      "sessionId": "71a45edf18524a9db890b63b8f0a64d6",
+      "sessionId": "bcaf5d3bd29846078e2a11765116b057",
       "phase": "waiting",
       "contents": {
         "amountMl": 0.0,
@@ -48,15 +48,15 @@
   },
   "preparedWaiting": {
     "discovery": {
-      "step": 5383,
+      "step": 1101,
       "reservations": 1,
       "executions": 1,
-      "units": 299,
+      "units": 468,
       "unitLimit": 524288,
-      "objectLimit": 66
+      "objectLimit": 4096
     },
     "execution": {
-      "step": 5383,
+      "step": 1101,
       "executions": 0,
       "executionLimit": 32,
       "queued": 1,
@@ -67,7 +67,7 @@
     "pending": false,
     "captures": 1,
     "source": {
-      "sessionId": "71a45edf18524a9db890b63b8f0a64d6",
+      "sessionId": "bcaf5d3bd29846078e2a11765116b057",
       "phase": "waiting",
       "contents": {
         "amountMl": 400.0,
@@ -80,7 +80,7 @@
       "error": "Liquid flow is waiting for work capacity. Ready groups take turns automatically; saved quantities are preserved."
     },
     "receiver": {
-      "sessionId": "71a45edf18524a9db890b63b8f0a64d6",
+      "sessionId": "bcaf5d3bd29846078e2a11765116b057",
       "phase": "waiting",
       "contents": {
         "amountMl": 0.0,
@@ -95,26 +95,26 @@
   },
   "flowing": {
     "discovery": {
-      "step": 5383,
+      "step": 1101,
       "reservations": 1,
       "executions": 1,
-      "units": 299,
+      "units": 468,
       "unitLimit": 524288,
-      "objectLimit": 66
+      "objectLimit": 4096
     },
     "execution": {
-      "step": 5383,
+      "step": 1101,
       "executions": 1,
       "executionLimit": 32,
       "queued": 0,
       "queueLimit": 64,
-      "units": 5326,
+      "units": 5456,
       "unitLimit": 524288
     },
     "pending": false,
     "captures": 1,
     "source": {
-      "sessionId": "d354ff3854554b5bad1e4120b0f65d5c",
+      "sessionId": "9121acd5f34b47c4880b8195d8f135c3",
       "phase": "flowing",
       "contents": {
         "amountMl": 383.9616933816729,
@@ -127,7 +127,7 @@
       "error": ""
     },
     "receiver": {
-      "sessionId": "d354ff3854554b5bad1e4120b0f65d5c",
+      "sessionId": "9121acd5f34b47c4880b8195d8f135c3",
       "phase": "flowing",
       "contents": {
         "amountMl": 16.038306618327088,
