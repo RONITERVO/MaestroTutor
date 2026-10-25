@@ -18,6 +18,9 @@ contract; dated entries below retain the development evidence.
 
 The [audio verification checkpoint](#native-audio-quality-regression-gates--2026-10-25)
 strengthens offline evidence without changing the selected audio path.
+The [whole-utterance investigation](#whole-utterance-speech-and-rejected-echo-controls--2026-10-25)
+now separates residual echo from speech loss in selected offline cases; both
+follow-up DSP settings were rejected for regressions.
 
 The installed development checkpoint remains **D85F3CB7 / f58dab48**. The latest
 packaged development APK is **5899972E / 5100f612**, not installed. Current desktop
@@ -17070,3 +17073,37 @@ measure the small skew-boundary difference explicitly before changing that gate.
 Headset/provider work, reflections, release signing, deployments and Meta changes
 remain on hold. Existing full application evidence remains applicable to unchanged
 production code; this increment makes no new full application or acoustic claim.
+
+
+### Whole-utterance speech and rejected echo controls — 2026-10-25
+
+The next audio investigation uses the existing offline English/Zira and
+Spanish/Helena recordings once through the real four-stream clock-aligned worker.
+All 48 cases verify identical frame metadata, retain zero clipping and stay within
+.640 ms modeled delay error. Fixed source gain and source-time windows replace
+looping/late excerpts for this diagnostic only. Original tests stay unchanged.
+
+Broadband preserves the tested speech while cold tones and changed paths leave
+substantial echo. The reference-without-acoustic-echo control preserves speech
+relative to its processed baseline. Four inspected exports reproduce their matrix
+rows and support residual echo as the main contamination in those selected cases.
+Independent adaptive streams, sub-PCM16 quiet attacks and DSP latency limit that
+inference. See [the detailed evidence](../unity/Tools/EchoProcessing/TONAL_DIAGNOSIS.md#whole-utterance-clock-aligned-speech-investigation--2026-10-25).
+
+Two supported APM settings were tested independently in fresh private builds.
+Refined-only output raises aligned failures from 31 to 36, losing five passes.
+Disabling stationary audibility scaling improves one trained-tone case but loses
+two bursty-speech cases (31 to 32), six previously passing standalone cases and
+six quiet whole-utterance cases. It gains two whole-utterance cases, for a net
+32 to 36 failures out of 48, while all six old speech excerpts still pass.
+Both controls fail the unchanged per-case regression gate. Neither is selected
+or added as a supported profile. This rules out those isolated changes, not every
+possible upstream or alternative-backend solution.
+
+Diagnostic sources, commands, hashes, logs, sample exports and reviews are retained
+in `.quest-evidence/echo-speech-20261025`. The fresh unchanged baseline is
+`echo-native/sp1w`; rejected controls are `sp2w` and `sp3w`. Existing 31 quality
+failures remain open. The new 32/48 baseline classifications are descriptive
+evidence, not additional or replacement release gates. No app code, maintained
+DSP configuration, capture routing, device/provider state or release operation
+changed. Physical sound quality and other release gates remain unfinished.

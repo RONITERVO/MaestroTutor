@@ -175,6 +175,92 @@ latency and full original Live/STT parity. Never stack it unknowingly with softw
 AEC or equate an availability flag with acceptance. Existing headset holds remain;
 no device availability query or microphone acquisition was made here.
 
+## Whole-utterance clock-aligned speech investigation — 2026-10-25
+
+The original standalone WAV test repeats its source, starts double-talk at an
+already-advanced source position, scores seconds 14–17 and searches a bounded
+output lag. English wraps at 15.665 s inside that window. Its passing cases do
+not establish preservation of an entire utterance through the aligned worker.
+
+A private diagnostic at source checkpoint `9d3f9423` plays the existing English/
+Zira and Spanish/Helena recordings once, starting at source time 6 s. Fixed gains
+.5 and .05 apply to both files, without normalization, phoneme amplification or
+output-selected lag. Broadband, cold tones, tones after broadband and tones with
+a changed path each use nominal and both opposing +/-900 ppm clocks: 24 cases
+per recording, 48 total.
+
+Four independent real DuplexProcessor/APM instances receive identical timing:
+near speech with silent reference, echo with reference, speech plus echo with
+reference, and speech with reference but no acoustic echo. Every frame checks
+metadata parity. The whole-source interval includes 20 ms after its end within a
+longer simulated continuation; this is not a claim that Close flushes audio.
+Export coordinates identify DSP input, not acoustic output time. All 48 cases
+retain zero clipping and at most .640 ms modeled delay error.
+
+The unchanged measured32 profile gives these descriptive results:
+
+| Pattern | Classified failures, English / Spanish | Echo reduction across both recordings |
+| --- | ---: | ---: |
+| Broadband | 0 / 0 | 38.61–50.59 dB |
+| Cold tones | 6 / 6 | .089–.135 dB |
+| Tones after broadband | 4 / 4 | 13.54–16.80 dB |
+| Tones with changed path | 6 / 6 | -2.00–-.94 dB |
+
+Reference-without-echo projected gain stays within .999998–1.000001 of its
+processed speech baseline. Four selected sample exports reproduce their matrix
+rows exactly. In nominal cold-tone cases for normal English and quiet Spanish,
+mixed output is close to baseline speech plus echo-only output (difference RMS
+about .00030 and .00291 of baseline RMS). This supports residual echo as the main
+contamination in those selected cases. Independent adaptive streams need not
+superpose; subtraction is not clean-source recovery or a universal explanation
+of the older generated-overlap speech-loss findings.
+
+Four quiet Spanish pause exits have source RMS below one PCM16 step in their
+first 80 ms. Ratios against that small denominator cannot establish phoneme loss.
+Raw-source attack comparisons also include fixed DSP latency and rising energy.
+The analyzer retains sample support, exact zero-pause exits and fixed input-time
+windows without moving windows, boosting audio or adding acceptance gates.
+
+### Two supported-setting controls were rejected
+
+Each uses fresh pinned sources and one setting change; neither removes upstream
+adaptation guards. The required per-case gate rejects both. Remaining probes are
+recorded as diagnostics after rejection, not successful builds.
+
+| Isolated change | Aligned failures / 39 | Existing passes lost | New passes |
+| --- | ---: | ---: | ---: |
+| Unchanged measured32 | 31 | 0 | 0 |
+| Disable coarse-filter output selection | 36 | 5 | 0 |
+| Disable stationary residual-echo audibility scaling | 32 | 2 | 1 |
+
+Forcing refined output loses both previously passing drift cases after broadband
+and three overlapping-signal cases. It does not disable coarse adaptation or the
+shared narrow-band guards. Further speech qualification was unnecessary to reject
+this regression; no unexecuted standalone/speech result is claimed for it.
+
+Disabling stationary audibility scaling improves the three original trained-tone
+cases to about 24 dB, but loses both passing bursty-overlap drift cases after
+broadband (onset gains about .064 and .028). Cold tones and changed paths still
+fail. Standalone failures rise from 0 to 6 out of 40: noise-heavy double-talk and
+all five onset cases. All six original English/Spanish speech cases still pass.
+The new whole-utterance matrix instead worsens from 32 to 36 failures out of 48:
+both voices gain the normal nominal trained-tone case but lose all three quiet
+broadband cases. Reference-without-echo speech is also attenuated. The old passing
+speech excerpts therefore cannot override the broader negative evidence.
+
+Keep the current evaluation configuration and all existing gates unchanged.
+These two recordings and synthetic paths do not establish human intelligibility,
+device acoustics or app/Quest acceptance. The 32 baseline speech classifications
+are separate descriptive evidence, not added to or substituted for the existing
+31 open quality failures. No native backend is promoted; device/provider holds
+remain in place.
+
+Evidence is retained under `.quest-evidence/echo-speech-20261025`: private probe
+and analyzer source, WAV hashes, timing receipts, complete logs, selected
+seven-column sample exports, candidate commands/hashes and independent reviews.
+`echo-native/sp1w` is the fresh baseline; `sp2w` and `sp3w` are rejected controls.
+Private diagnostic sources and recordings are not app assets.
+
 ## Decision
 
 Keep one shared capture/output ownership and timing contract. Keep both the cold

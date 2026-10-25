@@ -1079,6 +1079,15 @@ and coverage. Source hashes, rejected variants and failed attempts remain in
 `.quest-evidence/echo-path`. A corrected band-limited fixture avoids microphone
 aliasing; historical metrics from before that correction are not directly comparable.
 
+A [whole-utterance follow-up](Tools/EchoProcessing/TONAL_DIAGNOSIS.md#whole-utterance-clock-aligned-speech-investigation--2026-10-25)
+plays existing offline English/Spanish recordings once through the actual aligned
+worker, including tonal and changed-path references. Four-stream comparison
+points to residual echo dominating selected tonal speech failures; it does not
+erase the separate generated-overlap speech-loss evidence. Both supported-setting
+controls regress established passes and were rejected. One still passes the old
+speech excerpts while failing quiet whole-utterance cases. The app and evaluation
+configuration remain unchanged; this is not physical speech acceptance.
+
 Promotion still requires native microphone ownership, measured clock/delay/drift
 alignment, all-audible-output coverage, perceptual speech checks, pause/permission
 recovery and actual Quest/original-Live acceptance. Cross-compilation for Android
