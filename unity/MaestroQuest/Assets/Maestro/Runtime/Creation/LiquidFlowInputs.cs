@@ -25,9 +25,8 @@ namespace Maestro.Quest.Creation {
    foreach(var id in group.Plan.Members)if(vessels.TryGetValue(id,out var vessel)){vessel.Exposure=0;vessel.RainReady=false;vessel.RainReason=reason;}
   }
   RoomSpatialReadiness CheckFlowInputs(FlowGroup group,string[] targets,out string reason){
-   var state=editor.SpatialMovementReady(targets,null,out reason);if(state!=RoomSpatialReadiness.Ready)return state;
+   var state=editor.SpatialCollisionReady(targets,out reason);if(state!=RoomSpatialReadiness.Ready)return state;
    if(group.Plan.Unknown){reason="Required liquid-flow cavity bounds are unavailable";return RoomSpatialReadiness.Unavailable;}
-   foreach(var id in targets){var item=editor.Find(id);var rigid=item?item.GetComponent<RigidRoomItem>():null;if(rigid&&!rigid.GeometryReady){reason="Required liquid-flow collision geometry is unavailable";return RoomSpatialReadiness.Unavailable;}}
    foreach(var id in group.Plan.Members)if(!vessels.TryGetValue(id,out var vessel)||!FlowVesselReady(vessel)){
     reason="Required liquid-flow receiving or donor geometry is unavailable";return editor.LiquidNativePending(id)?RoomSpatialReadiness.Preparing:RoomSpatialReadiness.Unavailable;
    }

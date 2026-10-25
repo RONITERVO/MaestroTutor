@@ -5,6 +5,8 @@ Status: active implementation. Nothing in this document claims store readiness.
 Start with the [accepted product scope](#accepted-product-scope) and
 [release evidence checklist](#release-evidence-still-required) and the latest
 [complete integration checkpoint](#complete-native-book-and-android-integration-2026-10-24). The current
+[saved-world rain checkpoint](#passive-saved-world-rain-cover--2026-10-25) extends exposure readiness;
+its native, rendered Book and headless checks are recorded below. The preceding
 [outlet and recovery checkpoint](#liquid-outlet-clearance-and-live-recovery-holds--2026-10-25) hardens the
 [terrain-overflow checkpoint](#explicit-terrain-overflow-and-exact-liquid-persistence--2026-10-24), which builds on the
 [whole-world collision checkpoint](#shared-collision-policies-across-the-saved-world--2026-10-24) and follows the [shared visual metadata checkpoint](#shared-visual-metadata-across-unloaded-world-objects-2026-10-24). The [saved-world capacity checkpoint](#saved-world-capacity-and-deferred-creation--2026-10-23) records its
@@ -17107,3 +17109,74 @@ failures remain open. The new 32/48 baseline classifications are descriptive
 evidence, not additional or replacement release gates. No app code, maintained
 DSP configuration, capture routing, device/provider state or release operation
 changed. Physical sound quality and other release gates remain unfinished.
+
+
+### Passive saved-world rain cover — 2026-10-25
+
+Rain presentation and the shared world.weather.exposure fact now distinguish
+missing saved roof geometry from open sky. After the frame and any required scan
+are ready, a validated native solid hit can establish cover. Otherwise the
+upstream segment queries the existing saved collision directory: relevant dormant,
+unavailable or unknown geometry yields unknown exposure. Conservative bounds and
+recovery barriers cannot prove a solid roof. These passive reads do not load
+objects, start physics or change saved state.
+
+Collision readiness is shared with liquid-flow preparation. Registered solids
+must be active, enabled and on a participating virtual layer; imported geometry
+must still be available even when a stale collider remains enabled. A restoration
+hold freezes motion without invalidating complete visible solids as geometric
+cover. Each receiving entity retains its effective scanned-room policy, while
+local rain presentation uses the viewer/global policy. Opacity remains independent.
+The segment's endpoints and probe radius map into the validated uniform room frame
+before forming its dependency bounds, avoiding an inflated query after rotation.
+
+The rain view captures one synchronous saved-input snapshot per eligible visual
+tick and reuses it across its existing bounded samples. Liquid collection keeps
+its admitted upstream dependency preparation, then runs the same exact geometry
+query for its five aperture samples without rediscovering the saved world for
+each sample. Missing inputs keep the affected flow group waiting; recovery uses
+the current step without accumulating missed rain. Existing query saturation,
+quantity ownership and work-capacity rules remain in force. This is not a
+measured headset frame-time claim.
+
+Ten focused native regressions and controls cover saved-roof retirement/restoration,
+unknown imported bounds, distant known geometry, world-frame transforms,
+per-entity scan policy, disabled or stale native geometry, collection recovery
+and bounded rain presentation. Nine fail semantically against the preceding
+runtime; the independent distant-geometry control passes there.
+
+Verification passed 1,677 EditMode cases and 370 distinct selected PlayMode cases
+across the initial and supplemental runs. The initial 369-case run found two
+failures: an invalid test shape ID and the overly broad transformed query. After
+fixing both, all 23 weather cases passed, including the additional stale-import
+case. Native compilation, catalog export and clean Editor exits are retained.
+Seven fresh liquid captures preserve their existing semantic results, quantities,
+capacities and work counters; committed fixtures stay unchanged because their
+only differences are generated IDs and scheduling/sample frames.
+
+The web run passed 1,901 of 1,902 room/Quest tests, with one existing visual-editor
+case exceeding its 10-second limit under concurrent load. The unchanged editor
+file then passed all 39 cases in isolation; the affected case took 7.22 seconds.
+No assertion or timeout was relaxed. Application TypeScript and the shared
+catalog/ten-guide provenance checks passed. The actual-Unity Book journey
+`a6655d00` passed 2,258 requests and 6,648 observations with zero browser errors
+and reload without replay; providers/media were explicitly scripted offline.
+
+The initial Headless journey `9294cc7c` remains failed after 2,729 observations.
+The second shore leg completed, then its next passive live-position read was
+unavailable. Completion releases movement ownership and the fixed actor was
+outside the probe view, so ordinary retirement is strongly supported by the
+source and receipt sequence; final presence was not captured to prove it directly.
+The fixture now establishes ordinary viewer demand by turning toward the shore,
+preserves the live-position assertion, and restores the original view afterward.
+Unavailable facts also capture bounded passive presence diagnostics without
+loading or retrying. Native lifetime rules are unchanged. The fresh full Headless
+run `dd0e420f` passed 2,851 observations and 2,850 read sets, including both shore
+legs, following, strict post-completion positions and verified viewpoint restoration.
+Both integration clients and Editors exited cleanly. All 3,588 native inputs stayed
+unchanged across the final runs; the headless-only fixture change does not affect
+the completed Book run. No real provider or new Android package result is claimed.
+
+Device and paid-provider testing, signing, deployments and Meta changes remain
+on hold. Physical weather appearance/performance, broader water simulation and
+the existing audio and Store release gates remain unfinished.

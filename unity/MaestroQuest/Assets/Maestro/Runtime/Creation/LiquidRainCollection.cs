@@ -31,7 +31,7 @@ namespace Maestro.Quest.Creation
                 for(int sample=0;sample<5;sample++){
                     flowExecutionWork.RainSamples++;
                     var point=RainOpeningPoint(v,sample);
-                    var exposure=rainCover.Exposure(editor,point,velocity,v.Item);
+                    var exposure=rainCover.ExposureWithPreparedInputs(editor,point,velocity,v.Item);
                     if(exposure==RainExposure.Open)open++;else if(exposure==RainExposure.Unknown)unknown++;
                 }
                 v.Exposure=open/5f;

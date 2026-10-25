@@ -35,14 +35,16 @@ namespace Maestro.Quest.Art
             int count=Mathf.Clamp(Mathf.CeilToInt(weather.Rain/120*MaximumDrops),1,MaximumDrops);
             var velocity=WeatherCover.Velocity(editor);var centre=observer.position;var up=frame.DirectionToWorld(Vector3.up);var right=frame.DirectionToWorld(Vector3.right);var forward=frame.DirectionToWorld(Vector3.forward);
             Physics.SyncTransforms();
+            // One coherent saved-input snapshot for all bounded samples in this tick.
+            var spatial=editor.CaptureMovementCandidates(false);
             for(int n=0;n<QueriesPerTick;n++){
                 int i=cursor%count;cursor=(i+1)%count;
                 if(!alive[i]||now-sampled[i]>.4f||Vector3.Distance(positions[i],centre)>8){
                     positions[i]=centre+right*((Next()-.5f)*8)+forward*((Next()-.5f)*8)+up*(2+Next()*3);sampled[i]=now;
-                    alive[i]=cover.Exposure(editor,positions[i],velocity)==RainExposure.Open;
+                    alive[i]=cover.Exposure(editor,positions[i],velocity,spatial:spatial)==RainExposure.Open;
                 }else{
                     var end=positions[i]+velocity*Mathf.Clamp(now-sampled[i],0,.4f);
-                    alive[i]=Vector3.Dot(end-centre,up)>-3&&cover.Segment(editor,positions[i],end,real)==RainExposure.Open;
+                    alive[i]=Vector3.Dot(end-centre,up)>-3&&cover.Segment(editor,positions[i],end,real,spatial)==RainExposure.Open;
                     positions[i]=end;sampled[i]=now;
                 }
             }

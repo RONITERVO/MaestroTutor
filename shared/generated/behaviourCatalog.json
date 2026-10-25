@@ -47408,7 +47408,7 @@
         }
       },
       "label": "Rain exposure at a point",
-      "description": "Query upstream along the sampled wind/rain direction from an authored point, at most 100 physical metres. Accepted solid virtual objects and policy-enabled aligned scanned surfaces provide cover. target selects whose real-room participation applies; an empty target uses the global policy. Unknown means missing scan/alignment or saturated collision query, never an exposed surface. Rain intensity and physics pause do not change geometric exposure. Transparent solid roofs still block rain; visual opacity is independent. No unscanned physical geometry is inferred.",
+      "description": "Query upstream along the sampled wind/rain direction from an authored point, at most 100 physical metres. Accepted solid virtual objects and policy-enabled aligned scanned surfaces provide cover. target selects whose real-room participation applies; an empty target uses the global policy. Unknown means missing scan/alignment, unavailable required saved collision geometry, or saturated collision query, never an exposed surface. Saved bounds identify possible cover but cannot prove a solid roof. This passive read does not load objects; restore relevant geometry to resolve unknown exposure. Rain intensity and physics pause do not change geometric exposure. Transparent solid roofs still block rain; visual opacity is independent. No unscanned physical geometry is inferred.",
       "input": {
         "type": "object",
         "properties": {
@@ -49591,7 +49591,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Art/WorldRainView.cs",
-      "sha256": "8e0bb3048a3a7f21e4ac84b16f637c3c1dc8371aa466009913547fd8a6a075f3"
+      "sha256": "8a4588e710e3810133546f23187bc06d9f11703d2dcd24d1c454bd28b909963e"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/AssemblyInfo.cs",
@@ -50471,7 +50471,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/WorldWeatherCapability.cs",
-      "sha256": "11d4f08bfc2d698797cc51f7c74812c489c7973db8c1b0e035830d81bd7d8b5e"
+      "sha256": "efecf48bc8fc238c21587f2b258edac63dd6f53a30f045380de8b8e2c59c4445"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/AcceptedRoomPrimary.cs",
@@ -50687,7 +50687,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidFlowInputs.cs",
-      "sha256": "096bbb0681cf55712d18dd0fe1becb1553a6b77556f7f6e8e1ada2eb3a0c1eeb"
+      "sha256": "f347d45969de1dfec2c931077a84170f74afed350c5ffa507e1365a6c803b3e7"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidFlowPublication.cs",
@@ -50719,7 +50719,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidRainCollection.cs",
-      "sha256": "57ce2376edf02918ac56660b3bfe995bf30ec15effc2c38242512d10c19aaea8"
+      "sha256": "3b5d6ca82a7017671d3895e4047011697557baa15997d0c74e66199ce27e4a7d"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidResources.cs",
@@ -51395,7 +51395,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomSpatialReadiness.cs",
-      "sha256": "ad65440204902474ff4b387ac3c4b37931903ee3e37612097982ea930b623eba"
+      "sha256": "01eb024ea25939aa1eebb1970e9443b236785b268843bdc0313ad10117425aa9"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomStagingMaintenance.cs",
@@ -51579,7 +51579,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/WeatherCover.cs",
-      "sha256": "8d803b7dee834c73092eae33c07db7c17e2b52f58a0a325ba4c2701bced82602"
+      "sha256": "d3db8a369713b80e04c6f9a00e0870586ed0fbf9adbf3434529b39e1f915f42c"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/WindowResources.cs",

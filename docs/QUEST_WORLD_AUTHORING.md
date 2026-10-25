@@ -2606,6 +2606,42 @@ Rain collection dependency checks do not establish complete weather presentation
 or acoustic acceptance.
 
 
+## Saved-world rain cover
+
+`world.weather.exposure` and local rain presentation check the same upstream
+collision path as collection, up to 100 physical metres along the sampled rain
+direction. Once the world frame and any required aligned scan are ready, a
+validated native solid hit can establish `covered`. Without such a hit, relevant
+saved geometry must be available before the result can be `open`. A dormant roof, unavailable
+registered solid or unknown imported collision extent produces `unknown`, never
+an assumption of open sky. A known distant saved roof does not block an unrelated
+query. Missing scan/alignment or saturated collision queries also remain
+`unknown`. Conservative bounds and recovery barriers identify missing dependencies;
+they do not prove a solid surface.
+
+The native readiness check rejects disabled or inactive registered solids and
+imports whose model geometry is unavailable, even if an old collider is still
+enabled. A restoration hold alone does not invalidate otherwise complete solid
+geometry: exposure can still be inspected while motion is held or physics is
+paused. Transparent solid roofs continue to block rain. The target entity selects
+its effective real-room collision policy; the visual rain layer uses the global
+policy. Neither choice changes virtual collision completeness.
+
+These exposure reads are passive. They do not load a roof, alter saved state or
+start simulation; explicitly restoring relevant geometry resolves a missing-input
+result when that geometry can be made ready. The visual rain batch shares one
+fresh saved-input snapshot across its bounded samples. Quantity-changing rain
+collection instead uses its already admitted group preparation for all five
+aperture samples, then checks exact native cover without rediscovering the world
+per sample. Required missing geometry keeps that group waiting. A later ready
+step never collects rain for the skipped interval.
+
+The implementation adds no weather format, extra agent action or independent
+water inventory. Offline verification status is recorded in the
+[delivery checkpoint](QUEST_V1_PLAN.md#passive-saved-world-rain-cover--2026-10-25);
+physical headset appearance and performance remain separate acceptance gates.
+
+
 ## Fair liquid simulation opportunities (2026-10-16)
 
 The runtime keeps at most 64 liquid-work requests and grants at most 32 complete

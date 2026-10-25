@@ -13,6 +13,29 @@ namespace Maestro.Quest.Creation
     }
     public sealed partial class RoomEditor
     {
+        // Passive proof for collision consumers after broad-phase discovery.
+        // Residency/bounds alone do not prove that registered native shapes can
+        // currently answer PhysX queries. Never activate or retry on this path.
+        internal RoomSpatialReadiness SpatialCollisionReady(string[] targets,out string error)
+        {
+            var state=SpatialMovementReady(targets,null,out error);if(state!=RoomSpatialReadiness.Ready)return state;
+            foreach(var target in targets)if(!AuthoredCollisionReady(Find(target))){error="Required collision geometry is unavailable";return RoomSpatialReadiness.Unavailable;}
+            error=null;return RoomSpatialReadiness.Ready;
+        }
+        internal bool AuthoredCollisionReady(RoomItem item)
+        {
+            if(!item||!item.isActiveAndEnabled||!item.Grab)return false;
+            string id=Identity(item);
+            if(id!=null&&journal?.ImportedEntity(id)==true&&!ResidentGeometryReady(item,item.GetComponent<CreatedRoomObject>()))return false;
+            var rigid=item.GetComponent<RigidRoomItem>();if(rigid&&!rigid.GeometryReady)return false;
+            foreach(var collider in item.Grab.colliders){
+                if(!collider)return false;if(collider.isTrigger)continue;
+                int layer=collider.gameObject.layer;
+                if(!collider.enabled||!collider.gameObject.activeInHierarchy||layer!=RoomPhysicsLayers.Environment&&layer!=RoomPhysicsLayers.Item)return false;
+            }
+            // A restoration hold freezes movement, not complete visible solids.
+            return true;
+        }
         internal RoomSpatialReadiness SpatialMovementReady(string[] targets,Bounds? ground,out string error)
         {
             error="The movement workspace is unavailable";if(!this||!isActiveAndEnabled||journal==null)return RoomSpatialReadiness.Unavailable;
