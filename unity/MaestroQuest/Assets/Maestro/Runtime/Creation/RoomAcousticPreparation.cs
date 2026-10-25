@@ -48,7 +48,7 @@ namespace Maestro.Quest.Creation
         {
             var original=journal;var source=SpatialSource(data.Copy());
             bool Current()=>this&&DisplayReady&&owner&&ReferenceEquals(journal,original)&&dormantNative.TryGetValue(id,out var current)&&ReferenceEquals(current,entry)
-                &&(entry.Phase is NativeEntityPhase.Dormant or NativeEntityPhase.Failed)&&ObjectRevision(id)==revision
+                &&(NativePhase(id) is NativeEntityPhase.Dormant or NativeEntityPhase.Failed)&&ObjectRevision(id)==revision
                 &&!NativeContentPending(id);
             acousticCurrent=Current;
             void Check(){cancellation.ThrowIfCancellationRequested();if(!Current())throw new OperationCanceledException();}

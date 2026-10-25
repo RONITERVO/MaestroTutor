@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 using System.Linq;
 using Maestro.Quest.Interaction;
+using Newtonsoft.Json.Linq;
 using UnityEngine;
 namespace Maestro.Quest.Creation
 {
@@ -22,19 +23,48 @@ namespace Maestro.Quest.Creation
             foreach(var target in targets)if(!AuthoredCollisionReady(Find(target))){error="Required collision geometry is unavailable";return RoomSpatialReadiness.Unavailable;}
             error=null;return RoomSpatialReadiness.Ready;
         }
-        internal bool AuthoredCollisionReady(RoomItem item)
+        internal bool AuthoredCollisionReady(RoomItem item)=>AuthoredCollisionReadiness(item,out _)==RoomSpatialReadiness.Ready;
+        RoomSpatialReadiness AuthoredCollisionReadiness(RoomItem item,out string reason)
         {
-            if(!item||!item.isActiveAndEnabled||!item.Grab)return false;
+            reason="The native object is unavailable";
+            if(!item)return RoomSpatialReadiness.Unavailable;
+            reason="The native object is inactive";
+            if(!item.isActiveAndEnabled)return RoomSpatialReadiness.Unavailable;
+            reason="Registered collision geometry is unavailable";
+            if(!item.Grab)return RoomSpatialReadiness.Unavailable;
             string id=Identity(item);
-            if(id!=null&&journal?.ImportedEntity(id)==true&&!ResidentGeometryReady(item,item.GetComponent<CreatedRoomObject>()))return false;
-            var rigid=item.GetComponent<RigidRoomItem>();if(rigid&&!rigid.GeometryReady)return false;
-            foreach(var collider in item.Grab.colliders){
-                if(!collider)return false;if(collider.isTrigger)continue;
-                int layer=collider.gameObject.layer;
-                if(!collider.enabled||!collider.gameObject.activeInHierarchy||layer!=RoomPhysicsLayers.Environment&&layer!=RoomPhysicsLayers.Item)return false;
+            if(id!=null&&journal?.ImportedEntity(id)==true){
+                var model=item.GetComponent<CreatedRoomObject>();
+                if(!ResidentGeometryReady(item,model)){
+                    reason="Imported collision geometry is unavailable";
+                    if(!ResidentGeometryLost(id)&&model&&model.isActiveAndEnabled&&model.ModelLoading){
+                        reason="Preparing imported collision geometry";return RoomSpatialReadiness.Preparing;
+                    }
+                    return RoomSpatialReadiness.Unavailable;
+                }
             }
-            // A restoration hold freezes movement, not complete visible solids.
-            return true;
+            var rigid=item.GetComponent<RigidRoomItem>();
+            reason="Registered collision geometry is incomplete";
+            if(rigid&&!rigid.GeometryReady)return RoomSpatialReadiness.Unavailable;
+            foreach(var collider in item.Grab.colliders){
+                if(!collider)return RoomSpatialReadiness.Unavailable;if(collider.isTrigger)continue;
+                int layer=collider.gameObject.layer;
+                if(!collider.enabled||!collider.gameObject.activeInHierarchy||layer!=RoomPhysicsLayers.Environment&&layer!=RoomPhysicsLayers.Item)return RoomSpatialReadiness.Unavailable;
+            }
+            // An accepted empty solid set is complete. A restoration hold or
+            // paused physics freezes movement, not complete query geometry.
+            reason="";return RoomSpatialReadiness.Ready;
+        }
+        internal JObject ObserveCollisionAvailability(string target)
+        {
+            if(!this||!isActiveAndEnabled||journal==null||!HasSavedObject(target))return null;
+            RoomSpatialReadiness state;string reason;
+            if(NativeEntityDormant(target)){
+                bool pending=NativeContentPending(target);
+                state=pending?RoomSpatialReadiness.Preparing:RoomSpatialReadiness.Unavailable;
+                reason=pending?"Native object loading is requested":"The saved object is not loaded";
+            }else state=AuthoredCollisionReadiness(Find(target),out reason);
+            return new JObject{["target"]=target,["state"]=state==RoomSpatialReadiness.Ready?"ready":state==RoomSpatialReadiness.Preparing?"pending":"unavailable",["reason"]=reason};
         }
         internal RoomSpatialReadiness SpatialMovementReady(string[] targets,Bounds? ground,out string error)
         {

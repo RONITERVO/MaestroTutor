@@ -16,13 +16,21 @@ namespace Maestro.Quest.Tests
 {
     public sealed partial class RoomEditorTests
     {
-        IEnumerator ReloadForStartup(RoomDocument saved=null,RoomRuntimeGate gate=null,bool suspend=false,bool observe=true)
+        IEnumerator ReloadForStartup(RoomDocument saved=null,RoomRuntimeGate gate=null,bool suspend=false,bool observe=true,bool scannedFloor=false)
         {
             Assert.That(editor.TryFlush(out var error),Is.True,error);
             if(saved!=null){var writer=new RoomStorage(directory);Assert.That(writer.Load(out _),Is.Not.Null);Assert.That(writer.Save(saved,out error),Is.True,error);}
             UnityEngine.Object.Destroy(root);yield return null;
             root=new GameObject("Reloaded startup");root.AddComponent<XRInteractionManager>();room=root.AddComponent<RoomInteraction>();
             var book=Included("book");var avatar=Included("maestro");physics=root.AddComponent<RoomPhysicsWorld>();
+            if(scannedFloor){
+                // Explicit accepted test geometry, installed before startup may
+                // publish an actor. Other cases retain their no-scan precondition.
+                var floor=new GameObject("Synthetic aligned startup floor");floor.transform.SetParent(root.transform,false);floor.layer=RoomPhysicsLayers.Scanned;
+                var shape=floor.AddComponent<BoxCollider>();shape.center=new Vector3(0,-.05f,0);shape.size=new Vector3(10,.1f,10);
+                physics.Contains=point=>Mathf.Abs(point.x)<=5&&Mathf.Abs(point.z)<=5&&point.y>=0&&point.y<=5;
+                Physics.SyncTransforms();physics.SetSurfaces(true,"Synthetic aligned startup floor");
+            }
             editor=root.AddComponent<RoomEditor>();editor.Initialize(room,book,avatar,directory,physics,gate);if(observe)StartupCamera(wide:true);if(suspend)editor.SendMessage("OnApplicationFocus",false);
         }
         IEnumerator StartupFinished()
@@ -135,8 +143,12 @@ namespace Maestro.Quest.Tests
         {
             var recipe=RecipeTemplates.BoxRobot(true);
             Assert.That(editor.CreateRecipe("Startup robot",new Vector3(2,1,3),.6f,recipe,out var id,out var error),Is.True,error);
-            yield return ReloadForStartup();yield return StartupFinished();var value=editor.Find(id).GetComponent<RecipeObject>();
-            Assert.That(value.IsPlaying,Is.True);string part=editor.Read(id).recipe.tracks[0].part;var before=value.Part(part).localRotation;
+            yield return ReloadForStartup(scannedFloor:true);yield return StartupFinished();var value=editor.Find(id).GetComponent<RecipeObject>();
+            var restoration=value.GetComponent<RoomEnvironmentBinding>();var savedRecipe=editor.Read(id).recipe;
+            Assert.That(physics.SurfacesReady,Is.True);Assert.That(physics.IncludesRealRoom(editor.Find(id)),Is.True);
+            Assert.That(restoration,Is.Not.Null);Assert.That(restoration.RestorationHeld,Is.False,restoration.RestorationReason);
+            Assert.That(value.IsPlaying,Is.True,$"Startup autoplay: restorationHeld={restoration?.RestorationHeld}, restorationReason={restoration?.RestorationReason}, scanReady={physics.SurfacesReady}, realCollisions={physics.RealCollisions}, runtimeHeld={editor.RuntimeGate.Held}, savedPlaying={savedRecipe.playing}, savedLoop={savedRecipe.loop}, savedTracks={savedRecipe.tracks.Length}");
+            string part=savedRecipe.tracks[0].part;var before=value.Part(part).localRotation;
             yield return new WaitForSeconds(.4f);Assert.That(Quaternion.Angle(before,value.Part(part).localRotation),Is.GreaterThan(1));Assert.That(editor.Find(id).transform.localPosition,Is.EqualTo(new Vector3(2,1,3)));
         }
         [UnityTest] public IEnumerator NativeStartupFailedAreaDoesNotBlockOtherAreasOrRetryWithoutRequest()

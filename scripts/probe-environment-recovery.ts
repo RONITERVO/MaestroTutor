@@ -4,6 +4,7 @@ import assert from 'node:assert/strict';
 import {readFile,writeFile} from 'node:fs/promises';
 import {join} from 'node:path';
 import {capabilityDefinition} from '../shared/capabilities';
+import {validFactValue} from '../shared/behaviourFacts';
 import type {RoomAgentState} from '../src/core-sdk/room/roomAgent';
 import {assertSamePlacementValues} from './native-probe-contract';
 
@@ -36,6 +37,27 @@ export async function probeEnvironmentRecovery(driver:RecoveryDriver,directory:s
  for(const point of [obstructed,clear])assert.ok(Math.abs(point.x)<9&&Math.abs(point.z)<9,'Placement must stay inside the declared 20 m synthetic floor');
  const created=await invoke('object.create',{...capabilityDefinition('object.create')!.example!,name:'Restoration recovery proof',...obstructed,scale:1});
  const target=String(created.output!.objectId);
+ const collisionAvailability:Record<string,unknown>[]=[];evidence.collisionAvailability=collisionAvailability;
+ const checkCollisionAvailability=async(phase:string,expected:'ready'|'unavailable',expectedHold:boolean|null)=>{
+  const snapshot=async()=>{
+   const recovery=await driver.fact('object.environment.recovery',{target});
+   return {definition:await fact('object.definition',{target}),presence:await fact('object.presence',{target}),
+    recovery:{available:recovery.available,value:recovery.value??null},running:(await fact('physics.simulation')).running};
+  };
+  const before=await snapshot();
+  if(expectedHold===null)assert.equal(before.recovery.available,false,'Dormant recovery must remain unavailable');
+  else {assert.equal(before.recovery.available,true);assert.equal((before.recovery.value as Record<string,unknown>).held,expectedHold);}
+  const value=await fact('object.collision.availability',{target});
+  assert.ok(validFactValue('object.collision.availability',value),'Collision availability did not match its shared value contract');
+  assert.equal(value.target,target);assert.equal(value.state,expected,JSON.stringify(value));
+  assert.equal(typeof value.reason,'string');
+  if(expected==='ready')assert.equal(value.reason,'');else assert.ok((value.reason as string).length>0);
+  const after=await snapshot();
+  assert.deepEqual(after,before,'Passive collision availability changed saved content, native presence, restoration hold or physics intent');
+  assert.equal(after.running,false,'Passive collision availability enabled physics');
+  if(expectedHold===null)assert.equal(after.presence.nativeInstance,false,'Passive collision availability loaded the dormant object');
+  collisionAvailability.push({phase,before,value,after});
+ };
  const area=await invoke('world.region.save',{id:'',revision:0,name:'Recovery proof area',members:[],loading:'independent'}),areaId=String(area.output!.id);
  await invoke('object.region.assign',{target,revision:(await fact('object.region',{target})).revision,regionId:areaId,regionRevision:area.output!.revision});
  const definition=await fact('object.definition',{target});
@@ -45,6 +67,7 @@ export async function probeEnvironmentRecovery(driver:RecoveryDriver,directory:s
  const unavailable=await driver.fact('object.environment.recovery',{target});assert.equal(unavailable.available,false);
  assert.equal((await fact('object.presence',{target})).nativeInstance,false,'Passive recovery inspection loaded an object');
  assert.deepEqual(await fact('object.definition',{target}),definition,'Retirement or passive reads changed saved content');
+ await checkCollisionAvailability('dormant','unavailable',null);
  Object.assign(evidence,{target,areaId,initialCount,environment,simulation,obstructed,clear,dormant,unavailable});await checkpoint('dormant');
 
  // Edit canonical collision membership while ordinary area retention keeps the
@@ -118,6 +141,7 @@ export async function probeEnvironmentRecovery(driver:RecoveryDriver,directory:s
  while(!presence.active&&Date.now()<restoreDeadline){await new Promise(r=>setTimeout(r,200));presence=await fact('object.presence',{target});}
  assert.equal(presence.active,true,JSON.stringify(presence));Object.assign(evidence,{anchor,coupled,presence});
  const held=await fact('object.environment.recovery',{target});assert.equal(held.held,true);assert.ok(held.reason);
+ await checkCollisionAvailability('restored-held','ready',true);
  const placement=await fact('object.placement',{target});
  assert.deepEqual(await fact('object.environment.recovery',{target}),held,'Passive inspection retried the hold');
  const args=(value:Record<string,unknown>)=>({target,revision:value.revision,stateId:value.stateId});
@@ -136,6 +160,7 @@ export async function probeEnvironmentRecovery(driver:RecoveryDriver,directory:s
  assert.equal(recovered.output!.held,false,JSON.stringify(recovered));assert.equal(recovered.output!.reason,'');assert.equal(recovered.output!.revision,moved.revision);
  const after=await fact('object.placement',{target});assertSamePlacementValues(before,after,'Recovery moved the saved pose');
  assert.deepEqual(await fact('object.environment.recovery',{target}),recovered.output);
+ await checkCollisionAvailability('repaired','ready',false);
  const alreadyClear=await invoke('object.environment.recheck',args(recovered.output!));assert.deepEqual(alreadyClear.output,recovered.output,'Already-clear check changed recovery state');
  let replay:RecoveryReceipt|undefined;
  if(driver.replay){replay=await driver.replay(recovered);assert.equal(replay.id,recovered.id);assert.deepEqual(replay.output,recovered.output);assert.deepEqual(await fact('object.environment.recovery',{target}),recovered.output,'Duplicate receipt performed another recovery');}

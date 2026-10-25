@@ -5,6 +5,7 @@ Status: active implementation. Nothing in this document claims store readiness.
 Start with the [accepted product scope](#accepted-product-scope) and
 [release evidence checklist](#release-evidence-still-required) and the latest
 [complete integration checkpoint](#complete-native-book-and-android-integration-2026-10-24). The current
+[collision availability checkpoint](#shared-passive-collision-availability--2026-10-25) adds explicit user/program/agent inspection. The preceding
 [saved-world rain checkpoint](#passive-saved-world-rain-cover--2026-10-25) extends exposure readiness;
 its native, rendered Book and headless checks are recorded below. The preceding
 [outlet and recovery checkpoint](#liquid-outlet-clearance-and-live-recovery-holds--2026-10-25) hardens the
@@ -17180,3 +17181,72 @@ the completed Book run. No real provider or new Android package result is claime
 Device and paid-provider testing, signing, deployments and Meta changes remain
 on hold. Physical weather appearance/performance, broader water simulation and
 the existing audio and Store release gates remain unfinished.
+
+
+## Shared passive collision availability — 2026-10-25
+
+`object.collision.availability` now exposes one target's native query-geometry
+state through the shared fact catalog. The generated Book editor and typed
+program values use the same target/state/reason record as the agent. No bespoke
+control, new action, storage version or duplicate client readiness logic is added.
+Existing collision recipes, model data and object-presence facts retain their
+original meanings.
+
+Ready uses the same authority as rain cover and liquid flow. It includes a
+complete empty solid set and therefore does not prove a physical obstacle,
+support, clearance, navigation, active simulation or real-room participation.
+Pending requires target-specific existing demand or initial imported preparation;
+saved dormant content alone is unavailable. Partial/disabled colliders and lost
+imported geometry cannot be ready because some stale shapes survive. Restoration
+holds and physics pause do not invalidate complete query geometry. Missing saved
+IDs and paused/unfocused app runtime make the outer shared fact unavailable.
+
+Inspection cannot load, retry, resume physics, acquire ownership, publish guards
+or edit saved content. Derived source caches may still refresh. Native lifetime
+reads now return the effective phase without advancing stored lifecycle state;
+the cold acoustic preparation check uses that same effective phase. Review caught
+and corrected its former dependence on a status getter mutating the stored phase.
+
+Native verification passed 1,677 EditMode cases and 747 distinct selected
+PlayMode cases after targeted corrections. Eight new cases cover complete,
+incomplete and empty collision sets, inactive owners, dormant versus explicitly
+queued loading, cancellation/reactivation, stale imported geometry, built-in
+registration, restoration/physics holds and outer fact unavailability. The
+existing cold acoustic rebuild regression also passed.
+
+The initial 747-case runtime run had two failures. The new pending test assumed
+one small activation must yield; its corrected 13-object group necessarily
+crosses the four-step frame budget while retaining strict pending/cancellation/
+ready assertions. The unchanged startup-autoplay test failed again in isolation
+with explicit diagnostics: real-room participation was enabled, scanReady was
+false and restoration stopped the recipe because accepted ground was unavailable.
+That fixture now opts into a real synthetic scanned-floor collider and bounded
+accepted space before startup loading, then asserts real-room participation,
+cleared hold, animation movement and preserved placement. Other startup cases
+keep their original no-scan setup. All 11 startup cases passed. Production source
+was unchanged throughout these follow-ups; initial failures remain in evidence.
+
+The shared client checks passed 132 cases in four files, including all seven new
+contract/program cases. Application and probe TypeScript, native export equality,
+catalog source provenance and all ten shared guides passed. Actual Unity Book
+`1d6adce0` passed 2,386 requests and 6,969 observations with zero browser errors
+and reload without replay. Headless `c751d11d` passed 2,875 observations and
+2,874 read sets. Both execute the actual Unity app and shared protocol with
+explicitly scripted offline providers/media. Both clients verified dormant,
+restored-held and repaired collision states with unchanged saved definitions,
+presence, restoration holds and paused physics, then completed cleanup. Client,
+Editor and wrapper exits were clean. All 3,590 native inputs stayed unchanged
+through final integration. Evidence is under
+`.quest-evidence/collision-availability-20261025/`. Device/provider acceptance,
+Android packaging, signing, deployment and Store submission are not claimed by
+this desktop increment. The complete release checklist remains open.
+
+Source review identified the next collision gap: built-in pointer targets share
+the grab-collider list with actual solids. The book's page, bookmark and notice
+targets can conservatively make this new fact unavailable even though the cover
+is a usable solid. They can also enter liquid queries using broad masks, while
+exact weather contact currently assumes the workspace owns its target by
+ancestry; shared built-ins are siblings. A follow-up must give solid and pointer
+geometry explicit shared roles, preserve pointer/grab behavior, recognize only
+the current workspace's built-in identities and test exact cover/flow outcomes.
+This increment does not change those physical or pointer semantics.

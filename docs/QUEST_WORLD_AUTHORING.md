@@ -3616,3 +3616,31 @@ Older hosts retain 32,768 characters, with a clear local refusal before queuing 
 oversized request. This carries every member revision without weakening stale
 edit protection. Capability arguments, authored programs and the 32,768-character
 media-enriched frame budget retain their smaller bounds.
+
+
+### Inspecting native collision availability
+
+The shared `object.collision.availability` fact reports `ready`, `pending` or
+`unavailable` for one exact saved object. The generated Book controls, agent and
+program values read the same fact. Branch on `state`; `reason` is bounded
+explanatory text, empty when ready. A missing saved ID makes the outer fact
+unavailable; `object.presence` distinguishes that from a saved dormant object.
+
+Ready means the registered native query geometry is complete and usable by the
+same authority as rain cover and liquid flow. A deliberately empty solid set can
+be ready. This is not proof of an obstacle, floor support, clearance, a navigable
+path, water, active simulation or real-room collision participation. Use the
+specific physics, movement and environment facts for those questions. Built-in
+objects obey the same checks as creations.
+
+Pending requires current demand for this target's native load or initial imported
+geometry preparation. A dormant object does not become pending just because it
+could be loaded. Disabled, incomplete or lost geometry stays unavailable even
+when stale colliders remain. Physics pause, motion ownership and restoration
+holds do not alone invalidate usable query geometry. The outer shared fact is
+unavailable while the app runtime is paused or unfocused.
+
+Reading does not load, retry, resume physics, acquire ownership, publish collision
+guards or change saved content. The result is a momentary observation, not an edit
+revision or permission to act. Existing saved collision recipes and imported-model
+facts retain their narrower meanings.

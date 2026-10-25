@@ -40,8 +40,9 @@ namespace Maestro.Quest.Creation
         internal NativeEntityPhase NativePhase(string target)
         {
             if(!dormantNative.TryGetValue(target,out var entry))return NativeEntityPhase.Resident;
-            if(entry.Phase==NativeEntityPhase.Retiring&&!entry.RetiringRoot)entry.Phase=NativeEntityPhase.Dormant;
-            return entry.Phase;
+            // Reading effective lifetime must not advance native state. Unity can
+            // finish destroying the retired root between lifecycle ticks.
+            return entry.Phase==NativeEntityPhase.Retiring&&!entry.RetiringRoot?NativeEntityPhase.Dormant:entry.Phase;
         }
         internal string NativeActivationError(string target)=>dormantNative.TryGetValue(target,out var entry)?entry.Error:null;
         void SynchronizeNativeResidency(HashSet<string> saved)

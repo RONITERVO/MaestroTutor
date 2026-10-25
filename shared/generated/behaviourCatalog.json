@@ -43606,6 +43606,40 @@
       ]
     },
     {
+      "id": "object.collision.availability",
+      "version": 1,
+      "type": {
+        "record": {
+          "target": "text",
+          "state": "text",
+          "reason": "text"
+        }
+      },
+      "label": "Collision geometry availability",
+      "description": "Passively inspect one saved object's registered native collision-query geometry, using the same readiness authority as rain cover and liquid flow. state=ready means the complete registered set is usable, including a deliberately empty solid set; it does not prove an obstacle, floor support, clearance, navigation, water, active simulation or the object's real-room collision policy. pending means this target has a current native load request or is initially preparing imported geometry; merely saved/loadable dormant objects are unavailable. Disabled, incomplete or lost imported geometry is unavailable even if stale colliders survive. reason is empty when ready and bounded explanatory text otherwise; programs should branch on state, not reason. Physics pause, motion ownership and restoration holds do not alone invalidate query geometry. Built-ins obey the same registered-geometry checks. Missing saved targets and paused/unfocused app runtime make the outer fact unavailable. This snapshot grants no action authority and never loads, retries, changes saves, acquires ownership, publishes collision guards or starts physics. Read object.collision for saved proxies, object.presence for existence and object.environment.settings for real-room policy.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^(maestro|book|[a-fA-F0-9]{32})$",
+            "maxLength": 32,
+            "x-resource": "object"
+          }
+        },
+        "required": [
+          "target"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "target": "book"
+      },
+      "features": [
+        "factQueries.v1"
+      ]
+    },
+    {
       "id": "object.recipe.pose",
       "version": 2,
       "type": {
@@ -49955,7 +49989,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CollisionCapability.cs",
-      "sha256": "b37dc5f1f81c301f77e42baf958a2e60f25284896672ee6db671b19e4a3c7a07"
+      "sha256": "ca912b43acc6680d999cb5b717469e0e7f60103de29cec150878822713383ebb"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ConnectionCapability.cs",
@@ -50895,7 +50929,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomAcousticPreparation.cs",
-      "sha256": "165720136bf64a5a53096a3c1dd55fcfbf99cccc3c25830ad1435703d2ecee03"
+      "sha256": "e9c35815f1c5846208f859395661d643a7a24a049e4a221b4e12eae304941d19"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomAgent.cs",
@@ -51219,7 +51253,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomNativeResidency.cs",
-      "sha256": "915af1c76d070e6f05915702fc807a0200ce875243ea0edc753c4bb561b58a16"
+      "sha256": "012addc1d4021db7ab69b37ebeeaf2b00eb2094fc6f9e558674ba51b8308d21f"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomNativeRestoration.cs",
@@ -51395,7 +51429,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomSpatialReadiness.cs",
-      "sha256": "01eb024ea25939aa1eebb1970e9443b236785b268843bdc0313ad10117425aa9"
+      "sha256": "4f713483402a1541ad8b6fc6a706a5fcc5823f0bc9003946e87291bcdbaff1f6"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomStagingMaintenance.cs",
@@ -52371,7 +52405,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "722e796d77cce7a5ff1a60abf447bc229f921ef7fde260ff9ae6e0fc756ab944"
+      "sha256": "7d42c73fe0fc2ca5a35c85826dff9faf30a0534a54caa9ce2e4c70d841748283"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourProgram.cs",
