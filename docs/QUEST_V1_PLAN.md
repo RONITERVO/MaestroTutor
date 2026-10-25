@@ -17292,7 +17292,7 @@ a later configure/export required the normal catalog provenance refresh. The
 frozen focused runtime then passed all 43 selected PlayMode cases. Broader
 verification passed all 1,696 EditMode tests and 1,025 distinct selected PlayMode
 cases after the targeted corrections below. The unchanged strict packing test
-passes. Shared web coverage passed 151 cases across eleven suites, including
+passes. Shared web coverage passed 190 cases across twelve suites, including
 fresh native flow fixtures and continuing-competing-demand evidence. Application
 and probe types, catalog provenance/export and ten-guide equality passed.
 The rendered Book journey `c9bc04cb` passed 2,400 requests and 7,076 observations,
@@ -17341,3 +17341,12 @@ geometry, choose first contact before checking solid cover and missing geometry,
 and drive existing bounded ripples without changing quantities, save revisions
 or gameplay contacts. This remains planned, not verified behavior; a fixed-seed
 actual rain-mesh regression comes first.
+
+
+The first pushed release gate passed 3,315 of 3,316 web tests; the synchronous
+state/signal author-and-rename journey completed in 11.06 seconds against its
+10-second deadline. Local evidence measured 8.77 seconds before the change and
+8.39 seconds afterward. Only that 57-interaction test now has a 20-second deadline;
+all visual actions/assertions, product code and global defaults are unchanged.
+Its complete 39-case file passed. Native echo regression CI passed on `4e5cddd8`;
+this does not close the recorded audio-quality release gate.
