@@ -3679,3 +3679,27 @@ capacity is rejected, including a difference of one binary step; it is never
 silently clamped. Authoring an amount remains an explicit edit, separate from
 simulation or a measured transfer. These guarantees concern carried contents,
 not mass, granular physics or the visual volume of a shape.
+
+
+### Rain meeting finite water
+
+Local rain uses the same measured cavity and terrain geometry as the water
+surface. A visible drop stops at its first water entry. Entry from above adds a
+ripple through the existing surface renderer; an underwater spawn or entry
+through a submerged side disappears without an invented splash. Wind, tilted
+workspaces and uniform scale are evaluated in world coordinates, with the water
+plane perpendicular to gravity. Dry terrain inside a reservoir's bounds remains
+dry. Water above the local spawn area also prevents rain appearing beneath it.
+
+Solid cover and unavailable saved geometry are checked only as far as the first
+water contact. A lid prevents a ripple; the basin floor below water does not.
+Relevant incomplete water suppresses the sample until complete geometry is
+available, without loading it. Global real-room participation still governs
+local rain presentation; a recipient's collection policy remains separate.
+
+Presentation does not enable physics, change measured quantities, save, publish
+gameplay contacts or acquire ownership. Physical rain collection retains its
+existing admitted simulation path. The visual budget remains 64 streaks, 16
+sampled slots per 50 ms and eight live ripples per surface. Surface captures are
+synchronous and reused within that tick. This is bounded visual behavior, not a
+new fluid simulation or measured Quest performance guarantee.

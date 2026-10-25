@@ -20,9 +20,10 @@ namespace Maestro.Quest.Creation {
             foreach(var data in document.objects){var item=editor.Find(data.id);if(!item||data.IsBuiltIn)continue;var rigid=item.GetComponent<RigidRoomItem>();var body=item.GetComponent<Rigidbody>();if(rigid&&body)mediumBodies[data.id]=new(){Id=data.id,Item=item,Rigid=rigid,Body=body};}
         }
         internal void CaptureMedia(bool requireReadyGeometry=true){
-            mediaCount=0;CaptureMissingMedia();var gravity=Physics.gravity;if(!float.IsFinite(gravity.sqrMagnitude)||gravity.sqrMagnitude<.01f){if(vessels.Count>0)mediumQueryIssue="Liquid queries need a known gravity direction";return;}var up=-gravity.normalized;
+            surfaceContactsCaptured=false;mediaCount=0;CaptureMissingMedia(requireReadyGeometry);if(mediumQueryIssue!=null)return;
+            var gravity=Physics.gravity;if(!float.IsFinite(gravity.sqrMagnitude)||gravity.sqrMagnitude<.01f){if(vessels.Count>0)mediumQueryIssue="Liquid queries need a known gravity direction";return;}var up=-gravity.normalized;
             foreach(var v in vessels.Values){
-                if(!v.Item||!v.Item.isActiveAndEnabled||v.Item.GetComponent<ContainerFillView>()?.NativeReady!=true||!v.Rigid||requireReadyGeometry&&!v.Rigid.GeometryReady||v.Live.amountMl<=0||v.Live.TerrainFloor&&RoomTerrainReservoir.Native(v.Live,v.Item.transform)==null)continue;
+                if(v.Live.amountMl<=0||!NativeMediumReady(v,v.Item,requireReadyGeometry))continue;
                 // The array covers the independent global admission maximum. If an
                 // invariant is violated, no consumer may interpret a prefix as all water.
                 if(mediaCount==media.Length){mediaCount=0;mediumQueryIssue="Live liquid capacity is inconsistent; inspect the native liquid owners before moving";return;}

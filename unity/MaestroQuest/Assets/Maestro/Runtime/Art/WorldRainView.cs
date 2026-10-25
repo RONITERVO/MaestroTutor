@@ -37,14 +37,27 @@ namespace Maestro.Quest.Art
             Physics.SyncTransforms();
             // One coherent saved-input snapshot for all bounded samples in this tick.
             var spatial=editor.CaptureMovementCandidates(false);
+            var liquids=editor.Liquids;if(!liquids){Hide();return;}liquids.CaptureSurfaceContacts();
             for(int n=0;n<QueriesPerTick;n++){
                 int i=cursor%count;cursor=(i+1)%count;
                 if(!alive[i]||now-sampled[i]>.4f||Vector3.Distance(positions[i],centre)>8){
                     positions[i]=centre+right*((Next()-.5f)*8)+forward*((Next()-.5f)*8)+up*(2+Next()*3);sampled[i]=now;
-                    alive[i]=cover.Exposure(editor,positions[i],velocity,spatial:spatial)==RainExposure.Open;
+                    // Do not spawn below or inside finite water. Check the same
+                    // upstream path as solid cover without inventing an entry ripple.
+                    var upstream=positions[i]-velocity.normalized*WeatherCover.Distance;
+                    alive[i]=liquids.QuerySurfaceContact(upstream,positions[i]).State==LiquidSurfaceState.Clear&&
+                        cover.Exposure(editor,positions[i],velocity,spatial:spatial)==RainExposure.Open;
                 }else{
                     var end=positions[i]+velocity*Mathf.Clamp(now-sampled[i],0,.4f);
-                    alive[i]=Vector3.Dot(end-centre,up)>-3&&cover.Segment(editor,positions[i],end,real,spatial)==RainExposure.Open;
+                    var contact=liquids.QuerySurfaceContact(positions[i],end);
+                    // Prove only the path before the first water contact. A basin's
+                    // floor below it must not hide an otherwise visible water impact.
+                    var stop=contact.State==LiquidSurfaceState.Surface?contact.Point:end;
+                    bool open=(contact.State==LiquidSurfaceState.Clear||contact.State==LiquidSurfaceState.Surface)&&
+                        Vector3.Dot(stop-centre,up)>-3&&cover.Segment(editor,positions[i],stop,real,spatial)==RainExposure.Open;
+                    if(open&&contact.State==LiquidSurfaceState.Surface)
+                        contact.Medium.Item.GetComponent<ContainerFillView>().AddRipple(contact.Point,velocity.magnitude);
+                    alive[i]=open&&contact.State==LiquidSurfaceState.Clear;
                     positions[i]=end;sampled[i]=now;
                 }
             }

@@ -17350,3 +17350,64 @@ state/signal author-and-rename journey completed in 11.06 seconds against its
 all visual actions/assertions, product code and global defaults are unchanged.
 Its complete 39-case file passed. Native echo regression CI passed on `4e5cddd8`;
 this does not close the recorded audio-quality release gate.
+
+
+## Rain meeting measured water — 2026-10-25
+
+Local rain now captures the existing measured water inventory once per eligible
+visual tick and chooses its first finite contact in world coordinates. Descending
+entry reaches the same gravity-aligned free plane as the actual surface mesh and
+adds a bounded renderer ripple. An origin already wet, an underwater side entry,
+or a complete wind-driven pass through a small cavity suppresses the streak
+without inventing a free-surface impact. Upstream water prevents local spawning
+beneath a suspended pool even when no solid collider acts as a roof.
+
+Ordinary cavities use exact rectangle/circle intervals; terrain uses the accepted
+bed triangles and a clipped cell range. Normal descending hits use the finite
+surface fast path. Side-entry fallback is bounded by 512 triangles per terrain
+reservoir, with four terrain reservoirs and sixteen sampled streaks per tick.
+The existing body sweep and contact crossing contracts are unchanged. Closest
+contact wins, then smaller cavity volume and stable identity for exact ties.
+
+Ready and missing liquid captures share a predicate, fixing the case where
+incomplete registered geometry could disappear from both lists. Unknown water
+or solids only before the chosen contact suppress the sample. A solid lid cannot
+create a splash, and a basin floor below the free surface cannot hide one.
+Synchronous captures cannot be reused after another medium/missing capture.
+Existing false-mode physics/fact consumers retain their known-versus-active
+distinction. Visual checks never enable physics, activate native content, change
+quantities, save, acquire ownership or publish gameplay contacts.
+
+The visual limits remain 64 fixed-mesh streaks, sixteen sampled slots per 50 ms,
+at most two existing PhysX cover queries per slot and eight ripples per surface.
+The global real-room presentation policy remains separate from per-recipient
+physical rain collection. No schema, capability, transport or inventory is added.
+
+The frozen original runtime reproduced 544 submerged streak-head observations
+and zero ripples; state, quantity, saved bytes and native-presence assertions
+passed. The first fixture needed a bundled-NUnit assertion syntax correction.
+Focused verification passed 35/37; two fixtures then required setup corrections
+(a position outside the accepted room bounds and an empty recipe retaining the
+primitive's default collider). Their behavior assertions were retained. The
+complete-empty native registration fixture is the existing collision-readiness
+fixture, not a new promise that an empty collision recipe removes defaults.
+
+Final verification passed all 1,696 EditMode and 552 selected PlayMode cases,
+including sixteen new actual-render/contact regressions. Shared web/catalog
+coverage passed 281 cases across five files; native catalog export/equality,
+source provenance and ten-guide equality passed. The catalog changes only source
+provenance, not capability schemas. Editor and wrapper exits passed; all 3,612
+native inputs stayed unchanged through the final run and fourteen unrelated
+files remained byte-identical.
+
+Evidence is under `.quest-evidence/rain-water-20261025/`; all failed reports are
+retained. These checks establish desktop Unity behavior, not Quest appearance,
+frame time or physical/provider acceptance. Existing device/provider, signing,
+deployment and Meta holds remain; the release and audio-quality gates stay open.
+
+The next source-grounded visual target is an admitted poured stream meeting the
+receiver's measured surface, rather than disappearing at its rim. It must retain
+the source actor's collision policy, bounded interior proof and flow work
+accounting, with unchanged transfer quantities and save/undo authority. The
+read-only audit proposes an actual LineRenderer regression; this continuation is
+not implemented or verified by the rain increment.

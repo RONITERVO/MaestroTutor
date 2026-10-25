@@ -87,6 +87,54 @@ namespace Maestro.Quest.Creation {
             float t=(limit-at)/change;if(change>0)exit=Mathf.Min(exit,t);else enter=Mathf.Max(enter,t);
             return enter<=exit;
         }
+        // Presentation accepts a descending endpoint on the plane. An origin
+        // already in/on this finite medium, or entry through a submerged side,
+        // is suppression rather than a new free-surface impact. Keep the
+        // through-crossing contact contract below unchanged.
+        internal bool FirstSurfaceContact(Vector3 from,Vector3 to,out Vector3 point,out float fraction,out bool submerged){
+            point=default;fraction=0;submerged=false;
+            if(Contents.amountMl<=0||!RoomRecipe.Finite(from)||!RoomRecipe.Finite(to))return false;
+            float before=Vector3.Dot(from,Up)-Level,after=Vector3.Dot(to,Up)-Level;
+            if(!float.IsFinite(before)||!float.IsFinite(after))return false;
+            if(before<=0&&ContainsAtOrBelowSurface(from)){point=from;submerged=true;return true;}
+            if(before>0&&after<=0){
+                fraction=before/(before-after);if(!float.IsFinite(fraction))return false;
+                point=Vector3.LerpUnclamped(from,to,fraction);var local=inverse.MultiplyPoint3x4(point);
+                if(local.y>=-.0001f&&local.y<=Contents.height+.0001f&&Contents.ContainsHorizontal(local)&&(terrain==null||terrain.Contains(local)))return true;
+            }
+            if(!FirstWetEntry(from,to,out fraction))return false;
+            point=Vector3.LerpUnclamped(from,to,fraction);submerged=true;return true;
+        }
+        bool FirstWetEntry(Vector3 from,Vector3 to,out float fraction){
+            fraction=0;var a=inverse.MultiplyPoint3x4(from);var d=inverse.MultiplyVector(to-from);
+            if(terrain!=null)return terrain.FirstWetEntry(a,a+d,terrainNormal,terrainLevel,out fraction);
+            float enter=0,exit=1;
+            if(!Clip(-a.y,-d.y,0,ref enter,ref exit)||!Clip(a.y,d.y,Contents.height,ref enter,ref exit)||
+                !Clip(Vector3.Dot(from,Up),Vector3.Dot(to-from,Up),Level,ref enter,ref exit))return false;
+            if(Contents.IsRectangular){
+                if(!Clip(a.x,d.x,Contents.rectangle.width*.5f,ref enter,ref exit)||!Clip(-a.x,-d.x,Contents.rectangle.width*.5f,ref enter,ref exit)||
+                    !Clip(a.z,d.z,Contents.rectangle.depth*.5f,ref enter,ref exit)||!Clip(-a.z,-d.z,Contents.rectangle.depth*.5f,ref enter,ref exit))return false;
+            }else{
+                // Exact circle interval; the circumscribed body sweep is too
+                // generous for a zero-radius cosmetic point near the rim.
+                double aa=(double)d.x*d.x+(double)d.z*d.z;
+                double bb=2*((double)a.x*d.x+(double)a.z*d.z);
+                double cc=(double)a.x*a.x+(double)a.z*a.z-(double)Contents.radius*Contents.radius;
+                if(aa==0){if(cc>0)return false;}
+                else{
+                    double discriminant=bb*bb-4*aa*cc;if(discriminant<0)return false;
+                    double root=System.Math.Sqrt(discriminant);
+                    enter=Mathf.Max(enter,(float)((-bb-root)/(2*aa)));exit=Mathf.Min(exit,(float)((-bb+root)/(2*aa)));
+                    if(enter>exit)return false;
+                }
+            }
+            fraction=enter;return true;
+        }
+        internal bool ContainsAtOrBelowSurface(Vector3 point){
+            if(Contents.amountMl<=0||!RoomRecipe.Finite(point)||Vector3.Dot(point,Up)>Level)return false;
+            var local=inverse.MultiplyPoint3x4(point);
+            return local.y>=0&&local.y<=Contents.height&&Contents.ContainsHorizontal(local)&&(terrain==null||terrain.Contains(local));
+        }
         internal bool CrossesSurface(Vector3 from,Vector3 to,out Vector3 point){
             point=default;float before=Vector3.Dot(from,Up)-Level,after=Vector3.Dot(to,Up)-Level;
             if(before*after>=0||Mathf.Abs(before)<1e-6f||Mathf.Abs(after)<1e-6f)return false;

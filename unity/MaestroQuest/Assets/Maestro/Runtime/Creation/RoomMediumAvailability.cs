@@ -58,19 +58,29 @@ namespace Maestro.Quest.Creation
             internal MissingMedium(string id,string state,RoomSpatialExtent extent){Id=id;State=state;Extent=extent;}
             internal bool Relevant(Bounds body,string ignore)=>Id!=ignore&&(!Extent.Known||!Extent.HasBounds||Extent.Bounds.Intersects(body));
         }
-        readonly List<MissingMedium> missingMedia=new();
+        readonly List<MissingMedium> missingMedia=new(RoomContainer.MaximumPerRoom);
         string mediumQueryIssue;
-        void CaptureMissingMedia()
+        // Capture both ready geometry and missing dependencies with the same
+        // predicate. Complete passive queries cannot silently omit a vessel
+        // whose registered solid geometry is currently unavailable.
+        bool NativeMediumReady(Vessel vessel,RoomItem item,bool requireReadyGeometry)
         {
-            missingMedia.Clear();mediumQueryIssue=null;
+            if(!item||!item.isActiveAndEnabled||vessel==null||vessel.Item!=item||item.GetComponent<ContainerFillView>()?.NativeReady!=true||!vessel.Rigid)return false;
+            if(requireReadyGeometry&&(!editor||editor.Find(vessel.Id)!=item||editor.Identity(item)!=vessel.Id||!editor.AuthoredCollisionReady(item)))return false;
+            return !vessel.Live.TerrainFloor||RoomTerrainReservoir.Native(vessel.Live,item.transform)!=null;
+        }
+        void CaptureMissingMedia(bool requireReadyGeometry=false)
+        {
+            surfaceContactsCaptured=false;missingMedia.Clear();mediumQueryIssue=null;
             if(!editor||!editor.isActiveAndEnabled||!editor.Frame.Valid){mediumQueryIssue="The liquid workspace is unavailable";return;}
             foreach(var id in editor.LiquidIds()){
                 vessels.TryGetValue(id,out var vessel);
                 var item=editor.Find(id);
-                if(item&&item.isActiveAndEnabled&&vessel!=null&&vessel.Item==item&&item.GetComponent<ContainerFillView>()?.NativeReady==true&&vessel.Rigid&&(!vessel.Live.TerrainFloor||RoomTerrainReservoir.Native(vessel.Live,item.transform)!=null))continue;
+                if(NativeMediumReady(vessel,item,requireReadyGeometry))continue;
                 var extent=editor.MissingLiquidExtent(id,vessel?.Live,out var contents);
                 // An accepted empty vessel contains no medium, regardless of its view.
                 if(contents!=null&&contents.amountMl<=0)continue;
+                if(missingMedia.Count==media.Length){mediumQueryIssue="Liquid dependency capacity is inconsistent; inspect the saved liquid owners";return;}
                 missingMedia.Add(new(id,editor.LiquidNativePending(id)?"pending":"unavailable",extent));
             }
         }
