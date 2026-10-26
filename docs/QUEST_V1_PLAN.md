@@ -17554,3 +17554,35 @@ continuation and physical acceptance remain open. Next combine the production
 entry with actual Unity room actions, then freeze and qualify the complete
 native/Book/Headless/Android candidate. Audio capture integration and the retained
 quality failures remain separate release work.
+
+
+### Pointer confirmation defect exposed by production-entry CI
+
+The first Linux CI run at `a981b3d3` passed the app tests and build, then failed
+at language confirmation. Its screenshot/DOM and a locally slowed Chrome trace
+showed the actual cause: the globe's document-level pointerdown listener treated
+the sibling composer Confirm button as outside, clearing the target before its
+click handler ran. Keyboard confirmation passed, which would have hidden this
+pointer defect. The wheel timing candidates were distinct from that proven cause.
+
+The composer now supplies its existing form element as the globe's explicit
+interaction boundary. Confirmation preserves the selection; actual outside
+clicks still cancel, and other globe callers retain the original default boundary.
+No DOM wrapper, label-based exception, timeout increase or probe bypass was added.
+A real-component baseline failed the confirmation case and passed its two controls;
+the fix passes all sixteen focused globe/composer/boundary cases. Application and
+probe types and changed-file lint also pass.
+
+The unchanged production-entry pointer journey passed normally in 14.227 seconds
+and with CPU4 browser throttling in 18.997 seconds. Both retained the complete
+proactive artifact/image, upload, interaction and reload checks with no unexpected
+requests, page errors, pending requests or cleanup errors. Slowing browser
+scheduling reproduces a race; it is not a Quest performance measurement. Evidence
+and failed reports remain under `.quest-evidence/first-learner-20261026/`, including
+`interaction-boundary-evidence.json`. Native runtime inputs are unchanged.
+
+The separate wheel review retained two controlled-geometry failures (recenter on
+unrelated pointerdown render and a scrollend overriding an explicit choice) in
+`wheel-review/`; its test is private and the component has not been changed for
+those separate findings. Evaluate them before the next full candidate rather
+than treating this boundary fix as complete wheel-interaction acceptance.

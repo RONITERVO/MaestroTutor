@@ -3433,6 +3433,13 @@ composer. It neither seeds application storage nor mounts a replacement chat
 component. The original tutor/verifier controllers and normal tool/artifact
 dispatch remain in control.
 
+This path exposed a real pointer-confirmation defect: the globe's outside-click
+listener canceled the selected target when the user pressed its sibling Confirm
+button. The shared composer/globe interaction boundary now preserves confirmation
+while retaining true outside cancellation. The probe continues using pointer
+input, with a separate active-listener component regression and slowed-browser
+reproduction; keyboard-only testing would have missed the failure.
+
 Only external network boundaries are scripted: fake key validation, the local
 model registry, exact tutor/verifier responses, generated PNGs and the actual
 resumable file-upload protocol. A beginner asks where to start; the scripted

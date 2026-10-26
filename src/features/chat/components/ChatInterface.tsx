@@ -297,6 +297,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
 
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const languageFormRef = useRef<HTMLDivElement>(null);
 
   // Single source of the embed height cap and the one shared IntersectionObserver.
   useEmbedViewport(book?.layout === 'conversation' ? book.spreadRoot : scrollContainerRef, deviceBudgets);
@@ -1055,8 +1056,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
          </div>
        )}
 
-        {/* Note: Input area is always rendered now, but modes switch inside */}
-        <div className="flex flex-col items-end mt-2">
+        {/* Confirmation and the globe share one outside-interaction boundary. */}
+        <div ref={languageFormRef} className="flex flex-col items-end mt-2">
                 <InputArea
                     onSttToggle={onSttToggle}
                     onSendMessage={onSendMessage}
@@ -1080,6 +1081,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
                         onSelectNative={handleGlobeNativeSelect}
                         onSelectTarget={handleGlobeTargetSelect}
                         onCancel={() => setTempTargetLangCode(null)}
+                        interactionBoundaryRef={languageFormRef}
                         onInteract={updateLanguageSelectorInteraction}
                     />
                 </div>
