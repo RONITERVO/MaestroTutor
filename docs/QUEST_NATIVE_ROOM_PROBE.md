@@ -987,6 +987,8 @@ existing catalog form. `known:false` must remain unknown, not a dry measurement.
 Evidence is `provider-scenarios.json`, `book-native-liquid-contact.json` and its
 screenshot. Native tests cover bounded contact sampling, tracking/lifecycle
 baselines, participant policies, event fields and surface-contained ripple pixels.
+The contact-order regression additionally covers first crossing in either travel
+direction, exact-time volume/ID ties, readiness and actual avatar-joint ordering.
 These desktop checks do not establish physical fingertip, latency or Quest GPU
 acceptance. Both chat and Live room journeys wait for earlier managed billing to
 settle before their measured baseline; an unsettled account fails the bounded

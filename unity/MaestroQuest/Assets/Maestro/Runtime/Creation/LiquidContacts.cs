@@ -93,7 +93,7 @@ namespace Maestro.Quest.Creation {
             // loses precision after a large translation or non-unit world scale.
             if(kind=="avatar"){state.AvatarPose??=new Vector3[contactJoints.Length];Array.Copy(points,state.AvatarPose,count);}
             if(count==0){Forget(state,"No supported contact samples");return;}
-            bool previousKnown=state.Known,found=false,unknown=false,crossed=false;float depth=0,speed=0,volume=float.PositiveInfinity;Vector3 point=points[0],crossPoint=default;LiquidMediumGeometry chosen=default,crossMedium=default;
+            bool previousKnown=state.Known,found=false,unknown=false,crossed=false;float depth=0,speed=0,volume=float.PositiveInfinity,crossFraction=float.PositiveInfinity;Vector3 point=points[0],crossPoint=default;LiquidMediumGeometry chosen=default,crossMedium=default;
             for(int i=0;i<count;i++){
                 var current=points[i];if(!RoomRecipe.Finite(current)||!environment.CanSimulate(current,item,item)){unknown=true;break;}
                 var previous=authored?editor.Frame.PointToWorld(state.Previous[i]):state.Previous[i];
@@ -104,12 +104,21 @@ namespace Maestro.Quest.Creation {
                     if(!ready){unknown=true;break;}
                     if(!found||medium.Volume<volume||medium.Id==chosen.Id&&d>depth){found=true;chosen=medium;depth=d;volume=medium.Volume;point=current;}
                 }
-                if(previousKnown&&!crossed)for(int j=0;j<mediaCount;j++){
-                    var candidate=media[j];if(candidate.Id==id||!candidate.CrossesSurface(previous,current,out var crossing))continue;
-                    if(!candidate.Item.GetComponent<RigidRoomItem>().GeometryReady||!environment.CanSimulate(crossing,item,candidate.Item)){unknown=true;break;}
-                    crossed=true;crossPoint=crossing;crossMedium=candidate;break;
+                // All samples share the same observed interval. Fraction is
+                // crossing time along that interval, unlike world distance
+                // across joints moving at different speeds. Complete candidate
+                // scans are already reserved by ContactWorkResources.PerPoint.
+                if(previousKnown)for(int j=0;j<mediaCount;j++){
+                    var candidate=media[j];if(candidate.Id==id||!candidate.CrossesSurface(previous,current,out var crossing,out float fraction))continue;
+                    if(crossed&&!ContactPrecedes(fraction,in candidate,crossFraction,in crossMedium))continue;
+                    crossed=true;crossFraction=fraction;crossPoint=crossing;crossMedium=candidate;
                 }
             }
+            // Choose geometry first: unavailable early water must never fall
+            // through to a later ready surface. Missing-media guards above keep
+            // their complete-segment scope; only the selected crossing needs
+            // this participant-specific environment/readiness proof.
+            if(!unknown&&crossed&&(!crossMedium.Item.GetComponent<RigidRoomItem>().GeometryReady||!environment.CanSimulate(crossPoint,item,crossMedium.Item)))unknown=true;
             for(int i=0;i<count;i++)state.Previous[i]=authored?editor.Frame.PointToRoom(points[i]):points[i];
             if(unknown){Forget(state,"Contact geometry or participant environment is unavailable");return;}
             string before=state.BodyId,after=found?chosen.Id:"";
@@ -121,6 +130,12 @@ namespace Maestro.Quest.Creation {
                 else if(after!=""&&speed>.03f&&Time.unscaledTime-state.RippleAt>=.18f)Ripple(after,point+chosen.Up*depth,speed,state);
             }
             state.Known=true;state.BodyId=after;state.Liquid=found?chosen.Contents.liquid:"";state.Depth=depth;state.Speed=speed;state.Point=editor.Frame.PointToRoom(found?point+chosen.Up*depth:point);state.Reason="";
+        }
+        static bool ContactPrecedes(float fraction,in LiquidMediumGeometry candidate,float currentFraction,in LiquidMediumGeometry current){
+            if(fraction!=currentFraction)return fraction<currentFraction;
+            if(candidate.Volume!=current.Volume)return candidate.Volume<current.Volume;
+            // Exact geometry/identity ties retain the earlier stable sample.
+            return string.CompareOrdinal(candidate.Id,current.Id)<0;
         }
         void PublishContact(string body,string id,string kind,string phase,Vector3 point,float speed,float depth,ContactState state){
             if(!vessels.TryGetValue(body,out var vessel)||!vessel.Item)return;

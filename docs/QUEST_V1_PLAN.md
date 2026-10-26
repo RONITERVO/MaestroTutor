@@ -126,7 +126,7 @@ open until every required row has matching release-candidate evidence.
 
 | Requirement | Current evidence | Remaining work and acceptance limits |
 | --- | --- | --- |
-| Familiar language-learning chat and full-page book | Original web components, both book layouts, inline artifacts and ribbon bookmark; full offline Headless and visible Book journeys against current desktop Unity. | Fresh first-lesson, smalltalk, proactive artifact/tool combinations, image, weather, room actions and text-to-Live continuation on the chosen Quest candidate, through both managed and BYOK providers. See [coverage](QUEST_AGENT_RELEASE_COVERAGE.md) and [device QA](QUEST_DEVICE_QA.md). |
+| Familiar language-learning chat and full-page book | Original web components, both book layouts, inline artifacts and ribbon bookmark; recorded offline Headless and visible Book journeys against their named desktop Unity sources. The focused Book fixture bypasses onboarding and several Live/media controllers; it does not prove the full first-launch app composition. | Fresh first-lesson, smalltalk, proactive artifact/tool combinations, image, weather, room actions and text-to-Live continuation on the chosen Quest candidate, through both managed and BYOK providers. See [coverage](QUEST_AGENT_RELEASE_COVERAGE.md) and [device QA](QUEST_DEVICE_QA.md). |
 | Language-first, shared user/agent actions | Shared capability catalog, generated user controls, event-driven programs, traces, cancellation and ownership; deterministic and actual Unity integration coverage. | Real-provider multi-step completion, recovery and understandable learner feedback on the release candidate. Offline execution cannot establish model reliability. |
 | Creation, import and reusable authored worlds | Primitive/recipe/drawing/template creation, GLB/VRM models and motion collections, materials/images, editable constructions and shared saved completion. | Candidate import/rendering, memory pressure, interrupted work and restore acceptance with representative user content. Validate the declared capacity; the current 256 saved creations, 128 native roots, 16 liquid containers, 25-metre bounds and four height fields are not a city-scale promise. See [world authoring](QUEST_WORLD_AUTHORING.md) and [model imports](QUEST_MODEL_IMPORTS.md). |
 | Default Maestro, custom avatars and animation | Included avatar/motions, exact compatible motion IDs, activity/gait bindings, joint posing, recording, shared walk/follow and attention paths; optional exact-model foot fitting through the shared catalog. | Current-candidate motion fidelity, humanoid variety, hands-on posing, transitions and sustained performance. Bounded foot fitting uses a rest-bound shoe-plane estimate with explicit trims; visual calibration, real-headset acceptance and general crowd/interior planning remain unfinished. See [animation authoring](QUEST_ANIMATION_AUTHORING.md) and [library](QUEST_ANIMATION_LIBRARY.md). |
@@ -17474,3 +17474,49 @@ fast tracked water crossings currently select a surface in asset-ID order. The
 proposed nearest-contact repair must first reproduce an actual wrong event/ripple
 and retain existing contact budgets, unknown-geometry guards and tracking rules.
 It is not implemented or verified by this poured-water increment.
+
+
+## First tracked water crossing — 2026-10-26
+
+A fast controller or avatar movement now selects the earliest finite-surface
+crossing in its sampled interval, across all supported samples and water bodies.
+Exact-time ties prefer smaller volume, ordinal object ID and stable sample
+order. Readiness is checked after selecting that geometry: unavailable earlier
+water cannot fall through to a later ready body. Known unavailable later water
+does not poison an earlier ready crossing. Full-segment missing-geometry guards,
+endpoint immersion, tracking continuity and queued-event validation remain intact.
+
+The existing work reservation covers both complete candidate scans. There is no
+new physics query, capability, allocation or saved format. The representative
+event and renderer ripple share the selected point; quantity, revision, saved
+bytes and native identity remain unchanged by this sampled contact.
+
+The frozen original runtime selected the lower surface at y=1.6 when the upper
+surface at y=2.6 was crossed first. Its lower ripple count was one and upper
+count zero; conservation and saved-state assertions passed. The repaired runtime
+passed 36 focused contact cases, including eight new runtime regressions for
+both travel directions, volume/ID ties, readiness, missing-view recovery and
+actual avatar joints. The source-only review found a sharper joint fixture that
+distinguishes normalized crossing time from absolute distance; that test-only
+refinement is recorded separately in the final evidence.
+
+Broad verification passed all 1,703 EditMode and 572 selected PlayMode cases.
+All 3,622 native inputs stayed byte-identical through the terminal Editor/wrapper
+results. The later joint refinement changes only one test fixture; production
+runtime and native catalog inputs remain identical. Shared web/catalog/contact
+coverage passed 275 cases across eight files, alongside application/probe types,
+native export equality, source provenance and ten-guide equality. Capability
+schemas are unchanged. Fourteen unrelated files remained byte-identical.
+
+Evidence is under `.quest-evidence/contact-order-20261026/`. The strengthened joint fixture and all 36 focused contact cases passed on
+rerun, with the test file as the only source delta from the broad run. These are
+desktop/offline results. Device/provider, signing, deployment and Meta holds
+remain; this does not close release or audio-quality gates.
+
+The next release priority is the actual production-entry first-learner journey.
+The existing focused Book fixture deliberately preselects languages and bypasses
+several Live/media controllers. Its native-control evidence remains valid for
+that scope, but cannot establish fresh onboarding or a complete lesson through
+Live. Follow this with a frozen complete native/Book/Headless/unsigned Android
+checkpoint and shared native capture integration; retain the measured audio
+failures rather than promoting an unqualified backend.

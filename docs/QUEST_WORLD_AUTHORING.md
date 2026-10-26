@@ -2536,6 +2536,18 @@ entry, exit, crossing, speed and ripples cannot be reconstructed across the gap.
 A hand/controller source roundtrip still breaks continuity even when it happens
 between two sampling passes. This also applies to props and Maestro's joints.
 
+When a valid interval crosses multiple water surfaces, its representative
+crossing is the earliest normalized time across all sampled points. Exact-time
+ties prefer the smaller water volume, then stable object ID and sample order.
+This lets a later-sampled joint reach water first even when it travels farther.
+Selection precedes readiness: an unavailable first surface makes the result
+unknown rather than falling through to later water. A known unavailable later
+surface does not replace the ready first crossing. Missing geometry anywhere in
+the tracked segment still invalidates that complete segment. This preserves the
+single representative event contract; it does not emit every crossed surface.
+The existing sampling reservation covers both complete candidate scans, without
+another physics query, new allocation or changes to stored water amounts.
+
 Queued contact events retain the sampled participant and water source. Before
 each callback, the participant's identity, pose, tracking update and ownership,
 and the water's identity, geometry, transform and live quantity must still match.

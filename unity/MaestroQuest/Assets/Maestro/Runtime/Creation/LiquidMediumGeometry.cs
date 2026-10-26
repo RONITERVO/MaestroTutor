@@ -154,10 +154,11 @@ namespace Maestro.Quest.Creation {
             var local=inverse.MultiplyPoint3x4(point);
             return local.y>=0&&local.y<=Contents.height&&Contents.ContainsHorizontal(local)&&(terrain==null||terrain.Contains(local));
         }
-        internal bool CrossesSurface(Vector3 from,Vector3 to,out Vector3 point){
-            point=default;float before=Vector3.Dot(from,Up)-Level,after=Vector3.Dot(to,Up)-Level;
+        internal bool CrossesSurface(Vector3 from,Vector3 to,out Vector3 point)=>CrossesSurface(from,to,out point,out _);
+        internal bool CrossesSurface(Vector3 from,Vector3 to,out Vector3 point,out float fraction){
+            point=default;fraction=0;float before=Vector3.Dot(from,Up)-Level,after=Vector3.Dot(to,Up)-Level;
             if(before*after>=0||Mathf.Abs(before)<1e-6f||Mathf.Abs(after)<1e-6f)return false;
-            point=Vector3.LerpUnclamped(from,to,before/(before-after));
+            fraction=before/(before-after);point=Vector3.LerpUnclamped(from,to,fraction);
             var local=inverse.MultiplyPoint3x4(point);
             return Contents.amountMl>0&&local.y>=-.0001f&&local.y<=Contents.height+.0001f&&Contents.ContainsHorizontal(local)&&(terrain==null||terrain.Contains(local));
         }
