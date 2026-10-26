@@ -3441,18 +3441,26 @@ input, with a separate active-listener component regression and slowed-browser
 reproduction; keyboard-only testing would have missed the failure.
 
 Only external network boundaries are scripted: fake key validation, the local
-model registry, exact tutor/verifier responses, generated PNGs and the actual
-resumable file-upload protocol. A beginner asks where to start; the scripted
+model registry, exact tutor/verifier responses, generated PNGs, the actual
+resumable file-upload protocol and a bounded triggered-TTS SDK peer. A beginner asks where to start; the scripted
 verifier proactively returns an HTML flashcard and an image tool together. The
 app's default user image remains enabled. The probe interacts with the real
 artifact resume control and card, then reloads and confirms the language pair,
 conversation, two images and interactive artifact return without replaying the
-lesson or generation. The existing avatar-overlay maintenance upload may recur
+lesson or generation. The learner also taps the visible Spanish transcript row
+to start the ordinary speech service. The local socket accepts only the bundled
+prerecorded trigger and already-scripted tutor text, then returns a synthetic tone
+and transcription. The app must return to idle; socket completion alone is not
+renderer-drain or audible-quality evidence. Reload must not open another speech
+session. Other WebSockets remain rejected.
+
+The existing avatar-overlay maintenance upload may recur
 only with the same content; this is distinguished from repeated lesson work.
 
 Unexpected HTTP, WebSocket, runtime and local resource errors fail the run.
 Remote font and unused speech-recognition warmup downloads are explicitly denied
-and reported, while existing canceled animation loads are classified separately.
+and reported, while canceled animation loads and the exact transient image-loading
+artwork are classified separately. Local HTTP errors still fail.
 Private environment files and VITE access configuration are excluded. No real
 key, provider request, microphone, native-room result or account grant is used.
 The Release gate runs this probe and retains its JSON/screenshots for seven days.
@@ -3465,3 +3473,22 @@ judgment, managed access, physical speech/camera capture, image quality, the ful
 nine-turn lesson, native room actions, text-to-Live continuation or headset book
 rendering. Those remain required scenarios in the matrix above. The broader
 native Book fixture remains useful for its separate control/transport coverage.
+
+
+### Production-entry room extension
+
+The local native verifier additionally runs `-Journey Book -FirstLearner`, using
+the same production-entry runner with an explicit native transport adapter. A
+second beginner request creates a small green ball through the actual chat
+handoff, planner and Unity executor. Native results and fresh object facts must
+agree on the durable identity; a fresh browser handshake after reload must retain
+the object without repeating creation. The original first-lesson artifact/image
+and persistence assertions remain part of this journey.
+
+Provider HTTP and triggered-TTS socket replies remain scripted; the native floor
+is synthetic. This does not
+qualify real-provider planning, managed access, physical input, text-to-Live or
+headset rendering. CI continues to run the standalone browser composition; the
+local Unity verifier requires the additional native journey. See
+[the run contract](QUEST_NATIVE_ROOM_PROBE.md#fresh-learner-through-the-production-entry)
+for process ownership, terminal checks and evidence paths.

@@ -190,3 +190,7 @@ Write-Output "Unity checks passed: $($editCoverage.passed) EditMode and $($playC
 # Exercise the original two-page chat and editors against a separate real native room.
 # Chrome/Vite are owned by the journey; provider responses are local scripted SSE.
 & (Join-Path $PSScriptRoot 'Run-QuestRoomProbe.ps1') -Editor $editorPath -BuildMirror $mirrorRoot -Journey Book -SyntheticSound -SyntheticImage -SyntheticModel -SyntheticGait -SyntheticLiveSound -SparseObjectView
+
+# Exercise fresh onboarding and the original App's agent handoff against real Unity.
+# The production-entry browser still scripts provider HTTP; room actions are native.
+& (Join-Path $PSScriptRoot 'Run-QuestRoomProbe.ps1') -Editor $editorPath -BuildMirror $mirrorRoot -Journey Book -FirstLearner

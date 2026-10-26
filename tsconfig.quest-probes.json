@@ -9,7 +9,8 @@
       "ES2022",
       "DOM",
       "DOM.Iterable"
-    ]
+    ],
+    "allowJs": true
   },
   "include": [
     "scripts/probe-native-room.ts",
@@ -36,7 +37,9 @@
     "scripts/native-probe-motion.test.ts",
     "scripts/native-probe-read-set.test.ts",
     "scripts/native-probe-avatar-preferences.test.ts",
-    "scripts/native-probe-identity.test.ts"
+    "scripts/native-probe-identity.test.ts",
+    "scripts/probe-quest-first-learner-native.ts",
+    "scripts/first-learner-verifier-contract.test.ts"
   ],
   "references": []
 }

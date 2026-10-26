@@ -1959,3 +1959,45 @@ journey. This mode excludes Book, provider, resume and other focused modes.
 The file adapter bounds both decoded UTF-16 characters and encoded JSON bytes.
 The encoded allowance accounts for JSON escapes and the small session envelope;
 it never expands capability arguments or bypasses native revision checks.
+
+
+## Fresh learner through the production entry
+
+`Run-QuestRoomProbe.ps1 -Editor <pinned-editor> -BuildMirror <owned-mirror>
+-Journey Book -FirstLearner` connects the production-entry learner journey to a
+fresh actual Unity room. `Verify-Quest.ps1` requires it after the existing
+Headless and Book journeys. The older Book fixture remains responsible for its
+broader generated-control and transport checks.
+
+The new mode keeps visible adult confirmation, fake BYOK entry, English-native /
+Spanish-target selection, the first lesson, proactive flashcard plus image,
+artifact interaction, transcript-row speech and reload. The speech peer checks
+the exact bundled trigger and known scripted text; its synthetic tone establishes
+no real voice quality or native audio claim. A second plain-language request goes through
+the real App's tutor/verifier, agent handoff and planner. Only external provider
+HTTP and triggered-TTS socket replies are scripted. Unity's shared catalog, execution, observations and persisted
+object supply the action result. The ordinary completion reply also passes through
+its suggestions verifier. No App store seeding or replacement conversation
+component is used.
+
+The Node-owned transport reads only the owned top-level public book bridge,
+serializes exchanges with the existing RoomProbeChannel and retires before
+reload, after Unity acknowledges the visible Back to chat action and the client
+has no pending request. Fresh audience confirmation must produce a new client
+handshake that retains this chat view. The
+completed action, exact object identity and fresh fact reads must agree; reload
+must not repeat creation. The native room uses the existing synthetic physics
+floor, without a real scan, headset or provider call.
+
+The wrapper rejects provider, resume, focused and synthetic-asset options in this
+mode before Editor launch. In addition to its normal process/terminal/log checks,
+it requires `first-learner/result.json` to report a passed production composition,
+actual native execution, no real provider and the same owned native probe ID.
+The private browser build, screenshots and request evidence live in the
+`first-learner` subdirectory of the fresh native run. No passing browser result
+alone establishes clean native shutdown.
+
+This is offline production-App-to-Unity composition coverage. Managed access,
+model planning quality, the complete nine-turn novice lesson, Live capture and
+continuation, Android WebView rendering, physical room alignment, audio quality
+and headset performance remain separate release acceptance requirements.

@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 // Offline production-entry composition check. The application owns onboarding,
 // storage, language selection, chat dispatch, verification and artifact rendering.
-// Only remote HTTP is scripted. No store seeding, component fixture or native
+// Only remote HTTP and triggered-TTS transport are scripted. No store seeding, component fixture or native
 // room success is injected. This is not a device/provider/release-bundle test.
 import {chromium} from 'playwright-core';
 import {build, preview} from 'vite';
@@ -11,9 +11,27 @@ import {resolve, dirname} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {createHash} from 'node:crypto';
 import assert from 'node:assert/strict';
+import {firstLearnerSpeech} from './first-learner-speech.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const out = resolve(process.env.MAESTRO_FIRST_LEARNER_EVIDENCE || resolve(root, '.quest-evidence/first-learner'));
+/**
+ * @typedef {{body:any,schema:any,bodyText:string,systemText:string}} ScriptedRequest
+ * @typedef {{kind:string,text:string}} ScriptedReply
+ * @typedef {object} NativeFirstLearnerAdapter
+ * @property {(page:import('playwright-core').Page,origin:string)=>Promise<void>} attach
+ * @property {()=>Promise<void>} beforeFirstMessage
+ * @property {(request:ScriptedRequest)=>Promise<ScriptedReply|null>} stream
+ * @property {(bodyText:string)=>string|null} imagePurpose
+ * @property {()=>Promise<void>} afterLesson
+ * @property {()=>Promise<void>} beforeReload
+ * @property {()=>Promise<void>} afterReload
+ * @property {()=>Promise<void>} close
+ * @property {()=>{nativeProbeId:string,qualified:boolean,[key:string]:unknown}} evidence
+ */
+/** @param {{out?:string,native?:NativeFirstLearnerAdapter}} options */
+export async function runQuestFirstLearner(options={}) {
+const nativeAdapter=options.native;
+const out = resolve(options.out || process.env.MAESTRO_FIRST_LEARNER_EVIDENCE || resolve(root, '.quest-evidence/first-learner'));
 await mkdir(resolve(out, 'empty-env'), {recursive:true});
 const fakeKey = 'maestro-offline-first-learner-not-a-real-key';
 const learner = "Hi! This is my very first lesson. I speak English and want to learn Spanish. I do not know any Spanish yet. Where do we start?";
@@ -29,6 +47,8 @@ let browser, server, page, status = 'failed';
 const started = Date.now();
 const scriptSha256=createHash('sha256').update(await readFile(fileURLToPath(import.meta.url))).digest('hex');
 const cleanupErrors=[];
+let speechGesture=null;
+const speech=await firstLearnerSpeech(fakeKey,errors);
 let stage = 'server';
 const checkpoint = value => { stage = value; console.log(value); };
 const snapshot = async () => page.evaluate(() => window.maestroBook?.snapshot());
@@ -57,8 +77,10 @@ try {
     } catch { /* opaque sandbox has no service-worker capability */ }
   });
   await context.routeWebSocket('**/*', ws => {
-    // HMR is disabled; no realtime provider or other socket may escape this run.
-    const attempt={transport:'websocket',origin:new URL(ws.url()).origin};
+    // Triggered TTS is a bounded local SDK peer; every other socket is rejected.
+    if(speech.handle(ws))return;
+    const socketUrl=new URL(ws.url());
+    const attempt={transport:'websocket',origin:socketUrl.origin,path:socketUrl.pathname,keyNames:[...socketUrl.searchParams.keys()],fakeKeyMatches:socketUrl.searchParams.get('key')===fakeKey};
     blocked.push(attempt); unexpected.push(attempt);
     ws.close();
   });
@@ -97,9 +119,11 @@ try {
       const body=request.postDataJSON(); assert.deepEqual(body.generationConfig?.responseModalities,['IMAGE']);
       const assistantTool=requests.some(r=>r.kind==='verifier');
       const bodyText=JSON.stringify(body);
-      assert(bodyText.includes(assistantTool?toolPrompt:learner));
-      assert.equal(requests.filter(r=>r.kind==='image-generation'&&r.purpose===(assistantTool?'assistant-tool':'user-default')).length,0);
-      requests.push({kind:'image-generation',purpose:assistantTool?'assistant-tool':'user-default',hasLearnerRequest:bodyText.includes(learner),hasToolPrompt:bodyText.includes(toolPrompt)});
+      const nativePurpose=nativeAdapter?.imagePurpose(bodyText);
+      const purpose=nativePurpose || (assistantTool?'assistant-tool':'user-default');
+      if(!nativePurpose)assert(bodyText.includes(assistantTool?toolPrompt:learner));
+      assert.equal(requests.filter(r=>r.kind==='image-generation'&&r.purpose===purpose).length,0);
+      requests.push({kind:'image-generation',purpose,hasLearnerRequest:bodyText.includes(learner),hasToolPrompt:bodyText.includes(toolPrompt)});
       return route.fulfill({contentType:'application/json',body:JSON.stringify({candidates:[{content:{role:'model',parts:[{inlineData:{mimeType:'image/png',data:pixel}}]},finishReason:'STOP'}],modelVersion:'offline-image-boundary'})});
     }
     if (url.hostname === 'generativelanguage.googleapis.com' && url.pathname === '/v1beta/models' && request.method() === 'GET') {
@@ -114,7 +138,9 @@ try {
       const bodyText = JSON.stringify(body);
       const systemText = JSON.stringify(body.systemInstruction || '');
       let text, kind;
-      if (schema?.properties?.suggestions) {
+      const nativeReply=await nativeAdapter?.stream({body,schema,bodyText,systemText});
+      if(nativeReply) { ({text,kind}=nativeReply); }
+      else if (schema?.properties?.suggestions) {
         kind = 'verifier';
         assert.equal(requests.filter(r=>r.kind==='tutor').length,1);
         assert.equal(requests.filter(r=>r.kind==='verifier').length,0);
@@ -132,6 +158,7 @@ try {
         bodySha256:createHash('sha256').update(bodyText).digest('hex')});
       const response = {candidates:[{content:{role:'model',parts:[{text}]},finishReason:'STOP'}],
         usageMetadata:{promptTokenCount:1,candidatesTokenCount:1,totalTokenCount:2},modelVersion:'offline-production-entry-script'};
+      if(['tutor','native-tutor','native-result'].includes(kind))speech.allowText(text);
       return route.fulfill({contentType:'text/event-stream',body:'data: '+JSON.stringify(response)+'\n\n'});
     }
     const knownDenied = (url.hostname==='fonts.googleapis.com' && url.pathname==='/css2') ||
@@ -151,6 +178,7 @@ try {
   page.on('response', r => {if(r.url().startsWith(origin)&&r.status()>=400)localFailures.push({url:r.url(),status:r.status()});});
   page.on('pageerror', error => errors.push(error.message));
   page.on('console', message => { if(message.type()==='error') consoleErrors.push(message.text()); });
+  await nativeAdapter?.attach(page,origin);
   checkpoint('adult-gate');
   await page.goto(origin+'/?surface=quest-book',{waitUntil:'domcontentloaded',timeout:60000});
   await page.getByRole('checkbox',{name:'I am 18 years of age or older.'}).waitFor();
@@ -173,6 +201,7 @@ try {
   await page.getByRole('listbox',{name:'Target language',exact:true}).getByRole('option',{name:'Spanish (ES)',exact:true}).click();
   await page.getByRole('button',{name:'Confirm language selection',exact:true}).click();
   await page.getByTitle('Current Target Language: Spanish (ES)',{exact:true}).waitFor();
+  await nativeAdapter?.beforeFirstMessage();
   checkpoint('first-message');
   const composer = page.locator('textarea').filter({visible:true});
   await composer.fill(learner);
@@ -188,13 +217,35 @@ try {
   assert.deepEqual(requests.filter(r=>r.kind==='image-generation').map(r=>r.purpose),['user-default','assistant-tool']);
   await page.waitForLoadState('networkidle',{timeout:15000});
   assert([...uploads.values()].every(u=>u.complete),'Every admitted upload completed');
-  const before = await snapshot();
+  // Automatic reply speech may have already populated the audio cache. First
+  // let it finish, then prove the learner's click starts a new speaking phase.
+  // Cached playback is valid and need not create another provider socket.
+  await speech.settled();
+  await page.waitForFunction(()=>window.maestroBook?.snapshot().activity==='idle');
+  const speechBeforeClick=speech.evidence().sessions.length;
+  const firstLine=page.getByText(welcome.split('\n')[0],{exact:true}).locator('..');
+  await Promise.all([
+    page.waitForFunction(()=>window.maestroBook?.snapshot().activity==='speaking',null,{timeout:10000}),
+    firstLine.click(),
+  ]);
+  await speech.settled();
+  await page.waitForFunction(()=>window.maestroBook?.snapshot().activity==='idle');
+  assert(speech.evidence().sessions.length>0,'No scripted TTS session supplied the lesson audio');
+  speechGesture={activityBefore:'idle',activityObserved:'speaking',activityAfter:'idle',sessionsBefore:speechBeforeClick,sessionsAfter:speech.evidence().sessions.length};
   await page.screenshot({path:resolve(out,'first-lesson.png')});
   assert.equal(requests.filter(r=>r.kind==='tutor'&&r.hasLearnerRequest).length,1);
   assert.equal(requests.filter(r=>r.kind==='verifier'&&r.hasLearnerRequest).length,1);
   const tutor = requests.find(r=>r.kind==='tutor');
   assert.equal(tutor.hasEnglish,true); assert.equal(tutor.hasSpanish,true);
+  if(nativeAdapter) { checkpoint('native-room'); await nativeAdapter.afterLesson(); }
+  await page.waitForLoadState('networkidle',{timeout:15000});
+  assert([...uploads.values()].every(u=>u.complete),'Every admitted upload completed before reload');
+  const before = await snapshot();
+  const previewCount=await page.locator('img[alt="Preview"]').count();
   const beforeReloadCount = requests.length;
+  const beforeReloadSpeechCount = speech.evidence().sessions.length;
+  await speech.settled();
+  await nativeAdapter?.beforeReload();
   checkpoint('reload');
   await page.reload({waitUntil:'domcontentloaded'});
   await page.getByRole('checkbox',{name:'I am 18 years of age or older.'}).waitFor();
@@ -211,7 +262,8 @@ try {
   await frame.getByRole('button',{name:'Hello',exact:true}).waitFor();
   assert.equal(await keyInput.count(),0,'Saved test access restored without re-entering a key');
   assert.equal(await native.count(),0,'Selected language pair restored without first-run selector');
-  await page.waitForFunction(()=>Array.from(document.querySelectorAll('img[alt="Preview"]')).filter(img=>img.complete&&img.naturalWidth>0).length===2);
+  await page.waitForFunction(count=>Array.from(document.querySelectorAll('img[alt="Preview"]')).filter(img=>img.complete&&img.naturalWidth>0).length===count,previewCount);
+  await nativeAdapter?.afterReload();
   await page.waitForLoadState('networkidle',{timeout:15000});
   assert([...uploads.values()].every(u=>u.complete),'Every restored-session upload completed');
   const after = await snapshot();
@@ -228,9 +280,13 @@ try {
     assert.equal(restoredRequests[1].sha256,firstOverlay.sha256);
     assert.equal(restoredRequests[1].size,firstOverlay.size);
   }
+  await speech.settled();
+  assert.equal(speech.evidence().sessions.length,beforeReloadSpeechCount,'Reload must not replay triggered speech');
   assert.deepEqual(errors,[]); assert.deepEqual(unexpected,[]);
   assert.equal(context.serviceWorkers().length,0);
-  assert.deepEqual(localFailures.filter(f=>!(f.error==='net::ERR_ABORTED'&&new URL(f.url).pathname.startsWith('/animations/'))),[]);
+  // Transient image-loading artwork can be removed before its local fetch ends.
+  // Only explicit UI placeholders/animation cancellations are expected; HTTP errors still fail.
+  assert.deepEqual(localFailures.filter(f=>!(f.error==='net::ERR_ABORTED'&&(new URL(f.url).pathname.startsWith('/animations/')||new URL(f.url).pathname==='/artifact-loading-scene.svg'))),[]);
   assert(consoleErrors.every(message=>message.startsWith('Failed to load resource: net::ERR_BLOCKED_BY_CLIENT')));
   await page.screenshot({path:resolve(out,'restored-lesson.png')});
   status='passed';
@@ -244,6 +300,7 @@ try {
     await writeFile(resolve(out,'failure-dom.txt'),await page.locator('body').innerText().catch(()=>'')).catch(()=>{});
   }
 } finally {
+  try { await nativeAdapter?.close(); } catch(error) { cleanupErrors.push('native: '+String(error)); }
   try { await browser?.close(); } catch(error) { cleanupErrors.push('browser: '+String(error)); }
   if(server) {
     try {
@@ -254,10 +311,15 @@ try {
   if(cleanupErrors.length||errors.length||unexpected.length)status='failed';
   await writeFile(resolve(out,'result.json'),JSON.stringify({status,stage,durationMs:Date.now()-started,scriptSha256,cleanupErrors,
     entry:'index.html -> index.tsx -> QuestAudienceGate -> QuestBookSurface -> App',
-    productionComposition:true,productionBundle:true,nativeExecution:false,physicalDevice:false,
+    productionComposition:true,productionBundle:true,nativeExecution:status==='passed'&&nativeAdapter?.evidence().qualified===true,physicalDevice:false,
+    ...(nativeAdapter?{nativeProbeId:nativeAdapter.evidence().nativeProbeId,native:nativeAdapter.evidence()}:{}),
     realProvider:false,scriptedByokBoundary:true,storeSeeding:false,
-    unqualified:['native room actions','managed access','real provider quality','Live/media capture','speech recognition (remote model download denied)','image quality (one-pixel scripted response)'],
-    requests,blocked,unexpected,errors,consoleErrors,localFailures,pending:[...pending]},null,2)+'\n');
+    unqualified:[...(nativeAdapter?['Android WebView/native speech','real scanned room']:['native room actions']),'managed access','real provider quality','Live/media capture','speech recognition (remote model download denied)','image quality (one-pixel scripted response)'],
+    speech:speech.evidence(),speechGesture,requests,blocked,unexpected,errors,consoleErrors,localFailures,pending:[...pending]},null,2)+'\n');
 }
 if(status!=='passed') throw new Error('Production-entry learner regression failed at '+stage+'; see '+out);
 console.log('Production-entry first learner passed with scripted network only: '+out);
+
+}
+
+if(process.argv[1]&&resolve(process.argv[1])===fileURLToPath(import.meta.url))await runQuestFirstLearner();

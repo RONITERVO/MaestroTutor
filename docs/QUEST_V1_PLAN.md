@@ -17583,6 +17583,74 @@ and failed reports remain under `.quest-evidence/first-learner-20261026/`, inclu
 
 The separate wheel review retained two controlled-geometry failures (recenter on
 unrelated pointerdown render and a scrollend overriding an explicit choice) in
-`wheel-review/`; its test is private and the component has not been changed for
-those separate findings. Evaluate them before the next full candidate rather
-than treating this boundary fix as complete wheel-interaction acceptance.
+`wheel-review/`. At that checkpoint the component had not been changed for those
+separate findings. The subsequent interaction-ownership increment below addresses
+them; the boundary fix alone did not establish wheel-interaction acceptance.
+
+
+### Language wheel interaction ownership — 2026-10-26
+
+Two retained failures reproduced on the unchanged component: an unrelated parent
+render moved an unselected wheel between pointerdown and click, and pending
+scrollend replaced an explicitly chosen language. The wheel now retains stable
+native listeners, reads current callback/row props and recenters only for a
+changed controlled choice or real layout change. Explicit activation cancels old
+settlement; a new wheel, keyboard or touch gesture can still select another row.
+
+Two resize observations (viewport and content) preserve cqw-based idle centering.
+Reflow does not interrupt active pointer/touch/scroll input; one deferred frame
+after release gives the following click its priority. Controlled external changes
+remain authoritative. Observers, release listeners, timers and deferred frames
+retire on unmount. There is no per-render recenter or per-row observer.
+
+The baseline failed two cases and passed its control. Final verification passed
+28 related cases, including 18 wheel interactions covering stale callbacks,
+fallback/native settlement, explicit and external choices, new gestures, disabled
+input, idle/active reflow, outside release and cleanup. Application types, scoped
+ESLint and diff checks passed. Geometry and ResizeObserver events in these React
+tests are controlled fixtures; the production browser journey additionally checks
+real English/Spanish selection. Evidence is retained under
+`.quest-evidence/first-learner-20261026/wheel-review/`.
+
+
+### Production first lesson through actual native execution — 2026-10-26
+
+The fresh production-entry journey now connects to the real Unity room through
+an explicit `-Journey Book -FirstLearner` mode. It retains visible adult
+confirmation, fake BYOK entry, English-native / Spanish-target selection, the
+first chat turn, proactive interactive flashcard plus image and the default user
+image. A normal transcript-row click must produce a fresh idle/speaking/idle
+cycle; the local TTS peer admits only known scripted text and the bundled
+prerecorded trigger. Cached playback is allowed. Synthetic tones and controller
+state do not establish audible output, renderer drain or native audio quality.
+
+A second ordinary learner request passes through the original App's tutor,
+suggestions verifier, delegated planner and Unity executor. The driver requires
+one completed green-ball creation, exact-ID definition/colour facts, confirmed
+native journal checkpoints and the normal result reply plus follow-up suggestions.
+It keeps the transport alive until the visible Back to chat action is acknowledged.
+Reload requires fresh audience consent and a new native client identity, preserves
+the lesson/artifact/images and exact saved object, and dispatches no mutation or
+speech replay. `Verify-Quest.ps1` requires this alongside the existing Book and
+Headless journeys; the standalone browser path remains in CI.
+
+Native run `e01e9225188b47ee8007982eec345b80` passed in 25.964 seconds with 27
+native requests, 97 accepted observations, 30 scripted HTTP operations and three
+scripted TTS sessions. Client, Editor and terminal exits were zero; wrapper/log
+checks passed with no unexpected requests, pending requests, runtime or cleanup
+errors. Screenshots show the completed chat task and the restored native save
+status. Standalone browser run `browser-speech5` passed in 15.045 seconds. Eight
+maintained contracts exercise the actual language, room-reply normalization and
+suggestions builders; probe types and focused lint passed. The earlier language
+wheel checks retain their separate 28 passing cases.
+
+Failed runs are retained: they exposed harness assumptions about media-origin
+parts, omitted default catalog categories, reply suggestions, selected language
+display names, native-tag normalization and closing before reload. Those failures
+are not native acceptance. Evidence is in `.quest-evidence/native-room/` and
+`.quest-evidence/first-learner-native-20261026/`. All 3,622 native inputs and the
+14 unrelated files remain unchanged. No native runtime implementation changed in
+this increment. This is browser reload against one running Editor, with a
+synthetic floor and scripted provider transport. Real managed/BYOK quality, the
+complete nine-turn lesson, Live, Android/headset media and performance remain
+separate held acceptance work; the complete v1 goal remains open.
