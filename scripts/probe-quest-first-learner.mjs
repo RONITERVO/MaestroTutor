@@ -22,6 +22,8 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
  * @property {()=>Promise<void>} beforeFirstMessage
  * @property {(request:ScriptedRequest)=>Promise<ScriptedReply|null>} stream
  * @property {(bodyText:string)=>string|null} imagePurpose
+ * @property {(input:{fakeKey:string,errors:string[],out:string})=>Promise<any>} [offlineLive]
+ * @property {()=>Promise<any>} [offlineSpeechAssets]
  * @property {()=>Promise<void>} afterLesson
  * @property {()=>Promise<void>} beforeReload
  * @property {()=>Promise<void>} afterReload
@@ -40,6 +42,10 @@ const welcome = '¡Hola! Empecemos con una palabra fácil.\n[en] Hello! Let us s
 const card = '<!doctype html><html><body><main><h1>My first Spanish card</h1><button id="card" onclick="this.textContent=\'Hello\'">Hola</button></main></body></html>';
 const requests = [], blocked = [], errors = [], consoleErrors = [], localFailures = [], unexpected = [];
 const uploads = new Map();
+const networkEvents=[], networkPending=new Map(), lifecycleEvents=[], networkSettlements=[], networkFailures=[], browserCacheVerifications=[];
+const networkFailureRequests=new Map(),networkRequestIds=new WeakMap();
+let networkReconciliations=[],browserCacheProof=null;
+let networkGeneration=0,networkCleanup=false;
 const pixel = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+XAoYAAAAASUVORK5CYII=';
 const modelRegistry = await readFile(resolve(root,'public/gemini-models.json'));
 const pending = new Set();
@@ -49,10 +55,68 @@ const scriptSha256=createHash('sha256').update(await readFile(fileURLToPath(impo
 const cleanupErrors=[];
 let speechGesture=null;
 const speech=await firstLearnerSpeech(fakeKey,errors);
+const live=await nativeAdapter?.offlineLive?.({fakeKey,errors,out});
+const speechAssets=await nativeAdapter?.offlineSpeechAssets?.();
 let stage = 'server';
 const checkpoint = value => { stage = value; console.log(value); };
 const snapshot = async () => page.evaluate(() => window.maestroBook?.snapshot());
+let speechReadyObserved=false;
+const reconcileNetworkFailures=()=>{
+  networkReconciliations=networkFailures.filter(f=>!f.endedDuringCleanup).map(f=>{
+    assert(f.status===200&&f.error==='net::ERR_ABORTED','An admitted HTTP request failed');
+    const receipt=speechAssets.fullReceipt(networkFailureRequests.get(f.id));
+    assert(receipt&&receipt.status===200&&receipt.range===null,'Failed request lacks exact sole-attempt full delivery');
+    const source=networkEvents.find(e=>e.id===f.redirectedFromId);
+    assert(source&&source.origin==='https://huggingface.co'&&source.path==='/onnx-community/whisper-tiny.en/resolve/main/'+receipt.path&&source.status===307&&source.state==='finished','Failed request lost its exact source redirect');
+    const cached=browserCacheProof?.files.find(x=>x.path===receipt.path);
+    assert(cached&&cached.bytes===receipt.bytes&&cached.sha256===receipt.sha256,'Failed request lacks verified browser-consumed bytes');
+    return {...f,receipt,cacheVerifiedAt:networkReconciliations.find(r=>r.id===f.id)?.cacheVerifiedAt??browserCacheProof.verifiedAt,reason:'verified-browser-cache-after-full-delivery'};
+  });
+};
+const waitForSettledNetwork=async()=>{
+  if(!speechAssets){await page.waitForLoadState('networkidle',{timeout:15000});return;}
+  const began=Date.now(),deadline=began+15000;let quietSince=null,quietGeneration=-1,lastPending=[];
+  while(Date.now()<deadline){
+    const workers=await page.evaluate(()=>globalThis.__firstLearnerSpeechWorkers());
+    assert.equal(workers.version,1);assert.equal(workers.overflow,false);
+    assert(workers.workers.every(w=>w.errors.length===0),'Actual speech worker reported an error');
+    const ready=w=>w.ready.some(r=>r.model==='onnx-community/whisper-tiny.en'&&r.profile==='q4');
+    speechReadyObserved ||= workers.workers.some(ready);
+    const assets=speechAssets.evidence();assert.deepEqual(assets.errors,[]);assert.deepEqual(errors,[]);assert.deepEqual(unexpected,[]);
+    const complete=assets.files.length===7&&assets.files.every(f=>assets.requests.some(r=>r.path===f.path&&r.status===200&&r.range===null&&r.bytes===f.bytes&&r.sha256===f.sha256));
+    if(complete&&speechReadyObserved&&workers.workers.every(ready)){
+      // The installed loader writes its fully consumed buffers to CacheStorage.
+      // Independently hash those real bytes; never seed or fetch cache entries.
+      if(!browserCacheProof){browserCacheProof=await speechAssets.readBrowserCache(page);browserCacheVerifications.push(browserCacheProof);}
+      reconcileNetworkFailures();
+    }
+    const metadata=[];lastPending=[];
+    for(const [request,event] of networkPending){
+      const receipt=speechAssets.metadataReceipt(request);
+      if(event.status===206&&receipt){
+        assert.equal(receipt.range,'bytes=0-0');assert.equal(receipt.bytes,1);assert.equal(receipt.status,206);
+        metadata.push({...event,receipt});
+      }else lastPending.push({...event});
+    }
+    // The production loader intentionally leaves 206 bodies unread after using
+    // their headers. Preserve these as pending; only successful same-request
+    // first-byte fulfillment may be excluded. Every other HTTP request drains.
+    if(complete&&speechReadyObserved&&workers.workers.every(ready)&&lastPending.length===0){
+      if(quietGeneration!==networkGeneration){quietGeneration=networkGeneration;quietSince=Date.now();}
+      if(Date.now()-quietSince>=500){
+        const record={stage,at:Date.now(),observedPendingIds:[...networkPending.values()].map(e=>e.id),elapsedMs:Date.now()-began,quietMs:Date.now()-quietSince,networkGeneration,manifestSha256:assets.manifestSha256,fullFiles:assets.files.length,cacheVerifiedAt:browserCacheProof.verifiedAt,workers,pendingMetadata:metadata};
+        const previous=networkSettlements.at(-1);
+        if(previous?.stage===stage)networkSettlements[networkSettlements.length-1]={...record,earlierSettledAt:previous.at};
+        else networkSettlements.push(record);
+        return;
+      }
+    }else {quietSince=null;quietGeneration=-1;}
+    await new Promise(resolve=>setTimeout(resolve,50));
+  }
+  throw new Error('Network/model settlement timed out; non-metadata requests still pending: '+JSON.stringify(lastPending));
+};
 try {
+  await speechAssets?.start?.();
   // Do not load private .env files or inherit VITE_* access configuration.
   const config = {root, configFile:resolve(root,'vite.config.ts'),
     envDir:resolve(out,'empty-env'), envPrefix:'MAESTRO_OFFLINE_UNUSED_',
@@ -62,9 +126,35 @@ try {
   const address = server.httpServer.address();
   assert(address && typeof address === 'object');
   const origin = 'http://127.0.0.1:' + address.port;
-  browser = await chromium.launch({channel:'chrome', headless:true});
+  browser = await chromium.launch({channel:'chrome', headless:true,...(live?{args:live.launchArgs}: {})});
+  browser.on('disconnected',()=>lifecycleEvents.push({event:'browser-disconnected',stage,at:Date.now()}));
   const context = await browser.newContext({viewport:{width:1536,height:1024}, locale:'en-US'});
+  context.on('close',()=>lifecycleEvents.push({event:'context-close',stage,at:Date.now()}));
   context.setDefaultTimeout(15000);
+  // Include worker/model traffic and distinguish simultaneous identical URLs.
+  // Record only request metadata, never credentials, queries or payloads.
+  context.on('request',request=>{
+    try{speechAssets?.observeRequest(request);}catch(error){errors.push('Speech asset request identity: '+String(error));}
+    if(networkEvents.length>=5000){if(!errors.includes('HTTP evidence overflow'))errors.push('HTTP evidence overflow');return;}
+    const url=new URL(request.url()),entry={id:networkEvents.length+1,stage,startedAt:Date.now(),method:request.method(),origin:url.origin,path:url.pathname,type:request.resourceType(),state:'pending'};
+    const from=request.redirectedFrom();if(from)entry.redirectedFromId=networkRequestIds.get(from);
+    networkRequestIds.set(request,entry.id);networkEvents.push(entry);networkPending.set(request,entry);networkGeneration++;
+  });
+  context.on('response',response=>{const entry=networkPending.get(response.request());if(entry){entry.status=response.status();networkGeneration++;}});
+  const endRequest=(request,state)=>{
+    const entry=networkPending.get(request);if(!entry)return;
+    entry.state=state;entry.endedAt=Date.now();entry.endedStage=stage;entry.endedDuringCleanup=networkCleanup;networkGeneration++;
+    if(state==='failed'){
+      entry.error=request.failure()?.errorText;
+      const fontDenied=entry.origin==='https://fonts.googleapis.com'&&entry.path==='/css2'&&['net::ERR_BLOCKED_BY_CLIENT','net::ERR_BLOCKED_BY_CLIENT.Inspector'].includes(entry.error);
+      const placeholderAborted=entry.origin===origin&&entry.error==='net::ERR_ABORTED'&&(entry.path.startsWith('/animations/')||entry.path==='/artifact-loading-scene.svg');
+      if(!fontDenied&&!placeholderAborted){networkFailures.push({...entry});networkFailureRequests.set(entry.id,request);}
+    }
+    networkPending.delete(request);
+  };
+  context.on('requestfinished',request=>endRequest(request,'finished'));
+  context.on('requestfailed',request=>endRequest(request,'failed'));
+  await live?.observeCapture(context);
   // Playwright's serviceWorkers:block probe reads navigator.serviceWorker in
   // opaque artifact frames and throws. Deny new registrations at the browser
   // boundary without accessing that forbidden getter; this context starts empty.
@@ -78,6 +168,7 @@ try {
   });
   await context.routeWebSocket('**/*', ws => {
     // Triggered TTS is a bounded local SDK peer; every other socket is rejected.
+    if(live?.handle(ws,speech))return;
     if(speech.handle(ws))return;
     const socketUrl=new URL(ws.url());
     const attempt={transport:'websocket',origin:socketUrl.origin,path:socketUrl.pathname,keyNames:[...socketUrl.searchParams.keys()],fakeKeyMatches:socketUrl.searchParams.get('key')===fakeKey};
@@ -88,6 +179,7 @@ try {
     try {
     const request = route.request(), url = new URL(request.url());
     if (url.origin === origin) return route.continue();
+    if(await speechAssets?.handle(route))return;
     if(url.hostname==='chatwithmaestro.com' && url.pathname==='/gemini-models.json' && request.method()==='GET') {
       return route.fulfill({contentType:'application/json',body:modelRegistry});
     }
@@ -162,7 +254,7 @@ try {
       return route.fulfill({contentType:'text/event-stream',body:'data: '+JSON.stringify(response)+'\n\n'});
     }
     const knownDenied = (url.hostname==='fonts.googleapis.com' && url.pathname==='/css2') ||
-      (url.hostname==='huggingface.co' && url.pathname.startsWith('/onnx-community/whisper-tiny.en/resolve/main/'));
+      (!speechAssets && url.hostname==='huggingface.co' && url.pathname.startsWith('/onnx-community/whisper-tiny.en/resolve/main/'));
     if(!knownDenied)unexpected.push({method:request.method(),origin:url.origin,path:url.pathname});
     blocked.push({transport:'http',method:request.method(),origin:url.origin,path:url.pathname});
     return route.abort('blockedbyclient');
@@ -172,6 +264,8 @@ try {
     }
   });
   page = await context.newPage();
+  page.on('crash',()=>lifecycleEvents.push({event:'page-crash',stage,at:Date.now()}));
+  page.on('close',()=>lifecycleEvents.push({event:'page-close',stage,at:Date.now()}));
   page.on('request', r => {if(r.url().startsWith(origin)) pending.add(r.url());});
   page.on('requestfinished', r => pending.delete(r.url()));
   page.on('requestfailed', r => {pending.delete(r.url()); if(r.url().startsWith(origin)) localFailures.push({url:r.url(),error:r.failure()?.errorText});});
@@ -215,7 +309,7 @@ try {
   await page.waitForFunction(()=>Array.from(document.querySelectorAll('img[alt="Preview"]')).filter(img=>img.complete&&img.naturalWidth>0).length===2);
   assert.equal(requests.filter(r=>r.kind==='image-generation').length,2);
   assert.deepEqual(requests.filter(r=>r.kind==='image-generation').map(r=>r.purpose),['user-default','assistant-tool']);
-  await page.waitForLoadState('networkidle',{timeout:15000});
+  await waitForSettledNetwork();
   assert([...uploads.values()].every(u=>u.complete),'Every admitted upload completed');
   // Automatic reply speech may have already populated the audio cache. First
   // let it finish, then prove the learner's click starts a new speaking phase.
@@ -238,15 +332,18 @@ try {
   const tutor = requests.find(r=>r.kind==='tutor');
   assert.equal(tutor.hasEnglish,true); assert.equal(tutor.hasSpanish,true);
   if(nativeAdapter) { checkpoint('native-room'); await nativeAdapter.afterLesson(); }
-  await page.waitForLoadState('networkidle',{timeout:15000});
+  await waitForSettledNetwork();
   assert([...uploads.values()].every(u=>u.complete),'Every admitted upload completed before reload');
   const before = await snapshot();
   const previewCount=await page.locator('img[alt="Preview"]').count();
   const beforeReloadCount = requests.length;
   const beforeReloadSpeechCount = speech.evidence().sessions.length;
+  await live?.settled();
+  const beforeReloadLiveCount=live?.evidence().sessions.length??0;
   await speech.settled();
   await nativeAdapter?.beforeReload();
   checkpoint('reload');
+  browserCacheProof=null;
   await page.reload({waitUntil:'domcontentloaded'});
   await page.getByRole('checkbox',{name:'I am 18 years of age or older.'}).waitFor();
   assert.equal(await page.locator('textarea').count(),0,'Reload requires fresh audience consent');
@@ -264,7 +361,7 @@ try {
   assert.equal(await native.count(),0,'Selected language pair restored without first-run selector');
   await page.waitForFunction(count=>Array.from(document.querySelectorAll('img[alt="Preview"]')).filter(img=>img.complete&&img.naturalWidth>0).length===count,previewCount);
   await nativeAdapter?.afterReload();
-  await page.waitForLoadState('networkidle',{timeout:15000});
+  await waitForSettledNetwork();
   assert([...uploads.values()].every(u=>u.complete),'Every restored-session upload completed');
   const after = await snapshot();
   assert.equal(after.historyTotal,before.historyTotal);
@@ -282,40 +379,51 @@ try {
   }
   await speech.settled();
   assert.equal(speech.evidence().sessions.length,beforeReloadSpeechCount,'Reload must not replay triggered speech');
+  await live?.settled();
+  assert.equal(live?.evidence().sessions.length??0,beforeReloadLiveCount,'Reload must not replay Live');
   assert.deepEqual(errors,[]); assert.deepEqual(unexpected,[]);
+  if(speechAssets)assert.deepEqual(speechAssets.evidence().errors,[]);
   assert.equal(context.serviceWorkers().length,0);
   // Transient image-loading artwork can be removed before its local fetch ends.
   // Only explicit UI placeholders/animation cancellations are expected; HTTP errors still fail.
   assert.deepEqual(localFailures.filter(f=>!(f.error==='net::ERR_ABORTED'&&(new URL(f.url).pathname.startsWith('/animations/')||new URL(f.url).pathname==='/artifact-loading-scene.svg'))),[]);
   assert(consoleErrors.every(message=>message.startsWith('Failed to load resource: net::ERR_BLOCKED_BY_CLIENT')));
   await page.screenshot({path:resolve(out,'restored-lesson.png')});
+  // No awaited UI work follows final network qualification. Keep the latest
+  // reload checkpoint, including the earlier settlement timestamp for audit.
+  await waitForSettledNetwork();
+  assert.equal(speech.evidence().sessions.length,beforeReloadSpeechCount,'Late triggered speech replay');
+  assert.equal(live?.evidence().sessions.length??0,beforeReloadLiveCount,'Late Live replay');
+  if(speechAssets)reconcileNetworkFailures();
   status='passed';
 } catch(error) {
   errors.push(String(error.stack || error));
   console.error('Failed at '+stage+': '+error.message);
   console.error(JSON.stringify({pending:[...pending],localFailures,errors,consoleErrors,blocked}));
-  await writeFile(resolve(out,'failure-network.json'),JSON.stringify({pending:[...pending],localFailures,errors,consoleErrors,blocked},null,2));
+  await writeFile(resolve(out,'failure-network.json'),JSON.stringify({pending:[...pending],lifecycleEvents,networkSettlements,networkFailures,networkReconciliations,browserCacheVerifications,networkEvents,networkPending:[...networkPending.values()],localFailures,errors,consoleErrors,blocked},null,2));
   if(page) {
     await page.screenshot({path:resolve(out,'failure.png')}).catch(()=>{});
     await writeFile(resolve(out,'failure-dom.txt'),await page.locator('body').innerText().catch(()=>'')).catch(()=>{});
   }
 } finally {
+  networkCleanup=true;
   try { await nativeAdapter?.close(); } catch(error) { cleanupErrors.push('native: '+String(error)); }
   try { await browser?.close(); } catch(error) { cleanupErrors.push('browser: '+String(error)); }
+  try { await speechAssets?.close?.(); } catch(error) { cleanupErrors.push('speech-assets: '+String(error)); }
   if(server) {
     try {
       server.httpServer.closeAllConnections();
       await new Promise((resolve,reject)=>server.httpServer.close(error=>error?reject(error):resolve()));
     } catch(error) { cleanupErrors.push('server: '+String(error)); }
   }
-  if(cleanupErrors.length||errors.length||unexpected.length)status='failed';
+  if(cleanupErrors.length||errors.length||unexpected.length||speechAssets?.evidence().errors.length)status='failed';
   await writeFile(resolve(out,'result.json'),JSON.stringify({status,stage,durationMs:Date.now()-started,scriptSha256,cleanupErrors,
     entry:'index.html -> index.tsx -> QuestAudienceGate -> QuestBookSurface -> App',
     productionComposition:true,productionBundle:true,nativeExecution:status==='passed'&&nativeAdapter?.evidence().qualified===true,physicalDevice:false,
     ...(nativeAdapter?{nativeProbeId:nativeAdapter.evidence().nativeProbeId,native:nativeAdapter.evidence()}:{}),
     realProvider:false,scriptedByokBoundary:true,storeSeeding:false,
-    unqualified:[...(nativeAdapter?['Android WebView/native speech','real scanned room']:['native room actions']),'managed access','real provider quality','Live/media capture','speech recognition (remote model download denied)','image quality (one-pixel scripted response)'],
-    speech:speech.evidence(),speechGesture,requests,blocked,unexpected,errors,consoleErrors,localFailures,pending:[...pending]},null,2)+'\n');
+    unqualified:[...(nativeAdapter?['Android WebView/native speech','real scanned room']:['native room actions']),'managed access','real provider quality',...(live?['physical microphone/camera capture','Live speech quality']:['Live/media capture']),...(speechAssets?['speech recognition quality (synthetic microphone)']:['speech recognition (remote model download denied)']),'image quality (one-pixel scripted response)'],
+    speech:speech.evidence(),...(speechAssets?{speechAssets:speechAssets.evidence()}:{}),...(live?{live:live.evidence()}:{}),speechGesture,requests,blocked,unexpected,errors,consoleErrors,localFailures,pending:[...pending],lifecycleEvents,networkSettlements,networkFailures,networkReconciliations,browserCacheVerifications,networkEvents,networkPending:[...networkPending.values()]},null,2)+'\n');
 }
 if(status!=='passed') throw new Error('Production-entry learner regression failed at '+stage+'; see '+out);
 console.log('Production-entry first learner passed with scripted network only: '+out);

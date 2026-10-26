@@ -36,7 +36,7 @@ type WireRequest=NonNullable<Snapshot['request']>;
 type PlannerInput={request:string;scene:RoomAgentState;receipts:unknown[];tutorContext:{nativeLanguageCode:unknown;systemInstruction:string}};
 /** The current user turn also carries image-origin labels and file/inline parts.
  * Select its unique structured plan input without changing any source context. */
-export function readFirstLearnerPlannerInput(body:unknown):PlannerInput {
+export function readFirstLearnerPlannerInput(body:unknown,expectedRequest=requestText):PlannerInput {
  assert(record(body)&&Array.isArray(body.contents),'Planner request has no contents');
  const current=body.contents.at(-1);
  assert(record(current)&&current.role==='user'&&Array.isArray(current.parts),'Planner request has no current user turn');
@@ -45,7 +45,7 @@ export function readFirstLearnerPlannerInput(body:unknown):PlannerInput {
   if(!record(part)||typeof part.text!=='string')continue;
   let value:unknown;
   try {value=JSON.parse(part.text);}catch {continue;}
-  if(!record(value)||value.request!==requestText||!record(value.scene)||!Array.isArray(value.receipts)||!record(value.tutorContext)||typeof value.tutorContext.systemInstruction!=='string')continue;
+  if(!record(value)||value.request!==expectedRequest||!record(value.scene)||!Array.isArray(value.receipts)||!record(value.tutorContext)||typeof value.tutorContext.systemInstruction!=='string')continue;
   candidates.push(value as PlannerInput);
  }
  assert.equal(candidates.length,1,'Expected one unambiguous structured planner input in the current user turn');
@@ -71,24 +71,24 @@ export function readFirstLearnerSuggestionMessage(body:unknown):string {
  return candidates[0];
 }
 
-class NativeLearner implements NativeFirstLearnerAdapter {
- private page!:Page;
+export class NativeLearner implements NativeFirstLearnerAdapter {
+ protected page!:Page;
  private url='';
  private pump?:Promise<void>;
  private stopPump=false;
  private failure:Error|null=null;
- private latest:RoomAgentState|null=null;
- private clientId='';
- private firstClient='';
- private clients:string[]=[];
- private observations:unknown[]=[];
- private requests=new Map<string,{clientId:string;request:WireRequest}>();
+ protected latest:RoomAgentState|null=null;
+ protected clientId='';
+ protected firstClient='';
+ protected clients:string[]=[];
+ protected observations:unknown[]=[];
+ protected requests=new Map<string,{clientId:string;request:WireRequest}>();
  private phase:'lesson'|'room'|'restored'='lesson';
  private providerCalls:unknown[]=[];
  private tutorCalls=0;
  private verifierCalls=0;
  private resultVerifierCalls=0;
- private workspaceCloseAcks:unknown[]=[];
+ protected workspaceCloseAcks:unknown[]=[];
  private plannerCalls=0;
  private resultCalls=0;
  private roomImages=0;
@@ -100,17 +100,17 @@ class NativeLearner implements NativeFirstLearnerAdapter {
  private persistence:unknown;
  private restoredDefinition:unknown;
  private restoredObservation:unknown;
- private beforeReloadRequests=0;
- private qualified=false;
- constructor(private channel:RoomProbeChannel,private ready:Record<string,unknown>,private out:string) {}
+ protected beforeReloadRequests=0;
+ protected qualified=false;
+ constructor(protected channel:RoomProbeChannel,protected ready:Record<string,unknown>,protected out:string) {}
  async attach(page:Page,origin:string) {this.page=page;this.url=origin+'/?surface=quest-book';}
- private check() {if(this.failure)throw this.failure;}
- private async until(test:()=>boolean,message:string,timeout=35000) {
+ protected check() {if(this.failure)throw this.failure;}
+ protected async until(test:()=>boolean,message:string,timeout=35000) {
   const deadline=Date.now()+timeout;
   while(Date.now()<deadline) {this.check();if(test())return;await sleep(100);}
   this.check();throw new Error(message);
  }
- private start() {
+ protected start() {
   assert(!this.pump,'Native transport must be drained before restarting');
   this.stopPump=false;
   this.pump=(async()=>{
@@ -153,12 +153,12 @@ class NativeLearner implements NativeFirstLearnerAdapter {
    } catch(error) {this.failure=error instanceof Error?error:new Error(String(error));}
   })();
  }
- private async pause() {this.stopPump=true;await this.pump;this.pump=undefined;this.check();}
+ protected async pause() {this.stopPump=true;await this.pump;this.pump=undefined;this.check();}
  async beforeFirstMessage() {
   this.start();await this.until(()=>Boolean(this.latest?.session),'Actual production book did not accept the native handshake');
   this.firstClient=this.clientId;
  }
- imagePurpose(bodyText:string) {
+ imagePurpose(bodyText:string):string|null {
   if(this.phase==='lesson')return null;
   assert.equal(this.phase,'room','Reload must not generate another image');
   assert(bodyText.includes(requestText),'Room-turn default image must use the actual learner request');
@@ -254,7 +254,7 @@ class NativeLearner implements NativeFirstLearnerAdapter {
   this.providerCalls.push({kind,bodySha256:createHash('sha256').update(bodyText).digest('hex')});
   return {kind,text};
  }
- private async readFact(id:string,target?:string) {
+ protected async readFact(id:string,target?:string,fields:Record<string,string>={}) {
   const page=this.page,definition=behaviourFact(id);assert(definition);
   const back=page.getByRole('button',{name:'Back to workshop',exact:true}).filter({visible:true});
   if(await back.count())await back.click();
@@ -274,17 +274,18 @@ class NativeLearner implements NativeFirstLearnerAdapter {
    await choice.getByRole('status').filter({hasText:'1–1 of 1'}).waitFor();
    await choice.locator('.room-object-list').getByRole('button').click();
   }
+  for(const [key,value] of Object.entries(fields))await page.getByLabel('Fact inputs '+key,{exact:true}).fill(value);
   const previousRevision=this.latest!.revision;
   await page.getByRole('button',{name:'Read fact',exact:true}).click();
   await this.until(()=>{
    const state=this.latest,c=state?.catalog;
-   return !!state&&state.revision>previousRevision&&c?.operation==='inspect'&&c.category==='facts'&&c.capability===id&&c.available===true&&(!target||c.arguments?.target===target);
+   return !!state&&state.revision>previousRevision&&c?.operation==='inspect'&&c.category==='facts'&&c.capability===id&&c.available===true&&(!target||c.arguments?.target===target)&&Object.entries(fields).every(([key,value])=>c.arguments?.[key]===value);
   },'Fresh native fact did not arrive: '+id);
   const view=this.latest!.catalog;assert(view?.operation==='inspect'&&view.category==='facts');assert(validFactValue(id,view.value));
   await page.getByLabel('Current fact value',{exact:true}).getByText('Current value',{exact:true}).waitFor();
   return structuredClone(view);
  }
- private async checkpoint() {
+ protected async checkpoint() {
   const deadline=Date.now()+20000;
   do {
    const view=await this.readFact('room.persistence');this.persistence=view;
@@ -295,7 +296,7 @@ class NativeLearner implements NativeFirstLearnerAdapter {
   } while(Date.now()<deadline);
   throw new Error('Native journal checkpoint remained pending');
  }
- private async backToChat() {
+ protected async backToChat() {
   const back=this.page.getByRole('button',{name:'Back to workshop',exact:true}).filter({visible:true});if(await back.count())await back.click();
   const clientId=this.clientId,previous=this.latest;assert(previous?.visible===true);
   await this.page.getByRole('button',{name:'Back to chat',exact:true}).filter({visible:true}).first().click();
@@ -353,7 +354,7 @@ class NativeLearner implements NativeFirstLearnerAdapter {
   assert([...this.requests.values()].filter(entry=>entry.clientId===this.clientId).every(entry=>entry.request.commands.every(command=>this.readOrPresentation(command))),'Restored document dispatched a mutation');
   await this.page.screenshot({path:join(this.out,'native-restored-fact.png')});await this.backToChat();this.check();this.qualified=true;
  }
- evidence() {return {nativeProbeId:this.channel.id,qualified:this.qualified&&!this.failure,realProvider:false,physicalDevice:false,
+ evidence():ReturnType<NativeFirstLearnerAdapter['evidence']> {return {nativeProbeId:this.channel.id,qualified:this.qualified&&!this.failure,realProvider:false,physicalDevice:false,
   boundary:'Actual production App and Unity Editor room transport; scripted model replies. Reload is the browser document, not a native process restart. Completed creation plus journal checkpoint and fresh saved-object facts establish native acceptance; no headset/Android/real scan/Live/audio claim.',
   syntheticPhysics:this.ready.syntheticPhysics,syntheticScan:this.ready.syntheticScan,clients:this.clients,requestText,objectId:this.objectId,creationRunId:this.creationRunId,
   creationReceipt:this.creationReceipt,definition:this.definition,observation:this.observation,persistence:this.persistence,restoredDefinition:this.restoredDefinition,restoredObservation:this.restoredObservation,

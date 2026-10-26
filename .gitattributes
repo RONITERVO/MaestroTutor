@@ -8,3 +8,7 @@ unity/MaestroQuest/Assets/Maestro/Resources/Creation/Templates/*.json text eol=l
 
 # Android executes the diagnostic wrapper directly.
 unity/Tools/StorageProbe/wrap.sh text eol=lf
+
+# Offline speech evidence pins the exact manifest and fixture metadata bytes.
+test-fixtures/models/whisper-tiny-en.json text eol=lf
+test-fixtures/audio/first-learner-apple-request.json text eol=lf

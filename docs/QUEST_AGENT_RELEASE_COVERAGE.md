@@ -3524,3 +3524,47 @@ never automatically replayed. Eight regression cases pass; the complete web
 suite passed 3,426 tests across 372 files without snapshot changes. All 14
 protected unrelated files remained unchanged. This does not qualify the
 extended text-to-Live journey or supersede the frozen native checkpoint.
+
+
+## Production text-to-Live continuity (2026-10-26)
+
+Actual Unity run `5fe08d44460b454e92b1e3ca4377b422` passed the production App
+journey with all client, Editor, terminal and wrapper receipts. It retains
+visible first-run onboarding, English/Spanish selection, proactive flashcard and
+image output, then creates an editable tree and a separate apple through chat.
+A real browser microphone capture through the Live controller delegates the
+request to remove only the tree. Three native mutation receipts and fresh facts
+prove the result; browser reload retains the same apple without replay.
+
+The native exchange recorded 50 requests and 345 accepted observations. All nine
+Live planner continuations received the exact captured PCM/WAV and packet
+metadata (132 packets, 422,400 PCM bytes). Four acquired tracks ended, remained
+ended through the pre-reload check, and the restored page had no tracks or pending
+acquisition. The original spoken fixture is preserved; its active device input
+becomes verified silence before the scripted turn completes.
+
+The actual Q4 Whisper worker initialized and returned four inference results,
+without model errors. Seven full assets were independently hashed in the
+browser's real CacheStorage both before and after reload. Its packaged asyncify
+WASM path no longer depends on the library's default CDN. Earlier isolated
+Chromium experiments explain and narrowly test full-transfer accounting anomalies;
+the final full journey retained two such signals, both with exact delivery and
+browser-byte proof. Pending metadata responses remain visible.
+
+All 181 focused JS/TS cases and 192 standalone PowerShell contracts passed.
+The wrapper contracts now run in CI; the actual Unity mode remains explicit and
+requires separately prepared pinned model assets. Source and all 14 protected
+unrelated files stayed unchanged throughout the run. Nine failed development
+attempts remain in local evidence rather than being reclassified.
+
+This closes the narrow offline production text/Live/native continuity increment.
+The Gemini transcript and replies are scripted; the microphone is a local
+synthetic voice, the room floor is synthetic, and the Unity process remains
+running across browser reload. Real managed/BYOK judgment, the complete nine-turn
+novice lesson, recognition and audible-output quality, retained microphone
+permission across reload, interrupted native-process recovery, Android/WebView,
+physical capture/room behavior and headset performance remain unqualified.
+
+The final run pins model-manifest and voice-metadata line endings through
+`.gitattributes`, so checkout conversion cannot change their evidence hashes.
+The preceding successful run `37f02f5750b04dbc89f05ed7d028e0d1` is also retained.

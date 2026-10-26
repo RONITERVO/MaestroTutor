@@ -4,7 +4,8 @@ Status: active implementation. Nothing in this document claims store readiness.
 
 Start with the [accepted product scope](#accepted-product-scope) and
 [release evidence checklist](#release-evidence-still-required) and the latest
-[complete integration checkpoint](#complete-native-book-and-unsigned-android-verification--2026-10-26). The current
+[complete integration checkpoint](#complete-native-book-and-unsigned-android-verification--2026-10-26) and
+[production text-to-Live increment](#production-text-to-live-continuity--2026-10-26). The current
 [pointer and solid geometry checkpoint](#shared-pointer-and-solid-geometry--2026-10-25) separates book interaction from physical queries. The preceding
 [collision availability checkpoint](#shared-passive-collision-availability--2026-10-25) adds explicit user/program/agent inspection. The preceding
 [saved-world rain checkpoint](#passive-saved-world-rain-cover--2026-10-25) extends exposure readiness;
@@ -17749,3 +17750,54 @@ contracts, TypeScript and scoped lint also passed. Evidence is under
 `.quest-evidence/live-dispatch-preflight-20261026/`. This is a web/runtime fix;
 the full native and unsigned Android checkpoint above still belongs to
 `5fbde426`. The extended Live journey remains under qualification.
+
+
+### Production text-to-Live continuity — 2026-10-26
+
+Run `5fe08d44460b454e92b1e3ca4377b422` passed with actual desktop Unity and the
+production App. It starts as a new English-speaking Spanish learner, retains the
+proactive flashcard/image combination, creates an editable tree and independent
+apple in chat, then removes only the tree through Live. The same apple identity
+and definition survive browser reload, without repeating native actions.
+
+The App run took 57.955 seconds; the complete wrapper took 90.373 seconds. Client,
+Editor, terminal and evidence-gate receipts all passed. The exchange contains
+50 native requests, 345 accepted observations, exactly three completed mutations
+and nine byte-exact Live media comparisons. One Live connection carries 132 PCM
+packets. Stop and Pause release all four acquired audio tracks, with no later
+reacquisition before reload; the restored page has no tracks or pending capture.
+
+This increment also fixes packaged speech-runtime loading: the worker overrides
+only Transformers' known default asyncify CDN pair with the bundled WASM and
+embedded factory. Custom runtime paths and the older Safari fallback remain
+unchanged. The real Q4 worker initializes and returns four inference results.
+The full web suite passed 3,498 cases at the worker-fix checkpoint; subsequent
+asset-boundary changes passed 181 focused cases. The new 192-case PowerShell
+report gate is part of CI and requires no Unity, provider or model download.
+
+Model files are explicitly prepared from a pinned public manifest into the
+ignored local cache. Exact requests receive immutable validated bytes; independent
+read-only hashes prove all seven complete files reached the browser's actual
+CacheStorage. Chromium sometimes reports an abort after consuming a full response:
+private reproduction verified all 48 transferred/cache-read payloads while 22
+reported that signal. The test retains such events and allows only an exact,
+sole-attempt server receipt plus browser-byte proof. The final full journey retained two such signals with exact delivery and
+browser-byte proof; no unexplained request failure passed. Header-only metadata remains visibly pending rather than
+being mislabeled complete. No app state or model-recognition result is seeded.
+
+The source guard and all 14 protected files remained unchanged. Local evidence
+is `.quest-evidence/native-room/5fe08d44460b454e92b1e3ca4377b422/` and
+`.quest-evidence/first-learner-live-20261026/`; the nine failed attempts are retained.
+See the [explicit run contract](QUEST_NATIVE_ROOM_PROBE.md#opt-in-production-text-to-live-continuity)
+and [coverage limits](QUEST_AGENT_RELEASE_COVERAGE.md#production-text-to-live-continuity-2026-10-26).
+
+This is scripted provider transport, local synthetic microphone input and a
+synthetic floor, with one running Unity process. It does not replace real
+managed/BYOK, complete novice-lesson, Android/headset, native audio/AEC, physical
+room/camera, retained-permission reload or interrupted-process acceptance. The
+31 known audio-quality failures remain open. It adds no release package,
+signature, deployment, store submission or change to the existing Alpha build.
+
+The final run pins model-manifest and voice-metadata line endings through
+`.gitattributes`, so checkout conversion cannot change their evidence hashes.
+The preceding successful run `37f02f5750b04dbc89f05ed7d028e0d1` is also retained.

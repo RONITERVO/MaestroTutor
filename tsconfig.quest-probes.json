@@ -39,7 +39,8 @@
     "scripts/native-probe-avatar-preferences.test.ts",
     "scripts/native-probe-identity.test.ts",
     "scripts/probe-quest-first-learner-native.ts",
-    "scripts/first-learner-verifier-contract.test.ts"
+    "scripts/first-learner-verifier-contract.test.ts",
+    "scripts/probe-quest-first-learner-live.ts"
   ],
   "references": []
 }

@@ -64,6 +64,9 @@ jobs:
       - name: Test native suite coverage gate
         shell: pwsh
         run: ./unity/Tools/Test-QuestTestCoverage.ps1
+      - name: Test offline Live evidence gate
+        shell: pwsh
+        run: ./unity/Tools/Test-QuestLiveContinuity.ps1
       - name: Type-check native integration drivers
         run: npm run verify:quest-probes
       - name: Test app and shared core

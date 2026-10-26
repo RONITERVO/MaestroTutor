@@ -2001,3 +2001,126 @@ This is offline production-App-to-Unity composition coverage. Managed access,
 model planning quality, the complete nine-turn novice lesson, Live capture and
 continuation, Android WebView rendering, physical room alignment, audio quality
 and headset performance remain separate release acceptance requirements.
+
+### Opt-in production text-to-Live continuity
+
+**Offline runtime qualified, 2026-10-26.** Run `5fe08d44460b454e92b1e3ca4377b422`
+passed with client, Editor, terminal and evidence-gate success. The production
+App journey took 57.955 seconds (90.373 seconds including wrapper/startup), with
+50 native requests, 345 accepted observations, three completed mutations and
+nine exact captured-media comparisons. All four acquired audio tracks ended;
+reload retained no tracks or pending acquisition. The same apple survived under
+a fresh browser client, and the deleted tree stayed absent. This is the local
+scripted-provider qualification described below, not headset/provider acceptance.
+
+```powershell
+./unity/Tools/Run-QuestRoomProbe.ps1 -Editor '<Unity.exe>' -BuildMirror '<owned mirror>' -Journey Book -FirstLearner -LiveContinuity
+```
+
+This explicit mode requires both `-Journey Book` and `-FirstLearner`. The wrapper
+rejects provider, prompt, resume, focused and synthetic-asset options before
+launch. It records `liveContinuity: true` in the owned run and verified receipts
+and selects `probe-quest-first-learner-live.ts`. The ordinary FirstLearner mode
+keeps its existing green-ball scenario and release-verifier coverage.
+
+The journey retains production entry, onboarding, the English-native /
+Spanish-target lesson, proactive flashcard and image, and artifact interaction.
+A normal chat request then passes through the actual tutor/verifier/agent path
+to create a simple editable apple-tree recipe and an independent red apple.
+Both object IDs must come from completed Unity creation receipts. The deletion
+task reads the current exact tree definition before editing; an ID remembered
+from another task is not a fresh revision guard. After a clean
+native persistence checkpoint, the test clicks the visible **Start Live** control.
+
+Chrome supplies a pinned, locally synthesized spoken request and silence as
+its synthetic microphone device. The original WAV remains immutable; after
+activity-end, the separate active fake-device file becomes silence before the
+scripted response. This represents the learner finishing, rather than repeating
+the same utterance whenever capture reopens. The production Live controller, browser capture graph,
+worklet, speech boundary and packetizer remain active. The SDK peer waits for
+actual activity-start, PCM and activity-end messages before returning a scripted
+transcript requesting deletion of only the tree. The shared Live suggestions
+verifier and agent handoff must receive that finalized turn. Every delegated
+planning call must carry a WAV matching all PCM bytes sent during the Live
+connection, with the same packet sample offsets and counts. The test ends explicit Live through **Stop Live**, waits for the completed-task
+reply and verifier, then uses the visible **Pause Maestro** control to stop
+independent background observation. All acquired tracks must end and no
+getUserMedia acquisition may remain pending. Stop Live alone intentionally
+returns to normal background observation; it is not a global microphone mute.
+
+Only three native mutations are permitted: create tree, create apple and delete
+the exact tree ID. Completion requires the real deletion receipt, an unavailable
+deleted-tree definition, its absence from the saved-object directory, and the
+same surviving apple ID and definition. Fresh generated Book fact reads and a
+clean persistence checkpoint verify the result. After an acknowledged return to
+chat, browser reload requires fresh audience consent and a new bridge client;
+it must preserve the result without replaying provider work, Live/TTS sessions
+or native mutations. After the captured turn, the active device file becomes verified silence while
+the original spoken fixture remains unchanged. Before reload, the isolated
+synthetic microphone grant is withdrawn. Capture release is established through
+Stop and Pause, then checked again immediately before this permission change;
+reload cannot erase a late reacquisition. The restored page must have no tracks
+or pending acquisition, and only rejected audio-only attempts may remain. This does not test observer startup with retained microphone
+permission. The Unity process remains the same across this reload.
+
+The mode uses isolated synthetic microphone permission and does not select or
+authorize a physical camera. The production Whisper worker uses real
+Q4 assets pinned in `test-fixtures/models/whisper-tiny-en.json`. Prepare them
+explicitly with `node scripts/prepare-first-learner-speech-assets.mjs`; the test
+never downloads them automatically. The cache lives under
+`.quest-tools/whisper-tiny-en-<revision>`. Both the wrapper (before Unity) and
+driver (before browser launch) verify every size and SHA256. During the journey,
+only exact manifested requests receive those immutable local bytes. One additional
+fully verified model file supplies a first-byte-only progress-metadata request
+made by the pinned loader; full inference downloads of that metadata file are
+rejected. Unexpected files, fallback models, methods or ranges fail. A passive listener on the actual
+Worker must observe Q4 readiness and no model/inference errors; fetching files
+alone is insufficient. The supported asyncify runtime must load from the app
+bundle, without CDN requests. The existing older-Safari non-asyncify fallback
+is preserved and is outside this offline runtime qualification. The manifest records upstream Apache-2.0 evidence and
+the conversion repository's unspecified license declaration; these assets are
+for private offline evaluation, not bundled redistribution.
+
+Full runtime files stream from a private, bounded loopback server after their
+exact public model requests are intercepted. This avoids Chromium's DevTools
+message-size limit for the large decoder, without admitting arbitrary local or
+remote URLs. The loader leaves successful first-byte metadata responses unread
+once it has their headers. Settlement records these as pending, with successful
+receipts bound to the exact Playwright request objects; it never labels them
+finished. All seven full assets, real Q4 readiness and 500 ms without network events
+are required. The driver also hashes the seven complete entries written by the
+production loader to the fresh browser's CacheStorage. It never creates or
+populates that cache. Chromium can report `ERR_ABORTED` after a consumer has
+received every byte; such a failed event stays visible and is reconciled only
+with its exact source redirect, sole full download attempt, completed server
+delivery and matching browser-cache bytes. Every other admitted failure rejects
+the run. New requests reset that window,
+even if they finish between polls. The pending IDs and receipts remain auditable
+in the result. Deliberate browser-close cancellations are labeled separately.
+
+The pure PowerShell evidence gate also verifies retained microphone WAV bytes,
+media hashes, capture release and settlement records. Its standalone contract
+tests run in CI without Unity or model downloads:
+
+```powershell
+./unity/Tools/Test-QuestLiveContinuity.ps1
+```
+
+The provider transcript and response audio remain scripted, so this establishes
+no general speech-recognition, audible-output,
+echo-cancellation or language-quality result. The existing native synthetic
+floor is retained without a room scan or physical headset.
+
+Evidence remains under `.quest-evidence/native-room/<id>/first-learner`, including
+the generated microphone WAV/hash, captured-packet comparisons, capture lifetime,
+command receipts, screenshots and fresh/reloaded facts. The wrapper requires
+matching top-level and native probe IDs, qualified offline production/native
+results, distinct object identities, three completed receipts and one clean Live
+turn, in addition to its process/terminal/log checks. A browser result alone is
+insufficient. Managed/BYOK provider acceptance, the complete nine-turn novice
+lesson, Android/native audio, physical microphone/camera/room behavior, headset
+performance and native-process restart recovery still need their own evidence.
+
+The final run pins model-manifest and voice-metadata line endings through
+`.gitattributes`, so checkout conversion cannot change their evidence hashes.
+The preceding successful run `37f02f5750b04dbc89f05ed7d028e0d1` is also retained.
