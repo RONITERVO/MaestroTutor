@@ -3492,3 +3492,23 @@ headset rendering. CI continues to run the standalone browser composition; the
 local Unity verifier requires the additional native journey. See
 [the run contract](QUEST_NATIVE_ROOM_PROBE.md#fresh-learner-through-the-production-entry)
 for process ownership, terminal checks and evidence paths.
+
+
+## Frozen production and native checkpoint (2026-10-26)
+
+Commit `5fbde426` passed the complete native inventory: 1,703 EditMode and
+2,431 PlayMode, with three expected optional private-asset skips. Fresh actual
+Unity Headless `2d1c9399`, Book `a0da0a2d` and first-learner `265a9577` journeys
+all completed with clean client/Editor/terminal receipts. The same source then
+passed reviewed unsigned Android CompileOnly stages and 16 KiB ELF LOAD
+alignment for all 22 selected ARM64 libraries. Source and protected-file guards
+were checked before and after. No installable or signed package was produced.
+
+This closes the complete offline integration checkpoint for that commit. It
+does not close production text-to-Live/native continuity, native-process crash
+recovery, real-provider model judgment, headset rendering, physical capture or
+audible-output quality. The original measured audio profile still has 31
+failures; bit-identical passive tracing qualifies diagnostic observation only.
+The next Live journey must use the real visible App controls and capture owner,
+prove exact submitted media reaches the delegated planner, preserve object IDs
+across text/Live, and stop capture without replay on browser reload.

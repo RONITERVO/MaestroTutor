@@ -4,7 +4,7 @@ Status: active implementation. Nothing in this document claims store readiness.
 
 Start with the [accepted product scope](#accepted-product-scope) and
 [release evidence checklist](#release-evidence-still-required) and the latest
-[complete integration checkpoint](#complete-native-book-and-android-integration-2026-10-24). The current
+[complete integration checkpoint](#complete-native-book-and-unsigned-android-verification--2026-10-26). The current
 [pointer and solid geometry checkpoint](#shared-pointer-and-solid-geometry--2026-10-25) separates book interaction from physical queries. The preceding
 [collision availability checkpoint](#shared-passive-collision-availability--2026-10-25) adds explicit user/program/agent inspection. The preceding
 [saved-world rain checkpoint](#passive-saved-world-rain-cover--2026-10-25) extends exposure readiness;
@@ -17675,3 +17675,56 @@ diagnostic runs are under `.quest-evidence/recovery-timing-20261026/`. The faile
 full run is retained in `.quest-evidence/full-release-20261026/failed-verify-logs/`.
 A new complete verification is required before unsigned Android compilation;
 these focused checks do not turn the interrupted full run into a pass.
+
+
+### Complete native, Book and unsigned Android verification — 2026-10-26
+
+The frozen checkpoint at `5fbde426e6bdf1e239c8e84f10585eec39a320cf` passed
+the complete canonical verifier: **1,703 EditMode and 2,431 PlayMode tests**,
+with only the three named optional private-model/motion cases skipped. The
+actual Unity TestRunner inventory accounts for all 4,137 discovered cases
+without overlap; all 15 recovery tests passed in the full suite.
+
+The same invocation completed fresh actual-Unity Headless `2d1c9399`, Book
+`a0da0a2d` and production first-learner `265a9577` journeys. Each has matching
+ownership, client, Editor and terminal success receipts. The first learner uses
+the original App, visible onboarding, tutor/verifier/planner, completed green-ball
+creation and browser reload; the other journeys retain their broader controls.
+Providers and media are scripted and the floor is synthetic. These are desktop
+integration results, not real Gemini, physical microphone or headset acceptance.
+
+After actual verifier exit 0, a reviewed continuation executed the canonical
+CompileOnly stages without rerunning the completed native suite. Shared web
+build, native browser unit/AAR/lint gates, Unity Android export and explicit
+unsigned Gradle compilation passed. All **22 selected ARM64 libraries** passed
+16 KiB ELF LOAD alignment. Before and after guards matched 3,622 native inputs,
+1,674 web/tool inputs, 14 protected unrelated files, all journey receipts and the
+frozen commit. The continuation exited 0 and produced no installable APK/AAB;
+no signing, install, deployment or Meta operation occurred.
+
+Evidence and actual process-terminal receipts are retained under
+`.quest-evidence/full-release-recovery-20261026/`. Exact-head release CI
+`40335116828` and native echo regression CI `40335116184` passed. Later source
+edits require their own relevant verification; this checkpoint belongs to the
+commit above. Production text-to-Live continuity, interrupted native-process
+recovery and qualified native capture integration remain separate next increments.
+
+### Passive native audio attribution — 2026-10-26
+
+A private instrumented copy now accounts explicitly for every input block,
+including bypassed blocks and render-delay-buffer reinitialization. All 39
+original outputs are bit-identical, with identical metrics and verdicts; six
+additional matched four-stream diagnostic cases passed their trace contracts.
+Thirty synthetic validator contracts cover missing/duplicate entries, stage
+identity and bypass outcomes. The diagnostic process exited 0. No maintained
+DSP configuration, quality threshold or selected capture path changed.
+
+The original **31 audio-quality failures remain open**. Controlled identical
+microphone inputs with and without the render reference localize additional
+warm quiet-voice distortion before nonlinear suppression. This is evidence for
+further history-dependent investigation, not a proven faulty coefficient or a
+shipping fix. Attribution windows use measured input source time; original
+whole-window acceptance retains its fixed output windows, and those measures
+must not be substituted. Evidence is in
+`.quest-evidence/echo-passive-trace-20261026/attempt3/`. Physical acoustic quality
+and the production native-capture owner remain unqualified.
