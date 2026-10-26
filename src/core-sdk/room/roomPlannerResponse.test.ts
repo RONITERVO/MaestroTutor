@@ -7,7 +7,7 @@ import {ROOM_AGENT_SCHEMA,ROOM_AGENT_RESPONSE_SCHEMA,ROOM_PLANNER_ARGUMENT_GUIDE
 const target='a'.repeat(32),args={target,destination:{kind:'point',position:{x:3,y:.7,z:.6}},seconds:.6,maxSpeed:5};
 const call={id:'object.physics.launch',version:2,arguments:args};
 const encoded=()=>({commands:[{action:'execution',execution:{operation:'start',call:{...call,arguments:JSON.stringify(args)}}}]});
-const scene={version:1,session:'native',revision:1,sceneRevision:1,ack:0,ok:true,status:'Ready',created:[],objects:[],canUndo:false,canRedo:false,physicsRunning:true,capabilities:['execution.v1','objectLaunch.v1','actionResults.v1']} as RoomAgentState;
+const scene={version:1,session:'native',revision:1,sceneRevision:1,ack:0,ok:true,status:'Ready',created:[],objects:[{id:target,name:'Ball',kind:'Ball',position:{x:0,y:1,z:0},scale:1,color:{r:1,g:1,b:1,a:1},animated:false,objectRevision:3}],canUndo:false,canRedo:false,physicsRunning:true,capabilities:['execution.v1','objectLaunch.v1','actionResults.v1']} as RoomAgentState;
 function provider(outputs:unknown[]){
  return {models:{generateContent:vi.fn(),generateContentStream:vi.fn(async()=>{
   const text=JSON.stringify(outputs.shift());return (async function*(){yield {text,usageMetadata:{totalTokenCount:10},candidates:[{content:{role:'model',parts:[{text}]}}]};})();

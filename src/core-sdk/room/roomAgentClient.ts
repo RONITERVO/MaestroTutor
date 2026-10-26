@@ -9,9 +9,9 @@ import {validRoomCaptureMetadata,validRoomCaptureImage,sameRoomCapture,type Room
 import {validConstructionSelection,validConstructionManipulation} from '../../../shared/roomSelection';
 import {validRoomOwnership} from '../../../shared/roomOwnership';
 import {validTemporaryRoom} from '../../../shared/roomSession';
-import {roomCommandConditions,roomCommandTargets,roomRevisionBasis,roomObjectId,validRoomObjectObservation} from './roomObjectContext';
+import {roomCommandConditions,roomCommandReconciles,roomCommandTargets,roomRevisionBasis,roomObjectId,validRoomObjectObservation} from './roomObjectContext';
 import {ROOM_OBJECT_OVERVIEW_FEATURE,ROOM_OBJECT_OVERVIEW_LIMIT,validRoomObjectOverview} from '../../../shared/roomObjectOverview';
-import {validExecutionView,identifyExecution,executionForCapability} from '../../../shared/roomExecutions';
+import {validExecutionView,identifyExecution} from '../../../shared/roomExecutions';
 import {validCatalogView} from '../../../shared/roomCatalog';
 import { MAX_ROOM_CAPABILITIES, requireRoomCapabilities, validPhysicsObservation, validAvatarObservation, validAvatarWalkObservation } from '../../../shared/roomControls';
 import {validActivityProfile} from '../../../shared/avatarActivities';
@@ -111,7 +111,7 @@ export class RoomAgentClient {
     if(state.session!==live.session||state.temporaryRoom?.id!==live.temporaryRoom?.id)throw new Error('The room session changed. Reload the latest object before editing.');
     parseRoomCommands({commands});requireRoomCapabilities(commands,live);
     const objects=(expectedObjects??roomRevisionBasis(state)).map(o=>({...o}));
-    if(this.reconciling(commands)||objects.some(o=>o.objectRevision===undefined))return {state,objects};
+    if(roomCommandReconciles(commands,this.value)||objects.some(o=>o.objectRevision===undefined))return {state,objects};
     const missing=[...roomCommandTargets(commands).required].filter(id=>!objects.some(o=>o.id===id));
     if(!missing.length){roomCommandConditions(commands,objects);return {state,objects};}
     return (async()=>{
@@ -132,10 +132,6 @@ export class RoomAgentClient {
     const prepared=this.prepare(commands,expected,expectedObjects);
     const dispatch=(context:RoomCommandContext)=>this.request(commands,context.state,context.objects);
     return prepared instanceof Promise?prepared.then(dispatch):dispatch(prepared);
-  }
-  private reconciling(commands:readonly RoomCommand[]):boolean {
-    const start=commands.length===1&&commands[0].action==='execution'&&commands[0].execution?.operation==='start'?commands[0].execution:null;
-    return Boolean(start?.runId&&this.value?.capabilities?.includes('executionReceipts.v1')&&start.runId!==executionForCapability(start.call.id,this.value.execution)?.nextRunId);
   }
   snapshot=() => {
     const snapshot = {clientId:this.clientId,session:this.value?.session??'',...(this.captureAck?{captureAck:this.captureAck}:{}),request:this.pending?.request??null};
@@ -165,7 +161,7 @@ export class RoomAgentClient {
       if(!valid() || this.pending || this.sequence>=2147483647) return Promise.reject(new Error('Room session unavailable or busy'));
       parseRoomCommands({commands});requireRoomCapabilities(commands,this.value!);
       if(this.value!.capabilities?.includes('executionReceipts.v1'))commands=commands.map(c=>c.action==='execution'&&c.execution?{...c,execution:identifyExecution(c.execution,this.value!.execution)}:c);
-      const context=roomCommandConditions(commands,expectedObjects??roomRevisionBasis(this.value!),this.reconciling(commands));
+      const context=roomCommandConditions(commands,expectedObjects??roomRevisionBasis(this.value!),roomCommandReconciles(commands,this.value));
       const request={...context,session,sequence:++this.sequence,sceneRevision:expectedRevision,commands:commands.map(command => command.action === 'create' ? {scale:1,color:{r:1,g:1,b:1,a:1},...command} : command)};
       const frameLimit=this.value!.capabilities?.includes(roomSnapshotTransport.feature)?roomSnapshotTransport.maximumCharacters:roomSnapshotTransport.legacyMaximumCharacters;
       // Reserve an acknowledgement that may arrive while this request is pending.

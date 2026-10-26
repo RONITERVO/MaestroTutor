@@ -17728,3 +17728,24 @@ whole-window acceptance retains its fixed output windows, and those measures
 must not be substituted. Evidence is in
 `.quest-evidence/echo-passive-trace-20261026/attempt3/`. Physical acoustic quality
 and the production native-capture owner remain unqualified.
+
+### Known local refusal before action intent — 2026-10-26
+
+The production text-to-Live probe exposed a reporting defect: a planner that
+remembered an object ID without reading its current revision could be refused
+locally before dispatch, yet leave an unconfirmed-action journal entry. The
+shared planner now applies the existing target-evidence check before saving
+intent, using the exact same revision basis that it passes to the client. The
+client still checks at dispatch. Previously issued IDs can reconcile their
+native receipt; genuine post-intent uncertainty still prohibits replay. No
+automatic read, revision refresh, retry or fabricated receipt is introduced.
+
+Eight focused regressions cover fresh and explicit current IDs, observed
+targets, old-ID reconciliation, legacy revisions, post-intent failure, lease
+loss during durable save and lost acknowledgement. The complete offline web
+suite passed **3,426 tests across 372 files**, with snapshot updates disabled;
+all 14 protected unrelated files stayed byte-identical. Related room/Quest
+contracts, TypeScript and scoped lint also passed. Evidence is under
+`.quest-evidence/live-dispatch-preflight-20261026/`. This is a web/runtime fix;
+the full native and unsigned Android checkpoint above still belongs to
+`5fbde426`. The extended Live journey remains under qualification.

@@ -4,6 +4,7 @@ import {validCatalogView,type CatalogView} from '../../../shared/roomCatalog';
 import {validFactValue} from '../../../shared/behaviourFacts';
 import {readObjectReference} from '../../../shared/objectReference';
 import {capabilityResources} from '../../../shared/capabilities';
+import {executionForCapability} from '../../../shared/roomExecutions';
 import {validObjectPhysics,validAvatarMovement} from '../../../shared/roomControls';
 import {validPigment} from './recipe';
 import type {RoomAgentState,RoomCommand,RoomObjectObservation,RoomObjectRevision} from './roomAgent';
@@ -59,6 +60,12 @@ export function roomCommandTargets(commands:readonly RoomCommand[]):{targets:Set
   }
  }
  return {targets,required};
+}
+/** An explicitly issued old identity may only reconcile its durable native receipt.
+ * Share this classification with the client; preflight must not invent a fresh edit. */
+export function roomCommandReconciles(commands:readonly RoomCommand[],state:Pick<RoomAgentState,'capabilities'|'execution'>|null|undefined):boolean {
+ const start=commands.length===1&&commands[0].action==='execution'&&commands[0].execution?.operation==='start'?commands[0].execution:null;
+ return Boolean(start?.runId&&state?.capabilities?.includes('executionReceipts.v1')&&start.runId!==executionForCapability(start.call.id,state.execution)?.nextRunId);
 }
 /** Missing evidence is not permission to omit a native target precondition. */
 export function roomCommandConditions(commands:readonly RoomCommand[],basis:readonly RoomObjectRevision[],reconcile=false):{version:1|2;conditions:{id:string;revision:number}[]} {

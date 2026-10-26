@@ -3512,3 +3512,15 @@ failures; bit-identical passive tracing qualifies diagnostic observation only.
 The next Live journey must use the real visible App controls and capture owner,
 prove exact submitted media reaches the delegated planner, preserve object IDs
 across text/Live, and stop capture without replay on browser reload.
+
+
+## Pre-dispatch evidence reporting (2026-10-26)
+
+Missing target revision evidence now fails before the planner saves action
+intent. Both planner and client share the existing reconciliation predicate and
+target guard, and dispatch retains the exact planner-visible revisions. Lost
+acknowledgement or other post-intent uncertainty remains unconfirmed and is
+never automatically replayed. Eight regression cases pass; the complete web
+suite passed 3,426 tests across 372 files without snapshot changes. All 14
+protected unrelated files remained unchanged. This does not qualify the
+extended text-to-Live journey or supersede the frozen native checkpoint.

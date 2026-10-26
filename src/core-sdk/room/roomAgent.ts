@@ -1,6 +1,6 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
-import {roomRevisionBasis} from './roomObjectContext';
+import {roomCommandConditions,roomCommandReconciles,roomRevisionBasis} from './roomObjectContext';
 import type {RoomObjectOverview} from '../../../shared/roomObjectOverview';
 import {ROOM_PLANNER_ARGUMENT_GUIDE,roomCaptureImages} from '../../../shared/prompts/room';
 import {ROOM_PLANNER_DISCOVERY_GUIDE} from '../../../shared/prompts/catalog';
@@ -212,13 +212,17 @@ export async function runRoomActionTask(input: Pick<TutorTextTurnInput,'model'|'
       const current=grouped?copy(live):scene;
       requireRoomCapabilities(batch,current);
       if(current.capabilities?.includes('executionReceipts.v1'))batch=batch.map(c=>c.action==='execution'&&c.execution?{...c,execution:identifyExecution(c.execution,current.execution)}:c);
+      // Known local evidence refusal must precede durable intent. Keep the exact
+      // planner-visible basis; neither preflight nor dispatch refreshes its revisions.
+      const objects=roomRevisionBasis(current,receipts);
+      roomCommandConditions(batch,objects,roomCommandReconciles(batch,current));
       await control.beforeDispatch?.(batch,current);active();
       // Preserve the actual dispatch, including reconciled reads and issued run IDs.
       // A post-action scene alone cannot tell the next planner what was removed.
       const dispatched=copy(batch);
       const receipt=await (control.signal
-        ? lease.execute(batch,current.sceneRevision,roomRevisionBasis(current,receipts),control.signal)
-        : lease.execute(batch,current.sceneRevision,roomRevisionBasis(current,receipts)));
+        ? lease.execute(batch,current.sceneRevision,objects,control.signal)
+        : lease.execute(batch,current.sceneRevision,objects));
       operations.push({commands:dispatched,receiptIndex:receipts.length});
       receipts.push(copy(receipt));
       const moduleQuery=batch.length===1&&batch[0].action==='catalog'&&batch[0].catalog?.operation==='inspect'&&batch[0].catalog.category==='modules'?batch[0].catalog:null;

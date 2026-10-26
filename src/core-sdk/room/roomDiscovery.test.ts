@@ -30,11 +30,13 @@ describe('bounded planner discovery groups',()=>{
  });
  it('preserves the planning-time guard for mutations even if the target changes during generation',async()=>{
   const move:RoomCommand={action:'move',target:'book',position:{x:1,y:1,z:1}};
-  let current={...scene};const ai=client([[move],[]]);const stream=ai.models.generateContentStream;
-  stream.mockImplementationOnce(async()=>{current={...current,sceneRevision:5};const text=JSON.stringify({commands:[move]});return (async function*(){yield {text,candidates:[{content:{role:'model',parts:[{text}]}}]};})();});
+  const observed={id:'book',name:'Book',kind:'Book',position:{x:0,y:1,z:0},scale:1,color:{r:1,g:1,b:1,a:1},animated:false,objectRevision:2};
+  let current={...scene,objects:[observed]};const ai=client([[move],[]]);const stream=ai.models.generateContentStream;
+  stream.mockImplementationOnce(async()=>{current={...current,sceneRevision:5,objects:[{...observed,objectRevision:3}]};const text=JSON.stringify({commands:[move]});return (async function*(){yield {text,candidates:[{content:{role:'model',parts:[{text}]}}]};})();});
   const execute=vi.fn(async()=>({...current,ok:false,status:'Stale target'}));
   await runRoomActionTask(input,{aiClient:ai},{state:()=>current,valid:()=>true,execute},()=>{});
-  expect(execute).toHaveBeenCalledWith([move],4,scene.objects);
+  expect(execute).toHaveBeenCalledWith([move],4,[{id:'book',objectRevision:2}]);
+  expect(current.objects[0].objectRevision).toBe(3);
  });
  it.each(['cancel','session','capability','receiptLost'] as const)('stops remaining reads after %s and never replays the first query',async(kind)=>{
   const ai=client([reads,[]]),controller=new AbortController();let current={...scene};const saved=vi.fn();

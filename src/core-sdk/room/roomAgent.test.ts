@@ -11,6 +11,7 @@ import {parseRoomCommands,runRoomActionTask,runRoomTutorTurn,type RoomAgentState
 import {ROOM_AGENT_SCHEMA,ROOM_AGENT_RESPONSE_SCHEMA,ROOM_HANDOFF_TUTOR_INSTRUCTION,ROOM_HANDOFF_LIVE_INSTRUCTION} from '../../../shared/prompts';
 import {ROOM_TASK_LIMITS} from '../../../shared/roomTaskBudget';
 const scene:RoomAgentState={version:1,session:'a'.repeat(32),revision:1,sceneRevision:4,ack:0,ok:true,status:'Ready',objects:[],created:[],canUndo:false,canRedo:false,physicsRunning:false};
+const observedObject=(id:string,kind='Block')=>({id,name:id,kind,position:{x:0,y:0,z:0},scale:1,color:{r:1,g:1,b:1,a:1},animated:false,objectRevision:1});
 const input={model:'gemini-3.8-flash',prompt:'Make a robot and have it wave.',history:[],nativeLanguageCode:'en',systemInstruction:'Tutor fixture'};
 function client(outputs:string[]) {
  return {models:{generateContent:vi.fn(),generateContentStream:vi.fn(async()=>{
@@ -85,7 +86,7 @@ it('shows current room plus prior evidence to a follow-up and refuses blind muta
 });
 
 it('uses live runtime observations after a start without claiming future movement completed',async()=>{
- let current:RoomAgentState={...scene,capabilities:['avatarMotion.v1'],avatar:{active:false,mode:'stopped',status:'Ready',canLook:true,canFollow:true,lookReason:'',followReason:'',distance:1.3,speed:.65}};
+ let current:RoomAgentState={...scene,objects:[observedObject('maestro','Maestro')],capabilities:['avatarMotion.v1'],avatar:{active:false,mode:'stopped',status:'Ready',canLook:true,canFollow:true,lookReason:'',followReason:'',distance:1.3,speed:.65}};
  const ai=client(['{"commands":[{"action":"avatarMotion","target":"maestro","operation":"follow"}]}','{"commands":[]}']);
  const execute=vi.fn(async()=>({...current,ack:1,status:'Maestro follow started',avatar:{...current.avatar!,active:true,mode:'follow' as const,status:'Following'}}));
  const task=await runRoomActionTask({...input,prompt:'Follow me'},{aiClient:ai},{state:()=>current,valid:()=>true,execute},()=>{},{onReceipt:()=>{current={...current,avatar:{...current.avatar!,active:true,mode:'follow',status:'Path blocked by book'}};}});
@@ -117,11 +118,11 @@ it('discovers native motion identities before saving an animation through the ex
 
 it('assigns a discovered walking motion without starting follow and reports native availability',async()=>{
  const motionId='b'.repeat(32),command={action:'avatarWalk',target:'maestro',motionId};
- let current:RoomAgentState={...scene,capabilities:['avatarWalk.v1'],walk:{source:'included',motionId:'',clipIndex:-1,modelHash:'',name:'Included walk',available:true,status:'Selected',playbackStatus:''}};
+ let current:RoomAgentState={...scene,objects:[observedObject('maestro','Maestro')],capabilities:['avatarWalk.v1'],walk:{source:'included',motionId:'',clipIndex:-1,modelHash:'',name:'Included walk',available:true,status:'Selected',playbackStatus:''}};
  const ai=client([JSON.stringify({commands:[command]}),'{"commands":[]}']);
  const execute=vi.fn(async()=>current={...current,ack:1,walk:{...current.walk!,source:'library',motionId,name:'Walking',available:false,status:'Download no longer available'}});
  const result=await runRoomActionTask({...input,prompt:'Use the walking animation we found'},{aiClient:ai},{state:()=>current,valid:()=>true,execute},()=>{});
- expect(execute.mock.calls).toHaveLength(1);expect(execute).toHaveBeenCalledWith([command],4,scene.objects);expect(result.scene.walk?.available).toBe(false);
+ expect(execute.mock.calls).toHaveLength(1);expect(execute).toHaveBeenCalledWith([command],4,[{id:'maestro',objectRevision:1}]);expect(result.scene.walk?.available).toBe(false);
  const next:any=(ai.models.generateContentStream.mock.calls as any)[1][0];expect(JSON.parse(next.contents[0].parts[0].text).scene.walk.status).toBe('Download no longer available');
 });
 
@@ -305,7 +306,8 @@ it('can use discovered capabilities after all discovery reads without consuming 
  const commands=[...Array.from({length:queries},()=>query),create,paint];
  const ai=client([...commands.map(command=>JSON.stringify({commands:[command]})),'{"commands":[]}']);
  let current={...scene,capabilities:['catalog.v1']};
- const execute=vi.fn(async(_commands:RoomCommand[])=>{current={...current,revision:current.revision+1,ack:current.ack+1};return current;});
+ const execute=vi.fn(async(commands:RoomCommand[])=>{current={...current,revision:current.revision+1,ack:current.ack+1,
+  ...(commands[0].action==='create'?{created:[paint.target!],objects:[observedObject(paint.target!,'Ball')]}:{})};return current;});
  const result=await runRoomActionTask(input,{aiClient:ai},{state:()=>current,valid:()=>true,execute},()=>{});
  expect(execute.mock.calls.map(call=>call[0])).toEqual(commands.map(command=>[command]));expect(result.budgetExhausted).toBe(false);
  const requests=ai.models.generateContentStream.mock.calls as unknown as [any][];
