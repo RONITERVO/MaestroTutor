@@ -75,6 +75,22 @@ jobs:
       - name: Verify compiled microphone capture in headless Chrome
         timeout-minutes: 2
         run: npm run test:capture:browser
+      - name: Verify first Quest lesson through the production app
+        id: first-learner
+        timeout-minutes: 5
+        run: npm run test:quest:first-learner
+      - name: Retain first-lesson browser evidence
+        if: always() && steps.first-learner.outcome != '' && steps.first-learner.outcome != 'skipped'
+        uses: actions/upload-artifact@v4
+        with:
+          name: quest-first-learner
+          include-hidden-files: true
+          path: |
+            .quest-evidence/first-learner/*.json
+            .quest-evidence/first-learner/*.png
+            .quest-evidence/first-learner/*.txt
+          if-no-files-found: warn
+          retention-days: 7
       - name: Start the headless CLI contract
         run: |
           npm run verify:release-config

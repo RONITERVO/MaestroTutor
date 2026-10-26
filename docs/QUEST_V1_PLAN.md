@@ -126,7 +126,7 @@ open until every required row has matching release-candidate evidence.
 
 | Requirement | Current evidence | Remaining work and acceptance limits |
 | --- | --- | --- |
-| Familiar language-learning chat and full-page book | Original web components, both book layouts, inline artifacts and ribbon bookmark; recorded offline Headless and visible Book journeys against their named desktop Unity sources. The focused Book fixture bypasses onboarding and several Live/media controllers; it does not prove the full first-launch app composition. | Fresh first-lesson, smalltalk, proactive artifact/tool combinations, image, weather, room actions and text-to-Live continuation on the chosen Quest candidate, through both managed and BYOK providers. See [coverage](QUEST_AGENT_RELEASE_COVERAGE.md) and [device QA](QUEST_DEVICE_QA.md). |
+| Familiar language-learning chat and full-page book | Original web components, both book layouts, inline artifacts and ribbon bookmark; recorded offline Headless and visible Book journeys against their named desktop Unity sources. A separate production-entry offline lesson covers visible onboarding, English/Spanish selection, proactive artifact plus image tool and reload. The focused native Book fixture still bypasses several Live/media controllers; complete lesson/native/Live composition remains open. | Fresh first-lesson, smalltalk, proactive artifact/tool combinations, image, weather, room actions and text-to-Live continuation on the chosen Quest candidate, through both managed and BYOK providers. See [coverage](QUEST_AGENT_RELEASE_COVERAGE.md) and [device QA](QUEST_DEVICE_QA.md). |
 | Language-first, shared user/agent actions | Shared capability catalog, generated user controls, event-driven programs, traces, cancellation and ownership; deterministic and actual Unity integration coverage. | Real-provider multi-step completion, recovery and understandable learner feedback on the release candidate. Offline execution cannot establish model reliability. |
 | Creation, import and reusable authored worlds | Primitive/recipe/drawing/template creation, GLB/VRM models and motion collections, materials/images, editable constructions and shared saved completion. | Candidate import/rendering, memory pressure, interrupted work and restore acceptance with representative user content. Validate the declared capacity; the current 256 saved creations, 128 native roots, 16 liquid containers, 25-metre bounds and four height fields are not a city-scale promise. See [world authoring](QUEST_WORLD_AUTHORING.md) and [model imports](QUEST_MODEL_IMPORTS.md). |
 | Default Maestro, custom avatars and animation | Included avatar/motions, exact compatible motion IDs, activity/gait bindings, joint posing, recording, shared walk/follow and attention paths; optional exact-model foot fitting through the shared catalog. | Current-candidate motion fidelity, humanoid variety, hands-on posing, transitions and sustained performance. Bounded foot fitting uses a rest-bound shoe-plane estimate with explicit trims; visual calibration, real-headset acceptance and general crowd/interior planning remain unfinished. See [animation authoring](QUEST_ANIMATION_AUTHORING.md) and [library](QUEST_ANIMATION_LIBRARY.md). |
@@ -17520,3 +17520,37 @@ that scope, but cannot establish fresh onboarding or a complete lesson through
 Live. Follow this with a frozen complete native/Book/Headless/unsigned Android
 checkpoint and shared native capture integration; retain the measured audio
 failures rather than promoting an unqualified backend.
+
+
+## Production-entry learner regression — 2026-10-26
+
+The new `test:quest:first-learner` command builds the real app entry and drives
+fresh audience confirmation, fake BYOK access and English/Spanish selection
+through visible controls. The ordinary tutor/verifier and artifact/tool handlers
+produce an unsolicited interactive flashcard plus image tool in the same reply.
+Default user-image generation stays enabled. Reload restores the chosen language,
+conversation, both images and playable artifact without repeating chat or image
+generation; an optional identical avatar-overlay upload is classified separately.
+
+Final local run9 passed in 14.092 seconds with seventeen scripted network
+operations, six completed uploads, no unexpected requests, page errors, pending
+requests or cleanup errors. Its exact probe hash is recorded in the result.
+Earlier attempts exposed harness-only Vite watcher/optimizer issues and
+Playwright's unsafe service-worker getter inside opaque artifact frames. The
+probe now uses a static production build, guarded registration denial and the
+real artifact resume control, preserving the product sandbox and app behavior.
+Both first-lesson and restored-lesson screenshots were inspected; generated image
+pixels are deliberate placeholders and do not establish image or Quest quality.
+
+The Release gate runs this reusable check and retains bounded JSON/screenshot
+artifacts. Local evidence is `.quest-evidence/first-learner-20261026/run9/`.
+Remote fonts and unused speech-model warmup are explicitly denied and reported.
+No production app source, native code, paid provider or held device/release action
+was changed by this test increment. See the exact scope and command in
+[agent release coverage](QUEST_AGENT_RELEASE_COVERAGE.md#production-entry-first-lesson-2026-10-26).
+
+The complete novice room lesson, managed and real-BYOK reliability, text-to-Live
+continuation and physical acceptance remain open. Next combine the production
+entry with actual Unity room actions, then freeze and qualify the complete
+native/Book/Headless/Android candidate. Audio capture integration and the retained
+quality failures remain separate release work.

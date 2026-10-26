@@ -3422,3 +3422,39 @@ generated controls and emits `book-controller-completion.json` and its screensho
 Both verify that settings do not edit geometry or silently enable movement.
 These transport and UI checks do not establish physical input latency, headset
 comfort or provider planning quality.
+
+
+## Production-entry first lesson (2026-10-26)
+
+`npm run test:quest:first-learner` builds the real web entry and opens
+`/?surface=quest-book` in a fresh headless Chrome context. It uses the visible
+adult confirmation, BYOK form, English-native/Spanish-target selector and message
+composer. It neither seeds application storage nor mounts a replacement chat
+component. The original tutor/verifier controllers and normal tool/artifact
+dispatch remain in control.
+
+Only external network boundaries are scripted: fake key validation, the local
+model registry, exact tutor/verifier responses, generated PNGs and the actual
+resumable file-upload protocol. A beginner asks where to start; the scripted
+verifier proactively returns an HTML flashcard and an image tool together. The
+app's default user image remains enabled. The probe interacts with the real
+artifact resume control and card, then reloads and confirms the language pair,
+conversation, two images and interactive artifact return without replaying the
+lesson or generation. The existing avatar-overlay maintenance upload may recur
+only with the same content; this is distinguished from repeated lesson work.
+
+Unexpected HTTP, WebSocket, runtime and local resource errors fail the run.
+Remote font and unused speech-recognition warmup downloads are explicitly denied
+and reported, while existing canceled animation loads are classified separately.
+Private environment files and VITE access configuration are excluded. No real
+key, provider request, microphone, native-room result or account grant is used.
+The Release gate runs this probe and retains its JSON/screenshots for seven days.
+Default local evidence is `.quest-evidence/first-learner/`; set
+`MAESTRO_FIRST_LEARNER_EVIDENCE` to retain a distinct run folder.
+
+This qualifies offline production browser composition, including proactive
+artifact-plus-tool behavior and reload persistence. It does not qualify Gemini
+judgment, managed access, physical speech/camera capture, image quality, the full
+nine-turn lesson, native room actions, text-to-Live continuation or headset book
+rendering. Those remain required scenarios in the matrix above. The broader
+native Book fixture remains useful for its separate control/transport coverage.

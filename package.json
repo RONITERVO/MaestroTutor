@@ -25,6 +25,7 @@
     "verify:quest-probes": "tsc -p tsconfig.quest-probes.json",
     "verify:core-boundaries": "node scripts/core-boundaries.mjs",
     "test:capture:browser": "node scripts/probe-pcm-capture.mjs",
+    "test:quest:first-learner": "node scripts/probe-quest-first-learner.mjs",
     "test:live:ui": "node scripts/run-live-ui-replay.mjs",
     "lint": "eslint \"src/**/*.{ts,tsx}\"",
     "cap:sync": "npm run build && npx cap sync",
