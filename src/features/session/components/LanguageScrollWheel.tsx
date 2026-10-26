@@ -1,7 +1,7 @@
 // Copyright 2025 Roni Tervo
 //
 // SPDX-License-Identifier: Apache-2.0
-import React, { useRef, useEffect, useLayoutEffect, useCallback, useState } from 'react';
+import React, { useRef, useEffect, useLayoutEffect, useCallback } from 'react';
 import { LanguageDefinition } from '../../../core/config/languages';
 
 interface LanguageScrollWheelProps {
@@ -43,172 +43,212 @@ const getVariantClasses = (variant?: 'native' | 'target') => {
 
 const LanguageScrollWheel: React.FC<LanguageScrollWheelProps> = ({ languages, selectedValue, onSelect, title, disabled, onInteract, variant }) => {
     const scrollContainerRef = useRef<HTMLDivElement>(null);
+    const contentRef = useRef<HTMLDivElement>(null);
     const itemRefs = useRef<Map<string, HTMLButtonElement>>(new Map());
     const scrollTimeoutRef = useRef<number | null>(null);
     const isScrollingProgrammatically = useRef(false);
     const isTouchingRef = useRef(false);
-    const [isScrolling, setIsScrolling] = useState(false);
-    const scrollingTimeoutRef = useRef<number | null>(null);
+    const scrollPendingRef = useRef(false);
+    const activePointersRef = useRef(new Set<number>());
+    const resizePendingRef = useRef(false);
+    const resizeFrameRef = useRef<number | null>(null);
     const programmaticResetTimeoutRef = useRef<number | null>(null);
+    const currentPropsRef = useRef({ languages, selectedValue, onSelect, onInteract, disabled });
     const variantClasses = getVariantClasses(variant);
 
-    const releaseProgrammaticScrollSoon = useCallback(() => {
+    // The globe redraws while animating and supplies fresh arrays/callbacks.
+    // Keep pending native interactions alive while using the latest props.
+    useLayoutEffect(() => {
+        currentPropsRef.current = { languages, selectedValue, onSelect, onInteract, disabled };
+    });
+
+    const cancelScrollSettlement = useCallback(() => {
+        scrollPendingRef.current = false;
+        if (scrollTimeoutRef.current !== null) {
+            window.clearTimeout(scrollTimeoutRef.current);
+            scrollTimeoutRef.current = null;
+        }
+    }, []);
+
+    const clearProgrammaticScroll = useCallback(() => {
+        isScrollingProgrammatically.current = false;
         if (programmaticResetTimeoutRef.current !== null) {
             window.clearTimeout(programmaticResetTimeoutRef.current);
+            programmaticResetTimeoutRef.current = null;
         }
+    }, []);
+
+    const scrollToPosition = useCallback((container: HTMLDivElement, scrollTop: number) => {
+        resizePendingRef.current = false;
+        const nextScrollTop = Math.max(0, scrollTop);
+        if (Math.abs(container.scrollTop - nextScrollTop) <= 1) return;
+        clearProgrammaticScroll();
+        isScrollingProgrammatically.current = true;
+        container.scrollTop = nextScrollTop;
         programmaticResetTimeoutRef.current = window.setTimeout(() => {
             isScrollingProgrammatically.current = false;
             programmaticResetTimeoutRef.current = null;
         }, 120);
-    }, []);
+    }, [clearProgrammaticScroll]);
 
     const centerElement = useCallback((container: HTMLDivElement, element: HTMLElement) => {
-        const nextScrollTop = Math.max(0, getCenteredScrollTop(container, element));
-        if (Math.abs(container.scrollTop - nextScrollTop) <= 1) return;
+        scrollToPosition(container, getCenteredScrollTop(container, element));
+    }, [scrollToPosition]);
 
-        isScrollingProgrammatically.current = true;
-        container.scrollTop = nextScrollTop;
-        releaseProgrammaticScrollSoon();
-    }, [releaseProgrammaticScrollSoon]);
-
-    useLayoutEffect(() => {
-        if (isScrolling || isTouchingRef.current) return;
-
+    const centerAfterResize = useCallback(() => {
+        if (!resizePendingRef.current || scrollPendingRef.current || isTouchingRef.current || activePointersRef.current.size > 0) return;
+        resizePendingRef.current = false;
         const container = scrollContainerRef.current;
+        const selected = currentPropsRef.current.selectedValue;
+        const element = selected ? itemRefs.current.get(selected.langCode) : null;
+        if (container && element) centerElement(container, element);
+    }, [centerElement]);
 
-        if (selectedValue && container) {
-            const selectedElement = itemRefs.current.get(selectedValue.langCode);
-            if (selectedElement) {
-                centerElement(container, selectedElement);
-            }
-        } else if (!selectedValue && container) {
-            if (container.scrollTop <= 1) return;
-            isScrollingProgrammatically.current = true;
-            container.scrollTop = 0;
-            releaseProgrammaticScrollSoon();
-        }
-    });
+    const scheduleResizeCenter = useCallback(() => {
+        if (!resizePendingRef.current || resizeFrameRef.current !== null) return;
+        // Let pointerup's following click choose its own row before restoring
+        // an idle selection. Only one deferred measurement is ever queued.
+        resizeFrameRef.current = window.requestAnimationFrame(() => {
+            resizeFrameRef.current = null;
+            centerAfterResize();
+        });
+    }, [centerAfterResize]);
 
-    useEffect(() => {
-        return () => {
-            if (programmaticResetTimeoutRef.current !== null) {
-                window.clearTimeout(programmaticResetTimeoutRef.current);
-            }
-        };
-    }, []);
-
-    const selectClosestItem = useCallback(() => {
-        if (isScrollingProgrammatically.current) return;
+    const selectedCode = selectedValue?.langCode ?? null;
+    const languageLayout = JSON.stringify(languages.map(language => [language.langCode, language.displayName, language.flag]));
+    useLayoutEffect(() => {
+        // Only a changed controlled choice or actual row layout owns recentering.
+        // An unrelated parent render must not move an option between down/up.
+        cancelScrollSettlement();
+        clearProgrammaticScroll();
         const container = scrollContainerRef.current;
         if (!container) return;
-        
-        const scrollTop = container.scrollTop;
-        const containerHeight = container.offsetHeight;
-        const scrollCenter = scrollTop + (containerHeight / 2);
-        
-        let closestIndex = -1;
-        let minDistance = Infinity;
+        const selectedElement = selectedCode ? itemRefs.current.get(selectedCode) : null;
+        if (selectedElement) centerElement(container, selectedElement);
+        else if (!selectedCode) scrollToPosition(container, 0);
+    }, [selectedCode, languageLayout, disabled, cancelScrollSettlement, clearProgrammaticScroll, centerElement, scrollToPosition]);
 
-        languages.forEach((lang, index) => {
-            const itemEl = itemRefs.current.get(lang.langCode);
-            if (itemEl) {
-                const itemTop = itemEl.offsetTop;
-                const itemHeight = itemEl.offsetHeight;
-                const itemCenter = itemTop + itemHeight / 2;
-                const distance = Math.abs(scrollCenter - itemCenter);
-
-                if (distance < minDistance) {
-                    minDistance = distance;
-                    closestIndex = index;
-                }
-            }
+    useEffect(() => {
+        const container = scrollContainerRef.current;
+        const content = contentRef.current;
+        if (!container || !content || typeof ResizeObserver === 'undefined') return;
+        // cqw text and padding can change row positions without changing props.
+        // Observe the viewport and its content, not every language row.
+        const observer = new ResizeObserver(() => {
+            resizePendingRef.current = true;
+            centerAfterResize();
         });
-
-        if (closestIndex > -1) {
-            const newSelectedLang = languages[closestIndex];
-            const newSelectedElement = itemRefs.current.get(newSelectedLang.langCode);
-            if (newSelectedElement) {
-                centerElement(container, newSelectedElement);
-            }
-            if (newSelectedLang.langCode !== selectedValue?.langCode) {
-                onSelect(newSelectedLang);
-            }
-        }
-    }, [centerElement, languages, onSelect, selectedValue]);
+        observer.observe(container);
+        observer.observe(content);
+        return () => observer.disconnect();
+    }, [centerAfterResize]);
 
     const handleScrollEnd = useCallback(() => {
-        if (isScrollingProgrammatically.current || isTouchingRef.current) return;
-        setIsScrolling(false);
-        onInteract?.();
-        selectClosestItem();
-    }, [onInteract, selectClosestItem]);
+        const props = currentPropsRef.current;
+        if (props.disabled || !scrollPendingRef.current || isScrollingProgrammatically.current || isTouchingRef.current) return;
+        cancelScrollSettlement();
+        const container = scrollContainerRef.current;
+        if (!container) return;
+        const scrollCenter = container.scrollTop + container.clientHeight / 2;
+        let closest: LanguageDefinition | null = null;
+        let minDistance = Infinity;
+        for (const language of props.languages) {
+            const element = itemRefs.current.get(language.langCode);
+            if (!element) continue;
+            const distance = Math.abs(scrollCenter - (element.offsetTop + element.offsetHeight / 2));
+            if (distance < minDistance) {
+                minDistance = distance;
+                closest = language;
+            }
+        }
+        if (!closest) return;
+        const element = itemRefs.current.get(closest.langCode);
+        if (element) centerElement(container, element);
+        props.onInteract?.();
+        if (closest.langCode !== props.selectedValue?.langCode) props.onSelect(closest);
+    }, [cancelScrollSettlement, centerElement]);
 
     const scheduleScrollEnd = useCallback(() => {
-        if (isScrollingProgrammatically.current) return;
-        if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
-        // Keep a timer-based fallback even when scrollend exists because
-        // some mobile browsers report support but do not fire it reliably.
+        if (!scrollPendingRef.current || isScrollingProgrammatically.current) return;
+        if (scrollTimeoutRef.current !== null) window.clearTimeout(scrollTimeoutRef.current);
+        // Keep the fallback even when scrollend is advertised but not delivered.
         scrollTimeoutRef.current = window.setTimeout(handleScrollEnd, 250);
     }, [handleScrollEnd]);
 
-    const handleTouchStart = useCallback(() => {
-        isTouchingRef.current = true;
-        if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
-        onInteract?.();
-    }, [onInteract]);
+    const beginUserInteraction = useCallback(() => {
+        if (currentPropsRef.current.disabled) return;
+        // A new deliberate gesture supersedes the centering suppression window.
+        clearProgrammaticScroll();
+        currentPropsRef.current.onInteract?.();
+    }, [clearProgrammaticScroll]);
 
-    const handleTouchEnd = useCallback(() => {
-        isTouchingRef.current = false;
-        // Schedule selection after touch ends and scroll momentum settles
-        scheduleScrollEnd();
-    }, [scheduleScrollEnd]);
-    
+    const selectExplicitly = useCallback((language: LanguageDefinition) => {
+        const props = currentPropsRef.current;
+        if (props.disabled) return;
+        cancelScrollSettlement();
+        clearProgrammaticScroll();
+        const container = scrollContainerRef.current;
+        const element = itemRefs.current.get(language.langCode);
+        if (container && element) centerElement(container, element);
+        props.onInteract?.();
+        props.onSelect(language);
+    }, [cancelScrollSettlement, clearProgrammaticScroll, centerElement]);
+
     useEffect(() => {
         const container = scrollContainerRef.current;
         if (!container) return;
-
         const supportsScrollEnd = 'onscrollend' in window;
-        
         const onScroll = () => {
-            if (!isScrollingProgrammatically.current) {
-                setIsScrolling(true);
-                // Clear any existing scrolling timeout
-                if (scrollingTimeoutRef.current) clearTimeout(scrollingTimeoutRef.current);
-                scrollingTimeoutRef.current = window.setTimeout(() => setIsScrolling(false), 300);
-            }
+            if (currentPropsRef.current.disabled || isScrollingProgrammatically.current) return;
+            scrollPendingRef.current = true;
             scheduleScrollEnd();
         };
-        
-        const onScrollEnd = () => {
-            if (scrollTimeoutRef.current) {
-                clearTimeout(scrollTimeoutRef.current);
-                scrollTimeoutRef.current = null;
-            }
-            if (!isTouchingRef.current) {
-                handleScrollEnd();
-            }
+        const onTouchStart = () => {
+            isTouchingRef.current = true;
+            cancelScrollSettlement();
+            beginUserInteraction();
         };
-
+        const onTouchEnd = () => {
+            isTouchingRef.current = false;
+            scheduleScrollEnd();
+            scheduleResizeCenter();
+        };
+        const onPointerRelease = (event: PointerEvent) => {
+            activePointersRef.current.delete(event.pointerId);
+            scheduleResizeCenter();
+        };
+        const onBlur = () => {
+            activePointersRef.current.clear();
+            isTouchingRef.current = false;
+            cancelScrollSettlement();
+            scheduleResizeCenter();
+        };
         container.addEventListener('scroll', onScroll, { passive: true });
-        if (supportsScrollEnd) {
-            container.addEventListener('scrollend', onScrollEnd);
-        }
-        container.addEventListener('touchstart', handleTouchStart, { passive: true });
-        container.addEventListener('touchend', handleTouchEnd, { passive: true });
-        container.addEventListener('touchcancel', handleTouchEnd, { passive: true });
-
+        if (supportsScrollEnd) container.addEventListener('scrollend', handleScrollEnd);
+        container.addEventListener('touchstart', onTouchStart, { passive: true });
+        container.addEventListener('touchend', onTouchEnd, { passive: true });
+        container.addEventListener('touchcancel', onTouchEnd, { passive: true });
+        window.addEventListener('pointerup', onPointerRelease, true);
+        window.addEventListener('pointercancel', onPointerRelease, true);
+        window.addEventListener('blur', onBlur);
         return () => {
             container.removeEventListener('scroll', onScroll);
-            if (supportsScrollEnd) {
-                container.removeEventListener('scrollend', onScrollEnd);
-            }
-            container.removeEventListener('touchstart', handleTouchStart);
-            container.removeEventListener('touchend', handleTouchEnd);
-            container.removeEventListener('touchcancel', handleTouchEnd);
-            if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
-            if (scrollingTimeoutRef.current) clearTimeout(scrollingTimeoutRef.current);
+            if (supportsScrollEnd) container.removeEventListener('scrollend', handleScrollEnd);
+            container.removeEventListener('touchstart', onTouchStart);
+            container.removeEventListener('touchend', onTouchEnd);
+            container.removeEventListener('touchcancel', onTouchEnd);
+            window.removeEventListener('pointerup', onPointerRelease, true);
+            window.removeEventListener('pointercancel', onPointerRelease, true);
+            window.removeEventListener('blur', onBlur);
+            if (resizeFrameRef.current !== null) window.cancelAnimationFrame(resizeFrameRef.current);
+            resizeFrameRef.current = null;
+            resizePendingRef.current = false;
+            activePointersRef.current.clear();
+            isTouchingRef.current = false;
+            cancelScrollSettlement();
+            clearProgrammaticScroll();
         };
-    }, [scheduleScrollEnd, handleScrollEnd, handleTouchStart, handleTouchEnd]);
+    }, [beginUserInteraction, cancelScrollSettlement, clearProgrammaticScroll, handleScrollEnd, scheduleScrollEnd, scheduleResizeCenter]);
 
     return (
         <div
@@ -226,19 +266,28 @@ const LanguageScrollWheel: React.FC<LanguageScrollWheelProps> = ({ languages, se
                     disabled ? 'pointer-events-none' : '',
                 ].filter(Boolean).join(' ')}
                 style={flagScrollStyle}
-                onPointerDown={() => onInteract?.()}
+                onPointerDown={(event) => {
+                    if (disabled) return;
+                    activePointersRef.current.add(event.pointerId);
+                    beginUserInteraction();
+                }}
+                onKeyDown={(event) => {
+                    if (['ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Home', 'End'].includes(event.key)) beginUserInteraction();
+                }}
                 onWheel={(event) => {
                     event.stopPropagation();
-                    if (!disabled) {
-                        event.currentTarget.scrollTop += event.deltaY;
-                    }
-                    onInteract?.();
+                    if (disabled) return;
+                    beginUserInteraction();
+                    event.currentTarget.scrollTop += event.deltaY;
+                    scrollPendingRef.current = true;
+                    scheduleScrollEnd();
                 }}
                 aria-label={title || (variant === 'native' ? 'Native language' : 'Target language')}
                 aria-disabled={disabled || undefined}
                 role="listbox"
             >
                 <div
+                    ref={contentRef}
                     className="flex flex-col items-center justify-start"
                     style={{
                         paddingTop: '8cqw',
@@ -276,7 +325,7 @@ const LanguageScrollWheel: React.FC<LanguageScrollWheelProps> = ({ languages, se
                                 'cursor-pointer disabled:cursor-default',
                                 isSelected ? 'opacity-100 scale-105' : 'opacity-70 scale-100',
                             ].join(' ')}
-                            onClick={() => { if (!disabled) { onInteract?.(); onSelect(lang); } }}
+                            onClick={() => selectExplicitly(lang)}
                             disabled={disabled}
                             role="option"
                             aria-selected={isSelected}
