@@ -17654,3 +17654,24 @@ this increment. This is browser reload against one running Editor, with a
 synthetic floor and scripted provider transport. Real managed/BYOK quality, the
 complete nine-turn lesson, Live, Android/headset media and performance remain
 separate held acceptance work; the complete v1 goal remains open.
+
+
+### Recovery-grab timing regression — 2026-10-26
+
+The full verifier at `f8e38eb7` stopped in PlayMode on the recovery-held-object
+test after 1,703 EditMode, 953 other PlayMode and 652 rules cases passed (plus
+three optional private-asset skips). Its 12-frame wait assumed enough time had
+elapsed for XRI attachment easing. A private controlled 1 ms simulation interval
+reproduced the shortfall: displacement was 0.727 m after 12 ms, then 1.539 m at
+21 ms with selection and recovery hold intact. Deliberate release cleared the
+hold without replaying a throw. The ordinary isolated run reached 2 m.
+
+The test now waits for the same greater-than-1 m movement under a five-second
+real-time deadline, requiring selection and the recovery hold throughout. A
+second case repeats it with 1 ms steps and restores the previous clock in a
+finally block. Native grab, physics and attachment easing are unchanged. The
+15 focused recovery cases passed; their exact source/XML identities and retained
+diagnostic runs are under `.quest-evidence/recovery-timing-20261026/`. The failed
+full run is retained in `.quest-evidence/full-release-20261026/failed-verify-logs/`.
+A new complete verification is required before unsigned Android compilation;
+these focused checks do not turn the interrupted full run into a pass.

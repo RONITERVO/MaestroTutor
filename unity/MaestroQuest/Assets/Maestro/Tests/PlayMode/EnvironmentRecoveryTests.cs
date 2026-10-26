@@ -124,12 +124,27 @@ namespace Maestro.Quest.Tests
             } finally {foreach(var lease in leases)lease.Dispose();}
         }
         [UnityTest]public IEnumerator EnvironmentRecoveryHeldObjectCanBeMovedOutOfTheWallWhileOtherPhysicsRuns(){
+            yield return MoveRecoveryHeldObjectOutOfWall();
+        }
+        [UnityTest]public IEnumerator EnvironmentRecoveryHeldObjectMovesWithShortRenderIntervals(){
+            float previousDelta=Time.captureDeltaTime;Time.captureDeltaTime=.001f;
+            try {yield return null;yield return MoveRecoveryHeldObjectOutOfWall();}
+            finally {Time.captureDeltaTime=previousDelta;}
+        }
+        IEnumerator MoveRecoveryHeldObjectOutOfWall(){
             string id=editor.Identity(block);RestorationWall(block.transform.position);var binding=RestoredBinding(id);var rigid=block.GetComponent<RigidRoomItem>();
             rigid.Configure(physics,ItemPhysics.Solid,1);binding.BeginRestoration(false);binding.FinishRestoration();physics.StartPhysics();
             var start=block.transform.position;var hand=Hand(1,start);manager.SelectEnter((IXRSelectInteractor)hand,block.Grab);
             hand.transform.position+=Vector3.right*2;
-            for(int i=0;i<12;i++)yield return null;
+            // XRI eases attachment over time; uncapped Editor frames are not a clock.
+            double deadline=Time.realtimeSinceStartupAsDouble+5;
+            while(Vector3.Distance(start,block.transform.position)<=1&&Time.realtimeSinceStartupAsDouble<deadline){
+                Assert.That(block.Grab.isSelected,Is.True);
+                Assert.That(binding.RestorationHeld,Is.True,"Repair must keep physics suspended throughout the grab");
+                yield return null;
+            }
             Assert.That(Vector3.Distance(start,block.transform.position),Is.GreaterThan(1),"Recovery must not freeze the grab transformer");
+            Assert.That(block.Grab.isSelected,Is.True);
             Assert.That(binding.RestorationHeld,Is.True,"Grabbing is repair, not permission to simulate");
             manager.SelectExit((IXRSelectInteractor)hand,block.Grab);Assert.That(binding.RestorationHeld,Is.False,binding.RestorationReason);
             Assert.That(rigid.FlowMotion.Linear,Is.EqualTo(Vector3.zero));physics.PausePhysics();
