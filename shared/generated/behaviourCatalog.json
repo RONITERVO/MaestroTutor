@@ -50669,7 +50669,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/FlowWorkResources.cs",
-      "sha256": "b4e12336dd986a94fcd7b05fc79d4990116ec89d1cdba18672b57d16e7d328cc"
+      "sha256": "cdb48b989fcbba472f67a73a52c7a7348ba42001af177ffe31f5a8443231e0c2"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/HeightFieldGeometry.cs",
@@ -50729,7 +50729,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidFlowWork.cs",
-      "sha256": "437d594ce519a0f323add6bea46ed7d95432f7cc0e4123f9d088a73c95adf240"
+      "sha256": "1d0b175e6eba56c75b476a21c0a6631aa4f9f213002f47a214ab89dd1f4803ff"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidGroupWork.cs",
@@ -50741,7 +50741,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidMediumGeometry.cs",
-      "sha256": "2b4d8b71d9bc43a4b47dd6b45add58adbe510d1f99cda5d90615808091548b28"
+      "sha256": "341db23f5575f5220543e65c471abd60e26f696a069e1507341d809bec77a3e3"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidMediumPhysics.cs",
@@ -50749,7 +50749,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidPouring.cs",
-      "sha256": "ef5a1975833d294ae068b224beae0bfa4dddd0fe9b1a20b48570484628452cb6"
+      "sha256": "678c61ea05c58f23822b2e5aba1fc1db4a7d0c1accf2d018e5dc067973b12a1f"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidRainCollection.cs",
@@ -50762,6 +50762,14 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidRouteFootprint.cs",
       "sha256": "9a175a8f7c753c8e5be7871439cc3139a555bbc132f96b9acf87ae11f8b48a7d"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidStreamGeometry.cs",
+      "sha256": "7a59213fef72f36b1cd4d9391df860ed60a1680ecf86a2fed52f0b1885dd13a7"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidStreamPresentation.cs",
+      "sha256": "47088a8fdb19dbc29eae7f32f257daf80c6c351daf6586eb3d54c90edd569150"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidSurfaceGeometry.cs",

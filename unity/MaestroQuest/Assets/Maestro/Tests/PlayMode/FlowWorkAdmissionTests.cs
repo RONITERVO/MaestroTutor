@@ -67,12 +67,12 @@ namespace Maestro.Quest.Tests {
     Assert.That(editor.SetItemPhysics(id,new(){mode="fixed",shape="box",mass=1}),Is.True,editor.Status);
    }
    StartIsland();Assert.That(FlowWorkResources.TryAdmit(editor.Liquids,out var error),Is.True,error);var original=FlowGrant();var held=FillFlowWork();
-   // Ten vessels cost 206800: one equally sized peer fits beside the
-   // original group. Its fixed claim leaves 317488, admitting growth to
+   // Ten vessels cost 207180: one equally sized peer fits beside the
+   // original group. Its fixed claim leaves 317108, admitting growth to
    // eleven/twelve vessels but refusing thirteen without evicting the peer.
    Assert.That(held.Count,Is.EqualTo(1),"The fixture needs one continuing peer before probing growth");
    var peer=held[0];var cost=peer.FlowUnits;int available=FlowWorkResources.MaximumUnits-held.Sum(c=>c.FlowUnits);var added=new List<string>();int admittedCount=0,refusedCount=0;
-   Assert.That(available,Is.EqualTo(317488));
+   Assert.That(available,Is.EqualTo(317108));
    try{
     for(int i=0;i<3;i++){
      string id=CreateTemplateFixture(TemplateCall("cup",new Vector3(3+(baselineVessels+i)*.002f,1,0)));added.Add(id);

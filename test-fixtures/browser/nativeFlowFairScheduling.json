@@ -7,7 +7,7 @@
       "incumbentQueued": 1,
       "incumbentGranted": 1,
       "contents": {
-        "sessionId": "0766f8c0d1bf41588b6bb39adb3af1b2",
+        "sessionId": "862d6df12a274592b02a5a4519240953",
         "phase": "waiting",
         "contents": {
           "amountMl": 400.0,
@@ -30,7 +30,7 @@
         "rainSamples": 5
       },
       "schedule": {
-        "step": 72,
+        "step": 1387,
         "executions": 0,
         "executionLimit": 32,
         "queued": 1,
@@ -44,21 +44,21 @@
       "incumbentQueued": 1,
       "incumbentGranted": 0,
       "contents": {
-        "sessionId": "9dc37e191b044891b57e4c859bfed2e3",
+        "sessionId": "9b104c278e0b40c1a23892d2b29fac45",
         "phase": "flowing",
         "contents": {
-          "amountMl": 383.96169338167289,
+          "amountMl": 383.9616933816729,
           "savedAmountMl": 400.0,
           "capacityMl": 500.0,
-          "transferredMl": 16.038306618327088,
-          "spilledMl": 0.0
+          "transferredMl": 0.0,
+          "spilledMl": 16.038306618327088
         },
         "temporary": false,
         "error": ""
       },
       "budget": {
         "reservations": 1,
-        "units": 523264,
+        "units": 523872,
         "reservationLimit": 64,
         "unitLimit": 524288,
         "streamSegments": 32,
@@ -67,12 +67,12 @@
         "rainSamples": 5
       },
       "schedule": {
-        "step": 73,
+        "step": 1388,
         "executions": 1,
         "executionLimit": 32,
         "queued": 0,
         "queueLimit": 64,
-        "units": 523264,
+        "units": 523872,
         "unitLimit": 524288
       }
     }

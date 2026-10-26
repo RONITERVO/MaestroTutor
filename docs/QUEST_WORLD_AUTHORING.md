@@ -283,12 +283,15 @@ prototype paths. `object.container` exposes the same saved state to the user and
 agent. See [liquid containers](QUEST_CONTAINERS.md).
 
 `containerPouring.v1` extends those same components with bounded hand/gravity
-pouring while room physics is active. A gravity stream is clipped by solid
-geometry and transfers liquid through another configured opening. One short
-session publishes quantities atomically with one Undo and emits
+pouring while room physics is active. A configured opening selects a candidate;
+collection also needs a clear interior route to its measured water, finite cavity
+boundary or accepted terrain bed. A solid before that deposition point stops the
+stream and leaves the outgoing amount as uncollected spill. Missing prepared
+inputs or an inconclusive query before deposition do not authorize quantity
+changes. One short session publishes quantities atomically with one Undo and emits
 `object.container.poured`; `object.container.live` exposes current quantities
 without pretending they are already saved. Both are ordinary typed program/agent
-observations. Uncollected spills leave the model; persistent puddles, water forces,
+observations. Uncollected spills leave the model; persistent puddles,
 bare-hand scooping and snow fields remain unfinished. Desktop verification cannot establish
 Quest pouring comfort or sustained frame performance.
 
@@ -2466,11 +2469,16 @@ units, independently of saved or native object capacity. Demand counts all regis
 and temporarily missing views. It includes potential vessel pairs, 32 stream
 segments, bounded hit/candidate searches, five scoop paths and five rain samples.
 Each scoop path reserves visits for both endpoint overlap buffers and its ray
-buffer in both immersion and scoop phases. A one-vessel group reserves 2,644
-units, two vessels 9,296, and the supported 16-vessel group 523,264; the shared
-524,288-unit ceiling is unchanged. These are upper-bound work allowances.
-This is a logical allowance, not measured CPU time, memory, frame time or PhysX
-cost. Geometry/proof internals and external observations are not included.
+buffer in both immersion and scoop phases. A one-vessel group reserves 2,682
+units, two vessels 9,372, and the supported 16-vessel group 523,872; the shared
+524,288-unit ceiling is unchanged. Pouring retains the same 32-segment native-ray
+limit. After a receiver opening is selected, bounded deposition and final-surface
+checks replace further receiver searches. The reservation adds 38 units per
+source for at most 33 retained path points, two geometry captures, one presentation
+and the two possible boundary checks beyond the replaced search allowance.
+These are upper-bound work allowances, not measured CPU time, memory, frame time
+or PhysX cost. Geometry/proof internals, including a possible terrain-level cache
+rebuild during capture, and external observations are not included.
 
 Request identities are stable and scoped to the world/region; execution grants
 rotate fairly on the shared early fixed-step opportunity. Resizing within a turn
@@ -2978,11 +2986,14 @@ per read keeps records within the shared program-value budget. Check step,
 reservationId and firstMember across reads; indices and group membership
 can change. These facts are passive and shared by user and agent.
 
-The revised nine-room desktop fixture has ten ready two-container circuits.
-They need 53,260 execution units, so all run in the same opportunity while 124
-unrelated saved cups remain dormant. The older whole-host charge was 552,816.
-This proves the charging/closure improvement for that fixture, not maximum
-world size, measured CPU cost or Quest frame-time acceptance.
+The nine-room desktop fixture has ten ready two-container circuits and 124
+unrelated dormant saved cups. Their current reservation totals 93,720 execution
+units, within one opportunity's allowance. Earlier captures demonstrated the
+charging/closure improvement with the then-current 53,260-unit group charge
+versus a 552,816-unit whole-host charge. Fresh native captures now verify the
+93,720-unit reservation, actual interior path counters and unchanged dormant
+counts. They do not establish maximum world size, measured CPU cost or Quest
+frame-time acceptance.
 
 Joint preparation uses the complete prepared allowance before a native joint exists.
 Actual motion and quantity transfer still require the connected joints to be active;
@@ -3703,3 +3714,34 @@ existing admitted simulation path. The visual budget remains 64 streaks, 16
 sampled slots per 50 ms and eight live ripples per surface. Surface captures are
 synchronous and reused within that tick. This is bounded visual behavior, not a
 new fluid simulation or measured Quest performance guarantee.
+
+
+### Pouring into a measured cavity
+
+The gravity stream uses the source object's real-room collision policy throughout
+its path. Crossing a configured opening only selects a receiver. Compatible
+liquid is collected after a clear route reaches the receiver's live water, finite
+cavity boundary or actual accepted terrain bed. Empty cavities and dry portions
+of terrain reservoirs can therefore receive liquid without an invented water
+surface. The measured container then equalizes its contents; it does not simulate
+fluid travelling along a bed, pooling behind internal obstacles or flowing around
+a solid. A nearer interior solid stops the stream and causes uncollected spill.
+An unavailable prepared dependency or saturated query before any proved deposition
+authorizes neither transfer nor spill. A later inconclusive suffix cannot undo
+deposition already proved before it. Capacity, liquid compatibility, shared rate
+limits and source loss = received + uncollected spill remain unchanged.
+
+After all pouring, scooping and rain quantity phases finish, each stream clips its
+already-proved path to the receiver's resulting water surface. It does not launch
+another native ray pass or extend into unproved space. Entry from above can add a
+visual ripple, throttled to one per source per 0.1 seconds through the existing
+bounded ripple renderer. A dry boundary contact, submerged start or interior
+blocker does not invent a water-entry splash. Pause, waiting and
+episode cleanup hide retained streams; paths and ripples are transient views, not
+a second liquid inventory, saved state or new gameplay contact events.
+
+Desktop verification passed 1,703 EditMode and 564 selected PlayMode cases,
+including actual stream/ripple checks for empty, full, obstructed, incompatible
+and terrain receivers, multiple sources and later scooping. Fresh native work
+captures also pass shared web checks. Separate Quest appearance/performance
+acceptance remains required; the existing release holds are unchanged.

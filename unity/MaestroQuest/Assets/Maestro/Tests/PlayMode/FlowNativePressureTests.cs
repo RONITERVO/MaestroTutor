@@ -39,6 +39,7 @@ namespace Maestro.Quest.Tests {
     ["pourRayQueries"]=work.PourRayQueries,["pourHitCandidates"]=work.PourHitCandidates,
     ["scoopPathQueries"]=work.ScoopPathQueries,["scoopPathCandidates"]=work.ScoopPathCandidates,
     ["pourSegments"]=work.PourSegments,["pourCandidates"]=work.PourCandidates,
+    ["pourSearchSegments"]=work.PourSearchSegments,["pourDepositionQueries"]=work.PourDepositionQueries,["pourSurfaceQueries"]=work.PourSurfaceQueries,["pourPresentationPoints"]=work.PourPresentationPoints,["pourSurfaceCaptures"]=work.PourSurfaceCaptures,["pourPresentations"]=work.PourPresentations,
     ["scoopCandidates"]=work.ScoopCandidates,["discoveryCaptures"]=discovery.Captures,
     ["collisionReads"]=discovery.CollisionReads,["cavityReads"]=discovery.CavityReads
    };
@@ -124,7 +125,8 @@ namespace Maestro.Quest.Tests {
     Capture();
     Assert.That(main.Liquids.LastFlowExecution.Groups,Is.EqualTo(2));
     Assert.That(main.Liquids.LastFlowExecution.Members,Is.EqualTo(4));
-    Assert.That(main.Liquids.LastFlowExecution.PourCandidates,Is.EqualTo(2*main.Liquids.LastFlowExecution.PourSegments));
+    Assert.That(main.Liquids.LastFlowExecution.PourCandidates,Is.EqualTo(2*main.Liquids.LastFlowExecution.PourSearchSegments));
+    AssertPourExecutionWorkBound(main.Liquids.LastFlowExecution,2);
     Assert.That(FlowAmount(b),Is.GreaterThan(0));Assert.That(FlowAmount(d),Is.GreaterThan(0));
     var last=fixtures.Last();
     double Received(NativeFlowFixture f)=>(double)f.Editor.Liquids.Observe(f.Receivers[0])["contents"]["amountMl"];

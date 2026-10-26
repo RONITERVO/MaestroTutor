@@ -14,6 +14,7 @@ namespace Maestro.Quest.Creation {
     public sealed partial class LiquidPouring:MonoBehaviour {
         internal const int Segments=LiquidResources.StreamPoints-1;
         sealed class Vessel {
+            internal readonly StreamPresentation Stream=new();internal float NextStreamRipple;
             internal SimulationWorkSchedule.ServiceRecord WorkService=new();internal long AutomaticStep=-1;
             internal string Id;internal RoomContainer Saved,Live;internal RoomItem Item;internal RigidRoomItem Rigid;internal Rigidbody Body;internal bool Ready;internal ContainerFlowGeometry.Opening Opening;
             internal double Received,Spilled,Scooped,Drawn,DipBudget,Rain;internal float Exposure;internal bool RainReady;internal string RainReason="Physics is paused";internal readonly HashSet<string> Receivers=new(),Donors=new(),Dippers=new();
@@ -79,7 +80,7 @@ namespace Maestro.Quest.Creation {
                 double requested=Math.Min(excess,v.Live.capacityMl*.75*seconds*Math.Sqrt(excess/v.Live.capacityMl));if(requested<.000001||Immersed(v,members,up))continue;
                 var origin=ContainerFlowGeometry.Lip(v.Live,v.Item.transform,up,out var outward,terrain);if(!physics.CanSimulate(origin,v.Item))continue;var velocity=outward*.15f;
                 if(v.Rigid)velocity+=Vector3.ClampMagnitude(v.Rigid.FlowPointVelocity(origin),3);
-                if(!Trace(v,members,origin,velocity,gravity,up,out var receiver,out int count))continue;
+                if(!Trace(v,members,origin,velocity,gravity,up,out var receiver,out int count,out var contact))continue;
                 if(receiver!=null&&ChangesEpisodeIdentity(v,receiver)){Finish(out _);return;}
                 if(!Begin(out var issue)){error=issue;blocked=true;editor.ReportStatus(issue);return;}
                 Touch(v);double moved=0;
@@ -87,7 +88,7 @@ namespace Maestro.Quest.Creation {
                 double spill=Math.Min(v.Live.amountMl,requested-moved);
                 if(spill>0){v.Live.amountMl-=spill;v.Spilled+=spill;}
                 if(moved+spill<=0)continue;v.DipBudget=Math.Max(0,v.DipBudget-moved-spill);
-                contents[v.Id]=v.Live;if(receiver!=null)contents[receiver.Id]=receiver.Live;flowing=true;Preview(v);ShowStream(v,count,requested/seconds);
+                contents[v.Id]=v.Live;if(receiver!=null)contents[receiver.Id]=receiver.Live;flowing=true;Preview(v);RememberStream(v,count,requested/seconds,receiver!=null?contact:default);
             }
             foreach(var members in groups)foreach(var recipient in members){
                 if(!recipient.Ready||recipient.Live.amountMl>=recipient.Live.capacityMl)continue;
@@ -110,6 +111,7 @@ namespace Maestro.Quest.Creation {
                 contents[donor.Id]=donor.Live;contents[recipient.Id]=recipient.Live;flowing=true;Preview(donor);Preview(recipient);
             }
             flowing|=CollectRain(groups,seconds,out bool published);if(published)return;
+            PresentStreams(up);
             if(!Active)return;elapsed+=seconds;quiet=flowing?0:quiet+seconds;
             if(quiet>=.3f||elapsed>=10)Finish(out _);
         }
@@ -179,41 +181,89 @@ namespace Maestro.Quest.Creation {
             }
             return true;
         }
-        bool Trace(Vessel source,Vessel[] members,Vector3 origin,Vector3 velocity,Vector3 gravity,Vector3 up,out Vessel receiver,out int count){
-            receiver=null;count=1;path[0]=origin;const float step=.025f;
+        // An aperture selects a candidate; only a clear path to its measured
+        // water, finite cavity boundary or accepted native terrain bed collects.
+        // Keep the same prepared ballistic grid after entry, without another
+        // ray pass, so final presentation can follow later quantity changes.
+        bool Trace(Vessel source,Vessel[] members,Vector3 origin,Vector3 velocity,Vector3 gravity,Vector3 up,out Vessel receiver,out int count,out StreamContact contact){
+            receiver=null;count=1;contact=default;path[0]=origin;const float step=.025f;
             if(!StreamOriginClear(source,origin))return false;
+            Vessel selected=null;LiquidStreamGeometry geometry=default;
             for(int i=1;i<=Segments;i++){
                 float t=i*step;var next=origin+velocity*t+gravity*(.5f*t*t);var previous=path[count-1];var delta=next-previous;float length=delta.magnitude;
                 if(length<1e-6f)continue;
                 flowExecutionWork.PourSegments++;
-                float closest=1;Vessel entering=null;bool stopped=false;
-                foreach(var candidate in members){
-                    flowExecutionWork.PourCandidates++;
-                    if(candidate==source||!candidate.Ready)continue;
-                    if(candidate.Opening.Enters(previous,next,up,out float fraction)&&fraction<closest){closest=fraction;entering=candidate;}
+                float mouthFraction=1;Vessel entering=null;
+                if(selected==null){
+                    flowExecutionWork.PourSearchSegments++;
+                    foreach(var candidate in members){
+                        flowExecutionWork.PourCandidates++;
+                        if(candidate==source||!candidate.Ready)continue;
+                        if(candidate.Opening.Enters(previous,next,up,out float fraction)&&fraction<mouthFraction){mouthFraction=fraction;entering=candidate;}
+                    }
                 }
                 flowExecutionWork.PourRayQueries++;
                 int found=Physics.RaycastNonAlloc(previous,delta/length,hits,length,world.CollisionMask(~0,source.Item),QueryTriggerInteraction.Ignore);
-                if(found==hits.Length)return false; // Saturated collision query cannot prove a clear path.
+                // Nothing beyond a saturated prefix is proved. Prior deposition
+                // remains valid, but an aperture alone never accepts a transfer.
+                if(found==hits.Length)return receiver!=null;
+                float solidFraction=float.PositiveInfinity;Collider solid=null;
                 foreach(var hit in hits.AsSpan(0,found)){
                     flowExecutionWork.PourHitCandidates++;
                     if(!hit.collider||RoomItem.IsPointerOnly(hit.collider)||i==1&&SourceOwnsCollider(source,hit.collider))continue;
-                    float fraction=hit.distance/length;if(fraction<=closest){closest=fraction;entering=null;stopped=true;}
+                    float fraction=hit.distance/length;
+                    if(fraction<=solidFraction){solidFraction=fraction;solid=hit.collider;}
                 }
-                path[count++]=Vector3.LerpUnclamped(previous,next,closest);
-                if(stopped||closest<1){receiver=entering!=null&&editor.PhysicsWorld.CanSimulate(path[count-1],entering.Item)&&editor.PhysicsWorld.CanSimulate(path[count-1],source.Item)?entering:null;return true;}
-                if(!editor.PhysicsWorld.CanSimulate(next,source.Item))return true;
+                bool first=selected==null&&entering!=null&&mouthFraction<solidFraction;
+                if(first){
+                    var mouth=Vector3.LerpUnclamped(previous,next,mouthFraction);
+                    if(!world.CanSimulate(mouth,source.Item)||!world.CanSimulate(mouth,entering.Item))return receiver!=null;
+                    selected=entering;contact=new StreamContact{Target=selected,Mouth=mouth,First=count};
+                    geometry=new LiquidStreamGeometry(selected.Live,selected.Item,up);flowExecutionWork.PourSurfaceCaptures++;
+                }
+                float endFraction=Mathf.Min(1,solidFraction);bool stopped=solid!=null;
+                Vector3 provenContact=default;bool newDeposition=false;
+                if(selected!=null){
+                    float startFraction=first?mouthFraction:0;var from=first?contact.Mouth:previous;
+                    flowExecutionWork.PourDepositionQueries++;
+                    bool deposited=geometry.TryDeposition(from,next,out var deposition,out float fraction,out bool boundary,out float cavityExit);
+                    float depositFraction=startFraction+(1-startFraction)*fraction;
+                    float exitFraction=startFraction+(1-startFraction)*cavityExit;
+                    // A physical bed belongs to a terrain cavity only at its
+                    // actual accepted surface, never an arbitrary child collider.
+                    if(solid&&geometry.TryTerrainDeposition(solid,Vector3.LerpUnclamped(previous,next,solidFraction))&&(!deposited||solidFraction<depositFraction)){
+                        deposited=true;boundary=true;depositFraction=solidFraction;deposition=Vector3.LerpUnclamped(previous,next,solidFraction);
+                    }
+                    // Coincident cavity floor/wall and physical solid represent
+                    // one boundary. An interior solid at the water plane wins.
+                    float tolerance=boundary?.00001f/length:0;
+                    bool clearDeposit=deposited&&(boundary?depositFraction<=solidFraction+tolerance:depositFraction<solidFraction);
+                    if(receiver==null&&clearDeposit){
+                        if(!world.CanSimulate(deposition,source.Item)||!world.CanSimulate(deposition,selected.Item))return false;
+                        receiver=selected;provenContact=deposition;newDeposition=true;
+                    }
+                    if(exitFraction<=endFraction){endFraction=exitFraction;stopped=true;}
+                }
+                var end=Vector3.LerpUnclamped(previous,next,endFraction);
+                if(!world.CanSimulate(end,source.Item)){
+                    // Keep a proved contact even if the later grid endpoint is
+                    // unavailable. Otherwise a valid transfer could leave the
+                    // visible path ending before its mouth in this same segment.
+                    if(newDeposition)path[count++]=provenContact;
+                    return receiver!=null;
+                }
+                path[count++]=end;
+                if(stopped)return true;
             }
-            return true; // The bounded stream ends as uncollected spill; no persistent pool is implied.
+            return true; // Bounded uncollected flow spills; no persistent pool is implied.
         }
         void Preview(Vessel v){if(v.Item)v.Item.GetComponent<ContainerFillView>()?.ApplyLive(new[]{v.Live});}
-        void ShowStream(Vessel v,int count,double rate){if(v.Item)v.Item.GetComponent<ContainerFillView>()?.ShowStream(path,count,rate,v.Live.color);}
         void Cancel(string reason){error=reason;blocked=true;ClearEpisode();if(editor)editor.ReportStatus(reason);}
         void ClearEpisode(){
             write?.Dispose();write=null;original.Clear();contents.Clear();quiet=elapsed=0;
             foreach(var v in vessels.Values){v.Received=v.Spilled=v.Scooped=v.Drawn=v.Rain=0;v.Receivers.Clear();v.Donors.Clear();v.Dippers.Clear();var saved=editor?editor.Read(v.Id)?.containers?.FirstOrDefault():null;if(saved!=null)v.Saved=saved.Copy();v.Live=v.Saved.Copy();Preview(v);}HideStreams();
         }
-        void HideStreams(){foreach(var v in vessels.Values)if(v.Item)v.Item.GetComponent<ContainerFillView>()?.HideStream();}
+        void HideStreams(){foreach(var v in vessels.Values){v.Stream.Pending=false;if(v.Item)v.Item.GetComponent<ContainerFillView>()?.HideStream();}}
         internal JObject Observe(string id){if(!vessels.TryGetValue(id,out var v))return null;return new JObject{["sessionId"]=session,["phase"]=FlowPhase(id),["contents"]=new JObject{["amountMl"]=v.Live.amountMl,["savedAmountMl"]=v.Saved.amountMl,["capacityMl"]=v.Live.capacityMl,["transferredMl"]=v.Received,["spilledMl"]=v.Spilled},["temporary"]=editor.TemporaryRoom,["error"]=Maestro.Quest.Imports.ImportObservation.Text(blocked?error:(!Active?editor.LiquidCheckpointWait:null)??FlowInputIssue(id)??FlowWorkIssue(id)??error)};}
 
         internal JObject ObserveScooping(string id){if(!vessels.TryGetValue(id,out var v))return null;return new JObject{["sessionId"]=session,["phase"]=FlowPhase(id),["scoopedMl"]=v.Scooped,["drawnMl"]=v.Drawn,["donors"]=v.Donors.Count,["recipients"]=v.Dippers.Count};}

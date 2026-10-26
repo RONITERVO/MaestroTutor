@@ -12,10 +12,25 @@ using UnityEngine;
 using UnityEngine.TestTools;
 namespace Maestro.Quest.Tests {
  public sealed partial class RoomRulesTests {
+  static void AssertPourExecutionWorkBound(LiquidPouring.FlowExecutionWork work,int largestGroup){
+   Assert.That(work.PourSearchSegments,Is.InRange(0,work.PourSegments));
+   Assert.That(work.PourDepositionQueries,Is.InRange(0,work.PourSegments));
+   Assert.That(work.PourSurfaceQueries,Is.InRange(0,work.PourSegments));
+   Assert.That(work.PourSegments,Is.LessThanOrEqualTo(work.PourOriginQueries*LiquidPouring.Segments));
+   Assert.That(work.PourRayQueries,Is.EqualTo(work.PourSegments),"Interior proof must reuse the original ballistic ray grid");
+   Assert.That(work.PourHitCandidates,Is.LessThanOrEqualTo(work.PourRayQueries*FlowWorkResources.QueryHits));
+   Assert.That(work.PourPresentationPoints,Is.InRange(0,work.PourOriginQueries*LiquidResources.StreamPoints));
+   Assert.That(work.PourSurfaceCaptures,Is.InRange(0,work.PourOriginQueries*2));
+   Assert.That(work.PourPresentations,Is.InRange(0,work.PourOriginQueries));
+   Assert.That(work.PourCandidates+work.PourDepositionQueries+work.PourSurfaceQueries,
+    Is.LessThanOrEqualTo(work.PourOriginQueries*(largestGroup*LiquidPouring.Segments+2)));
+   Assert.That(work.PourCandidates+work.PourDepositionQueries+work.PourSurfaceQueries+work.PourPresentationPoints+work.PourSurfaceCaptures+work.PourPresentations,
+    Is.LessThanOrEqualTo(work.PourOriginQueries*(largestGroup*LiquidPouring.Segments+FlowWorkResources.PourPresentationUnits)));
+  }
   void CaptureFlowExecution(string name){
    string directory=Environment.GetEnvironmentVariable("MAESTRO_FLOW_EXECUTION_EVIDENCE");if(string.IsNullOrEmpty(directory))return;
    Directory.CreateDirectory(directory);var w=editor.Liquids.LastFlowExecution;
-   File.WriteAllText(Path.Combine(directory,name+".json"),new JObject{["groups"]=w.Groups,["members"]=w.Members,["pourOriginQueries"]=w.PourOriginQueries,["pourOriginCandidates"]=w.PourOriginCandidates,["pourSegments"]=w.PourSegments,["pourCandidates"]=w.PourCandidates,["pourRayQueries"]=w.PourRayQueries,["pourHitCandidates"]=w.PourHitCandidates,["immersionChecks"]=w.ImmersionChecks,["immersionCandidates"]=w.ImmersionCandidates,["scoopRecipients"]=w.ScoopRecipients,["scoopCandidates"]=w.ScoopCandidates,["scoopPathQueries"]=w.ScoopPathQueries,["scoopPathCandidates"]=w.ScoopPathCandidates,["rainSamples"]=w.RainSamples}.ToString());
+   File.WriteAllText(Path.Combine(directory,name+".json"),new JObject{["groups"]=w.Groups,["members"]=w.Members,["pourOriginQueries"]=w.PourOriginQueries,["pourOriginCandidates"]=w.PourOriginCandidates,["pourSegments"]=w.PourSegments,["pourCandidates"]=w.PourCandidates,["pourSearchSegments"]=w.PourSearchSegments,["pourDepositionQueries"]=w.PourDepositionQueries,["pourSurfaceQueries"]=w.PourSurfaceQueries,["pourPresentationPoints"]=w.PourPresentationPoints,["pourSurfaceCaptures"]=w.PourSurfaceCaptures,["pourPresentations"]=w.PourPresentations,["pourRayQueries"]=w.PourRayQueries,["pourHitCandidates"]=w.PourHitCandidates,["immersionChecks"]=w.ImmersionChecks,["immersionCandidates"]=w.ImmersionCandidates,["scoopRecipients"]=w.ScoopRecipients,["scoopCandidates"]=w.ScoopCandidates,["scoopPathQueries"]=w.ScoopPathQueries,["scoopPathCandidates"]=w.ScoopPathCandidates,["rainSamples"]=w.RainSamples}.ToString());
   }
   [UnityTest]public IEnumerator FlowExecutionIndependentCircuitsUseLocalCandidatesAndOneUndo(){
    var(a,b,c,d)=IndependentFlowCups();Assert.That(editor.SetWeather(editor.WeatherRevision,1,new(){rainMmPerHour=60},0,out var error),Is.True,error);
@@ -23,8 +38,10 @@ namespace Maestro.Quest.Tests {
    physics.StartPhysics();editor.Liquids.Tick(.05f);CaptureFlowExecution("independent");var w=editor.Liquids.LastFlowExecution;
    Assert.That(FlowAmount(b),Is.GreaterThan(0));Assert.That(FlowAmount(d),Is.GreaterThan(0));Assert.That(events,Is.Zero);
    Assert.That(w.Groups,Is.EqualTo(2));Assert.That(w.Members,Is.EqualTo(4));Assert.That(w.PourSegments,Is.GreaterThan(0));Assert.That(w.ImmersionChecks,Is.GreaterThan(0));Assert.That(w.ScoopRecipients,Is.GreaterThan(0));Assert.That(w.RainSamples,Is.GreaterThan(0));
-   Assert.That(w.PourCandidates,Is.EqualTo(2*w.PourSegments),"A stream must not enumerate the other complete circuit");
+   AssertPourExecutionWorkBound(w,2);Assert.That(w.PourCandidates,Is.EqualTo(2*w.PourSearchSegments),"Only pre-lock search segments enumerate candidates, and must never enumerate the other complete circuit");
    Assert.That(w.ImmersionCandidates,Is.EqualTo(2*w.ImmersionChecks));Assert.That(w.ScoopCandidates,Is.EqualTo(2*w.ScoopRecipients));
+   Assert.That(w.PourDepositionQueries,Is.GreaterThan(0));Assert.That(w.PourSurfaceQueries,Is.GreaterThan(0));Assert.That(w.PourPresentations,Is.EqualTo(2));
+   Assert.That(w.PourPresentationPoints,Is.GreaterThan(0));Assert.That(w.PourSurfaceCaptures,Is.GreaterThan(0));
    var ids=new[]{a,b,c,d};double rain=ids.Sum(id=>(double)editor.Liquids.ObserveRain(id)["collectedMl"]);
    Assert.That(ids.Sum(id=>FlowAmount(id)+FlowAmount(id,"spilledMl")),Is.EqualTo(800+rain).Within(1e-8));
    Assert.That(editor.Read(b).containers[0].amountMl,Is.Zero);double accepted=FlowAmount(b);
@@ -37,7 +54,7 @@ namespace Maestro.Quest.Tests {
    physics.StartPhysics();editor.Liquids.Tick(.05f);CaptureFlowExecution("waiting");var w=editor.Liquids.LastFlowExecution;
    Assert.That(FlowAmount(a),Is.EqualTo(400));Assert.That(FlowAmount(b),Is.Zero);Assert.That(FlowAmount(d),Is.GreaterThan(0));Assert.That(FlowAmount(c)+FlowAmount(d),Is.EqualTo(400).Within(1e-8));
    Assert.That(w.Groups,Is.EqualTo(1));Assert.That(w.Members,Is.EqualTo(2));Assert.That(w.PourSegments,Is.GreaterThan(0));
-   Assert.That(w.PourCandidates,Is.EqualTo(2*w.PourSegments));Assert.That(w.ImmersionCandidates,Is.EqualTo(2*w.ImmersionChecks));Assert.That(w.ScoopCandidates,Is.EqualTo(2*w.ScoopRecipients));
+   AssertPourExecutionWorkBound(w,2);Assert.That(w.PourCandidates,Is.EqualTo(2*w.PourSearchSegments));Assert.That(w.ImmersionCandidates,Is.EqualTo(2*w.ImmersionChecks));Assert.That(w.ScoopCandidates,Is.EqualTo(2*w.ScoopRecipients));
    body.SetGeometryReady(true);editor.Liquids.Tick(.05f);CaptureFlowExecution("recovered");w=editor.Liquids.LastFlowExecution;
    Assert.That(w.Groups,Is.EqualTo(2));Assert.That(w.Members,Is.EqualTo(4));Assert.That(FlowAmount(b),Is.GreaterThan(0).And.LessThanOrEqualTo(18.75));
    Assert.That(FlowAmount(a)+FlowAmount(b)+FlowAmount(c)+FlowAmount(d),Is.EqualTo(800).Within(1e-8));physics.PausePhysics();yield return null;

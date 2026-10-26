@@ -17411,3 +17411,66 @@ the source actor's collision policy, bounded interior proof and flow work
 accounting, with unchanged transfer quantities and save/undo authority. The
 read-only audit proposes an actual LineRenderer regression; this continuation is
 not implemented or verified by the rain increment.
+
+
+## Poured water reaching measured surfaces — 2026-10-26
+
+The same prepared ballistic path now proves a destination beyond an opening.
+An opening selects one candidate; collection needs its measured water, finite
+cavity boundary or accepted native terrain bed. An arbitrary interior solid,
+including a receiver-owned solid, blocks receipt and leaves emitted water as
+uncollected spill. Unknown or saturated query prefixes before deposition do not
+authorize quantity changes. A proved deposition is retained if a later suffix
+cannot be proved. Empty terrain requires its actual enabled bed collider.
+
+Ordinary cavities remain equalized finite stores. A dry terrain impact may add
+water that settles elsewhere in the accepted basin; it does not imply a local
+puddle, flowing river or fluid-pressure simulation. Full and incompatible water
+can receive a visual impact while existing transfer rules account for spill.
+No separate visual inventory, capability, storage format or save authority is added.
+
+Every source retains at most 33 points from the original 32 ballistic segments.
+After all pour, scoop and rain phases, presentation clips only the proved receiver
+suffix to the final measured plane. This handles multiple inflows and later
+scooping without stale stream endpoints. Free-surface impacts use existing
+renderer ripples, throttled per source to 100 ms; each surface still holds at most
+eight ripples. Full-mouth roundoff has a narrow stream-only tolerance, with exact
+projected-point footprint checks. Existing rain, body sweep and point-containment
+semantics stay unchanged.
+
+There is no second PhysX trace. Candidate searches stop after aperture selection;
+constant-work per-segment deposition and final-plane checks reuse that allowance.
+A 38-unit per-source reservation covers retained points, geometry captures,
+presentation and the two excess suffix checks. Sixteen vessels require 523,872
+units under the unchanged 524,288 limit. Capturing geometry can rebuild existing
+bounded terrain level caches; this is not a claim of constant-time capture or
+measured Quest performance. Source collision participation, exact pointer roles,
+readiness, quantity conservation and accepted-save/Undo authority remain shared.
+
+The frozen original runtime reproduced an 11.24489 cm stream-to-water gap and zero
+ripples while conservation, saved bytes, publication and Undo/Redo assertions
+passed. Unity initially stopped before testing because its license was unavailable;
+starting the existing Hub refreshed its entitlement without user credentials.
+The first focused configuration stopped on expected source-provenance drift.
+Focused verification then passed 24/25 and exposed the full-mouth precision issue;
+the corrected run passed 26/26, including later scooping. All reports are retained.
+
+Final verification passed all 1,703 EditMode and 564 selected PlayMode cases,
+including nineteen new work-bound, surface-geometry and actual-render regressions.
+Shared catalog/terrain/presentation coverage passed 281 cases across five files;
+seven fresh native diagnostic captures passed another nineteen web cases across
+seven files. Native catalog export/equality, source provenance and ten-guide
+equality passed; capability schemas are unchanged. Application and probe types,
+Editor/wrapper exits and all 3,620 frozen native input hashes passed. Fourteen
+unrelated files remained byte-identical.
+
+Evidence is under `.quest-evidence/pour-water-20261026/`. These are desktop/offline
+results, not Quest appearance or frame-time acceptance. Device/provider testing,
+signing, deployment and Meta changes remain on hold; release and audio-quality
+gates remain open.
+
+A separate source-only audit identified the next small continuity candidate:
+fast tracked water crossings currently select a surface in asset-ID order. The
+proposed nearest-contact repair must first reproduce an actual wrong event/ripple
+and retain existing contact budgets, unknown-geometry guards and tracking rules.
+It is not implemented or verified by this poured-water increment.

@@ -87,6 +87,30 @@ namespace Maestro.Quest.Creation {
             float t=(limit-at)/change;if(change>0)exit=Mathf.Min(exit,t);else enter=Mathf.Max(enter,t);
             return enter<=exit;
         }
+        // Constant-time contact with the measured free surface or an already
+        // wet origin. This deliberately excludes the swept wet-volume fallback
+        // used by rain, so prepared stream segments never scan terrain cells.
+        internal bool TryFreeSurfaceContact(Vector3 from,Vector3 to,out Vector3 point,out float fraction)=>
+            FreeSurfaceContact(from,to,true,out point,out fraction);
+        bool FreeSurfaceContact(Vector3 from,Vector3 to,bool toleratePlaneOrigin,out Vector3 point,out float fraction){
+            point=default;fraction=0;
+            if(Contents==null||Contents.amountMl<=0||!RoomRecipe.Finite(from)||!RoomRecipe.Finite(to))return false;
+            float before=Vector3.Dot(from,Up)-Level,after=Vector3.Dot(to,Up)-Level;
+            if(!float.IsFinite(before)||!float.IsFinite(after))return false;
+            // A full receiver's world-space mouth can invert one float step
+            // above its local ceiling. Only an origin within one micrometre of
+            // the measured plane gets vertical cavity roundoff tolerance; the
+            // finite horizontal footprint and terrain proof stay exact.
+            if(toleratePlaneOrigin&&Mathf.Abs(before)<=.000001f){
+                var onPlane=from-Up*before;var at=inverse.MultiplyPoint3x4(onPlane);
+                if(at.y>=-.00001f&&at.y<=Contents.height+.00001f&&Contents.ContainsHorizontal(at)&&(terrain==null||terrain.Contains(at))){point=onPlane;return true;}
+            }
+            if(before<=0&&ContainsAtOrBelowSurface(from)){point=from;return true;}
+            if(before<=0||after>0)return false;
+            fraction=before/(before-after);if(!float.IsFinite(fraction))return false;
+            point=Vector3.LerpUnclamped(from,to,fraction);var local=inverse.MultiplyPoint3x4(point);
+            return local.y>=-.0001f&&local.y<=Contents.height+.0001f&&Contents.ContainsHorizontal(local)&&(terrain==null||terrain.Contains(local));
+        }
         // Presentation accepts a descending endpoint on the plane. An origin
         // already in/on this finite medium, or entry through a submerged side,
         // is suppression rather than a new free-surface impact. Keep the
@@ -96,12 +120,7 @@ namespace Maestro.Quest.Creation {
             if(Contents.amountMl<=0||!RoomRecipe.Finite(from)||!RoomRecipe.Finite(to))return false;
             float before=Vector3.Dot(from,Up)-Level,after=Vector3.Dot(to,Up)-Level;
             if(!float.IsFinite(before)||!float.IsFinite(after))return false;
-            if(before<=0&&ContainsAtOrBelowSurface(from)){point=from;submerged=true;return true;}
-            if(before>0&&after<=0){
-                fraction=before/(before-after);if(!float.IsFinite(fraction))return false;
-                point=Vector3.LerpUnclamped(from,to,fraction);var local=inverse.MultiplyPoint3x4(point);
-                if(local.y>=-.0001f&&local.y<=Contents.height+.0001f&&Contents.ContainsHorizontal(local)&&(terrain==null||terrain.Contains(local)))return true;
-            }
+            if(FreeSurfaceContact(from,to,false,out point,out fraction)){submerged=before<=0;return true;}
             if(!FirstWetEntry(from,to,out fraction))return false;
             point=Vector3.LerpUnclamped(from,to,fraction);submerged=true;return true;
         }

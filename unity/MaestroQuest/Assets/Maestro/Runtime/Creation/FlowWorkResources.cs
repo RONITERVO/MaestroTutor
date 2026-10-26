@@ -10,6 +10,9 @@ namespace Maestro.Quest.Creation {
  internal static class FlowWorkResources {
   internal const int MaximumReservations=64,MaximumExecutions=32,MaximumUnits=524288;
   internal const int QueryHits=64,ScoopSamples=5,RainSamples=5;
+  // One retained 33-point path, two receiver geometry captures, one final
+  // presentation, and the two suffix boundary queries beyond n*32 below.
+  internal const int PourPresentationUnits=LiquidResources.StreamPoints+2+1+2;
   internal const string Preparing="Liquid flow is preparing required inputs before requesting execution";
   internal const string Waiting="Liquid flow is waiting for work capacity. Ready groups take turns automatically; saved quantities are preserved.";
   internal static int Demand(int vessels){
@@ -19,7 +22,12 @@ namespace Maestro.Quest.Creation {
    // Self-pairs are skipped before exact queries; pour-hit work is already
    // reserved in the origin and per-segment terms.
    long scoopHits=2*n*(n-1)*ScoopSamples*3*QueryHits;
-   return (int)Math.Min(int.MaxValue,n*(16+QueryHits+1+LiquidPouring.Segments*(n+QueryHits+3)+2*n*(1+ScoopSamples*5)+RainSamples*(QueryHits+3))+scoopHits);
+   // After aperture lock, deposition and final-level surface checks replace
+   // candidate enumeration in the same 32-segment suffix. For n>=2 and a
+   // lock at segment i: n*i + 2*(32-i+1) <= n*32+2. A singleton cannot lock
+   // onto itself. No additional PhysX ray pass is reserved or permitted.
+   long presentation=n*PourPresentationUnits;
+   return (int)Math.Min(int.MaxValue,n*(16+QueryHits+1+LiquidPouring.Segments*(n+QueryHits+3)+2*n*(1+ScoopSamples*5)+RainSamples*(QueryHits+3))+scoopHits+presentation);
   }
   sealed class Member {
    internal string Target;internal string[] Peers=Array.Empty<string>();internal bool Requested,Discovered;

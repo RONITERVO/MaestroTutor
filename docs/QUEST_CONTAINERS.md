@@ -92,11 +92,15 @@ suspension and workspace recovery stop the simulation.
 At 20 Hz, the lowest opening rim determines how much lies above the spill plane.
 A bounded flow rate removes that excess. A gravity trajectory has at most 32
 segments per source, with 64-hit bounded collision queries. The nearest solid
-surface clips the stream. A downward crossing through another cavity's opening
-can receive compatible liquid, capped by its free capacity. Misses, full or
-incompatible recipients count as uncollected spill. Spilled millilitres leave this
-container model: there is no persistent puddle, snow/water field or buoyancy yet.
-The conservation check is source loss = received + uncollected spill.
+surface clips the stream. A downward opening crossing selects one receiving
+cavity. Collection also requires a clear path to its measured water, finite
+cavity boundary or accepted native terrain bed. An interior obstruction, even
+one owned by that recipient, stops the stream and leaves the emitted amount as
+uncollected spill. An inconclusive collision prefix before deposition preserves
+quantities until it can be proved. Compatible liquid is capped by free capacity;
+misses, full or incompatible recipients count as uncollected spill. Spilled
+millilitres do not create a persistent puddle or another inventory. The
+conservation check is source loss = received + uncollected spill.
 
 One room-wide episode combines simultaneous flows. It publishes after 0.3 seconds
 without flow, a grip release, physics pause, explicit Save, or a ten-second
@@ -115,9 +119,14 @@ millilitres and the number of distinct recipients. It never claims a saved resul
 before publication, never fires for failed saves, and never replays on reload.
 The same fact/event are available to user-authored programs and Maestro.
 
-The stream is a visual strip with no per-drop rigidbodies. There is no splash,
-wetness, momentum exchange, bare-hand scooping, fluid pressure or mass calculation.
-Changing visual scale does not change the authored logical millilitre capacity.
+The stream is a visual strip with at most 33 points and no per-drop rigidbodies.
+Its proved path is clipped against the final measured receiving surface after
+all pour, scoop and rain phases, so simultaneous sources and later scooping use
+the same water level as the surface mesh. A real free-surface entry adds a
+bounded ripple, including a full or incompatible receiver that accepts no liquid.
+This does not add wetness, stream momentum exchange, bare-hand scooping, fluid
+pressure or liquid mass calculation. Changing visual scale does not change the
+authored logical millilitre capacity.
 Device readability, sustained performance and real-hand pouring acceptance are
 still required before release.
 
@@ -286,8 +295,9 @@ A sculpted bed produces new geometry and a new outlet. It never creates or
 silently removes water during authoring.
 
 Excess water leaves through the existing rate-limited, collision-checked stream.
-A lower configured cavity can receive it when the trajectory crosses its opening
-from above. Received quantity plus reported uncollected spill equals source loss.
+A lower configured cavity can receive it after the trajectory crosses its opening
+from above and reaches measured water or a proved cavity boundary/terrain bed.
+Received quantity plus reported uncollected spill equals source loss.
 A solid obstruction clips the stream. Missing bed, collision or dependent
 recipient geometry suspends that flow group rather than letting water disappear.
 The existing admission limits, live episode, asynchronous checkpoint, events,

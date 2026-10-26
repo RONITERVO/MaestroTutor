@@ -1,10 +1,10 @@
 {
   "trace": [
     {
-      "step": 479,
+      "step": 1626,
       "rooms": [
         {
-          "worldId": "be109fa5424a4f538e5693685f765d69",
+          "worldId": "975b6c1cc3154ff685af399395493b92",
           "vessels": 16,
           "nativeVessels": 4,
           "dormantVessels": 12,
@@ -12,10 +12,10 @@
           "ready": true,
           "sources": [
             {
-              "sessionId": "df2502783b45482fab277341f3bbd451",
+              "sessionId": "a6b832edc8e248f8ba5757ecb6010909",
               "phase": "flowing",
               "contents": {
-                "amountMl": 383.96169338167289,
+                "amountMl": 383.9616933816729,
                 "savedAmountMl": 400.0,
                 "capacityMl": 500.0,
                 "transferredMl": 16.038306618327088,
@@ -25,10 +25,10 @@
               "error": ""
             },
             {
-              "sessionId": "df2502783b45482fab277341f3bbd451",
+              "sessionId": "a6b832edc8e248f8ba5757ecb6010909",
               "phase": "flowing",
               "contents": {
-                "amountMl": 383.96169338167289,
+                "amountMl": 383.9616933816729,
                 "savedAmountMl": 400.0,
                 "capacityMl": 500.0,
                 "transferredMl": 16.038306618327088,
@@ -40,7 +40,7 @@
           ],
           "receivers": [
             {
-              "sessionId": "df2502783b45482fab277341f3bbd451",
+              "sessionId": "a6b832edc8e248f8ba5757ecb6010909",
               "phase": "flowing",
               "contents": {
                 "amountMl": 16.038306618327088,
@@ -53,7 +53,7 @@
               "error": ""
             },
             {
-              "sessionId": "df2502783b45482fab277341f3bbd451",
+              "sessionId": "a6b832edc8e248f8ba5757ecb6010909",
               "phase": "flowing",
               "contents": {
                 "amountMl": 16.038306618327088,
@@ -70,19 +70,25 @@
           "executedMembers": 4,
           "pourOriginQueries": 2,
           "pourOriginCandidates": 0,
-          "pourRayQueries": 28,
-          "pourHitCandidates": 2,
+          "pourRayQueries": 32,
+          "pourHitCandidates": 4,
           "scoopPathQueries": 0,
           "scoopPathCandidates": 0,
-          "pourSegments": 28,
+          "pourSegments": 32,
           "pourCandidates": 56,
+          "pourSearchSegments": 28,
+          "pourDepositionQueries": 6,
+          "pourSurfaceQueries": 6,
+          "pourPresentationPoints": 34,
+          "pourSurfaceCaptures": 4,
+          "pourPresentations": 2,
           "scoopCandidates": 8,
           "discoveryCaptures": 1,
           "collisionReads": 18,
           "cavityReads": 16
         },
         {
-          "worldId": "68fef273aa244ee0ac71deeaa4fe334d",
+          "worldId": "d6a6eceb1bd04cb99d7c02456c79388c",
           "vessels": 16,
           "nativeVessels": 2,
           "dormantVessels": 14,
@@ -90,10 +96,10 @@
           "ready": true,
           "sources": [
             {
-              "sessionId": "04ab38d2107640a9a8988b782ac06c2d",
+              "sessionId": "3b666538fb8940faa60c6c74842a8c31",
               "phase": "flowing",
               "contents": {
-                "amountMl": 383.96169338167289,
+                "amountMl": 383.9616933816729,
                 "savedAmountMl": 400.0,
                 "capacityMl": 500.0,
                 "transferredMl": 16.038306618327088,
@@ -105,7 +111,7 @@
           ],
           "receivers": [
             {
-              "sessionId": "04ab38d2107640a9a8988b782ac06c2d",
+              "sessionId": "3b666538fb8940faa60c6c74842a8c31",
               "phase": "flowing",
               "contents": {
                 "amountMl": 16.038306618327088,
@@ -122,19 +128,25 @@
           "executedMembers": 2,
           "pourOriginQueries": 1,
           "pourOriginCandidates": 0,
-          "pourRayQueries": 14,
-          "pourHitCandidates": 1,
+          "pourRayQueries": 16,
+          "pourHitCandidates": 2,
           "scoopPathQueries": 0,
           "scoopPathCandidates": 0,
-          "pourSegments": 14,
+          "pourSegments": 16,
           "pourCandidates": 28,
+          "pourSearchSegments": 14,
+          "pourDepositionQueries": 3,
+          "pourSurfaceQueries": 3,
+          "pourPresentationPoints": 17,
+          "pourSurfaceCaptures": 2,
+          "pourPresentations": 1,
           "scoopCandidates": 4,
           "discoveryCaptures": 1,
           "collisionReads": 18,
           "cavityReads": 16
         },
         {
-          "worldId": "6f2a6cf609ba4f88aed92072c7c4e256",
+          "worldId": "7eec76ba71a24cc2be825d7ebcc8a3c4",
           "vessels": 16,
           "nativeVessels": 2,
           "dormantVessels": 14,
@@ -142,10 +154,10 @@
           "ready": true,
           "sources": [
             {
-              "sessionId": "a97fe6d848434972a136bdb3edefbb5f",
+              "sessionId": "5e9a9d33af314edf90b99c09cb9e3ffe",
               "phase": "flowing",
               "contents": {
-                "amountMl": 383.96169338167289,
+                "amountMl": 383.9616933816729,
                 "savedAmountMl": 400.0,
                 "capacityMl": 500.0,
                 "transferredMl": 16.038306618327088,
@@ -157,7 +169,7 @@
           ],
           "receivers": [
             {
-              "sessionId": "a97fe6d848434972a136bdb3edefbb5f",
+              "sessionId": "5e9a9d33af314edf90b99c09cb9e3ffe",
               "phase": "flowing",
               "contents": {
                 "amountMl": 16.038306618327088,
@@ -174,19 +186,25 @@
           "executedMembers": 2,
           "pourOriginQueries": 1,
           "pourOriginCandidates": 0,
-          "pourRayQueries": 14,
-          "pourHitCandidates": 1,
+          "pourRayQueries": 16,
+          "pourHitCandidates": 2,
           "scoopPathQueries": 0,
           "scoopPathCandidates": 0,
-          "pourSegments": 14,
+          "pourSegments": 16,
           "pourCandidates": 28,
+          "pourSearchSegments": 14,
+          "pourDepositionQueries": 3,
+          "pourSurfaceQueries": 3,
+          "pourPresentationPoints": 17,
+          "pourSurfaceCaptures": 2,
+          "pourPresentations": 1,
           "scoopCandidates": 4,
           "discoveryCaptures": 1,
           "collisionReads": 18,
           "cavityReads": 16
         },
         {
-          "worldId": "7564b460882447f8bf391b59c2f91ef2",
+          "worldId": "a88c7516fd3742e1a3beeadf6eadc865",
           "vessels": 16,
           "nativeVessels": 2,
           "dormantVessels": 14,
@@ -194,10 +212,10 @@
           "ready": true,
           "sources": [
             {
-              "sessionId": "463c11e612c64d12bf1b138692d8e224",
+              "sessionId": "b79006d1f7ab476ba0a11864c3ce85c5",
               "phase": "flowing",
               "contents": {
-                "amountMl": 383.96169338167289,
+                "amountMl": 383.9616933816729,
                 "savedAmountMl": 400.0,
                 "capacityMl": 500.0,
                 "transferredMl": 16.038306618327088,
@@ -209,7 +227,7 @@
           ],
           "receivers": [
             {
-              "sessionId": "463c11e612c64d12bf1b138692d8e224",
+              "sessionId": "b79006d1f7ab476ba0a11864c3ce85c5",
               "phase": "flowing",
               "contents": {
                 "amountMl": 16.038306618327088,
@@ -226,19 +244,25 @@
           "executedMembers": 2,
           "pourOriginQueries": 1,
           "pourOriginCandidates": 0,
-          "pourRayQueries": 14,
-          "pourHitCandidates": 1,
+          "pourRayQueries": 16,
+          "pourHitCandidates": 2,
           "scoopPathQueries": 0,
           "scoopPathCandidates": 0,
-          "pourSegments": 14,
+          "pourSegments": 16,
           "pourCandidates": 28,
+          "pourSearchSegments": 14,
+          "pourDepositionQueries": 3,
+          "pourSurfaceQueries": 3,
+          "pourPresentationPoints": 17,
+          "pourSurfaceCaptures": 2,
+          "pourPresentations": 1,
           "scoopCandidates": 4,
           "discoveryCaptures": 1,
           "collisionReads": 18,
           "cavityReads": 16
         },
         {
-          "worldId": "31c74ab848ce40a98ac7668d7625cefd",
+          "worldId": "94e62ec6aeba4dca9b4a99505bc5f32a",
           "vessels": 16,
           "nativeVessels": 2,
           "dormantVessels": 14,
@@ -246,10 +270,10 @@
           "ready": true,
           "sources": [
             {
-              "sessionId": "5f51da5b575b43b78b9f9776c50fc534",
+              "sessionId": "d87046f27ec348d6a386b293b256f604",
               "phase": "flowing",
               "contents": {
-                "amountMl": 383.96169338167289,
+                "amountMl": 383.9616933816729,
                 "savedAmountMl": 400.0,
                 "capacityMl": 500.0,
                 "transferredMl": 16.038306618327088,
@@ -261,7 +285,7 @@
           ],
           "receivers": [
             {
-              "sessionId": "5f51da5b575b43b78b9f9776c50fc534",
+              "sessionId": "d87046f27ec348d6a386b293b256f604",
               "phase": "flowing",
               "contents": {
                 "amountMl": 16.038306618327088,
@@ -278,19 +302,25 @@
           "executedMembers": 2,
           "pourOriginQueries": 1,
           "pourOriginCandidates": 0,
-          "pourRayQueries": 14,
-          "pourHitCandidates": 1,
+          "pourRayQueries": 16,
+          "pourHitCandidates": 2,
           "scoopPathQueries": 0,
           "scoopPathCandidates": 0,
-          "pourSegments": 14,
+          "pourSegments": 16,
           "pourCandidates": 28,
+          "pourSearchSegments": 14,
+          "pourDepositionQueries": 3,
+          "pourSurfaceQueries": 3,
+          "pourPresentationPoints": 17,
+          "pourSurfaceCaptures": 2,
+          "pourPresentations": 1,
           "scoopCandidates": 4,
           "discoveryCaptures": 1,
           "collisionReads": 18,
           "cavityReads": 16
         },
         {
-          "worldId": "d5653b32209c4cbfa15a0b01e229d85e",
+          "worldId": "c72037b3248942d6ab2750f549ca87d3",
           "vessels": 16,
           "nativeVessels": 2,
           "dormantVessels": 14,
@@ -298,10 +328,10 @@
           "ready": true,
           "sources": [
             {
-              "sessionId": "fd0009ad78e5410bb74722ee4f0308e9",
+              "sessionId": "a3ae6205473542f79f316935eeea2ee6",
               "phase": "flowing",
               "contents": {
-                "amountMl": 383.96169338167289,
+                "amountMl": 383.9616933816729,
                 "savedAmountMl": 400.0,
                 "capacityMl": 500.0,
                 "transferredMl": 16.038306618327088,
@@ -313,7 +343,7 @@
           ],
           "receivers": [
             {
-              "sessionId": "fd0009ad78e5410bb74722ee4f0308e9",
+              "sessionId": "a3ae6205473542f79f316935eeea2ee6",
               "phase": "flowing",
               "contents": {
                 "amountMl": 16.038306618327088,
@@ -330,19 +360,25 @@
           "executedMembers": 2,
           "pourOriginQueries": 1,
           "pourOriginCandidates": 0,
-          "pourRayQueries": 14,
-          "pourHitCandidates": 1,
+          "pourRayQueries": 16,
+          "pourHitCandidates": 2,
           "scoopPathQueries": 0,
           "scoopPathCandidates": 0,
-          "pourSegments": 14,
+          "pourSegments": 16,
           "pourCandidates": 28,
+          "pourSearchSegments": 14,
+          "pourDepositionQueries": 3,
+          "pourSurfaceQueries": 3,
+          "pourPresentationPoints": 17,
+          "pourSurfaceCaptures": 2,
+          "pourPresentations": 1,
           "scoopCandidates": 4,
           "discoveryCaptures": 1,
           "collisionReads": 18,
           "cavityReads": 16
         },
         {
-          "worldId": "c0af818a790a4fcf8afed21c8b519931",
+          "worldId": "fa43c82f82ea4d82ac0f1eaf245728dc",
           "vessels": 16,
           "nativeVessels": 2,
           "dormantVessels": 14,
@@ -350,10 +386,10 @@
           "ready": true,
           "sources": [
             {
-              "sessionId": "23bfbdb5d4c04d15bc325ab84fa372ce",
+              "sessionId": "c00df722f69a4ce88cc2e810c0fc1009",
               "phase": "flowing",
               "contents": {
-                "amountMl": 383.96169338167289,
+                "amountMl": 383.9616933816729,
                 "savedAmountMl": 400.0,
                 "capacityMl": 500.0,
                 "transferredMl": 16.038306618327088,
@@ -365,7 +401,7 @@
           ],
           "receivers": [
             {
-              "sessionId": "23bfbdb5d4c04d15bc325ab84fa372ce",
+              "sessionId": "c00df722f69a4ce88cc2e810c0fc1009",
               "phase": "flowing",
               "contents": {
                 "amountMl": 16.038306618327088,
@@ -382,19 +418,25 @@
           "executedMembers": 2,
           "pourOriginQueries": 1,
           "pourOriginCandidates": 0,
-          "pourRayQueries": 14,
-          "pourHitCandidates": 1,
+          "pourRayQueries": 16,
+          "pourHitCandidates": 2,
           "scoopPathQueries": 0,
           "scoopPathCandidates": 0,
-          "pourSegments": 14,
+          "pourSegments": 16,
           "pourCandidates": 28,
+          "pourSearchSegments": 14,
+          "pourDepositionQueries": 3,
+          "pourSurfaceQueries": 3,
+          "pourPresentationPoints": 17,
+          "pourSurfaceCaptures": 2,
+          "pourPresentations": 1,
           "scoopCandidates": 4,
           "discoveryCaptures": 1,
           "collisionReads": 18,
           "cavityReads": 16
         },
         {
-          "worldId": "417f9179d28143e991f6746601edf83d",
+          "worldId": "76bcbade0c104d6f907bb2288e2cad24",
           "vessels": 16,
           "nativeVessels": 2,
           "dormantVessels": 14,
@@ -402,10 +444,10 @@
           "ready": true,
           "sources": [
             {
-              "sessionId": "1599eab9650645a99495247c2e5d4274",
+              "sessionId": "d34ad67c1feb4a69b2530861140932bc",
               "phase": "flowing",
               "contents": {
-                "amountMl": 383.96169338167289,
+                "amountMl": 383.9616933816729,
                 "savedAmountMl": 400.0,
                 "capacityMl": 500.0,
                 "transferredMl": 16.038306618327088,
@@ -417,7 +459,7 @@
           ],
           "receivers": [
             {
-              "sessionId": "1599eab9650645a99495247c2e5d4274",
+              "sessionId": "d34ad67c1feb4a69b2530861140932bc",
               "phase": "flowing",
               "contents": {
                 "amountMl": 16.038306618327088,
@@ -434,19 +476,25 @@
           "executedMembers": 2,
           "pourOriginQueries": 1,
           "pourOriginCandidates": 0,
-          "pourRayQueries": 14,
-          "pourHitCandidates": 1,
+          "pourRayQueries": 16,
+          "pourHitCandidates": 2,
           "scoopPathQueries": 0,
           "scoopPathCandidates": 0,
-          "pourSegments": 14,
+          "pourSegments": 16,
           "pourCandidates": 28,
+          "pourSearchSegments": 14,
+          "pourDepositionQueries": 3,
+          "pourSurfaceQueries": 3,
+          "pourPresentationPoints": 17,
+          "pourSurfaceCaptures": 2,
+          "pourPresentations": 1,
           "scoopCandidates": 4,
           "discoveryCaptures": 1,
           "collisionReads": 18,
           "cavityReads": 16
         },
         {
-          "worldId": "a043a4aaefe148b299602480f1bcc0b9",
+          "worldId": "1dd0983c3c0f4c308f6eeb3471fbec3e",
           "vessels": 16,
           "nativeVessels": 2,
           "dormantVessels": 14,
@@ -454,10 +502,10 @@
           "ready": true,
           "sources": [
             {
-              "sessionId": "47e2a7fbe9004ee7a27b212c1e360ce8",
+              "sessionId": "5ea617e7d53c4f02b7cd0149325f8501",
               "phase": "flowing",
               "contents": {
-                "amountMl": 383.96169338167289,
+                "amountMl": 383.9616933816729,
                 "savedAmountMl": 400.0,
                 "capacityMl": 500.0,
                 "transferredMl": 16.038306618327088,
@@ -469,7 +517,7 @@
           ],
           "receivers": [
             {
-              "sessionId": "47e2a7fbe9004ee7a27b212c1e360ce8",
+              "sessionId": "5ea617e7d53c4f02b7cd0149325f8501",
               "phase": "flowing",
               "contents": {
                 "amountMl": 16.038306618327088,
@@ -486,12 +534,18 @@
           "executedMembers": 2,
           "pourOriginQueries": 1,
           "pourOriginCandidates": 0,
-          "pourRayQueries": 14,
-          "pourHitCandidates": 1,
+          "pourRayQueries": 16,
+          "pourHitCandidates": 2,
           "scoopPathQueries": 0,
           "scoopPathCandidates": 0,
-          "pourSegments": 14,
+          "pourSegments": 16,
           "pourCandidates": 28,
+          "pourSearchSegments": 14,
+          "pourDepositionQueries": 3,
+          "pourSurfaceQueries": 3,
+          "pourPresentationPoints": 17,
+          "pourSurfaceCaptures": 2,
+          "pourPresentations": 1,
           "scoopCandidates": 4,
           "discoveryCaptures": 1,
           "collisionReads": 18,
@@ -500,7 +554,7 @@
       ],
       "flowBudget": {
         "reservations": 9,
-        "units": 92960,
+        "units": 93720,
         "reservationLimit": 64,
         "unitLimit": 524288,
         "streamSegments": 32,
@@ -509,7 +563,7 @@
         "rainSamples": 5
       },
       "discoveryBudget": {
-        "step": 479,
+        "step": 1626,
         "reservations": 9,
         "executions": 9,
         "units": 65124,
@@ -526,10 +580,10 @@
       }
     },
     {
-      "step": 480,
+      "step": 1627,
       "rooms": [
         {
-          "worldId": "be109fa5424a4f538e5693685f765d69",
+          "worldId": "975b6c1cc3154ff685af399395493b92",
           "vessels": 16,
           "nativeVessels": 4,
           "dormantVessels": 12,
@@ -537,10 +591,10 @@
           "ready": true,
           "sources": [
             {
-              "sessionId": "df2502783b45482fab277341f3bbd451",
+              "sessionId": "a6b832edc8e248f8ba5757ecb6010909",
               "phase": "flowing",
               "contents": {
-                "amountMl": 368.27888927952381,
+                "amountMl": 368.2788892795238,
                 "savedAmountMl": 400.0,
                 "capacityMl": 500.0,
                 "transferredMl": 16.038306618327088,
@@ -550,10 +604,10 @@
               "error": ""
             },
             {
-              "sessionId": "df2502783b45482fab277341f3bbd451",
+              "sessionId": "a6b832edc8e248f8ba5757ecb6010909",
               "phase": "flowing",
               "contents": {
-                "amountMl": 368.27888927952381,
+                "amountMl": 368.2788892795238,
                 "savedAmountMl": 400.0,
                 "capacityMl": 500.0,
                 "transferredMl": 31.721110720476176,
@@ -565,7 +619,7 @@
           ],
           "receivers": [
             {
-              "sessionId": "df2502783b45482fab277341f3bbd451",
+              "sessionId": "a6b832edc8e248f8ba5757ecb6010909",
               "phase": "flowing",
               "contents": {
                 "amountMl": 16.038306618327088,
@@ -578,7 +632,7 @@
               "error": ""
             },
             {
-              "sessionId": "df2502783b45482fab277341f3bbd451",
+              "sessionId": "a6b832edc8e248f8ba5757ecb6010909",
               "phase": "flowing",
               "contents": {
                 "amountMl": 31.721110720476176,
@@ -595,19 +649,25 @@
           "executedMembers": 4,
           "pourOriginQueries": 2,
           "pourOriginCandidates": 0,
-          "pourRayQueries": 46,
-          "pourHitCandidates": 2,
+          "pourRayQueries": 48,
+          "pourHitCandidates": 4,
           "scoopPathQueries": 0,
           "scoopPathCandidates": 0,
-          "pourSegments": 46,
+          "pourSegments": 48,
           "pourCandidates": 74,
+          "pourSearchSegments": 46,
+          "pourDepositionQueries": 3,
+          "pourSurfaceQueries": 3,
+          "pourPresentationPoints": 50,
+          "pourSurfaceCaptures": 2,
+          "pourPresentations": 2,
           "scoopCandidates": 10,
           "discoveryCaptures": 1,
           "collisionReads": 6,
           "cavityReads": 16
         },
         {
-          "worldId": "68fef273aa244ee0ac71deeaa4fe334d",
+          "worldId": "d6a6eceb1bd04cb99d7c02456c79388c",
           "vessels": 16,
           "nativeVessels": 2,
           "dormantVessels": 14,
@@ -615,10 +675,10 @@
           "ready": true,
           "sources": [
             {
-              "sessionId": "04ab38d2107640a9a8988b782ac06c2d",
+              "sessionId": "3b666538fb8940faa60c6c74842a8c31",
               "phase": "flowing",
               "contents": {
-                "amountMl": 368.27888927952381,
+                "amountMl": 368.2788892795238,
                 "savedAmountMl": 400.0,
                 "capacityMl": 500.0,
                 "transferredMl": 31.721110720476176,
@@ -630,7 +690,7 @@
           ],
           "receivers": [
             {
-              "sessionId": "04ab38d2107640a9a8988b782ac06c2d",
+              "sessionId": "3b666538fb8940faa60c6c74842a8c31",
               "phase": "flowing",
               "contents": {
                 "amountMl": 31.721110720476176,
@@ -647,19 +707,25 @@
           "executedMembers": 2,
           "pourOriginQueries": 1,
           "pourOriginCandidates": 0,
-          "pourRayQueries": 14,
-          "pourHitCandidates": 1,
+          "pourRayQueries": 16,
+          "pourHitCandidates": 2,
           "scoopPathQueries": 0,
           "scoopPathCandidates": 0,
-          "pourSegments": 14,
+          "pourSegments": 16,
           "pourCandidates": 28,
+          "pourSearchSegments": 14,
+          "pourDepositionQueries": 3,
+          "pourSurfaceQueries": 3,
+          "pourPresentationPoints": 17,
+          "pourSurfaceCaptures": 2,
+          "pourPresentations": 1,
           "scoopCandidates": 4,
           "discoveryCaptures": 1,
           "collisionReads": 4,
           "cavityReads": 16
         },
         {
-          "worldId": "6f2a6cf609ba4f88aed92072c7c4e256",
+          "worldId": "7eec76ba71a24cc2be825d7ebcc8a3c4",
           "vessels": 16,
           "nativeVessels": 2,
           "dormantVessels": 14,
@@ -667,10 +733,10 @@
           "ready": true,
           "sources": [
             {
-              "sessionId": "a97fe6d848434972a136bdb3edefbb5f",
+              "sessionId": "5e9a9d33af314edf90b99c09cb9e3ffe",
               "phase": "flowing",
               "contents": {
-                "amountMl": 368.27888927952381,
+                "amountMl": 368.2788892795238,
                 "savedAmountMl": 400.0,
                 "capacityMl": 500.0,
                 "transferredMl": 31.721110720476176,
@@ -682,7 +748,7 @@
           ],
           "receivers": [
             {
-              "sessionId": "a97fe6d848434972a136bdb3edefbb5f",
+              "sessionId": "5e9a9d33af314edf90b99c09cb9e3ffe",
               "phase": "flowing",
               "contents": {
                 "amountMl": 31.721110720476176,
@@ -699,19 +765,25 @@
           "executedMembers": 2,
           "pourOriginQueries": 1,
           "pourOriginCandidates": 0,
-          "pourRayQueries": 14,
-          "pourHitCandidates": 1,
+          "pourRayQueries": 16,
+          "pourHitCandidates": 2,
           "scoopPathQueries": 0,
           "scoopPathCandidates": 0,
-          "pourSegments": 14,
+          "pourSegments": 16,
           "pourCandidates": 28,
+          "pourSearchSegments": 14,
+          "pourDepositionQueries": 3,
+          "pourSurfaceQueries": 3,
+          "pourPresentationPoints": 17,
+          "pourSurfaceCaptures": 2,
+          "pourPresentations": 1,
           "scoopCandidates": 4,
           "discoveryCaptures": 1,
           "collisionReads": 4,
           "cavityReads": 16
         },
         {
-          "worldId": "7564b460882447f8bf391b59c2f91ef2",
+          "worldId": "a88c7516fd3742e1a3beeadf6eadc865",
           "vessels": 16,
           "nativeVessels": 2,
           "dormantVessels": 14,
@@ -719,10 +791,10 @@
           "ready": true,
           "sources": [
             {
-              "sessionId": "463c11e612c64d12bf1b138692d8e224",
+              "sessionId": "b79006d1f7ab476ba0a11864c3ce85c5",
               "phase": "flowing",
               "contents": {
-                "amountMl": 368.27888927952381,
+                "amountMl": 368.2788892795238,
                 "savedAmountMl": 400.0,
                 "capacityMl": 500.0,
                 "transferredMl": 31.721110720476176,
@@ -734,7 +806,7 @@
           ],
           "receivers": [
             {
-              "sessionId": "463c11e612c64d12bf1b138692d8e224",
+              "sessionId": "b79006d1f7ab476ba0a11864c3ce85c5",
               "phase": "flowing",
               "contents": {
                 "amountMl": 31.721110720476176,
@@ -751,19 +823,25 @@
           "executedMembers": 2,
           "pourOriginQueries": 1,
           "pourOriginCandidates": 0,
-          "pourRayQueries": 14,
-          "pourHitCandidates": 1,
+          "pourRayQueries": 16,
+          "pourHitCandidates": 2,
           "scoopPathQueries": 0,
           "scoopPathCandidates": 0,
-          "pourSegments": 14,
+          "pourSegments": 16,
           "pourCandidates": 28,
+          "pourSearchSegments": 14,
+          "pourDepositionQueries": 3,
+          "pourSurfaceQueries": 3,
+          "pourPresentationPoints": 17,
+          "pourSurfaceCaptures": 2,
+          "pourPresentations": 1,
           "scoopCandidates": 4,
           "discoveryCaptures": 1,
           "collisionReads": 4,
           "cavityReads": 16
         },
         {
-          "worldId": "31c74ab848ce40a98ac7668d7625cefd",
+          "worldId": "94e62ec6aeba4dca9b4a99505bc5f32a",
           "vessels": 16,
           "nativeVessels": 2,
           "dormantVessels": 14,
@@ -771,10 +849,10 @@
           "ready": true,
           "sources": [
             {
-              "sessionId": "5f51da5b575b43b78b9f9776c50fc534",
+              "sessionId": "d87046f27ec348d6a386b293b256f604",
               "phase": "flowing",
               "contents": {
-                "amountMl": 368.27888927952381,
+                "amountMl": 368.2788892795238,
                 "savedAmountMl": 400.0,
                 "capacityMl": 500.0,
                 "transferredMl": 31.721110720476176,
@@ -786,7 +864,7 @@
           ],
           "receivers": [
             {
-              "sessionId": "5f51da5b575b43b78b9f9776c50fc534",
+              "sessionId": "d87046f27ec348d6a386b293b256f604",
               "phase": "flowing",
               "contents": {
                 "amountMl": 31.721110720476176,
@@ -803,19 +881,25 @@
           "executedMembers": 2,
           "pourOriginQueries": 1,
           "pourOriginCandidates": 0,
-          "pourRayQueries": 14,
-          "pourHitCandidates": 1,
+          "pourRayQueries": 16,
+          "pourHitCandidates": 2,
           "scoopPathQueries": 0,
           "scoopPathCandidates": 0,
-          "pourSegments": 14,
+          "pourSegments": 16,
           "pourCandidates": 28,
+          "pourSearchSegments": 14,
+          "pourDepositionQueries": 3,
+          "pourSurfaceQueries": 3,
+          "pourPresentationPoints": 17,
+          "pourSurfaceCaptures": 2,
+          "pourPresentations": 1,
           "scoopCandidates": 4,
           "discoveryCaptures": 1,
           "collisionReads": 4,
           "cavityReads": 16
         },
         {
-          "worldId": "d5653b32209c4cbfa15a0b01e229d85e",
+          "worldId": "c72037b3248942d6ab2750f549ca87d3",
           "vessels": 16,
           "nativeVessels": 2,
           "dormantVessels": 14,
@@ -823,10 +907,10 @@
           "ready": true,
           "sources": [
             {
-              "sessionId": "fd0009ad78e5410bb74722ee4f0308e9",
+              "sessionId": "a3ae6205473542f79f316935eeea2ee6",
               "phase": "flowing",
               "contents": {
-                "amountMl": 368.27888927952381,
+                "amountMl": 368.2788892795238,
                 "savedAmountMl": 400.0,
                 "capacityMl": 500.0,
                 "transferredMl": 31.721110720476176,
@@ -838,7 +922,7 @@
           ],
           "receivers": [
             {
-              "sessionId": "fd0009ad78e5410bb74722ee4f0308e9",
+              "sessionId": "a3ae6205473542f79f316935eeea2ee6",
               "phase": "flowing",
               "contents": {
                 "amountMl": 31.721110720476176,
@@ -855,19 +939,25 @@
           "executedMembers": 2,
           "pourOriginQueries": 1,
           "pourOriginCandidates": 0,
-          "pourRayQueries": 14,
-          "pourHitCandidates": 1,
+          "pourRayQueries": 16,
+          "pourHitCandidates": 2,
           "scoopPathQueries": 0,
           "scoopPathCandidates": 0,
-          "pourSegments": 14,
+          "pourSegments": 16,
           "pourCandidates": 28,
+          "pourSearchSegments": 14,
+          "pourDepositionQueries": 3,
+          "pourSurfaceQueries": 3,
+          "pourPresentationPoints": 17,
+          "pourSurfaceCaptures": 2,
+          "pourPresentations": 1,
           "scoopCandidates": 4,
           "discoveryCaptures": 1,
           "collisionReads": 4,
           "cavityReads": 16
         },
         {
-          "worldId": "c0af818a790a4fcf8afed21c8b519931",
+          "worldId": "fa43c82f82ea4d82ac0f1eaf245728dc",
           "vessels": 16,
           "nativeVessels": 2,
           "dormantVessels": 14,
@@ -875,10 +965,10 @@
           "ready": true,
           "sources": [
             {
-              "sessionId": "23bfbdb5d4c04d15bc325ab84fa372ce",
+              "sessionId": "c00df722f69a4ce88cc2e810c0fc1009",
               "phase": "flowing",
               "contents": {
-                "amountMl": 368.27888927952381,
+                "amountMl": 368.2788892795238,
                 "savedAmountMl": 400.0,
                 "capacityMl": 500.0,
                 "transferredMl": 31.721110720476176,
@@ -890,7 +980,7 @@
           ],
           "receivers": [
             {
-              "sessionId": "23bfbdb5d4c04d15bc325ab84fa372ce",
+              "sessionId": "c00df722f69a4ce88cc2e810c0fc1009",
               "phase": "flowing",
               "contents": {
                 "amountMl": 31.721110720476176,
@@ -907,19 +997,25 @@
           "executedMembers": 2,
           "pourOriginQueries": 1,
           "pourOriginCandidates": 0,
-          "pourRayQueries": 14,
-          "pourHitCandidates": 1,
+          "pourRayQueries": 16,
+          "pourHitCandidates": 2,
           "scoopPathQueries": 0,
           "scoopPathCandidates": 0,
-          "pourSegments": 14,
+          "pourSegments": 16,
           "pourCandidates": 28,
+          "pourSearchSegments": 14,
+          "pourDepositionQueries": 3,
+          "pourSurfaceQueries": 3,
+          "pourPresentationPoints": 17,
+          "pourSurfaceCaptures": 2,
+          "pourPresentations": 1,
           "scoopCandidates": 4,
           "discoveryCaptures": 1,
           "collisionReads": 4,
           "cavityReads": 16
         },
         {
-          "worldId": "417f9179d28143e991f6746601edf83d",
+          "worldId": "76bcbade0c104d6f907bb2288e2cad24",
           "vessels": 16,
           "nativeVessels": 2,
           "dormantVessels": 14,
@@ -927,10 +1023,10 @@
           "ready": true,
           "sources": [
             {
-              "sessionId": "1599eab9650645a99495247c2e5d4274",
+              "sessionId": "d34ad67c1feb4a69b2530861140932bc",
               "phase": "flowing",
               "contents": {
-                "amountMl": 368.27888927952381,
+                "amountMl": 368.2788892795238,
                 "savedAmountMl": 400.0,
                 "capacityMl": 500.0,
                 "transferredMl": 31.721110720476176,
@@ -942,7 +1038,7 @@
           ],
           "receivers": [
             {
-              "sessionId": "1599eab9650645a99495247c2e5d4274",
+              "sessionId": "d34ad67c1feb4a69b2530861140932bc",
               "phase": "flowing",
               "contents": {
                 "amountMl": 31.721110720476176,
@@ -959,19 +1055,25 @@
           "executedMembers": 2,
           "pourOriginQueries": 1,
           "pourOriginCandidates": 0,
-          "pourRayQueries": 14,
-          "pourHitCandidates": 1,
+          "pourRayQueries": 16,
+          "pourHitCandidates": 2,
           "scoopPathQueries": 0,
           "scoopPathCandidates": 0,
-          "pourSegments": 14,
+          "pourSegments": 16,
           "pourCandidates": 28,
+          "pourSearchSegments": 14,
+          "pourDepositionQueries": 3,
+          "pourSurfaceQueries": 3,
+          "pourPresentationPoints": 17,
+          "pourSurfaceCaptures": 2,
+          "pourPresentations": 1,
           "scoopCandidates": 4,
           "discoveryCaptures": 1,
           "collisionReads": 4,
           "cavityReads": 16
         },
         {
-          "worldId": "a043a4aaefe148b299602480f1bcc0b9",
+          "worldId": "1dd0983c3c0f4c308f6eeb3471fbec3e",
           "vessels": 16,
           "nativeVessels": 2,
           "dormantVessels": 14,
@@ -979,10 +1081,10 @@
           "ready": true,
           "sources": [
             {
-              "sessionId": "47e2a7fbe9004ee7a27b212c1e360ce8",
+              "sessionId": "5ea617e7d53c4f02b7cd0149325f8501",
               "phase": "flowing",
               "contents": {
-                "amountMl": 368.27888927952381,
+                "amountMl": 368.2788892795238,
                 "savedAmountMl": 400.0,
                 "capacityMl": 500.0,
                 "transferredMl": 31.721110720476176,
@@ -994,7 +1096,7 @@
           ],
           "receivers": [
             {
-              "sessionId": "47e2a7fbe9004ee7a27b212c1e360ce8",
+              "sessionId": "5ea617e7d53c4f02b7cd0149325f8501",
               "phase": "flowing",
               "contents": {
                 "amountMl": 31.721110720476176,
@@ -1011,12 +1113,18 @@
           "executedMembers": 2,
           "pourOriginQueries": 1,
           "pourOriginCandidates": 0,
-          "pourRayQueries": 14,
-          "pourHitCandidates": 1,
+          "pourRayQueries": 16,
+          "pourHitCandidates": 2,
           "scoopPathQueries": 0,
           "scoopPathCandidates": 0,
-          "pourSegments": 14,
+          "pourSegments": 16,
           "pourCandidates": 28,
+          "pourSearchSegments": 14,
+          "pourDepositionQueries": 3,
+          "pourSurfaceQueries": 3,
+          "pourPresentationPoints": 17,
+          "pourSurfaceCaptures": 2,
+          "pourPresentations": 1,
           "scoopCandidates": 4,
           "discoveryCaptures": 1,
           "collisionReads": 4,
@@ -1025,7 +1133,7 @@
       ],
       "flowBudget": {
         "reservations": 9,
-        "units": 96968,
+        "units": 97728,
         "reservationLimit": 64,
         "unitLimit": 524288,
         "streamSegments": 32,
@@ -1034,7 +1142,7 @@
         "rainSamples": 5
       },
       "discoveryBudget": {
-        "step": 480,
+        "step": 1627,
         "reservations": 9,
         "executions": 9,
         "units": 65124,
@@ -1052,10 +1160,10 @@
       "topology": "merged"
     },
     {
-      "step": 481,
+      "step": 1628,
       "rooms": [
         {
-          "worldId": "be109fa5424a4f538e5693685f765d69",
+          "worldId": "975b6c1cc3154ff685af399395493b92",
           "vessels": 16,
           "nativeVessels": 4,
           "dormantVessels": 12,
@@ -1063,23 +1171,23 @@
           "ready": true,
           "sources": [
             {
-              "sessionId": "df2502783b45482fab277341f3bbd451",
+              "sessionId": "a6b832edc8e248f8ba5757ecb6010909",
               "phase": "flowing",
               "contents": {
-                "amountMl": 352.95167907859582,
+                "amountMl": 352.9516790785958,
                 "savedAmountMl": 400.0,
                 "capacityMl": 500.0,
-                "transferredMl": 31.365516819255092,
+                "transferredMl": 31.36551681925509,
                 "spilledMl": 15.68280410214909
               },
               "temporary": false,
               "error": ""
             },
             {
-              "sessionId": "df2502783b45482fab277341f3bbd451",
+              "sessionId": "a6b832edc8e248f8ba5757ecb6010909",
               "phase": "flowing",
               "contents": {
-                "amountMl": 352.95167907859582,
+                "amountMl": 352.9516790785958,
                 "savedAmountMl": 400.0,
                 "capacityMl": 500.0,
                 "transferredMl": 47.048320921404176,
@@ -1091,10 +1199,10 @@
           ],
           "receivers": [
             {
-              "sessionId": "df2502783b45482fab277341f3bbd451",
+              "sessionId": "a6b832edc8e248f8ba5757ecb6010909",
               "phase": "flowing",
               "contents": {
-                "amountMl": 31.365516819255092,
+                "amountMl": 31.36551681925509,
                 "savedAmountMl": 0.0,
                 "capacityMl": 500.0,
                 "transferredMl": 0.0,
@@ -1104,7 +1212,7 @@
               "error": ""
             },
             {
-              "sessionId": "df2502783b45482fab277341f3bbd451",
+              "sessionId": "a6b832edc8e248f8ba5757ecb6010909",
               "phase": "flowing",
               "contents": {
                 "amountMl": 47.048320921404176,
@@ -1121,19 +1229,25 @@
           "executedMembers": 4,
           "pourOriginQueries": 2,
           "pourOriginCandidates": 0,
-          "pourRayQueries": 28,
-          "pourHitCandidates": 2,
+          "pourRayQueries": 32,
+          "pourHitCandidates": 4,
           "scoopPathQueries": 0,
           "scoopPathCandidates": 0,
-          "pourSegments": 28,
+          "pourSegments": 32,
           "pourCandidates": 56,
+          "pourSearchSegments": 28,
+          "pourDepositionQueries": 6,
+          "pourSurfaceQueries": 6,
+          "pourPresentationPoints": 34,
+          "pourSurfaceCaptures": 4,
+          "pourPresentations": 2,
           "scoopCandidates": 8,
           "discoveryCaptures": 1,
           "collisionReads": 6,
           "cavityReads": 16
         },
         {
-          "worldId": "68fef273aa244ee0ac71deeaa4fe334d",
+          "worldId": "d6a6eceb1bd04cb99d7c02456c79388c",
           "vessels": 16,
           "nativeVessels": 2,
           "dormantVessels": 14,
@@ -1141,10 +1255,10 @@
           "ready": true,
           "sources": [
             {
-              "sessionId": "04ab38d2107640a9a8988b782ac06c2d",
+              "sessionId": "3b666538fb8940faa60c6c74842a8c31",
               "phase": "flowing",
               "contents": {
-                "amountMl": 352.95167907859582,
+                "amountMl": 352.9516790785958,
                 "savedAmountMl": 400.0,
                 "capacityMl": 500.0,
                 "transferredMl": 47.048320921404176,
@@ -1156,7 +1270,7 @@
           ],
           "receivers": [
             {
-              "sessionId": "04ab38d2107640a9a8988b782ac06c2d",
+              "sessionId": "3b666538fb8940faa60c6c74842a8c31",
               "phase": "flowing",
               "contents": {
                 "amountMl": 47.048320921404176,
@@ -1173,19 +1287,25 @@
           "executedMembers": 2,
           "pourOriginQueries": 1,
           "pourOriginCandidates": 0,
-          "pourRayQueries": 14,
-          "pourHitCandidates": 1,
+          "pourRayQueries": 16,
+          "pourHitCandidates": 2,
           "scoopPathQueries": 0,
           "scoopPathCandidates": 0,
-          "pourSegments": 14,
+          "pourSegments": 16,
           "pourCandidates": 28,
+          "pourSearchSegments": 14,
+          "pourDepositionQueries": 3,
+          "pourSurfaceQueries": 3,
+          "pourPresentationPoints": 17,
+          "pourSurfaceCaptures": 2,
+          "pourPresentations": 1,
           "scoopCandidates": 4,
           "discoveryCaptures": 1,
           "collisionReads": 4,
           "cavityReads": 16
         },
         {
-          "worldId": "6f2a6cf609ba4f88aed92072c7c4e256",
+          "worldId": "7eec76ba71a24cc2be825d7ebcc8a3c4",
           "vessels": 16,
           "nativeVessels": 2,
           "dormantVessels": 14,
@@ -1193,10 +1313,10 @@
           "ready": true,
           "sources": [
             {
-              "sessionId": "a97fe6d848434972a136bdb3edefbb5f",
+              "sessionId": "5e9a9d33af314edf90b99c09cb9e3ffe",
               "phase": "flowing",
               "contents": {
-                "amountMl": 352.95167907859582,
+                "amountMl": 352.9516790785958,
                 "savedAmountMl": 400.0,
                 "capacityMl": 500.0,
                 "transferredMl": 47.048320921404176,
@@ -1208,7 +1328,7 @@
           ],
           "receivers": [
             {
-              "sessionId": "a97fe6d848434972a136bdb3edefbb5f",
+              "sessionId": "5e9a9d33af314edf90b99c09cb9e3ffe",
               "phase": "flowing",
               "contents": {
                 "amountMl": 47.048320921404176,
@@ -1225,19 +1345,25 @@
           "executedMembers": 2,
           "pourOriginQueries": 1,
           "pourOriginCandidates": 0,
-          "pourRayQueries": 14,
-          "pourHitCandidates": 1,
+          "pourRayQueries": 16,
+          "pourHitCandidates": 2,
           "scoopPathQueries": 0,
           "scoopPathCandidates": 0,
-          "pourSegments": 14,
+          "pourSegments": 16,
           "pourCandidates": 28,
+          "pourSearchSegments": 14,
+          "pourDepositionQueries": 3,
+          "pourSurfaceQueries": 3,
+          "pourPresentationPoints": 17,
+          "pourSurfaceCaptures": 2,
+          "pourPresentations": 1,
           "scoopCandidates": 4,
           "discoveryCaptures": 1,
           "collisionReads": 4,
           "cavityReads": 16
         },
         {
-          "worldId": "7564b460882447f8bf391b59c2f91ef2",
+          "worldId": "a88c7516fd3742e1a3beeadf6eadc865",
           "vessels": 16,
           "nativeVessels": 2,
           "dormantVessels": 14,
@@ -1245,10 +1371,10 @@
           "ready": true,
           "sources": [
             {
-              "sessionId": "463c11e612c64d12bf1b138692d8e224",
+              "sessionId": "b79006d1f7ab476ba0a11864c3ce85c5",
               "phase": "flowing",
               "contents": {
-                "amountMl": 352.95167907859582,
+                "amountMl": 352.9516790785958,
                 "savedAmountMl": 400.0,
                 "capacityMl": 500.0,
                 "transferredMl": 47.048320921404176,
@@ -1260,7 +1386,7 @@
           ],
           "receivers": [
             {
-              "sessionId": "463c11e612c64d12bf1b138692d8e224",
+              "sessionId": "b79006d1f7ab476ba0a11864c3ce85c5",
               "phase": "flowing",
               "contents": {
                 "amountMl": 47.048320921404176,
@@ -1277,19 +1403,25 @@
           "executedMembers": 2,
           "pourOriginQueries": 1,
           "pourOriginCandidates": 0,
-          "pourRayQueries": 14,
-          "pourHitCandidates": 1,
+          "pourRayQueries": 16,
+          "pourHitCandidates": 2,
           "scoopPathQueries": 0,
           "scoopPathCandidates": 0,
-          "pourSegments": 14,
+          "pourSegments": 16,
           "pourCandidates": 28,
+          "pourSearchSegments": 14,
+          "pourDepositionQueries": 3,
+          "pourSurfaceQueries": 3,
+          "pourPresentationPoints": 17,
+          "pourSurfaceCaptures": 2,
+          "pourPresentations": 1,
           "scoopCandidates": 4,
           "discoveryCaptures": 1,
           "collisionReads": 4,
           "cavityReads": 16
         },
         {
-          "worldId": "31c74ab848ce40a98ac7668d7625cefd",
+          "worldId": "94e62ec6aeba4dca9b4a99505bc5f32a",
           "vessels": 16,
           "nativeVessels": 2,
           "dormantVessels": 14,
@@ -1297,10 +1429,10 @@
           "ready": true,
           "sources": [
             {
-              "sessionId": "5f51da5b575b43b78b9f9776c50fc534",
+              "sessionId": "d87046f27ec348d6a386b293b256f604",
               "phase": "flowing",
               "contents": {
-                "amountMl": 352.95167907859582,
+                "amountMl": 352.9516790785958,
                 "savedAmountMl": 400.0,
                 "capacityMl": 500.0,
                 "transferredMl": 47.048320921404176,
@@ -1312,7 +1444,7 @@
           ],
           "receivers": [
             {
-              "sessionId": "5f51da5b575b43b78b9f9776c50fc534",
+              "sessionId": "d87046f27ec348d6a386b293b256f604",
               "phase": "flowing",
               "contents": {
                 "amountMl": 47.048320921404176,
@@ -1329,19 +1461,25 @@
           "executedMembers": 2,
           "pourOriginQueries": 1,
           "pourOriginCandidates": 0,
-          "pourRayQueries": 14,
-          "pourHitCandidates": 1,
+          "pourRayQueries": 16,
+          "pourHitCandidates": 2,
           "scoopPathQueries": 0,
           "scoopPathCandidates": 0,
-          "pourSegments": 14,
+          "pourSegments": 16,
           "pourCandidates": 28,
+          "pourSearchSegments": 14,
+          "pourDepositionQueries": 3,
+          "pourSurfaceQueries": 3,
+          "pourPresentationPoints": 17,
+          "pourSurfaceCaptures": 2,
+          "pourPresentations": 1,
           "scoopCandidates": 4,
           "discoveryCaptures": 1,
           "collisionReads": 4,
           "cavityReads": 16
         },
         {
-          "worldId": "d5653b32209c4cbfa15a0b01e229d85e",
+          "worldId": "c72037b3248942d6ab2750f549ca87d3",
           "vessels": 16,
           "nativeVessels": 2,
           "dormantVessels": 14,
@@ -1349,10 +1487,10 @@
           "ready": true,
           "sources": [
             {
-              "sessionId": "fd0009ad78e5410bb74722ee4f0308e9",
+              "sessionId": "a3ae6205473542f79f316935eeea2ee6",
               "phase": "flowing",
               "contents": {
-                "amountMl": 352.95167907859582,
+                "amountMl": 352.9516790785958,
                 "savedAmountMl": 400.0,
                 "capacityMl": 500.0,
                 "transferredMl": 47.048320921404176,
@@ -1364,7 +1502,7 @@
           ],
           "receivers": [
             {
-              "sessionId": "fd0009ad78e5410bb74722ee4f0308e9",
+              "sessionId": "a3ae6205473542f79f316935eeea2ee6",
               "phase": "flowing",
               "contents": {
                 "amountMl": 47.048320921404176,
@@ -1381,19 +1519,25 @@
           "executedMembers": 2,
           "pourOriginQueries": 1,
           "pourOriginCandidates": 0,
-          "pourRayQueries": 14,
-          "pourHitCandidates": 1,
+          "pourRayQueries": 16,
+          "pourHitCandidates": 2,
           "scoopPathQueries": 0,
           "scoopPathCandidates": 0,
-          "pourSegments": 14,
+          "pourSegments": 16,
           "pourCandidates": 28,
+          "pourSearchSegments": 14,
+          "pourDepositionQueries": 3,
+          "pourSurfaceQueries": 3,
+          "pourPresentationPoints": 17,
+          "pourSurfaceCaptures": 2,
+          "pourPresentations": 1,
           "scoopCandidates": 4,
           "discoveryCaptures": 1,
           "collisionReads": 4,
           "cavityReads": 16
         },
         {
-          "worldId": "c0af818a790a4fcf8afed21c8b519931",
+          "worldId": "fa43c82f82ea4d82ac0f1eaf245728dc",
           "vessels": 16,
           "nativeVessels": 2,
           "dormantVessels": 14,
@@ -1401,10 +1545,10 @@
           "ready": true,
           "sources": [
             {
-              "sessionId": "23bfbdb5d4c04d15bc325ab84fa372ce",
+              "sessionId": "c00df722f69a4ce88cc2e810c0fc1009",
               "phase": "flowing",
               "contents": {
-                "amountMl": 352.95167907859582,
+                "amountMl": 352.9516790785958,
                 "savedAmountMl": 400.0,
                 "capacityMl": 500.0,
                 "transferredMl": 47.048320921404176,
@@ -1416,7 +1560,7 @@
           ],
           "receivers": [
             {
-              "sessionId": "23bfbdb5d4c04d15bc325ab84fa372ce",
+              "sessionId": "c00df722f69a4ce88cc2e810c0fc1009",
               "phase": "flowing",
               "contents": {
                 "amountMl": 47.048320921404176,
@@ -1433,19 +1577,25 @@
           "executedMembers": 2,
           "pourOriginQueries": 1,
           "pourOriginCandidates": 0,
-          "pourRayQueries": 14,
-          "pourHitCandidates": 1,
+          "pourRayQueries": 16,
+          "pourHitCandidates": 2,
           "scoopPathQueries": 0,
           "scoopPathCandidates": 0,
-          "pourSegments": 14,
+          "pourSegments": 16,
           "pourCandidates": 28,
+          "pourSearchSegments": 14,
+          "pourDepositionQueries": 3,
+          "pourSurfaceQueries": 3,
+          "pourPresentationPoints": 17,
+          "pourSurfaceCaptures": 2,
+          "pourPresentations": 1,
           "scoopCandidates": 4,
           "discoveryCaptures": 1,
           "collisionReads": 4,
           "cavityReads": 16
         },
         {
-          "worldId": "417f9179d28143e991f6746601edf83d",
+          "worldId": "76bcbade0c104d6f907bb2288e2cad24",
           "vessels": 16,
           "nativeVessels": 2,
           "dormantVessels": 14,
@@ -1453,10 +1603,10 @@
           "ready": true,
           "sources": [
             {
-              "sessionId": "1599eab9650645a99495247c2e5d4274",
+              "sessionId": "d34ad67c1feb4a69b2530861140932bc",
               "phase": "flowing",
               "contents": {
-                "amountMl": 352.95167907859582,
+                "amountMl": 352.9516790785958,
                 "savedAmountMl": 400.0,
                 "capacityMl": 500.0,
                 "transferredMl": 47.048320921404176,
@@ -1468,7 +1618,7 @@
           ],
           "receivers": [
             {
-              "sessionId": "1599eab9650645a99495247c2e5d4274",
+              "sessionId": "d34ad67c1feb4a69b2530861140932bc",
               "phase": "flowing",
               "contents": {
                 "amountMl": 47.048320921404176,
@@ -1485,19 +1635,25 @@
           "executedMembers": 2,
           "pourOriginQueries": 1,
           "pourOriginCandidates": 0,
-          "pourRayQueries": 14,
-          "pourHitCandidates": 1,
+          "pourRayQueries": 16,
+          "pourHitCandidates": 2,
           "scoopPathQueries": 0,
           "scoopPathCandidates": 0,
-          "pourSegments": 14,
+          "pourSegments": 16,
           "pourCandidates": 28,
+          "pourSearchSegments": 14,
+          "pourDepositionQueries": 3,
+          "pourSurfaceQueries": 3,
+          "pourPresentationPoints": 17,
+          "pourSurfaceCaptures": 2,
+          "pourPresentations": 1,
           "scoopCandidates": 4,
           "discoveryCaptures": 1,
           "collisionReads": 4,
           "cavityReads": 16
         },
         {
-          "worldId": "a043a4aaefe148b299602480f1bcc0b9",
+          "worldId": "1dd0983c3c0f4c308f6eeb3471fbec3e",
           "vessels": 16,
           "nativeVessels": 2,
           "dormantVessels": 14,
@@ -1505,10 +1661,10 @@
           "ready": true,
           "sources": [
             {
-              "sessionId": "47e2a7fbe9004ee7a27b212c1e360ce8",
+              "sessionId": "5ea617e7d53c4f02b7cd0149325f8501",
               "phase": "flowing",
               "contents": {
-                "amountMl": 352.95167907859582,
+                "amountMl": 352.9516790785958,
                 "savedAmountMl": 400.0,
                 "capacityMl": 500.0,
                 "transferredMl": 47.048320921404176,
@@ -1520,7 +1676,7 @@
           ],
           "receivers": [
             {
-              "sessionId": "47e2a7fbe9004ee7a27b212c1e360ce8",
+              "sessionId": "5ea617e7d53c4f02b7cd0149325f8501",
               "phase": "flowing",
               "contents": {
                 "amountMl": 47.048320921404176,
@@ -1537,12 +1693,18 @@
           "executedMembers": 2,
           "pourOriginQueries": 1,
           "pourOriginCandidates": 0,
-          "pourRayQueries": 14,
-          "pourHitCandidates": 1,
+          "pourRayQueries": 16,
+          "pourHitCandidates": 2,
           "scoopPathQueries": 0,
           "scoopPathCandidates": 0,
-          "pourSegments": 14,
+          "pourSegments": 16,
           "pourCandidates": 28,
+          "pourSearchSegments": 14,
+          "pourDepositionQueries": 3,
+          "pourSurfaceQueries": 3,
+          "pourPresentationPoints": 17,
+          "pourSurfaceCaptures": 2,
+          "pourPresentations": 1,
           "scoopCandidates": 4,
           "discoveryCaptures": 1,
           "collisionReads": 4,
@@ -1551,7 +1713,7 @@
       ],
       "flowBudget": {
         "reservations": 9,
-        "units": 92960,
+        "units": 93720,
         "reservationLimit": 64,
         "unitLimit": 524288,
         "streamSegments": 32,
@@ -1560,7 +1722,7 @@
         "rainSamples": 5
       },
       "discoveryBudget": {
-        "step": 481,
+        "step": 1628,
         "reservations": 9,
         "executions": 9,
         "units": 65124,
@@ -1582,9 +1744,9 @@
   "savedContainers": 144,
   "nativeContainers": 20,
   "dormantContainers": 124,
-  "hostUnits": 4709376,
+  "hostUnits": 4714848,
   "flowUnitLimit": 524288,
-  "groupUnits": 92960,
+  "groupUnits": 93720,
   "resourceBudgets": {
     "objects": {
       "instances": 20,
