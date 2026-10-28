@@ -25,7 +25,7 @@ namespace Maestro.Quest.Creation {
             internal long WorkStep;internal double At;internal float Depth,Speed,RippleAt=-10;internal Vector3 Point;internal Matrix4x4 Pose;internal uint InputUpdate;
         }
         sealed class ContactInput {internal Vector3 Point;internal string Kind="controller";internal bool Tracked;internal long WorkStep;internal double At;internal uint Update;}
-        readonly ContactInput[] contactInputs={new(),new()};
+        readonly ContactInput[] contactInputs={new(),new(),new()};
         readonly Dictionary<string,ContactState> contacts=new(StringComparer.Ordinal);
         readonly List<ContactDelivery> contactEvents=new();
         readonly Vector3[] contactPoints=new Vector3[MediumDisplacement.Samples];
@@ -34,13 +34,19 @@ namespace Maestro.Quest.Creation {
         bool contactsPaused,contactsFocused=true;
         bool ContactReady=>!contactsPaused&&contactsFocused&&editor&&world&&world.Running&&!blocked&&!editor.RuntimeGate.Held&&!editor.Ownership.Suspended&&!editor.WriteGate.Frozen&&editor.Frame.Valid;
         internal void SetContactInput(int index,Vector3? point,bool hand){
-            if(index<0||index>=contactInputs.Length)return;var input=contactInputs[index];double now=ContactNow;string kind=hand?"hand":"controller";
+            if(index<0||index>=2)return;
+            SetTrackedContact(index,point,hand?"hand":"controller");
+        }
+        // The viewpoint owns this source, independently of controller/hand availability.
+        internal void SetViewerContact(Vector3? point)=>SetTrackedContact(2,point,"viewer");
+        void SetTrackedContact(int index,Vector3? point,string kind){
+            var input=contactInputs[index];double now=ContactNow;
             bool continuous=input.Tracked&&FreshContact(now,input.At,TrackingLifetime)&&input.Kind==kind;
             input.Update++;input.Tracked=point.HasValue&&RoomRecipe.Finite(point.Value);input.Kind=kind;
             if(input.Tracked)input.Point=point.Value;input.At=now;
             if((!continuous||!input.Tracked)&&contacts.TryGetValue(InputId(index),out var state))Forget(state,input.Tracked?"Tracking continuity changed":"Tracking is unavailable");
         }
-        static string InputId(int index)=>index==0?"input:left":"input:right";
+        static string InputId(int index)=>index==0?"input:left":index==1?"input:right":"input:viewer";
         static void Forget(ContactState state,string reason){state.Known=false;state.BodyId=state.Liquid="";state.Depth=state.Speed=0;state.Reason=reason;}
         void ResetContacts(){contactEpoch++;contacts.Clear();foreach(var v in vessels.Values)if(v.Item)v.Item.GetComponent<ContainerFillView>()?.ClearRipples();}
         void ContactGateChanged(){if(editor.RuntimeGate.Held)ResetContacts();}
@@ -143,7 +149,7 @@ namespace Maestro.Quest.Creation {
         }
         void Ripple(string body,Vector3 point,float speed,ContactState state){if(vessels.TryGetValue(body,out var v)&&v.Item){v.Item.GetComponent<ContainerFillView>()?.AddRipple(point,speed);state.RippleAt=Time.unscaledTime;}}
         internal JObject ObserveContact(string id){
-            bool input=id=="input:left"||id=="input:right";if(!input&&(!editor||!editor.Find(id)))return null;
+            bool input=ContactInputIndex(id)>=0;if(!input&&(!editor||!editor.Find(id)))return null;
             contacts.TryGetValue(id,out var state);bool workReady=ContactWorkResources.Ready(this,out var workIssue);
             bool participantReady=ContactParticipantCurrent(id,state,false,out var participantIssue);bool known=workReady&&participantReady;
             if(known&&state.BodyId!="")known=vessels.TryGetValue(state.BodyId,out var v)&&v.Item&&v.Item.isActiveAndEnabled&&v.Rigid&&v.Rigid.GeometryReady&&world.CanSimulate(editor.Frame.PointToWorld(state.Point),state.Item)&&world.CanSimulate(editor.Frame.PointToWorld(state.Point),v.Item);

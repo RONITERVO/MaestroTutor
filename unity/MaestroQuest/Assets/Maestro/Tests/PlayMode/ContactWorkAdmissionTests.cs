@@ -51,14 +51,28 @@ namespace Maestro.Quest.Tests {
             ContactPoint(new Vector3(4,2,0));Assert.That(events.Select(e=>e.Phase),Is.EqualTo(new[]{"exited"}));Assert.That(editor.Read(pool).containers[0].amountMl,Is.EqualTo(400000));physics.PausePhysics();yield return null;
         }
         [UnityTest]public IEnumerator ContactWorkAdmissionGrowthCannotEvictAnotherSamplerOrKeepAContactPrefix(){
-            var(_,prop)=MediumFixture(.1f);var item=editor.Find(prop);item.GetComponent<RigidRoomItem>().SetAnimationOwner(this,true);ContactTick();var original=ContactGrant();var held=FillContactWork();var extra=new List<Collider>();
+            var(_,prop)=MediumFixture(.1f);var item=editor.Find(prop);item.GetComponent<RigidRoomItem>().SetAnimationOwner(this,true);
+            // Fill close to the real unit ceiling. A new tracked participant can
+            // change the number of whole samplers that fit and leave a large tail.
+            // Do not mistake that unused capacity for a failed growth guard.
+            var baseline=new List<Collider>();int demand=editor.Liquids.ContactWorkDemand;
+            int slots=Math.Min(ContactWorkResources.MaximumExecutions,ContactWorkResources.MaximumUnits/demand);
+            int perShape=ContactWorkResources.BodyDemand(2)-ContactWorkResources.BodyDemand(1);
+            int padding=(ContactWorkResources.MaximumUnits/slots-demand)/perShape;
+            for(int i=0;i<padding;i++){
+                Assert.That(item.Grab.colliders.Count,Is.LessThan(MediumDisplacement.MaximumColliders));
+                var c=item.gameObject.AddComponent<BoxCollider>();c.isTrigger=true;item.Grab.colliders.Add(c);baseline.Add(c);
+            }
+            ContactTick();var original=ContactGrant();var held=FillContactWork();var extra=new List<Collider>();
             try{
                 foreach(var data in editor.Snapshot().objects){if(data.IsBuiltIn)continue;var target=editor.Find(data.id);for(int i=target.Grab.colliders.Count;i<64;i++){var c=target.gameObject.AddComponent<BoxCollider>();c.isTrigger=true;target.Grab.colliders.Add(c);extra.Add(c);}}
+                int spare=ContactWorkResources.MaximumUnits-(int)SimulationWorkSchedule.ObserveLedger()["committed"]["contactUnits"];
+                Assert.That(editor.Liquids.ContactWorkDemand-(int)original["units"],Is.GreaterThan(spare),"Fixture growth must exceed the remaining budget");
                 Assert.That(ContactWorkResources.Ready(editor.Liquids,out _),Is.False);string budget=ContactWorkResources.ObserveBudget().ToString();ContactTick();Assert.That(ContactWorkResources.Ready(editor.Liquids,out _),Is.False);Assert.That(ContactWorkResources.ObserveBudget().ToString(),Is.EqualTo(budget));
                 Assert.That((bool)editor.Liquids.ObserveContact(prop)["known"],Is.False);Assert.That((bool)ContactWorkResources.Observe(1)["current"],Is.False,"The changed shared geometry invalidates each copied sampler's old demand");
                 foreach(var c in extra){c.GetComponent<RoomItem>().Grab.colliders.Remove(c);UnityEngine.Object.DestroyImmediate(c);}extra.Clear();ContactTick();
                 Assert.That(ContactWorkResources.Ready(editor.Liquids,out var error),Is.True,error);Assert.That((string)ContactWorkResources.Observe(0)["reservationId"],Is.EqualTo((string)original["reservationId"]));
-            }finally{foreach(var c in extra)if(c){c.GetComponent<RoomItem>().Grab.colliders.Remove(c);UnityEngine.Object.DestroyImmediate(c);}ReleaseContactWork(held);}physics.PausePhysics();yield return null;
+            }finally{foreach(var c in extra)if(c){c.GetComponent<RoomItem>().Grab.colliders.Remove(c);UnityEngine.Object.DestroyImmediate(c);}ReleaseContactWork(held);foreach(var c in baseline)if(c){c.GetComponent<RoomItem>().Grab.colliders.Remove(c);UnityEngine.Object.DestroyImmediate(c);}}physics.PausePhysics();yield return null;
         }
         [UnityTest]public IEnumerator ContactWorkAdmissionPassiveFactsCannotResumePausedPhysicsOrReserveSampling(){
             root.AddComponent<RuntimeDiagnostics>();var(_,prop)=MediumFixture(.1f);ContactTick();Assert.That((int)CollisionFact("runtime.contactWorkBudget")["reservations"],Is.EqualTo(1));

@@ -28,14 +28,16 @@ namespace Maestro.Quest.Interaction
         bool HeadReady=>isActiveAndEnabled&&!paused&&focused&&tracked?.Invoke()==true;
         internal void Tick()
         {
-            if(!HeadReady||!editor||!view)return;
+            if(!HeadReady||!editor||!view){editor?.Liquids?.SetViewerContact(null);return;}
             if(pending!=null){
+                editor.Liquids?.SetViewerContact(null);
                 if(!view.RestoreViewpoint(pending,out var error)){
                     if(error!=lastError){lastError=error;editor.ReportStatus(error);}return;
                 }
                 pending=null;restoring?.Dispose();restoring=null;
                 editor.ReportStatus("Saved world location restored; real-room alignment remains separate");
             }
+            editor.Liquids?.SetViewerContact(view.ReadViewerPoint(out var point)?point:null);
             if(Time.unscaledTime>=sampleAt){sampleAt=Time.unscaledTime+1;Capture();}
         }
         void OnMoved(){if(HeadReady&&!recording){recording=true;Capture();}}
@@ -45,9 +47,9 @@ namespace Maestro.Quest.Interaction
             if(view.ReadViewpoint(out var value))editor.RememberViewpoint(value);
         }
         void Update()=>Tick();
-        void OnApplicationPause(bool value){if(value){Capture();view?.EndWalking(editor);}paused=value;}
-        void OnApplicationFocus(bool value){if(!value){Capture();view?.EndWalking(editor);}focused=value;}
-        void OnDisable(){if(view)view.EndWalking(editor);}
-        void OnDestroy(){if(view){view.Moved-=OnMoved;view.UnbindWalking(editor);}restoring?.Dispose();restoring=null;}
+        void OnApplicationPause(bool value){if(value){Capture();view?.EndWalking(editor);editor?.Liquids?.SetViewerContact(null);}paused=value;}
+        void OnApplicationFocus(bool value){if(!value){Capture();view?.EndWalking(editor);editor?.Liquids?.SetViewerContact(null);}focused=value;}
+        void OnDisable(){editor?.Liquids?.SetViewerContact(null);if(view)view.EndWalking(editor);}
+        void OnDestroy(){editor?.Liquids?.SetViewerContact(null);if(view){view.Moved-=OnMoved;view.UnbindWalking(editor);}restoring?.Dispose();restoring=null;}
     }
 }

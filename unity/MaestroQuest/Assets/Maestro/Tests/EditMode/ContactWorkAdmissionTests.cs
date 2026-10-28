@@ -5,7 +5,7 @@ using NUnit.Framework;
 namespace Maestro.Quest.Tests {
     public sealed class ContactWorkAdmissionTests {
         [Test]public void ContactWorkAdmissionBoundsPotentialContactDemand(){
-            Assert.That(ContactWorkResources.BaseDemand,Is.EqualTo(1120));
+            Assert.That(ContactWorkResources.BaseDemand,Is.EqualTo(1252));
             Assert.That(ContactWorkResources.BodyDemand(1),Is.EqualTo(8512));
             Assert.That(ContactWorkResources.BodyDemand(-1),Is.EqualTo(ContactWorkResources.BodyDemand(0)));
             Assert.That(ContactWorkResources.BodyDemand(100),Is.EqualTo(ContactWorkResources.BodyDemand(64)));

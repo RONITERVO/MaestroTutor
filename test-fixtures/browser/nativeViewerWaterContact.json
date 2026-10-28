@@ -1,0 +1,69 @@
+{
+  "dry": {
+    "known": true,
+    "immersed": false,
+    "bodyId": "",
+    "kind": "viewer",
+    "liquid": "",
+    "depthMetres": 0.0,
+    "sampleSpeedMetresPerSecond": 0.0,
+    "surface": {
+      "x": 4.0,
+      "y": 2.0,
+      "z": 0.0
+    },
+    "reason": ""
+  },
+  "wet": {
+    "known": true,
+    "immersed": true,
+    "bodyId": "efc4bcf0a033439c9a2f9c0b08463c49",
+    "kind": "viewer",
+    "liquid": "Water",
+    "depthMetres": 0.200000048,
+    "sampleSpeedMetresPerSecond": 12.0,
+    "surface": {
+      "x": 4.0,
+      "y": 1.6,
+      "z": 0.0
+    },
+    "reason": ""
+  },
+  "unavailable": {
+    "known": false,
+    "immersed": false,
+    "bodyId": "",
+    "kind": "viewer",
+    "liquid": "",
+    "depthMetres": 0.0,
+    "sampleSpeedMetresPerSecond": 0.0,
+    "surface": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0
+    },
+    "reason": "Tracking is unavailable"
+  },
+  "events": [
+    {
+      "participantId": "input:viewer",
+      "kind": "viewer",
+      "phase": "entered",
+      "speed": 12.0,
+      "depth": 0.200000048,
+      "x": 4.0,
+      "y": 1.6,
+      "z": 0.0
+    }
+  ],
+  "workBudget": {
+    "reservations": 1,
+    "units": 43812,
+    "reservationLimit": 64,
+    "unitLimit": 524288,
+    "samplesPerBody": 64,
+    "collidersPerBody": 64,
+    "avatarSamples": 6,
+    "inputSamples": 3
+  }
+}

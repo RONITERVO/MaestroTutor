@@ -2795,7 +2795,7 @@ are explicit refusals. Observing or waiting does not apply forces, change water
 quantities, add history, acquire native geometry or restart paused physics.
 
 Each pass is still charged for its whole room, including held/animated objects,
-six avatar joints and two input sources. Logical sample/candidate/proof allowances
+six avatar joints and three input sources (left, right and viewer). Logical sample/candidate/proof allowances
 are not measured CPU time, PhysX cost, frame time or Quest memory. Group-local
 metering and separately bounded discovery/geometry work remain necessary before
 larger worlds can be promised.
@@ -3757,3 +3757,36 @@ including actual stream/ripple checks for empty, full, obstructed, incompatible
 and terrain receivers, multiple sources and later scooping. Fresh native work
 captures also pass shared web checks. Separate Quest appearance/performance
 acceptance remains required; the existing release holds are unchanged.
+
+## Viewer immersion uses the same water system
+
+The tracked viewer now participates in the existing finite-water contact system.
+Programs, the delegated agent and the original book's generated inspection UI
+read `viewer.medium.contactState`. The existing `object.medium.contact` event
+identifies this participant as `input:viewer` with `kind: viewer`. This lets an
+authored program attach sound or another existing action to entry, exit or a
+sampled crossing without creating a second liquid inventory or trigger engine.
+The new fact and extended event advertise `viewerLiquidContacts.v1`; old native
+clients cannot silently accept a program that expects viewer events.
+
+The sample is the tracked view point, not a simulated head or body volume.
+It works without hands or controllers and while looking straight down. Like the
+other tracked inputs, it uses the global real-room policy. An independently
+configured NPC or prop continues to use its own environment profile. Water
+quantity, cavity boundaries, current geometry and the shared sampling budget
+remain authoritative. Physical bounds, visual layers and acoustic behavior
+remain separate.
+
+Physics pause, workspace holds, unavailable geometry and tracking loss report
+`known: false`, never a fabricated dry state. Reacquisition, restore and explicit
+viewpoint relocation establish a fresh baseline without an entry/exit splash.
+Ordinary observed movement then produces normal contact edges. A program should
+handle unknown state explicitly, for example stopping a loop it owns until a
+fresh sample is available.
+
+No camera feed is captured or sent by these observations. This does not apply
+an underwater tint, refraction, audio filter or force. Those presentation choices
+can build on the shared state; full underwater presentation and physical Quest
+acceptance remain unfinished. Current desktop evidence includes bound-camera
+sampling without controllers, finite boundaries, lifecycle/freshness, global
+collision readiness, reentrant event delivery, and discrete world relocation.

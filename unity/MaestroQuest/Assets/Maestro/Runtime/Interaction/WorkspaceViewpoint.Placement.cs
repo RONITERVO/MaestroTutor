@@ -44,6 +44,8 @@ namespace Maestro.Quest.Interaction
         internal void ApplyPlacement()
         {
             view.ApplyPreparedViewpoint();recording=true;
+            // Teleport is a new immersion baseline, never a swept splash.
+            editor.Liquids?.SetViewerContact(null);
             editor.GetComponent<MovementControls>()?.WorldPlaced();
             PlacementState();stateId=Guid.NewGuid().ToString("N");
         }

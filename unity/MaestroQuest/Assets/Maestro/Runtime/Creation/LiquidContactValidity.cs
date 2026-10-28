@@ -9,7 +9,7 @@ namespace Maestro.Quest.Creation {
   // Unlike frame-cached time, this also expires work during a slow callback.
   static double ContactNow=>Time.realtimeSinceStartupAsDouble;
   static bool FreshContact(double now,double at,double lifetime)=>now>=at&&now-at<=lifetime;
-  static int ContactInputIndex(string id)=>id=="input:left"?0:id=="input:right"?1:-1;
+  static int ContactInputIndex(string id)=>id=="input:left"?0:id=="input:right"?1:id=="input:viewer"?2:-1;
 
   bool AvatarContactPose(RoomItem item,MaestroAvatar avatar,ContactState expected,bool exactPose,out uint revision,out int count){
    count=0;revision=0;

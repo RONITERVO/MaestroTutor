@@ -39,6 +39,14 @@ namespace Maestro.Quest.Interaction
             if(!RoomRecipe.Finite(foot)||!RoomRecipe.Finite(forward)||forward.sqrMagnitude<.0001f)return false;
             heading=Mathf.Atan2(forward.x,forward.z)*Mathf.Rad2Deg;return true;
         }
+        // Position sampling must still work while looking straight down into water.
+        // Tracking/focus admission belongs to the workspace viewpoint owner.
+        internal bool ReadViewerPoint(out Vector3 point){
+            point=default;
+            if(!isActiveAndEnabled||!viewer||!viewer.isActiveAndEnabled||!trackingOrigin||
+                motion==null||!motion.Ready||viewer.transform.IsChildOf(content))return false;
+            point=viewer.transform.position;return RoomRecipe.Finite(point);
+        }
         internal bool ReadViewpoint(out RoomViewpoint value)
         {
             value=null;if(!PhysicalView(out var foot,out var heading))return false;

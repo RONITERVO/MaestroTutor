@@ -2,6 +2,10 @@
 
 Status: active implementation. Nothing in this document claims store readiness.
 
+The latest [viewer immersion increment](#shared-viewer-water-contact--2026-10-28)
+extends existing finite-water contacts to the tracked viewpoint. It does not
+complete underwater presentation or replace the candidate/device release gates.
+
 Start with the [accepted product scope](#accepted-product-scope) and
 [release evidence checklist](#release-evidence-still-required) and the latest
 [complete integration checkpoint](#complete-native-book-and-unsigned-android-verification--2026-10-26) and
@@ -17985,3 +17989,48 @@ linkage and 16 KiB alignment checks for the added diagnostic. Its native sources
 match the final Windows build; it was not run on a device. Product capture
 ownership, app/world behavior, save formats and release packages are unchanged. Native acoustic
 quality, production integration and physical/provider acceptance remain open.
+
+## Shared viewer water contact — 2026-10-28
+
+The workspace viewpoint now supplies an independent viewer point to the existing
+liquid-contact sampler. The same current cavities, quantity, missing-geometry
+proofs, real-room policy, fair scheduling and event delivery checks apply.
+`viewer.medium.contactState` and the `input:viewer` / `viewer` participant on
+`object.medium.contact` are generated into the shared catalog for user inspection,
+agent discovery and editable programs. `viewerLiquidContacts.v1` guards this
+extension on older native clients.
+
+Tracking/focus loss, disable, restore and explicit relocation retire the old
+baseline. Looking straight down still provides a position. Moving the virtual
+world to a destination does not move physical tracking or invent a swept contact;
+a subsequent observed exit is an ordinary event. No hand/controller dependency,
+liquid quantity change, camera sharing, automatic camera/audio effect or new
+unbounded per-frame service was introduced. The existing admission budget now
+accounts for three tracked inputs. The growth-admission regression fixture
+fills real remaining capacity instead of assuming an old sampler divisor.
+
+Verified desktop evidence is retained in
+`.quest-evidence/viewer-water-20261028/`. `viewer-focused-3.xml` records **55
+passing PlayMode tests**, including six new viewer scenarios, existing contact
+continuity/order/admission, per-entity below-floor physics and shared placement.
+`nativeViewerWaterContact.json` in the browser fixtures is captured from the
+bound native camera scenario, with synthetic tracking availability and no
+provider/device use. Shared tests validate its dry/wet/unavailable states,
+event fields and use by the same editable program parser.
+
+The first test attempt correctly caught malformed new asset metadata; the
+metadata was repaired before the successful compile. The initial budget test
+assumed a particular whole-pass packing and was corrected without increasing
+the production limit. A relocation test initially requested an occupied place;
+its fixture now removes its unrelated prop and uses the actual vessel-floor
+position rather than bypassing destination clearance.
+
+The final catalog verification also passed **18 EditMode tests**, native/shared
+manifest equality, **3,668 web tests across 379 files**, and TypeScript checking.
+The retained native fixture is revalidated by the new shared tests after copying.
+No fresh Android candidate is claimed for this increment.
+
+Headset tracking, comfort, thermal/frame cost and continuous real movement
+through virtual water still require physical acceptance. Underwater optics,
+acoustic presentation and wider living-world requirements remain open. No
+device, paid-provider, deployment, signing or Meta action was taken.

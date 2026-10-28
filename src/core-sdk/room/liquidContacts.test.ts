@@ -13,7 +13,8 @@ it('shares the native contact event with typed fields and requires contact suppo
  const commands=[{action:'rules',rule:{action:'edit',revision:1,edits:[{kind:'save',sequence:{program:JSON.stringify(program)}}]}}];
  const capabilities=['behaviourPrograms.v3','eventPrograms.v1','eventFields.v1'];
  expect(()=>requireRoomCapabilities(commands,{capabilities})).toThrow('liquidContacts.v1');
- expect(()=>requireRoomCapabilities(commands,{capabilities:[...capabilities,'liquidContacts.v1']})).not.toThrow();
+ expect(()=>requireRoomCapabilities(commands,{capabilities:[...capabilities,'liquidContacts.v1']})).toThrow('viewerLiquidContacts.v1');
+ expect(()=>requireRoomCapabilities(commands,{capabilities:[...capabilities,'liquidContacts.v1','viewerLiquidContacts.v1']})).not.toThrow();
  program.functions[0].locals.find(v=>v.name==='who')!.initial=0;
  expect(parseProgram(JSON.stringify(program)).program).toBeNull();
 });

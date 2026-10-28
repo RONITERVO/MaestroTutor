@@ -11,7 +11,7 @@ namespace Maestro.Quest.Creation
     internal static class ContactWorkResources
     {
         internal const int MaximumReservations=64,MaximumExecutions=32,MaximumUnits=524288;
-        internal const int AvatarSamples=6,InputSamples=2;
+        internal const int AvatarSamples=6,InputSamples=3;
         internal const string Waiting="Water contacts are waiting for sampling capacity. Complete room passes take turns; missed events are never replayed.";
         // Logical candidate/proof allowances, not instructions or frame time.
         // Contact samples test both occupancy and swept surface crossings, and
