@@ -334,6 +334,37 @@ Commands, hashes, full results and the direct control are retained in
 dependency source, original thresholds and 14 unrelated files are unchanged.
 No backend is promoted; the original 31 aligned quality failures remain open.
 
+## Mobile processor timing and input dynamics — 2026-10-29
+
+A separate private control keeps the same pinned direct AECM and APM mobile
+implementations and 40 ms synthetic echo path. It varies input rate (8/16 kHz),
+delay hint (0/10/20/40/80 ms), direct suppression mode (0–4), and white-noise or
+two-tone reference. All 100 rows are retained; APM does not expose the direct
+suppression-mode setting, so its 20 unique configurations repeat across that
+axis. Measured from 10–20 seconds, direct reduction stays near .07 dB. APM's
+best result is about 1.16 dB for 8 kHz noise; the 16 kHz cases remain near
+.13 dB noise and .08 dB tone. These settings alone do not rescue these inputs.
+
+An eight-row follow-up holds 16 kHz, the 40 ms hint and direct mode 3 constant.
+The steady rows reproduce the earlier direct control exactly. A one-second
+silent introduction or periodic half-second silence leaves similar poor results.
+Smoothly varying reference amplitude from .05 to 1 over a 1.7-second cycle
+instead yields approximately 32.11/32.10 dB direct/APM reduction for noise and
+28.19/30.76 dB for the tones. No near-end speech is present in these controls.
+
+This supplies a positive control for both existing integrations; it does not
+establish double-talk quality or repair stationary world audio. The pinned
+`aecm_core.cc` updates its energy/VAD thresholds from input dynamics, which is a
+plausible explanation worth instrumenting, not a measured internal attribution
+from these output-only controls. Do not inject calibration audio or replace
+the failing stationary acceptance cases with these easier dynamic inputs.
+
+Sources, binaries, commands, hashes, all metrics and the decision are retained
+in `.quest-evidence/echo-mobile-timing-20261029/` and
+`.quest-evidence/echo-mobile-dynamics-20261029/`. Both runs verify the original
+source/archive/probe authority unchanged. The app, supported evaluation profiles
+and thresholds remain unchanged; the 31 aligned quality failures remain open.
+
 ## Decision
 
 Keep one shared capture/output ownership and timing contract. Keep both the cold
