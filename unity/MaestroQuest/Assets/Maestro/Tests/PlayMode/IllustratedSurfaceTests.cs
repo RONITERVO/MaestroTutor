@@ -34,10 +34,10 @@ namespace Maestro.Quest.Tests
             var material=Paint(Color.white);
             Surface("blend",.4f).Apply(material,true);
             Assert.That(material.renderQueue,Is.EqualTo(3000));Assert.That(material.GetFloat("_ZWrite"),Is.Zero);
-            Assert.That(material.GetTag("RenderType",false),Is.EqualTo("Transparent"));Assert.That(material.GetShaderPassEnabled("PENCIL"),Is.False);
+            Assert.That(material.GetTag("RenderType",false),Is.EqualTo("Transparent"));Assert.That(material.GetShaderPassEnabled(IllustratedSurface.PencilPass),Is.False);
             Surface("cutout",.8f,.35f,false).Apply(material,true);
             Assert.That(material.renderQueue,Is.EqualTo(2450));Assert.That(material.GetFloat("_ZWrite"),Is.EqualTo(1));
-            Assert.That(material.GetFloat("_AlphaCutoff"),Is.EqualTo(.35f));Assert.That(material.GetInt("_SurfaceCull"),Is.EqualTo(2));Assert.That(material.GetShaderPassEnabled("PENCIL"),Is.True);
+            Assert.That(material.GetFloat("_AlphaCutoff"),Is.EqualTo(.35f));Assert.That(material.GetInt("_SurfaceCull"),Is.EqualTo(2));Assert.That(material.GetShaderPassEnabled(IllustratedSurface.PencilPass),Is.True);
             IllustratedSurface.Opaque.Apply(material,false);Assert.That(material.renderQueue,Is.EqualTo(2000));Assert.That(material.GetFloat("_AlphaCutoff"),Is.Zero);
         }
         GameObject Quad(Material material,float z=0,float size=1) {
@@ -63,6 +63,19 @@ namespace Maestro.Quest.Tests
             Assert.That(actual.a,Is.EqualTo(expected.a).Within(.025f),where+" compositor alpha");
         }
         static Color Linear(float r,float g,float b,float a=1)=>new Color(Mathf.LinearToGammaSpace(r),Mathf.LinearToGammaSpace(g),Mathf.LinearToGammaSpace(b),a);
+        [UnityTest]public IEnumerator BackFacingSurfaceHonoursTheRealOutlinePassSwitch() {
+            var material=Paint(Color.red);var quad=Quad(material);quad.transform.rotation=Quaternion.Euler(0,180,0);
+            var camera=Camera();yield return null;
+            Surface("opaque",twoSided:false).Apply(material,true);
+            var outlined=Read(camera,"back-outline-on")[48*96+48];
+            Assert.That(outlined.r-outlined.g,Is.LessThan(.2f),"The opaque outline must actually draw when enabled");
+            Surface("opaque",twoSided:false).Apply(material,false);
+            Pixel(Read(camera,"back-outline-off")[48*96+48],Color.blue,"Disabled outline must leave the culled back face clear");
+            Surface("opaque").Apply(material,false);
+            Pixel(Read(camera,"back-two-sided")[48*96+48],Color.red,"Two-sided pigment remains visible");
+            Surface("blend",.5f).Apply(material,true);
+            Pixel(Read(camera,"back-transparent")[48*96+48],Linear(.5f,0,.5f),"Transparent back face has no opaque outline");
+        }
         [UnityTest]public IEnumerator RenderedBlendPreservesBackgroundAndCompositorCoverageFromBothEyePositions() {
             Assert.That(QualitySettings.activeColorSpace,Is.EqualTo(ColorSpace.Linear));
             var material=Paint(Color.red);Quad(material);var camera=Camera();yield return null;

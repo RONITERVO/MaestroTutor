@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import {expect,it} from 'vitest';
 import native from '../../../test-fixtures/browser/appearanceAuthoring.json';
+import nativeLiquid from '../../../test-fixtures/browser/nativeLiquidAppearance.json';
 import {capabilityDefinition,capabilityResources,validateCapabilityArguments,validateCapabilityOutput} from '../../../shared/capabilities';
 import {validFactValue} from '../../../shared/behaviourFacts';
 import {validExecutionView} from '../../../shared/roomExecutions';
@@ -72,4 +73,30 @@ it('selects exact current chat-image offers without allowing URLs or bytes in pr
  expect(validateCapabilityArguments('image.import',1,{operation:'selectChat',offerSet:'a'.repeat(32),imageHash:'b'.repeat(64)})).toBeNull();
  for(const extra of [{url:'https://example.com/image'},{data:'AAAA'},{offerSet:'stale'},{imageHash:'../file'}])
   expect(validateCapabilityArguments('image.import',1,{operation:'selectChat',offerSet:'a'.repeat(32),imageHash:'b'.repeat(64),...extra})).not.toBeNull();
+});
+
+it('keeps native liquid addresses strict and negotiates the feature only for native bindings',()=>{
+ const original=native.call.arguments;
+ for(const partId of ['liquid_surface','liquid_stream']){
+  const args={...original,binding:{...original.binding,kind:'nativePart',partId}};
+  const call={id:'object.appearance.bind',version:1,arguments:args};
+  expect(validateCapabilityArguments(call.id,1,args)).toBeNull();
+  const commands=[{action:'execution',execution:{operation:'start',call}}];
+  expect(()=>requireRoomCapabilities(commands,{capabilities:['execution.v1','appearances.v1']})).toThrow('nativeAppearanceParts.v1');
+  expect(()=>requireRoomCapabilities(commands,{capabilities:['execution.v1','appearances.v1','nativeAppearanceParts.v1']})).not.toThrow();
+  for(const patch of [{partId:'unknown'},{partId:'../surface'},{partId:''},{materialIndex:0},{modelHash:'a'.repeat(64)},{extra:true}])
+   expect(validateCapabilityArguments(call.id,1,{...args,binding:{...args.binding,...patch}})).not.toBeNull();
+ }
+ expect(()=>requireRoomCapabilities([{action:'execution',execution:{operation:'start',call:native.call}}],{capabilities:['execution.v1','appearances.v1']})).not.toThrow();
+});
+
+it('accepts captured native liquid completion and the same user/agent target observations',()=>{
+ const {call,...summary}=nativeLiquid.receipt;
+ expect(validateCapabilityArguments(call.id,1,call.arguments)).toBeNull();
+ expect(validateCapabilityOutput(call.id,1,nativeLiquid.receipt.output)).toBeNull();
+ expect(validExecutionView({selected:nativeLiquid.receipt,running:[],outcomes:[summary]})).toBe(true);
+ expect(validFactValue('object.appearance.targets',nativeLiquid.targets)).toBe(true);
+ expect(validFactValue('object.appearances',nativeLiquid.bindings)).toBe(true);
+ expect(nativeLiquid.targets.targets.filter(t=>t.kind==='nativePart').map(t=>t.partId)).toEqual(['liquid_surface','liquid_stream']);
+ expect(nativeLiquid.bindings.bindings[0]).toMatchObject({kind:'nativePart',partId:'liquid_surface',state:'active'});
 });

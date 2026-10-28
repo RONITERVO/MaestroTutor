@@ -111,6 +111,7 @@ namespace Maestro.Quest.Creation
             return kind switch {
                 "root"=>partId==""&&modelHash==""&&materialIndex==-1,
                 "part"=>owner.kind==RoomObjectKind.Assembly&&RoomRecipe.ValidId(partId)&&modelHash==""&&materialIndex==-1,
+                "nativePart"=>!owner.IsBuiltIn&&NativeAppearanceParts.ValidId(partId)&&modelHash==""&&materialIndex==-1,
                 "material"=>owner.kind is RoomObjectKind.ImportedModel or RoomObjectKind.Maestro&&partId==""&&ModelLibrary.ValidHash(modelHash)&&materialIndex>=0&&materialIndex<1024,
                 _=>false
             };

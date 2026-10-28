@@ -100,6 +100,7 @@ Shader "Maestro/Watercolor"
         Pass
         {
             Name "PENCIL"
+            Tags { "LightMode"="Always" }
             Cull Front
             ZWrite [_ZWrite]
             Blend [_SrcBlend] [_DstBlend], One OneMinusSrcAlpha

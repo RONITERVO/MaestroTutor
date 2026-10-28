@@ -52,3 +52,17 @@ it('selects an explicit lookup dependency without copying a library revision int
  }
  const ordinary=schema();ordinary['x-choices']![0].lookup=true;expect(()=>resourceChoices(ordinary)).toThrow();
 });
+
+it('selects the shared appearance within a native variant without touching its address',()=>{
+ const action=capabilityDefinition('object.appearance.bind')!,s=action.input,choice=resourceChoices(s)[0];
+ const value={...action.example,binding:{...action.example!.binding as object,kind:'nativePart',partId:'liquid_surface'}};
+ expect(applyResourceChoice(s,choice,value,entry)).toEqual({...value,appearanceRevision:7,binding:{...value.binding,appearanceId:entry.id}});
+ for(const mutate of [
+  (s:CapabilitySchema)=>s.properties!.binding.oneOf![1].properties!.appearanceId['x-static']=true,
+  (s:CapabilitySchema)=>s.properties!.binding.oneOf![1].properties!.appearanceId.maxLength=31,
+  (s:CapabilitySchema)=>delete s.properties!.binding.oneOf![1].properties!.appearanceId,
+  (s:CapabilitySchema)=>s.properties!.binding['x-discriminators']!.push('appearanceId')
+ ]){
+  const broken=structuredClone(s);mutate(broken);expect(()=>resourceChoices(broken)).toThrow('invalid destination');
+ }
+});

@@ -2,9 +2,11 @@
 
 Status: active implementation. Nothing in this document claims store readiness.
 
-The latest [viewer immersion increment](#shared-viewer-water-contact--2026-10-28)
-extends existing finite-water contacts to the tracked viewpoint. It does not
-complete underwater presentation or replace the candidate/device release gates.
+The latest [native liquid appearance increment](#independent-liquid-appearance-and-back-face-rendering--2026-10-28)
+adds shared surface/stream styling and fixes transparent back-face outlines.
+The preceding [viewer immersion increment](#shared-viewer-water-contact--2026-10-28)
+supplies the tracked viewpoint's finite-water contacts. These do not complete
+underwater presentation or replace the candidate/device release gates.
 
 Start with the [accepted product scope](#accepted-product-scope) and
 [release evidence checklist](#release-evidence-still-required) and the latest
@@ -18034,3 +18036,55 @@ Headset tracking, comfort, thermal/frame cost and continuous real movement
 through virtual water still require physical acceptance. Underwater optics,
 acoustic presentation and wider living-world requirements remain open. No
 device, paid-provider, deployment, signing or Meta action was taken.
+
+
+## Independent liquid appearance and back-face rendering — 2026-10-28
+
+The existing appearance action/library now addresses measured liquid surfaces
+and pouring streams independently through stable `nativePart` bindings.
+`liquid_surface` and `liquid_stream` are discovered alongside ordinary
+object addresses; `nativeAppearanceParts.v1` guards the new binding variant.
+No new action family, liquid simulation, persistent field or duplicate physical
+state was introduced. Specific native pigment overrides the source liquid's
+color visually without changing liquid identity, quantity or fluid forces.
+Empty containers retain their addresses; removed components keep dormant styles
+that restore on Undo/recreation. Portable constructions retain both addresses.
+
+The shared picker now allows a nested variant only when every branch exposes
+the identical writable identity field. It does not change a discriminator,
+target address or unrelated setting. Ordinary bindings keep their previous
+feature requirements. Native catalog tests independently verify all variant
+destinations, and captured native invocation/target/receipt data is checked by
+the headless shared contracts.
+
+Water now has finite-plane texture coordinates. Tipping a vessel does not
+collapse either UV axis, and changing a terrain reservoir level preserves
+mapping at shared terrain positions. Actual desktop renders verify imported
+red/green image regions and transparency from above and below the same native
+surface.
+
+The below-water render exposed an existing shared shader defect: code switched
+`PENCIL` by ShaderLab Name, but Unity's material API selects LightMode.
+The outline now explicitly uses `Always`, and all shared material adapters,
+variant keys and visibility wrappers switch the same tag. Rendered regression
+checks prove the opaque outline can draw, can be disabled, and does not cover a
+transparent back face. This also corrects other transparent watercolor objects.
+See [Unity's API semantics](https://docs.unity.com/en-us/engine/6000.0/script-reference/unityengine/material/setshaderpassenabled).
+
+Evidence: `.quest-evidence/liquid-appearance-20261028/`. Final
+`playmode-5.xml` has **73 passing PlayMode tests**, including six liquid
+appearance cases, shared surface/visibility, lighting and passthrough rendering.
+`editmode-2.xml` has **39 passing EditMode tests**, including native/shared
+catalog equality, malformed/dormant bindings and terrain geometry.
+`web-full-2.log` records **3,672 passing tests across 379 files**; TypeScript
+and source/catalog checks pass. The retained `nativeLiquidAppearance.json`
+fixture comes from the successful native action path. All 14 unrelated files
+remain byte-identical. Earlier failed attempts are retained: they caught source
+pigment tinting, the real outline-pass fault, and picker/catalog assumptions
+about nested binding variants. The outline control fixture was also corrected
+to test a culled back face, where an enabled outline is actually visible.
+
+This remains a styled finite surface, without refraction or volumetric optics.
+Transparent overlap ordering, Quest stereo/comfort/performance, full underwater
+presentation and the broader release acceptance remain open. No fresh Android
+candidate, device, real-provider, signing, deployment or Meta action is claimed.

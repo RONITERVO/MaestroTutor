@@ -38,7 +38,7 @@ namespace Maestro.Quest.Art
                 SourceKey=key;State=state;
                 Material=new Material(source){name="Shared visibility layer",enableInstancing=true};
                 queue=source.renderQueue;sourceBlend=source.GetInt("_SrcBlend");destinationBlend=source.GetInt("_DstBlend");
-                zwrite=source.GetInt("_ZWrite");pencil=source.GetShaderPassEnabled("PENCIL");renderType=source.GetTag("RenderType",false,"");
+                zwrite=source.GetInt("_ZWrite");pencil=source.GetShaderPassEnabled(IllustratedSurface.PencilPass);renderType=source.GetTag("RenderType",false,"");
                 state.Changed+=Apply;Apply();
             }
             void Apply() {
@@ -52,7 +52,7 @@ namespace Maestro.Quest.Art
                 Material.SetInt("_ZWrite",fade?0:zwrite);
                 Material.renderQueue=fade?(int)RenderQueue.Transparent:queue;
                 Material.SetOverrideTag("RenderType",fade?"Transparent":renderType);
-                Material.SetShaderPassEnabled("PENCIL",pencil&&!fade);
+                Material.SetShaderPassEnabled(IllustratedSurface.PencilPass,pencil&&!fade);
             }
             internal void Release(){State.Changed-=Apply;ArtResources.Release(Material);}
         }

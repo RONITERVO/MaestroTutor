@@ -1,7 +1,7 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 import {behaviourFact} from './behaviourCatalog';
-import {argumentValue,schemaField,validateCapabilityValue,type CapabilitySchema,type ResourceChoice} from './capabilities';
+import {argumentValue,validateCapabilityValue,type CapabilitySchema,type ResourceChoice} from './capabilities';
 import {validCatalogView,type CatalogRequest,type CatalogView} from './roomCatalog';
 import type {DataType} from './programValues';
 const record=(v:unknown):v is Record<string,unknown>=>!!v&&typeof v==='object'&&!Array.isArray(v);
@@ -11,13 +11,24 @@ const path=(v:unknown):v is string=>typeof v==='string'&&v.split('.').length<=4&
 const text=(v:unknown,empty=false)=>typeof v==='string'&&(empty||v.trim().length>0)&&v.length<=80&&!/[\x00-\x1f\x7f-\x9f]/.test(v);
 function mutableField(schema:CapabilitySchema,key:string,lookup=false):CapabilitySchema|undefined {
  if(!path(key))return undefined;
- for(const part of key.split('.')){
-  if(schema.type!=='object'||schema.oneOf||schema['x-static']||!own(schema.properties??{},part))return undefined;
-  if(schema['x-discriminators']?.includes(part)||schema['x-current']?.guards.includes(part)||!lookup&&Object.values(schema['x-current']?.arguments??{}).includes(part))return undefined;
-  schema=schema.properties![part];
- }
- return schema['x-static']||schema.oneOf?undefined:schema;
+ const parts=key.split('.');
+ const visit=(node:CapabilitySchema,index:number):CapabilitySchema|undefined=>{
+  if(node['x-static'])return undefined;
+  if(index===parts.length)return node.oneOf?undefined:node;
+  const part=parts[index];
+  if(node['x-discriminators']?.includes(part)||node['x-current']?.guards.includes(part)||!lookup&&Object.values(node['x-current']?.arguments??{}).includes(part))return undefined;
+  if(node.oneOf){
+   // A picker may cross a nested variant only when every branch has exactly the
+   // same writable field. It never selects a branch or changes its discriminator.
+   const fields=node.oneOf.map(branch=>visit(branch,index)),first=fields[0];
+   return first&&fields.every(field=>field&&JSON.stringify(field)===JSON.stringify(first))?first:undefined;
+  }
+  if(node.type!=='object'||!own(node.properties??{},part))return undefined;
+  return visit(node.properties![part],index+1);
+ };
+ return visit(schema,0);
 }
+
 function fields(type:DataType|undefined):Record<string,DataType>|undefined {return typeof type==='object'&&'record' in type?type.record:undefined;}
 /** Catalog-owned references, not a second action vocabulary. CI checks both endpoints. */
 export function resourceChoices(schema:CapabilitySchema):ResourceChoice[] {
@@ -69,7 +80,7 @@ export function readResourceChoicePage(schema:CapabilitySchema,choice:ResourceCh
 }
 function validateEntry(schema:CapabilitySchema,choice:ResourceChoice,entry:ResourceChoiceEntry){
  need(record(entry)&&typeof entry.id==='string'&&entry.id.length>0&&entry.id.length<=128&&text(entry.name,true)&&Number.isSafeInteger(entry.revision)&&entry.revision>0,'Invalid saved resource');
- need(validateCapabilityValue(entry.id,schemaField(schema,choice.id)!)===null&&(!choice.revision||validateCapabilityValue(entry.revision,schemaField(schema,choice.revision)!)===null),'Resource does not fit the action');
+ need(validateCapabilityValue(entry.id,mutableField(schema,choice.id,choice.lookup)!)===null&&(!choice.revision||validateCapabilityValue(entry.revision,mutableField(schema,choice.revision)!)===null),'Resource does not fit the action');
 }
 /** One synchronous draft edit. Never reads, runs, retries, or updates other fields. */
 export function applyResourceChoice(schema:CapabilitySchema,choice:ResourceChoice,value:unknown,entry:ResourceChoiceEntry|null):Record<string,unknown> {

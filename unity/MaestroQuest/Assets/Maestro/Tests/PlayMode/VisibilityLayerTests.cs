@@ -81,11 +81,11 @@ namespace Maestro.Quest.Tests
             var source=Paint(Color.red);Surface(source,mode,opacity,cutoff);source.renderQueue+=7;
             var state=new VisibilityState();var result=Lease(source,state).Material;
             for(int i=0;i<3;i++) {
-                state.Set(.5f,false);Assert.That(result.renderQueue,Is.EqualTo(3000));Assert.That(result.GetInt("_ZWrite"),Is.Zero);Assert.That(result.GetShaderPassEnabled("PENCIL"),Is.False);
+                state.Set(.5f,false);Assert.That(result.renderQueue,Is.EqualTo(3000));Assert.That(result.GetInt("_ZWrite"),Is.Zero);Assert.That(result.GetShaderPassEnabled(IllustratedSurface.PencilPass),Is.False);
                 Assert.That(result.GetFloat("_SurfaceMode"),Is.EqualTo(source.GetFloat("_SurfaceMode")));Assert.That(result.GetFloat("_AlphaCutoff"),Is.EqualTo(cutoff));
                 state.Set(1,true);Assert.That(result.renderQueue,Is.EqualTo(source.renderQueue));Assert.That(result.GetInt("_ZWrite"),Is.EqualTo(source.GetInt("_ZWrite")));
                 Assert.That(result.GetInt("_SrcBlend"),Is.EqualTo(source.GetInt("_SrcBlend")));Assert.That(result.GetInt("_DstBlend"),Is.EqualTo(source.GetInt("_DstBlend")));
-                Assert.That(result.GetShaderPassEnabled("PENCIL"),Is.EqualTo(source.GetShaderPassEnabled("PENCIL")));Assert.That(result.GetTag("RenderType",false),Is.EqualTo(source.GetTag("RenderType",false)));
+                Assert.That(result.GetShaderPassEnabled(IllustratedSurface.PencilPass),Is.EqualTo(source.GetShaderPassEnabled(IllustratedSurface.PencilPass)));Assert.That(result.GetTag("RenderType",false),Is.EqualTo(source.GetTag("RenderType",false)));
             }
         }
         [UnityTest]public IEnumerator RenderedLayerComposesOpacityAfterSurfaceMaskFromBothEyePositions() {

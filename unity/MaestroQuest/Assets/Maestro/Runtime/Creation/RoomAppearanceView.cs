@@ -58,6 +58,7 @@ namespace Maestro.Quest.Creation
                 if(renderer.GetComponent<Book.BookPageTarget>()||renderer.GetComponentInParent<RoomItem>()!=owner)continue;
                 bool appearanceEligible=!renderer.GetComponent<PencilMarks>()||kind==RoomObjectKind.Drawing&&renderer.transform==transform;
                 string part=recipe?recipe.AppearancePart(renderer):null;
+                string nativePart=NativeAppearanceParts.Address(renderer);
                 var model=renderer.GetComponentInParent<ImportedModel>();
                 string hash=model&&model.Ready?model.AssetHash:null;
                 var original=renderer.sharedMaterials;var applied=(Material[])original.Clone();bool changed=false;
@@ -67,8 +68,12 @@ namespace Maestro.Quest.Creation
                     if(part!=null)binding=bindings.FirstOrDefault(b=>b.kind=="part"&&b.partId==part)??binding;
                     if(hash!=null&&int.TryParse(source.GetTag("MaestroMaterialIndex",false,""),out int index))
                         binding=bindings.FirstOrDefault(b=>b.kind=="material"&&b.modelHash==hash&&b.materialIndex==index)??binding;
+                    if(nativePart!=null)binding=bindings.FirstOrDefault(b=>b.kind=="nativePart"&&b.partId==nativePart)??binding;
                     if(appearanceEligible&&binding!=null&&definitions.TryGetValue(binding.appearanceId,out var definition)) {
-                        var basePigment=binding.kind=="material"&&model&&model.Ready?model.Instance.GetComponent<PencilModelStyle>()?.ImportedBaseColor(binding.materialIndex):null;
+                        // Native part tint is an authored pigment, like a bound recipe part.
+                        // Keep the liquid identity colour intact in the container document.
+                        Color? basePigment=binding.kind=="nativePart"?Color.white:
+                            binding.kind=="material"&&model&&model.Ready?model.Instance.GetComponent<PencilModelStyle>()?.ImportedBaseColor(binding.materialIndex):null;
                         var lease=AppearanceMaterials.Acquire(source,binding.Effective(definition),basePigment,Image(definition.style));leases.Add(lease);applied[i]=lease.Material;changed=true;
                     }
                     if(visibility!=null) {

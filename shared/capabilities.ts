@@ -102,7 +102,7 @@ function validate(value:unknown,schema:CapabilitySchema,path:string):string|null
       (mode==='inherit'||mode==='opaque'?opacity===1&&cutoff===0:mode==='blend'?cutoff===0:true)?null:path+' needs consistent opacity, cutoff and inherited shading';
    }
    if(schema.format==='appearanceBinding'){
-    return (value.kind==='root'?value.partId===''&&value.modelHash===''&&value.materialIndex===-1:value.kind==='part'?value.partId!==''&&value.modelHash===''&&value.materialIndex===-1:value.partId===''&&value.modelHash!==''&&(value.materialIndex as number)>=0)?null:path+' needs an exact root, part or imported-material address';
+    return (value.kind==='root'?value.partId===''&&value.modelHash===''&&value.materialIndex===-1:value.kind==='part'?value.partId!==''&&value.modelHash===''&&value.materialIndex===-1:value.kind==='nativePart'?['liquid_surface','liquid_stream'].includes(value.partId as string)&&value.modelHash===''&&value.materialIndex===-1:value.partId===''&&value.modelHash!==''&&(value.materialIndex as number)>=0)?null:path+' needs an exact root, recipe/native part or imported-material address';
    }
    if(schema.format==='worldAudioStream')return validLiveAudioEndpoint((value.stream as {endpoint:string}).endpoint)?null:path+' needs a direct HTTPS MP3 URL without credentials, query or fragment';
    if(schema.format==='worldAudioSource'){const tone=value.tone as {attack:number;release:number;seconds:number};return tone.attack+tone.release<=tone.seconds+1e-7?null:path+' needs its attack and release to fit the sound duration';}

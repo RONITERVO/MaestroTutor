@@ -9,6 +9,9 @@ namespace Maestro.Quest.Art
     /// Immutable values can participate in shared appearance-material cache keys.</summary>
     public readonly struct IllustratedSurface:IEquatable<IllustratedSurface>
     {
+        // SetShaderPassEnabled selects LightMode, not the ShaderLab Name.
+        internal const string PencilPass="Always";
+
         public readonly string Mode;
         public readonly float Opacity,Cutoff;
         public readonly bool DoubleSided;
@@ -37,7 +40,7 @@ namespace Maestro.Quest.Art
             material.SetOverrideTag("RenderType",blend?"Transparent":Mode=="cutout"?"TransparentCutout":"Opaque");
             // A solid back-face outline is misleading on translucent surfaces.
             // Cutouts use the same texture/vertex-alpha threshold in both passes.
-            material.SetShaderPassEnabled("PENCIL",pencil&&!blend);
+            material.SetShaderPassEnabled(IllustratedSurface.PencilPass,pencil&&!blend);
         }
         internal static IllustratedSurface Imported(Material source,Color color) {
             string mode="opaque";

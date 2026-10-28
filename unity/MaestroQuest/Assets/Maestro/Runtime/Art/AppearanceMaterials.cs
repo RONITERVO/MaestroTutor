@@ -50,7 +50,7 @@ namespace Maestro.Quest.Art
             float opacity=style.renderMode=="inherit"?inherited.Opacity:style.opacity,cutoff=style.renderMode=="inherit"?inherited.Cutoff:style.cutoff;
             bool sided=style.sidedness=="inherit"?inherited.DoubleSided:style.sidedness=="both";
             if(!IllustratedSurface.TryCreate(mode,opacity,cutoff,sided,out var surface,out var error)){ArtResources.Release(value);throw new ArgumentException(error);}
-            surface.Apply(value,source.GetShaderPassEnabled("PENCIL"));
+            surface.Apply(value,source.GetShaderPassEnabled(IllustratedSurface.PencilPass));
             if(style.grain>=0)value.SetFloat("_Grain",style.grain);
             if(style.shading>=0)value.SetFloat("_Shading",style.shading);
             return value;

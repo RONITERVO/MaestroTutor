@@ -63,7 +63,7 @@ namespace Maestro.Quest.Art
             material.SetFloat("_Grain", grain);
             material.SetFloat("_Shading", grain > 0 ? .12f : 0);
             material.SetTexture("_PigmentTex", Pigment());
-            material.SetShaderPassEnabled("PENCIL", grain > 0);
+            material.SetShaderPassEnabled(IllustratedSurface.PencilPass, grain > 0);
             return material;
             }catch{ArtResources.Release(material);throw;}
         }

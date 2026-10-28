@@ -3790,3 +3790,44 @@ can build on the shared state; full underwater presentation and physical Quest
 acceptance remain unfinished. Current desktop evidence includes bound-camera
 sampling without controllers, finite boundaries, lifecycle/freshness, global
 collision readiness, reentrant event delivery, and discrete world relocation.
+
+## Independent native liquid appearance
+
+Liquid surfaces and pouring streams use the existing shared appearance library.
+Read `object.appearance.targets` for a loaded object with a container. Alongside
+its root and any recipe/imported addresses, it exposes `kind: "nativePart"`
+with `partId: "liquid_surface"` or `"liquid_stream"`. Both use an empty
+`modelHash` and `materialIndex: -1`. The native client advertises
+`nativeAppearanceParts.v1`; calls and portable constructions using these
+bindings require it. Ordinary appearance calls retain their existing feature
+requirements.
+
+Use the ordinary `object.appearance.bind` action and appearance editor for
+opacity, tint, patterns, sidedness and imported image references. A native part
+binding overrides the root appearance completely. Its tint supplies the selected
+visual pigment without changing the liquid's stored identity color, amount,
+density or other fluid properties. Thus a translucent lake and an opaque bank,
+or a differently styled pour stream, remain one physical water system.
+
+Empty containers retain their allocated surface addresses. Removing the
+container retains dormant bindings; restoring it restores the styles on the new
+native renderers. Assignment requires an available target; removing a dormant
+binding still uses the ordinary unbind action. Save, Undo, construction capture
+and library references retain exact addresses, not child names.
+
+Native water meshes now carry image/pattern UVs. Mapping covers the finite
+gravity-level surface, remains valid in a tipped vessel and stays anchored to
+the terrain footprint when measured water rises. This adds no duplicate liquid
+simulation, source of physical truth or unbounded visual service.
+
+Rendered desktop tests cover the same native surface from above and below,
+independent stream/vessel styling, image mapping, terrain level changes and
+component removal/restoration. They also exposed an existing outline bug:
+Unity's material pass switch uses the `LightMode` tag, not the ShaderLab
+`Name`. The shared watercolor material now switches its explicit `Always`
+outline pass correctly. Opaque outlines remain available; transparent surfaces
+no longer receive that opaque back-face pass.
+
+This is a styled finite surface, not volumetric water or refraction. Transparent
+overlap sorting, Quest stereo appearance/performance and full underwater
+presentation still need their separate acceptance checks.

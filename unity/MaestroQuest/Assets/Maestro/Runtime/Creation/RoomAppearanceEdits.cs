@@ -82,6 +82,7 @@ namespace Maestro.Quest.Creation
             if(!item||!item.isActiveAndEnabled)return "native instance unavailable";
             if(ScanDrawingAnchor.Has(data))return "use scanned-layer ink controls";
             if(binding.kind=="part"&&!data.recipe.parts.Any(p=>p.id==binding.partId))return "missing part";
+            if(binding.kind=="nativePart")return NativeAppearanceParts.Present(item,binding.partId)?"active":"missing native part";
             var avatar=item.GetComponent<MaestroAvatar>();
             var imported=item.GetComponent<CreatedRoomObject>()?.Model;
             if(avatar&&avatar.ModelBusy||data.kind==RoomObjectKind.ImportedModel&&(!imported||!imported.Ready))return "model not ready";
@@ -107,7 +108,7 @@ namespace Maestro.Quest.Creation
             if(ObjectRevision(target)!=revision||binding==null||definition==null||AppearanceRevision(binding.appearanceId)!=appearanceRevision||remove&&independent)return false;
             if(!CanChangeAppearance(target,out error))return false;
             var data=Read(target);
-            if(!binding.Validate(data)){error="Choose a valid stable root, recipe part or exact imported material address";return false;}
+            if(!binding.Validate(data)){error="Choose a valid stable root, recipe part, native part or exact imported material address";return false;}
             var previous=data.appearanceBindings.FirstOrDefault(x=>x.Key==binding.Key);
             if(remove) {
                 if(previous==null||previous.appearanceId!=binding.appearanceId){error="That binding changed; inspect the current object appearance";return false;}
@@ -173,12 +174,13 @@ namespace Maestro.Quest.Creation
                 },remove?"Appearance unbound":independent?"Independent appearance bound":"Appearance bound",out pending,out error,checkpoint);
         }
         internal JObject ObserveAppearanceTargets(string target,int offset) {
-            var data=Read(target);var item=Find(target);if(data==null||!item||offset<0||offset>1057)return null;
+            var data=Read(target);var item=Find(target);if(data==null||!item||offset<0||offset>1059)return null;
             var addresses=new System.Collections.Generic.List<AppearanceBinding>{new()};
             if(data.kind==RoomObjectKind.Assembly)addresses.AddRange(data.recipe.parts.Select(p=>new AppearanceBinding{kind="part",partId=p.id}));
             foreach(var model in item.GetComponentsInChildren<ImportedModel>(true).Where(m=>m.Ready&&m.AssetHash==data.modelHash))
                 foreach(int index in model.GetComponentsInChildren<Renderer>(true).SelectMany(r=>r.sharedMaterials).Where(m=>m&&m.shader.name=="Maestro/Watercolor").Select(m=>int.TryParse(m.GetTag("MaestroMaterialIndex",false,""),out int i)?i:-1).Where(i=>i>=0&&i<1024).Distinct().OrderBy(i=>i))
                     addresses.Add(new AppearanceBinding{kind="material",modelHash=data.modelHash,materialIndex=index});
+            addresses.AddRange(NativeAppearanceParts.Addresses(data).Select(id=>new AppearanceBinding{kind="nativePart",partId=id}));
             return new JObject{["target"]=target,["revision"]=ObjectRevision(target),["offset"]=offset,["total"]=addresses.Count,["pageSize"]=3,
                 ["targets"]=new JArray(addresses.Skip(offset).Take(3).Select(b=>new JObject{["kind"]=b.kind,["partId"]=b.partId,["modelHash"]=b.modelHash,["materialIndex"]=b.materialIndex,["state"]=AppearanceBindingState(target,b)}))};
         }

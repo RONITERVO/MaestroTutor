@@ -54,11 +54,11 @@ namespace Maestro.Quest.Art
                         pigment = IllustratedMaterials.Create(color, .15f);
                         pigment.SetFloat("_HasRestCoordinates", 1);
                         // Authored eyes, freckles, and pencil paths already carry their own edges.
-                        if (original.name.StartsWith("Detail ")) pigment.SetShaderPassEnabled("PENCIL", false);
+                        if (original.name.StartsWith("Detail ")) pigment.SetShaderPassEnabled(IllustratedSurface.PencilPass, false);
                         if (original.HasProperty("_BaseMap")) pigment.mainTexture = original.GetTexture("_BaseMap");
                         else if (original.HasProperty("_MainTex")) pigment.mainTexture = original.GetTexture("_MainTex");
                         pigment.mainTextureScale = original.mainTextureScale; pigment.mainTextureOffset = original.mainTextureOffset;
-                        surface.Apply(pigment,pigment.GetShaderPassEnabled("PENCIL"));
+                        surface.Apply(pigment,pigment.GetShaderPassEnabled(IllustratedSurface.PencilPass));
                         string slot=original.GetTag("MaestroMaterialIndex",false,"");
                         if(int.TryParse(slot,System.Globalization.NumberStyles.None,System.Globalization.CultureInfo.InvariantCulture,out int index)&&index>=0) {
                             pigment.SetOverrideTag("MaestroMaterialIndex",slot);

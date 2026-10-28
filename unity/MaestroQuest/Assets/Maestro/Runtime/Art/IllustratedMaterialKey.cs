@@ -11,7 +11,7 @@ namespace Maestro.Quest.Art
     internal static class IllustratedMaterialKey
     {
         internal static StringBuilder Source(Material source) {
-            var b=new StringBuilder().Append(source.GetInstanceID()).Append(':').Append(source.renderQueue).Append(':').Append(source.GetShaderPassEnabled("PENCIL"));
+            var b=new StringBuilder().Append(source.GetInstanceID()).Append(':').Append(source.renderQueue).Append(':').Append(source.GetShaderPassEnabled(IllustratedSurface.PencilPass));
             // Source adapters can change colour, maps or render state. Capture all
             // supported shader values; a mutable Material reference alone is not a key.
             var shader=source.shader;

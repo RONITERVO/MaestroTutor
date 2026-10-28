@@ -24,3 +24,14 @@ it('gates portable visual layers independently and retains older resource calls'
  expect(()=>requireRoomCapabilities(commands,{capabilities:['execution.v1',...features.filter(f=>f!=='visibilityLayers.v1')]})).toThrow('visibilityLayers.v1');
  expect(capabilityResources('object.batch.create',args)).toEqual([]);
 });
+
+it('retains both native surface bindings in portable objects and guards their feature',()=>{
+ const args=structuredClone(cases[0].arguments) as {blueprint:{pieces:{source:{prototype:{appearanceBindings:{kind:string;partId:string}[]}}}[]}};
+ const p=args.blueprint.pieces[0].source.prototype;
+ const original=p.appearanceBindings[0];
+ p.appearanceBindings=['liquid_surface','liquid_stream'].map(partId=>({...original,kind:'nativePart',partId}));
+ expect(validateCapabilityArguments('object.batch.create',1,args)).toBeNull();
+ expect(capabilityFeatures('object.batch.create',args)).toContain('nativeAppearanceParts.v1');
+ p.appearanceBindings[1].partId='liquid_surface';
+ expect(validateCapabilityArguments('object.batch.create',1,args)).not.toBeNull();
+});

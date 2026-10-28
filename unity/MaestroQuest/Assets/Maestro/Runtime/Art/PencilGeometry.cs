@@ -18,7 +18,7 @@ namespace Maestro.Quest.Art
                 mesh=PencilStrokeMesh.Build(points,radius,seed,m=>lease.Own(m));lease.CheckMesh(mesh);
                 material=reusePigment?reusePigment.ReusablePigment:null;
                 if(material)pigmentOwner=reusePigment;
-                else{material=IllustratedMaterials.Create(IllustratedMaterials.Ink,.08f,m=>lease.Own(m));material.SetFloat("_HasRestCoordinates",1);material.SetShaderPassEnabled("PENCIL",false);}
+                else{material=IllustratedMaterials.Create(IllustratedMaterials.Ink,.08f,m=>lease.Own(m));material.SetFloat("_HasRestCoordinates",1);material.SetShaderPassEnabled(IllustratedSurface.PencilPass,false);}
             }catch{Dispose();throw;}
         }
         internal static PencilGeometry Prepare(IReadOnlyList<Vector3[]> paths,float radius,RoomResourceOwner owner,string source,uint seed=71,PencilMarks reusePigment=null)=>new(PencilStrokeMesh.PointCount(paths,radius),()=>paths,radius,owner,source,seed,reusePigment);

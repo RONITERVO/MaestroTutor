@@ -16122,57 +16122,124 @@
                                   "type": "array",
                                   "items": {
                                     "type": "object",
-                                    "properties": {
-                                      "version": {
-                                        "type": "integer",
-                                        "minimum": 1.0,
-                                        "maximum": 1.0
-                                      },
-                                      "appearanceId": {
-                                        "type": "string",
-                                        "pattern": "^[a-f0-9]{32}$",
-                                        "maxLength": 32
-                                      },
-                                      "kind": {
-                                        "type": "string",
-                                        "enum": [
-                                          "root",
-                                          "part",
-                                          "material"
-                                        ]
-                                      },
-                                      "partId": {
-                                        "type": "string",
-                                        "pattern": "^[a-zA-Z0-9_]{0,32}$",
-                                        "maxLength": 32
-                                      },
-                                      "modelHash": {
-                                        "type": "string",
-                                        "pattern": "^(|[a-f0-9]{64})$",
-                                        "maxLength": 64
-                                      },
-                                      "materialIndex": {
-                                        "type": "integer",
-                                        "minimum": -1.0,
-                                        "maximum": 1023.0
-                                      },
-                                      "tint": {
-                                        "type": "string",
-                                        "pattern": "^(|#[a-fA-F0-9]{6})$",
-                                        "maxLength": 7
-                                      }
-                                    },
-                                    "required": [
-                                      "version",
-                                      "appearanceId",
-                                      "kind",
-                                      "partId",
-                                      "modelHash",
-                                      "materialIndex",
-                                      "tint"
+                                    "x-discriminators": [
+                                      "kind"
                                     ],
-                                    "additionalProperties": false,
-                                    "format": "appearanceBinding"
+                                    "oneOf": [
+                                      {
+                                        "type": "object",
+                                        "properties": {
+                                          "version": {
+                                            "type": "integer",
+                                            "minimum": 1.0,
+                                            "maximum": 1.0
+                                          },
+                                          "appearanceId": {
+                                            "type": "string",
+                                            "pattern": "^[a-f0-9]{32}$",
+                                            "maxLength": 32
+                                          },
+                                          "kind": {
+                                            "type": "string",
+                                            "enum": [
+                                              "root",
+                                              "part",
+                                              "material"
+                                            ]
+                                          },
+                                          "partId": {
+                                            "type": "string",
+                                            "pattern": "^[a-zA-Z0-9_]{0,32}$",
+                                            "maxLength": 32
+                                          },
+                                          "modelHash": {
+                                            "type": "string",
+                                            "pattern": "^(|[a-f0-9]{64})$",
+                                            "maxLength": 64
+                                          },
+                                          "materialIndex": {
+                                            "type": "integer",
+                                            "minimum": -1.0,
+                                            "maximum": 1023.0
+                                          },
+                                          "tint": {
+                                            "type": "string",
+                                            "pattern": "^(|#[a-fA-F0-9]{6})$",
+                                            "maxLength": 7
+                                          }
+                                        },
+                                        "required": [
+                                          "version",
+                                          "appearanceId",
+                                          "kind",
+                                          "partId",
+                                          "modelHash",
+                                          "materialIndex",
+                                          "tint"
+                                        ],
+                                        "additionalProperties": false,
+                                        "format": "appearanceBinding",
+                                        "title": "Object, recipe or imported material"
+                                      },
+                                      {
+                                        "type": "object",
+                                        "properties": {
+                                          "version": {
+                                            "type": "integer",
+                                            "minimum": 1.0,
+                                            "maximum": 1.0
+                                          },
+                                          "appearanceId": {
+                                            "type": "string",
+                                            "pattern": "^[a-f0-9]{32}$",
+                                            "maxLength": 32
+                                          },
+                                          "kind": {
+                                            "type": "string",
+                                            "enum": [
+                                              "nativePart"
+                                            ]
+                                          },
+                                          "partId": {
+                                            "type": "string",
+                                            "enum": [
+                                              "liquid_surface",
+                                              "liquid_stream"
+                                            ]
+                                          },
+                                          "modelHash": {
+                                            "type": "string",
+                                            "pattern": "^(|[a-f0-9]{64})$",
+                                            "maxLength": 64
+                                          },
+                                          "materialIndex": {
+                                            "type": "integer",
+                                            "minimum": -1.0,
+                                            "maximum": 1023.0
+                                          },
+                                          "tint": {
+                                            "type": "string",
+                                            "pattern": "^(|#[a-fA-F0-9]{6})$",
+                                            "maxLength": 7
+                                          }
+                                        },
+                                        "required": [
+                                          "version",
+                                          "appearanceId",
+                                          "kind",
+                                          "partId",
+                                          "modelHash",
+                                          "materialIndex",
+                                          "tint"
+                                        ],
+                                        "additionalProperties": false,
+                                        "format": "appearanceBinding",
+                                        "title": "Native component surface",
+                                        "x-features": [
+                                          "nativeAppearanceParts.v1"
+                                        ]
+                                      }
+                                    ]
                                   },
                                   "minItems": 0,
                                   "maxItems": 33,
@@ -31152,57 +31219,124 @@
           },
           "binding": {
             "type": "object",
-            "properties": {
-              "version": {
-                "type": "integer",
-                "minimum": 1.0,
-                "maximum": 1.0
-              },
-              "appearanceId": {
-                "type": "string",
-                "pattern": "^[a-f0-9]{32}$",
-                "maxLength": 32
-              },
-              "kind": {
-                "type": "string",
-                "enum": [
-                  "root",
-                  "part",
-                  "material"
-                ]
-              },
-              "partId": {
-                "type": "string",
-                "pattern": "^[a-zA-Z0-9_]{0,32}$",
-                "maxLength": 32
-              },
-              "modelHash": {
-                "type": "string",
-                "pattern": "^(|[a-f0-9]{64})$",
-                "maxLength": 64
-              },
-              "materialIndex": {
-                "type": "integer",
-                "minimum": -1.0,
-                "maximum": 1023.0
-              },
-              "tint": {
-                "type": "string",
-                "pattern": "^(|#[a-fA-F0-9]{6})$",
-                "maxLength": 7
-              }
-            },
-            "required": [
-              "version",
-              "appearanceId",
-              "kind",
-              "partId",
-              "modelHash",
-              "materialIndex",
-              "tint"
+            "x-discriminators": [
+              "kind"
             ],
-            "additionalProperties": false,
-            "format": "appearanceBinding"
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "version": {
+                    "type": "integer",
+                    "minimum": 1.0,
+                    "maximum": 1.0
+                  },
+                  "appearanceId": {
+                    "type": "string",
+                    "pattern": "^[a-f0-9]{32}$",
+                    "maxLength": 32
+                  },
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "root",
+                      "part",
+                      "material"
+                    ]
+                  },
+                  "partId": {
+                    "type": "string",
+                    "pattern": "^[a-zA-Z0-9_]{0,32}$",
+                    "maxLength": 32
+                  },
+                  "modelHash": {
+                    "type": "string",
+                    "pattern": "^(|[a-f0-9]{64})$",
+                    "maxLength": 64
+                  },
+                  "materialIndex": {
+                    "type": "integer",
+                    "minimum": -1.0,
+                    "maximum": 1023.0
+                  },
+                  "tint": {
+                    "type": "string",
+                    "pattern": "^(|#[a-fA-F0-9]{6})$",
+                    "maxLength": 7
+                  }
+                },
+                "required": [
+                  "version",
+                  "appearanceId",
+                  "kind",
+                  "partId",
+                  "modelHash",
+                  "materialIndex",
+                  "tint"
+                ],
+                "additionalProperties": false,
+                "format": "appearanceBinding",
+                "title": "Object, recipe or imported material"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "version": {
+                    "type": "integer",
+                    "minimum": 1.0,
+                    "maximum": 1.0
+                  },
+                  "appearanceId": {
+                    "type": "string",
+                    "pattern": "^[a-f0-9]{32}$",
+                    "maxLength": 32
+                  },
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "nativePart"
+                    ]
+                  },
+                  "partId": {
+                    "type": "string",
+                    "enum": [
+                      "liquid_surface",
+                      "liquid_stream"
+                    ]
+                  },
+                  "modelHash": {
+                    "type": "string",
+                    "pattern": "^(|[a-f0-9]{64})$",
+                    "maxLength": 64
+                  },
+                  "materialIndex": {
+                    "type": "integer",
+                    "minimum": -1.0,
+                    "maximum": 1023.0
+                  },
+                  "tint": {
+                    "type": "string",
+                    "pattern": "^(|#[a-fA-F0-9]{6})$",
+                    "maxLength": 7
+                  }
+                },
+                "required": [
+                  "version",
+                  "appearanceId",
+                  "kind",
+                  "partId",
+                  "modelHash",
+                  "materialIndex",
+                  "tint"
+                ],
+                "additionalProperties": false,
+                "format": "appearanceBinding",
+                "title": "Native component surface",
+                "x-features": [
+                  "nativeAppearanceParts.v1"
+                ]
+              }
+            ]
           }
         },
         "required": [
@@ -31253,7 +31387,7 @@
         "appearance.revision.current",
         "storage.writable"
       ],
-      "description": "Read object.appearances for exact object revision and saved bindings, object.appearance.targets for supported addresses, and appearance.definition for its current revision. assign reuses a shared definition; copy makes an independent definition and binds it atomically; remove unbinds this exact saved address/appearance even if dormant. Root uses empty partId/modelHash and materialIndex=-1. Part uses an exact recipe partId; material uses exact loaded model hash plus source material index, never display name or traversal order. A part/material binding overrides root completely. A bound recipe part uses the appearance tint as its pigment and ignores whole-object tint; the ordinary recipe colour editor writes that binding local tint. Pattern edits that would be hidden by a replacement pattern refuse with an explanation. Missing/replaced model slots remain dormant until explicitly rebound; assignment refuses unavailable targets. tint='' inherits definition tint; an RGB hex overrides tint for this binding only. Ordinary Paint writes the root binding's local tint without editing the shared definition; assign tint='' restores shared tint. Removing root retains its effective tint as ordinary object paint; other surface values revert to source. copy includes the provided local tint in the independent definition. Bindings do not extend to selection marks or surface-drawing ink. Saved source uses one Undo and temporary Keep/Discard. Identical assignments do not add Undo. Stable IDs are references, names are display text. Appearance changes never select a camera, change collision participation, acoustics, physical material contents or terrain height. Browser book pages and drawing-overlay ink retain their own display materials. Inspect facts after completion; saved source is not proof of headset appearance. Outside temporary play, prepares and publishes its save in the background with one Undo edit. Completion confirms native application and saving. Once preparation begins, newer authored changes invalidate its candidate. Cancellation before native acceptance leaves the requested edit unapplied. After acceptance, stopping cannot retract the edit or its pending save. A save conflict preserves files, blocks further saves and requires inspection; never blindly replay it. Runtime clock and viewer movement continue. Concurrent persisted object edits enter preparation in arrival order after earlier saves drain, without copying a waiting candidate. Stopping or invalidating a waiter releases its place; target changes while waiting require a new request. In a temporary room, changes the live room and local Undo; a kept snapshot makes it durable. Other objects keep running.",
+      "description": "Read object.appearances for exact object revision and saved bindings, object.appearance.targets for supported addresses, and appearance.definition for its current revision. assign reuses a shared definition; copy makes an independent definition and binds it atomically; remove unbinds this exact saved address/appearance even if dormant. Root uses empty partId/modelHash and materialIndex=-1. Part uses an exact recipe partId; material uses exact loaded model hash plus source material index, never display name or traversal order. A part/material/nativePart binding overrides root completely. nativePart uses a stable partId from object.appearance.targets with empty modelHash and materialIndex=-1. liquid_surface and liquid_stream select only the measured liquid renderer or stream, independently of vessel/terrain appearance; missing components retain inactive bindings. Native-part tint sets its visual pigment independently of the liquid colour. Their styles do not change liquid identity, quantity or fluid forces. A bound recipe part uses the appearance tint as its pigment and ignores whole-object tint; the ordinary recipe colour editor writes that binding local tint. Pattern edits that would be hidden by a replacement pattern refuse with an explanation. Missing/replaced model slots remain dormant until explicitly rebound; assignment refuses unavailable targets. tint='' inherits definition tint; an RGB hex overrides tint for this binding only. Ordinary Paint writes the root binding's local tint without editing the shared definition; assign tint='' restores shared tint. Removing root retains its effective tint as ordinary object paint; other surface values revert to source. copy includes the provided local tint in the independent definition. Bindings do not extend to selection marks or surface-drawing ink. Saved source uses one Undo and temporary Keep/Discard. Identical assignments do not add Undo. Stable IDs are references, names are display text. Appearance changes never select a camera, change collision participation, acoustics, physical material contents or terrain height. Browser book pages and drawing-overlay ink retain their own display materials. Inspect facts after completion; saved source is not proof of headset appearance. Outside temporary play, prepares and publishes its save in the background with one Undo edit. Completion confirms native application and saving. Once preparation begins, newer authored changes invalidate its candidate. Cancellation before native acceptance leaves the requested edit unapplied. After acceptance, stopping cannot retract the edit or its pending save. A save conflict preserves files, blocks further saves and requires inspection; never blindly replay it. Runtime clock and viewer movement continue. Concurrent persisted object edits enter preparation in arrival order after earlier saves drain, without copying a waiting candidate. Stopping or invalidating a waiter releases its place; target changes while waiting require a new request. In a temporary room, changes the live room and local Undo; a kept snapshot makes it durable. Other objects keep running.",
       "example": {
         "operation": "assign",
         "target": "maestro",
@@ -48965,7 +49099,7 @@
         }
       },
       "label": "Object appearances",
-      "description": "Two saved bindings per page, including dormant bindings and explicit local tint overrides. A specific part/material wins over root; root tint is not applied a second time. State describes binding availability, not physical interaction or visibility through other objects.",
+      "description": "Two saved bindings per page, including dormant bindings and explicit local tint overrides. A specific part/material/nativePart wins over root; root tint is not applied a second time. State describes binding availability, not physical interaction or visibility through other objects.",
       "input": {
         "type": "object",
         "properties": {
@@ -49020,7 +49154,7 @@
         }
       },
       "label": "Appearance targets",
-      "description": "Three stable root/part/import-material addresses per page, in that order. Source material indexes come from the loaded asset, not renderer order. Only state=active can receive a new binding. Pending/unavailable models require a later observation.",
+      "description": "Three stable root/part/import-material/nativePart addresses per page, in that order. liquid_surface and liquid_stream address measured-water renderers independently of their vessel or terrain. Empty containers still own these targets; removed components keep saved bindings dormant. Source material indexes come from the loaded asset, not renderer order. Only state=active can receive a new binding. Pending/unavailable models require a later observation.",
       "input": {
         "type": "object",
         "properties": {
@@ -49033,7 +49167,7 @@
           "offset": {
             "type": "integer",
             "minimum": 0.0,
-            "maximum": 1057.0
+            "maximum": 1059.0
           }
         },
         "required": [
@@ -49572,7 +49706,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Art/AppearanceMaterials.cs",
-      "sha256": "dcb9cd884629c31eae93655edc9222e3a1cbab8dacf117701bfd642061b49cc0"
+      "sha256": "9b0e4252e72af23b1ad8febcaadbda5be243323a00417d0f14478017fd3a46a6"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Art/ArtResources.cs",
@@ -49580,15 +49714,15 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Art/IllustratedMaterialKey.cs",
-      "sha256": "b9c1060d79db2c51dddec45a4c1d7552e48a8e186a9a168136f5c0dc68607040"
+      "sha256": "7efcb5734bfff8a2e76307dcf6625f6d203c364e241c5b60e5633eabd9acc70e"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Art/IllustratedMaterials.cs",
-      "sha256": "c2d470436e47728880a2613b14f29d51d2154c16fe3884ba1df9dfccf072186d"
+      "sha256": "00f54a34e3c046bdd172e2978d3eb0b6ce9f012de7e76d77e1c2bf25935465a7"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Art/IllustratedSurface.cs",
-      "sha256": "909fdc7c99153df6259039e3a4c501fd7bd1e79600152ead83500dc7140902de"
+      "sha256": "e8d9e59ecf4393e1de73dfd568d48c5d0b6c13000f0225975172e3492d51aee8"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Art/ImageResources.cs",
@@ -49616,15 +49750,15 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Art/PencilGeometry.cs",
-      "sha256": "5963084980b7427444d2d7d3d31ac6187f02785f92a62e6a79483d4b2c4e1585"
+      "sha256": "d6116fcfffb8b8ba8efd9fa96c37f84463702d7a35b1ad7bd2c214987880ea23"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Art/PencilMarks.cs",
-      "sha256": "d002d537cb4f53b0ccec1dfc6bda3c6bbd870e930a732c4fedee1b4b5cfa0dca"
+      "sha256": "7b5a8d0f4ccb51e511b81540d2ea3e3cb7c5af247de2f5d383714b7254cda138"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Art/PencilModelStyle.cs",
-      "sha256": "27c9c6a40cd954cc15758445ea08e5933cc9c4e6a50c1e0145d7ff20877b250a"
+      "sha256": "ef396e6dd17ba5440718bd71c35fedcfaf717848e1dc0e1ad10468f2f7182341"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Art/PencilStrokeMesh.cs",
@@ -49632,11 +49766,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Art/VisibilityMaterials.cs",
-      "sha256": "2cf136875823ffa989efa05aea111c578c3e2180eed867ce99fbd8deda590c56"
+      "sha256": "ca5a6c66fa2f380d100c0d14e6abcc497eb6b402cfe5a12102a833bf299378fb"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Art/Watercolor.shader",
-      "sha256": "d80092c1e0dab489757dc82e1f46c58025edbac1bbeb7894e54f3080f1355aae"
+      "sha256": "bcbd8ec01736b47952ea996e9a876a9c09592a284ebd71ddac150e8027db7ea4"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Art/WatercolorSurface.cginc",
@@ -49956,7 +50090,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/AppearanceCapabilities.cs",
-      "sha256": "3f08144581cc7e22827fd116777eb76bf9ce7288480a61be870e01758d76e7ca"
+      "sha256": "7aef8ad6c8939d2ef51977fe0a53088a17c8fcc98dcd2a2ede29c4d833e05acb"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/AquaticNavigationSchema.cs",
@@ -50624,7 +50758,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/ContainerFillView.cs",
-      "sha256": "6fffc3de35167116f099e783254da8faadf3b40bbc9c1a2ad662f93496eef891"
+      "sha256": "ef178ae3ea21c26866ebed970b021d0a2f3ee1bb45672712a8cd00f6fadc1ce8"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/ContainerFlowGeometry.cs",
@@ -50823,6 +50957,10 @@
       "sha256": "317e00f72e89a358f6d8429bdd5539fbbdd32684db9244209863980ab5c53e70"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/NativeAppearanceParts.cs",
+      "sha256": "373baa782c570290662de2e0b12fed5b4fd13c44ced0602c22edd89812c80008"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/NativeObjectResources.cs",
       "sha256": "48f9cc78984d13693667c5609ae571c55f9db783cfe2f44d727448643a37ef1d"
     },
@@ -50988,15 +51126,15 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomAppearance.cs",
-      "sha256": "b639bd51fd8cf195d4e8095d3367dc1ba9aa020ec6c523119619ef7c761d297e"
+      "sha256": "668480ded6df8b830787f7dc1dba7feeecbd293ab6591be7795063fe13f3b8a8"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomAppearanceEdits.cs",
-      "sha256": "8adb3b55899a8b056992820723728cf399fb500d71ae1d3ecb48de8c73a0d057"
+      "sha256": "18c78d7ed49727ca46e2b18f209a53f69043b10a328d77f6f5e08e6d27628582"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomAppearanceView.cs",
-      "sha256": "ff7abd1fd67b20541725ed4bdf504cd8a19c8b2eb039619182425c090f8278c3"
+      "sha256": "50af550fd797a31b5d69890e0eda0a59e9aade2e259d1122a4ab85077a7d4125"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomAudioDefinition.cs",
@@ -51056,7 +51194,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomControls.cs",
-      "sha256": "15020c6da4dad474dc1084ba1a4788691ca631bb54985e28ec4b218f787e5efa"
+      "sha256": "4dd4b8895d74194a70869b402fabf117a49eff04eeebd978c7efb0d08f9f2df1"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomCreationBudget.cs",
@@ -52464,7 +52602,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/CapabilityArguments.cs",
-      "sha256": "34a5c1e6b6cd5623f11aa42c03aacaca1218636fdb81a35041b44c0cd22dd6c8"
+      "sha256": "d9aa29453a070220db37234a653491ccbcf0701f27a08511dfc3e96e5d6ee02d"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/ConditionSubscription.cs",

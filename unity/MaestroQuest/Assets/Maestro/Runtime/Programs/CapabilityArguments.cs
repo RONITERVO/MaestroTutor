@@ -63,7 +63,7 @@ namespace Maestro.Quest.Programs
                         if(!Maestro.Quest.Creation.AppearanceStyle.Wire(value)){error=path+" needs consistent opacity, cutoff and inherited shading";return false;}
                     } else if((string)schema["format"]=="appearanceBinding") {
                         var binding=UnityEngine.JsonUtility.FromJson<Maestro.Quest.Creation.AppearanceBinding>(value.ToString());
-                        if(!binding.Validate(new Maestro.Quest.Creation.RoomObjectData{kind=binding.kind=="part"?Maestro.Quest.Creation.RoomObjectKind.Assembly:Maestro.Quest.Creation.RoomObjectKind.ImportedModel})){error=path+" needs an exact root, part or imported-material address";return false;}
+                        if(!binding.Validate(new Maestro.Quest.Creation.RoomObjectData{kind=binding.kind=="part"?Maestro.Quest.Creation.RoomObjectKind.Assembly:Maestro.Quest.Creation.RoomObjectKind.ImportedModel})){error=path+" needs an exact root, recipe/native part or imported-material address";return false;}
                     } else if((string)schema["format"]=="worldAudioSource") {
                         var tone=obj["tone"];if((double)tone["attack"]+(double)tone["release"]>(double)tone["seconds"]+1e-7){error=path+" needs its attack and release to fit the sound duration";return false;}
                     } else if((string)schema["format"]=="worldAudioStream") {

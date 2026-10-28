@@ -15,6 +15,19 @@ namespace Maestro.Quest.Tests
         const string Style="aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",Object="bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
         static RoomAppearance Appearance()=>new(){id=Style,name="Warm glass",style=new(){tint="#DDBBAA",renderMode="blend",opacity=.4f}};
         static RoomDocument Room()=>new(){version=RoomDocument.CurrentVersion,objects=new[]{new RoomObjectData{id="book",kind=RoomObjectKind.Book},new RoomObjectData{id="maestro",kind=RoomObjectKind.Maestro},new RoomObjectData{id=Object,kind=RoomObjectKind.Block}}};
+        [Test]public void NativeBindingsKeepExactAddressesWhileAComponentIsAbsent() {
+            var room=Room();room.appearances=new[]{Appearance()};var obj=room.objects[2];
+            var binding=new AppearanceBinding{appearanceId=Style,kind="nativePart",partId=NativeAppearanceParts.LiquidSurface};
+            obj.appearanceBindings=new[]{binding,binding.Copy()};obj.appearanceBindings[1].partId=NativeAppearanceParts.LiquidStream;
+            Assert.IsTrue(room.Validate(out var error),error);
+            var wire=JObject.Parse(JsonUtility.ToJson(room));Assert.IsTrue(RoomAppearance.ValidWire(wire));
+            obj.appearanceBindings[1].partId=NativeAppearanceParts.LiquidSurface;Assert.IsFalse(room.Validate(out _),"Duplicate native address");
+            obj.appearanceBindings=new[]{binding};
+            foreach(string part in new[]{"unknown","../surface","Liquid_Surface",""}){binding.partId=part;Assert.IsFalse(room.Validate(out _));}
+            binding.partId=NativeAppearanceParts.LiquidSurface;binding.materialIndex=0;Assert.IsFalse(room.Validate(out _));
+            binding.materialIndex=-1;binding.modelHash=new string('c',64);Assert.IsFalse(room.Validate(out _));
+            binding.modelHash="";obj.kind=RoomObjectKind.Book;Assert.IsFalse(binding.Validate(obj),"Built-in book is not a container");
+        }
         [Test]public void RejectsMalformedStylesAndCoercedWireValues() {
             var a=Appearance();Assert.That(a.Validate(out _),Is.True);
             a.style.opacity=float.NaN;Assert.That(a.Validate(out _),Is.False);

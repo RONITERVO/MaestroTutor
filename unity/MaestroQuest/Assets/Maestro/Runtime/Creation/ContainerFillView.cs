@@ -10,11 +10,16 @@ namespace Maestro.Quest.Creation {
         readonly List<Vector3> rim=new(72),vertices=new(74);
         readonly List<int> triangles=new(216);
         readonly List<Vector3> normals=new(74);
+        readonly List<Vector2> uvs=new(74);
         readonly Vector3[] bottom=new Vector3[Segments],top=new Vector3[Segments];
         RoomContainer data;GameObject surface;Mesh mesh;Material material;MeshRenderer renderer;
         LiquidResources.Lease reservation;string target="";
         internal LiquidResources.Lease ReusableReservation=>reservation!=null&&reservation.Available&&reservation.Phase=="ready"&&reservation.Host==this?reservation:null;
         internal bool NativeReady=>isActiveAndEnabled&&data!=null&&ReusableReservation!=null;
+        internal string AppearancePart(Renderer value)=>ReusableReservation==null?null:
+            value==reservation.Renderer?NativeAppearanceParts.LiquidSurface:
+            value==reservation.Line?NativeAppearanceParts.LiquidStream:null;
+        internal bool HasAppearancePart(string address)=>ReusableReservation!=null&&NativeAppearanceParts.ValidId(address);
         Quaternion lastRotation;Vector3 lastUp;float nextRefresh;bool dirty;
         // Standalone diagnostic construction uses the same bounded preparation.
         // Live quantity updates and normal reconciliation may never allocate here.
@@ -31,12 +36,14 @@ namespace Maestro.Quest.Creation {
         internal void ApplyLive(RoomContainer[] containers){
             data=containers?.Length==1?containers[0].Copy():null;dirty=true;
             if(ReusableReservation==null||data==null||data.amountMl<=0||data.TerrainFloor&&RoomTerrainReservoir.Native(data,transform)==null){ClearRipples();if(surface)surface.SetActive(false);return;}
-            renderer.enabled=true;surface.SetActive(true);surface.transform.SetLocalPositionAndRotation(data.frame.position+data.frame.rotation*(Vector3.up*data.height*.5f),data.frame.rotation);material.SetColor("_Color",data.color);
+            renderer.enabled=true;surface.SetActive(true);surface.transform.SetLocalPositionAndRotation(data.frame.position+data.frame.rotation*(Vector3.up*data.height*.5f),data.frame.rotation);material.SetColor("_Color",data.color);reservation.StreamMaterial.SetColor("_Color",data.color);
             Refresh();RoomAppearanceView.VisualsChanged(this);
         }
         internal void ShowStream(Vector3[] points,int count,double rate,Color color){
             if(!NativeReady||points==null||count<0||count>LiquidResources.StreamPoints||count>points.Length)return;
-            var line=reservation.Line;reservation.StreamMaterial.SetColor("_Color",color);line.startColor=line.endColor=color;line.startWidth=line.endWidth=Mathf.Clamp((float)System.Math.Sqrt(rate)*.0002f,.0015f,.008f);line.positionCount=count;for(int i=0;i<count;i++)line.SetPosition(i,points[i]);line.enabled=true;
+            var line=reservation.Line;
+            if(reservation.StreamMaterial.GetColor("_Color")!=color){reservation.StreamMaterial.SetColor("_Color",color);RoomAppearanceView.VisualsChanged(this);}
+            line.startColor=line.endColor=Color.white;line.startWidth=line.endWidth=Mathf.Clamp((float)System.Math.Sqrt(rate)*.0002f,.0015f,.008f);line.positionCount=count;for(int i=0;i<count;i++)line.SetPosition(i,points[i]);line.enabled=true;
         }
         internal void HideStream(){if(reservation?.Line)reservation.Line.enabled=false;}
         // This reusable renderer has no authored/rest geometry while owner-disabled.
@@ -71,7 +78,21 @@ namespace Maestro.Quest.Creation {
             vertices.Clear();triangles.Clear();if(rim.Count>=3){Vector3 middle=Vector3.zero;foreach(var p in rim)middle+=p;vertices.Add(middle/rim.Count);vertices.AddRange(rim);for(int i=0;i<rim.Count;i++){int a=i+1,b=(i+1)%rim.Count+1;triangles.Add(0);triangles.Add(a);triangles.Add(b);}}
             PublishMesh(normal);
         }
-        void PublishMesh(Vector3 normal){mesh.Clear();mesh.SetVertices(vertices);mesh.SetTriangles(triangles,0);normals.Clear();for(int i=0;i<vertices.Count;i++)normals.Add(normal);mesh.SetNormals(normals);mesh.RecalculateBounds();}
+        void PublishMesh(Vector3 normal){
+            mesh.Clear();mesh.SetVertices(vertices);mesh.SetTriangles(triangles,0);
+            normals.Clear();uvs.Clear();
+            // Map the gravity-level plane in the cavity's local frame. A tilted
+            // vessel must not collapse one UV axis; terrain shores keep the same
+            // footprint mapping as their measured level changes.
+            var u=Vector3.ProjectOnPlane(Vector3.right,normal);
+            if(u.sqrMagnitude<.000001f)u=Vector3.ProjectOnPlane(Vector3.forward,normal);
+            u.Normalize();var v=Vector3.Cross(u,normal).normalized;
+            var half=new Vector3(data.IsRectangular?data.rectangle.width*.5f:data.radius,data.height*.5f,data.IsRectangular?data.rectangle.depth*.5f:data.radius);
+            float Span(Vector3 axis)=>2*(Mathf.Abs(axis.x)*half.x+Mathf.Abs(axis.y)*half.y+Mathf.Abs(axis.z)*half.z);
+            float width=Span(u),depth=Span(v);
+            foreach(var point in vertices){normals.Add(normal);uvs.Add(new Vector2(.5f+Vector3.Dot(point,u)/width,.5f+Vector3.Dot(point,v)/depth));}
+            mesh.SetNormals(normals);mesh.SetUVs(0,uvs);mesh.RecalculateBounds();
+        }
         void Edge(Vector3 a,Vector3 b,Vector3 normal,float level){float da=Vector3.Dot(normal,a)-level,db=Vector3.Dot(normal,b)-level;if(da*db>0||Mathf.Abs(da-db)<1e-8f)return;var point=Vector3.LerpUnclamped(a,b,da/(da-db));foreach(var p in rim)if((p-point).sqrMagnitude<1e-12f)return;rim.Add(point);}
         // Kept as the existing display entry point; immersion uses the identical plane.
         internal static float Level(Vector3 normal,float radius,float height,float fraction)=>ContainerFlowGeometry.Level(normal,radius,height,fraction);

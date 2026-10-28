@@ -134,6 +134,12 @@ namespace Maestro.Quest.Tests
         }
         [Test] public void ResourceChoicesReferencePagedFactsAndWritableIdentityPairs()
         {
+            // Pickers crossing a nested union must fit every branch identically.
+            System.Collections.Generic.IEnumerable<JObject> Fields(JObject node,string[] path,int index=0) {
+                if(node?["oneOf"] is JArray branches){foreach(JObject branch in branches)foreach(var field in Fields(branch,path,index))yield return field;}
+                else if(node==null||index==path.Length)yield return node;
+                else foreach(var field in Fields(node["properties"]?[path[index]] as JObject,path,index+1))yield return field;
+            }
             int count=0;
             foreach(var action in BehaviourCatalog.Actions)foreach(var schema in action.InputSchema.DescendantsAndSelf().OfType<JObject>()) {
                 if(schema["x-choices"] is not JArray choices)continue;
@@ -155,7 +161,8 @@ namespace Maestro.Quest.Tests
                     foreach(string name in new[]{"id","revision"}) {
                         if(choice[name]==null)continue;string path=(string)choice[name];Assert.That(destinations.Add(path),Is.True);
                         Assert.That(path.Split('.').All(part=>System.Text.RegularExpressions.Regex.IsMatch(part,"^[a-zA-Z0-9_]{1,32}$")&&!new[]{"__proto__","constructor","prototype"}.Contains(part)),Is.True);
-                        var field=CapabilitySchema.Field(schema,path);Assert.That(field,Is.Not.Null);
+                        var fields=Fields(schema,path.Split('.')).ToArray();Assert.That(fields,Is.Not.Empty);var field=fields[0];Assert.That(field,Is.Not.Null);
+                        Assert.That(fields.All(candidate=>candidate!=null&&JToken.DeepEquals(candidate,field)),Is.True,"Picker destination must agree in every variant");
                         Assert.That((string)field["type"],Is.EqualTo(name=="id"?"string":"integer"));Assert.That((bool?)field["x-static"],Is.Not.True);
                         Assert.That(schema["x-current"]?["guards"]?.Values<string>().Contains(path)??false,Is.False);
                         if(choice["emptyLabel"]!=null)Assert.That(CapabilityArguments.Validate(name=="id"?new JValue(""):new JValue(0),field,out _),Is.True);

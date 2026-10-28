@@ -17,7 +17,7 @@ namespace Maestro.Quest.Art
             if(authored!=null){using var candidate=PencilGeometry.Prepare(paths,radius,authored.Owner,authored.Source,seed,this);SetPrepared(candidate);return;}
             var next=PencilStrokeMesh.Build(paths,radius,seed);Material created=null;
             try{
-                if(!material){created=IllustratedMaterials.Create(IllustratedMaterials.Ink,.08f);created.SetFloat("_HasRestCoordinates",1);created.SetShaderPassEnabled("PENCIL",false);}
+                if(!material){created=IllustratedMaterials.Create(IllustratedMaterials.Ink,.08f);created.SetFloat("_HasRestCoordinates",1);created.SetShaderPassEnabled(IllustratedSurface.PencilPass,false);}
                 if(created){material=created;GetComponent<MeshRenderer>().sharedMaterial=material;}
                 GetComponent<MeshFilter>().sharedMesh=next;ArtResources.Release(mesh);mesh=next;Creation.RoomAppearanceView.VisualsChanged(this);
             }catch{ArtResources.Release(next);if(created)ArtResources.Release(created);throw;}
