@@ -3784,10 +3784,10 @@ Ordinary observed movement then produces normal contact edges. A program should
 handle unknown state explicitly, for example stopping a loop it owns until a
 fresh sample is available.
 
-No camera feed is captured or sent by these observations. This does not apply
-an underwater tint, refraction, audio filter or force. Those presentation choices
-can build on the shared state; full underwater presentation and physical Quest
-acceptance remain unfinished. Current desktop evidence includes bound-camera
+No camera feed is captured or sent by these observations. Contact observations
+do not themselves apply a tint, refraction, audio filter or force. Authored
+underwater shading is described below; physical Quest acceptance remains
+unfinished. Current desktop evidence includes bound-camera
 sampling without controllers, finite boundaries, lifecycle/freshness, global
 collision readiness, reentrant event delivery, and discrete world relocation.
 
@@ -3801,10 +3801,10 @@ with a fixed upper bound from the accepted terrain resolution.
 
 This geometric result is independent of simulation pause and is not itself a
 gameplay contact event or a geometry-readiness guarantee. The viewer contact
-facts above retain their tracking, pause and unknown-state rules. Full
-underwater visuals and audio treatment remain unfinished; the new calculation
-does not tint a camera feed, create another liquid inventory or alter collision
-participation.
+facts above retain their tracking, pause and unknown-state rules. The authored
+underwater view below uses this geometry. Audio treatment and full underwater
+acceptance remain unfinished; this calculation does not tint a camera feed,
+create another liquid inventory or alter collision participation.
 
 ## Independent native liquid appearance
 
@@ -3844,5 +3844,56 @@ outline pass correctly. Opaque outlines remain available; transparent surfaces
 no longer receive that opaque back-face pass.
 
 This is a styled finite surface, not volumetric water or refraction. Transparent
-overlap sorting, Quest stereo appearance/performance and full underwater
-presentation still need their separate acceptance checks.
+overlap sorting, Quest stereo appearance/performance and the underwater view
+below still need their separate physical acceptance checks.
+
+
+## Authored underwater view
+
+`object.container.view.configure` and `object.container.view` expose one saved
+setting through the shared catalog, generated book controls and agent/program
+calls. The native client advertises `underwaterView.v1`. A setting contains
+`version: 1`, `enabled`, RGB `tint` and `densityPerMetre` from 0 to 8.
+Both new and retained legacy containers start with the effect disabled.
+
+While a rendering viewpoint is inside a configured finite water body, eligible
+virtual surfaces fade toward its tint according to actual wet distance:
+transmittance is `exp(-densityPerMetre * wetMetres)`. Looking beyond a small
+vessel does not turn the rest of the ray into water. A dry terrain ridge
+contributes no wet distance. The same live quantity, tilted gravity plane,
+cavity transform and actual terrain triangles govern the result; there is no
+separate visual water level.
+
+Each camera render uses its current position; stereo shaders use the current
+eye. A bounded shared projection contains at most 16 native water bodies and a
+17-by-17 height grid per body. Terrain rays traverse at most 35 cells. It chooses
+the smallest containing cavity, then stable ID, including a disabled inner
+cavity. This selection is deliberately not a mixture of intersecting fluids.
+Unavailable containing geometry suppresses the projection. Physics pause alone
+does not remove existing water appearance.
+
+The setting belongs to the cavity. Pouring transfers liquid and its physical
+properties, leaving each cavity's visual setting intact. Ordinary container
+edits preserve it. The new action uses the same revision checks, ownership,
+asynchronous saved completion, replay receipt and Undo path as other authored
+changes. Portable creations retain the setting; old typed container facts keep
+their previous shape. New room saves use format 45, requiring an explicit
+underwater setting on each container. Format 44 rooms load with disabled
+defaults and are retained when saved in the new format. Older readers see the
+newer room and remain read-only instead of silently dropping the setting.
+
+The effect changes virtual pigment only. It preserves surface alpha, book-page
+and recovery-control readability, real-depth clipping, and the passthrough
+compositor. Room collision participation, visual layers, surface paint,
+buoyancy, contact events and audio remain independent. This is underwater
+distance shading, not refraction, outside-water transmission, caustics or
+a general volumetric-fluid renderer.
+
+Focused rendered tests cover finite cylindrical/rectangular distances,
+perspective and orthographic views, tilted/scaled/offset cavities, dry terrain
+ridges at 4/8/16-cell resolutions, transparent alpha and actual book materials.
+Lifecycle tests cover actual camera callbacks, nested camera overflow,
+physics pause, removal, disabled nested cavities, save failure, persistence,
+Undo and duplicate/stale agent requests. These desktop checks do not establish
+Quest stereo image quality, thermal cost, transparent overlap ordering or
+real-device comfort. Keep those release checks open.

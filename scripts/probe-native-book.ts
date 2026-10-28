@@ -438,6 +438,28 @@ try{
  assert.equal(await page.getByLabel('Action inputs definition fluid densityKgM3',{exact:true}).inputValue(),'850');
  await page.getByLabel('Action inputs definition fluid densityKgM3',{exact:true}).scrollIntoViewIfNeeded();await page.screenshot({path:join(directory,'book-native-medium.png')});
  await writeFile(join(directory,'book-native-medium.json'),JSON.stringify({boundary:'Actual original-book fluid authoring, native receipt and current-value reload; no physical buoyancy or provider proof.',medium},null,2));
+ // Underwater settings use the same visible forms and native saved action as agents.
+ await openNamedAction('Configure underwater view','object.container.view.configure');
+ await chooseObject('Action inputs target',ball.id);
+ await page.getByRole('button',{name:'Load current values',exact:true}).click();await page.getByText('Current values loaded. Review your changes before running.',{exact:true}).waitFor();
+ assert.equal(await page.getByLabel('Action inputs settings enabled',{exact:true}).inputValue(),'false');
+ await page.getByLabel('Action inputs settings enabled',{exact:true}).selectOption('true');
+ await page.getByLabel('Action inputs settings tint',{exact:true}).fill('#183D65');
+ await page.getByLabel('Action inputs settings densityPerMetre',{exact:true}).fill('0.7');
+ const underwater=await runNamedAction('object.container.view.configure');
+ assert.equal((underwater.call.arguments.settings as {tint:string}).tint,'#183D65');
+ await page.getByRole('button',{name:'Load current values',exact:true}).click();await page.getByText('Current values loaded. Review your changes before running.',{exact:true}).waitFor();
+ assert.equal(await page.getByLabel('Action inputs settings enabled',{exact:true}).inputValue(),'true');
+ assert.equal(await page.getByLabel('Action inputs settings tint',{exact:true}).inputValue(),'#183D65');
+ assert.equal(await page.getByLabel('Action inputs settings densityPerMetre',{exact:true}).inputValue(),'0.7');
+ await page.getByRole('heading',{name:'Configure underwater view',exact:true}).scrollIntoViewIfNeeded();await page.screenshot({path:join(directory,'book-native-underwater.png')});
+ await page.getByRole('button',{name:'Back to workshop',exact:true}).click();
+ const underwaterRevision=await page.evaluate(()=>window.nativeBookEvidence!().state!.sceneRevision);
+ await page.getByRole('button',{name:'Undo',exact:true}).first().click();await page.waitForFunction(revision=>window.nativeBookEvidence!().state!.sceneRevision>revision,underwaterRevision);
+ const underwaterUndone=await readResourceFact('object.container.view','Underwater view settings',{target:ball.id}) as unknown as {settings:{enabled:boolean}};
+ assert.equal(underwaterUndone.settings.enabled,false);
+ const underwaterContents=await readResourceFact('object.container','Liquid container and contents',{target:ball.id}) as unknown as BookContainer;assert.equal(underwaterContents.definition.amountMl,100);
+ await writeFile(join(directory,'book-native-underwater.json'),JSON.stringify({boundary:'Visible original-book generated controls, native saved completion/current-value readback, and ordinary Undo retaining liquid quantity. Offline scripted transport, no provider or headset appearance claim.',underwater,underwaterUndone,underwaterContents},null,2));
  // The same measured transfer is authored through visible nested object inputs.
  await openNamedAction('Create object','object.create');
  await page.getByLabel('Creation kind',{exact:true}).selectOption({label:'Create starter object'});

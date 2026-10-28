@@ -17657,6 +17657,39 @@
                                         "type": "integer",
                                         "minimum": 1.0,
                                         "maximum": 4.0
+                                      },
+                                      "underwater": {
+                                        "type": "object",
+                                        "properties": {
+                                          "version": {
+                                            "type": "integer",
+                                            "minimum": 1.0,
+                                            "maximum": 1.0
+                                          },
+                                          "enabled": {
+                                            "type": "boolean"
+                                          },
+                                          "tint": {
+                                            "type": "string",
+                                            "pattern": "^#[0-9A-Fa-f]{6}$",
+                                            "maxLength": 7
+                                          },
+                                          "densityPerMetre": {
+                                            "type": "number",
+                                            "minimum": 0.0,
+                                            "maximum": 8.0
+                                          }
+                                        },
+                                        "required": [
+                                          "version",
+                                          "enabled",
+                                          "tint",
+                                          "densityPerMetre"
+                                        ],
+                                        "additionalProperties": false,
+                                        "x-features": [
+                                          "underwaterView.v1"
+                                        ]
                                       }
                                     },
                                     "required": [
@@ -22091,6 +22124,107 @@
           "amountMl": 200.0,
           "terrainFloor": false,
           "spillAtTerrainEdge": false
+        }
+      }
+    },
+    {
+      "id": "object.container.view.configure",
+      "version": 1,
+      "label": "Configure underwater view",
+      "input": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^[a-fA-F0-9]{32}$",
+            "maxLength": 32,
+            "x-resource": "object"
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 1.0,
+            "maximum": 2147483647.0
+          },
+          "settings": {
+            "type": "object",
+            "properties": {
+              "version": {
+                "type": "integer",
+                "minimum": 1.0,
+                "maximum": 1.0
+              },
+              "enabled": {
+                "type": "boolean"
+              },
+              "tint": {
+                "type": "string",
+                "pattern": "^#[0-9A-Fa-f]{6}$",
+                "maxLength": 7
+              },
+              "densityPerMetre": {
+                "type": "number",
+                "minimum": 0.0,
+                "maximum": 8.0
+              }
+            },
+            "required": [
+              "version",
+              "enabled",
+              "tint",
+              "densityPerMetre"
+            ],
+            "additionalProperties": false,
+            "x-features": [
+              "underwaterView.v1"
+            ]
+          }
+        },
+        "required": [
+          "target",
+          "revision",
+          "settings"
+        ],
+        "additionalProperties": false,
+        "x-current": {
+          "fact": "object.container.view",
+          "version": 1,
+          "arguments": {
+            "target": "target"
+          },
+          "fields": {
+            "revision": [
+              "revision"
+            ],
+            "settings": [
+              "settings"
+            ]
+          },
+          "guards": [
+            "revision"
+          ]
+        }
+      },
+      "duration": "completion",
+      "ownership": "exclusiveTargetAndProp",
+      "channels": [
+        "wholeTarget"
+      ],
+      "requirements": [
+        "target.created",
+        "target.unheld",
+        "source.revision.current",
+        "storage.writable",
+        "target.container"
+      ],
+      "description": "Set a configured water body's underwater view. Virtual world surfaces fade toward tint according to the actual metres of this finite water along the viewing ray. densityPerMetre=0 disables attenuation; larger values reduce visibility. This applies only while the rendering viewpoint is inside water. Nested bodies choose the smallest containing cavity, then stable ID; it is not refraction, general transmission through outside water, or a mixture of overlapping fluids. Surface paint/opacity, fluid identity/quantity/forces, audio, real-room collision and passthrough remain separate. Book pages and recovery controls retain readability. The settings belong to the cavity and do not travel with pouring. Newly configured and retained legacy cavities default to disabled. Read object.container.view for current revision and settings. Ordinary container edits preserve them. Geometry must be available, but pausing physics does not remove the view. Outside temporary play, prepares and publishes its save in the background with one Undo edit. Completion confirms native application and saving. Once preparation begins, newer authored changes invalidate its candidate. Cancellation before native acceptance leaves the requested edit unapplied. After acceptance, stopping cannot retract the edit or its pending save. A save conflict preserves files, blocks further saves and requires inspection; never blindly replay it. Runtime clock and viewer movement continue. Concurrent persisted object edits enter preparation in arrival order after earlier saves drain, without copying a waiting candidate. Stopping or invalidating a waiter releases its place; target changes while waiting require a new request. In a temporary room, changes the live room and local Undo; a kept snapshot makes it durable. Other objects keep running.",
+      "example": {
+        "target": "00000000000000000000000000000000",
+        "revision": 1,
+        "settings": {
+          "version": 1,
+          "enabled": true,
+          "tint": "#285B78",
+          "densityPerMetre": 0.4
         }
       }
     },
@@ -41569,6 +41703,48 @@
       ]
     },
     {
+      "id": "object.container.view",
+      "version": 1,
+      "type": {
+        "record": {
+          "revision": "number",
+          "configured": "boolean",
+          "settings": {
+            "record": {
+              "version": "number",
+              "enabled": "boolean",
+              "tint": "text",
+              "densityPerMetre": "number"
+            }
+          }
+        }
+      },
+      "label": "Underwater view settings",
+      "description": "Saved finite-water presentation and exact object revision. Reading does not load geometry, start physics or capture a camera. configured=false supplies disabled defaults; configure a container before editing its view.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^[a-fA-F0-9]{32}$",
+            "maxLength": 32,
+            "x-resource": "object"
+          }
+        },
+        "required": [
+          "target"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "target": "00000000000000000000000000000000"
+      },
+      "features": [
+        "factQueries.v1",
+        "underwaterView.v1"
+      ]
+    },
+    {
       "id": "object.material",
       "version": 1,
       "type": {
@@ -49737,8 +49913,12 @@
       "sha256": "76deccb0759e9536306d33a624639c342c162ffa5ebdc2952345c86949a3c611"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Art/MaestroUnderwater.cginc",
+      "sha256": "0887ed83b56c9352cabb71fe901d514522777ebe5e8ce558b960e48fde4ac8b1"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Art/MaestroWorldLighting.cginc",
-      "sha256": "c8bfc089cba1d601ee47c82457bad87eeb90bee60a14a069b501043f8a2d194c"
+      "sha256": "25ec39f92be0b596b0b50eaa0af5e0d0c9e59d842b94ac7a0ac33ab04125bd6c"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Art/NativeResourceLifetime.cs",
@@ -49765,12 +49945,16 @@
       "sha256": "a6642581d0cb2aaa65e65c5a521a24fff6e9ebaccdeb5dc84ccc1cada32fe3f6"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Art/UnderwaterView.cs",
+      "sha256": "c5bd615376cd3cd7f7d7ef5cf6ea7717ce15d6c4bf4bf5d669a03cce96e1e2da"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Art/VisibilityMaterials.cs",
       "sha256": "ca5a6c66fa2f380d100c0d14e6abcc497eb6b402cfe5a12102a833bf299378fb"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Art/Watercolor.shader",
-      "sha256": "bcbd8ec01736b47952ea996e9a876a9c09592a284ebd71ddac150e8027db7ea4"
+      "sha256": "50b9b48a037e597c6500f2f58f9dcce4444c8ea1bb826fa8af0daa35b31d0b97"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Art/WatercolorSurface.cginc",
@@ -50134,7 +50318,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilityModules.cs",
-      "sha256": "7ff4126bf529d6682ff16a22284da45dfd5b49ee6389f23b814a67f046dcf0c3"
+      "sha256": "d4c8f7501f6b4c3a068d8559d853081dcea3bbafc98e8ad696a0c8bbef34910d"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilitySchema.cs",
@@ -50182,7 +50366,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ContainerCapability.cs",
-      "sha256": "967f6f916fb9a4b1e138df51986fb973d8f6b654f958be0469220c0f2fe1ab19"
+      "sha256": "da2a4c0487bbd5ac1210e7d27df4faaacd599533a0885e2e7a17ffaac614147c"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ContainerPouringFacts.cs",
@@ -50589,6 +50773,10 @@
       "sha256": "2273d55676c79b88c916496fd18cc082456c8177a11d71b1096974d2883df829"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/UnderwaterViewCapability.cs",
+      "sha256": "a7e59c0957073f38af9b9f15b96e6e124c87fc01dd2e4bdfa691f52f63f7a447"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/VisibilityLayerCapabilities.cs",
       "sha256": "e7690a57a5fa0b3af7eed2c789a74c216c146eb73ca4fb67efc82887e0d61ba1"
     },
@@ -50906,7 +51094,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidMediumGeometry.cs",
-      "sha256": "c2285195441202c7493bb8e4c250675405389b449664f7032adf98a2748818d2"
+      "sha256": "34d1a695308797d33e652f937da3ec42f292620dc9bfd7328aac731a98c9dbc0"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidMediumPhysics.cs",
@@ -51138,7 +51326,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomAppearanceView.cs",
-      "sha256": "50af550fd797a31b5d69890e0eda0a59e9aade2e259d1122a4ab85077a7d4125"
+      "sha256": "75e87d4cad8c553de8a8635726faa92361c0578904b16b81274a43e53bf5218a"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomAudioDefinition.cs",
@@ -51190,7 +51378,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomContainer.cs",
-      "sha256": "9a0998edb59af3b37920bb2c18c3b0cc430c9dac2d80ef6a06e929aa041c662c"
+      "sha256": "8e1f0b3b549cfd2b1a016cf70428fab5d3e94cf59ec6ee6cc08f78921e42bf07"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomContainerEdits.cs",
@@ -51198,7 +51386,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomControls.cs",
-      "sha256": "4dd4b8895d74194a70869b402fabf117a49eff04eeebd978c7efb0d08f9f2df1"
+      "sha256": "a1fec6c0844763631f6f852e580eb2cf1185de14596254808b2e8d449a0d8d6c"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomCreationBudget.cs",
@@ -51214,7 +51402,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomDocument.cs",
-      "sha256": "10a17b20b78455f25ec812d8853b36e5ef76c0e933bf64b2803afa3a9eee153e"
+      "sha256": "17e487abcbf6e91656daa8b0c32316e18488daaa58ab895282956c1c609bef3a"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomDormantRecovery.cs",
@@ -51242,7 +51430,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditor.cs",
-      "sha256": "9e91445c32ef4cf8dfb7227c0cfdfa18dc01ae6e46730f2f4b1a86906bea606c"
+      "sha256": "abec677123ab38e4171866c21d488f6fa11e31c19b1de04d5b562cb443537bbf"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEnvironmentEdits.cs",
@@ -51358,7 +51546,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomLiquidCodec.cs",
-      "sha256": "e41c6a565ae32506fc6d4444e256b353f7c3958164af53ee6ef550bb690a2609"
+      "sha256": "afe7a09d3de6e06e3e43123855e1190b792c3a191079d7251e827be5cfe1f600"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomLiquidEdits.cs",
@@ -51622,7 +51810,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomStorage.cs",
-      "sha256": "fe4f853add9c7fee6b207fb8ff8177c183a4338a03e2ca59f34d680ea352d7da"
+      "sha256": "2b7a460f61e3bb7307817f49e8ca563fd1360cd8d13f1fefd58a04794240d4b4"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomStructure.cs",
@@ -51786,11 +51974,19 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/TerrainLiquidGeometry.cs",
-      "sha256": "30cb88b73c7f66e47e1e8944fd7109448103d853b9a6b8f5d047b02d4e233a0f"
+      "sha256": "76438cf4feaa63ed1e29a57603075b23acce972eb5c76399a8ffbfb8c348e1d5"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/TerrainLiquidSurfaceQueries.cs",
       "sha256": "efcdb73c90a29fbc989524b6c06a94f34484681c22ce904e406e608bb5a3dd05"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/UnderwaterViewProjection.cs",
+      "sha256": "5a6f8acb74a3a23b7b770b55cedb4dc63b09e961fa505731f0b1c46b95862c2b"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/UnderwaterViewSettings.cs",
+      "sha256": "812fff44ef62876c236cdb0a8a37557eb19ff609a65721d0270996d5b379a893"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/VersionedRoomFile.cs",
@@ -52462,7 +52658,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/RoomSnapshotTransaction.cs",
-      "sha256": "ad480382c422ec7d0eab8bb42743d73fe5e25d8d034406f1b51920398c199cc8"
+      "sha256": "2e4f33b7539e26a69a3ef93330903de06636a6d8376cc26ebd59e6d97f2f32a0"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceAcceptedSave.cs",
@@ -52594,7 +52790,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "53d565ae01739aee121836276f06ef07be3485c3bbe8da8622a0bc4bf92d224b"
+      "sha256": "3fc1475f379743fb497a3769e52aae1e62a757793a7c65c739966c79263fe9ec"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourProgram.cs",

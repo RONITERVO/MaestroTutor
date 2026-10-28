@@ -27,6 +27,7 @@ namespace Maestro.Quest.Creation
         Texture Image(AppearanceStyle style){if(style.patternMode!="image")return null;if(!images)return null;if(!imageLeases.TryGetValue(style.imageHash,out var lease)){lease=images.Acquire(style.imageHash,imageOwner);imageLeases.Add(style.imageHash,lease);}return lease.Texture;}
         VisibilityState visibility;
         bool refreshPending;
+        internal float OpticalOpacity=>isActiveAndEnabled?visibility?.Opacity??1:0;
         internal bool PointerVisible=>!isActiveAndEnabled||visibility==null||visibility.Opacity>0;
         internal static void VisualsChanged(Component source){var owner=source.GetComponentInParent<RoomItem>();var view=owner?owner.GetComponent<RoomAppearanceView>():null;if(view)view.refreshPending=true;}
         void LateUpdate(){if(refreshPending)Refresh();}

@@ -106,7 +106,7 @@ namespace Maestro.Quest.Tests {
   [Test]public void MaterialExistingFormat44ReadsWithoutRewritingItsNumbers(){
    var room=Full();var wire=JObject.Parse(JsonUtility.ToJson(room));wire["version"]=44;
    RoomLiquidCodec.Write(Store(room),(JObject)wire["objects"][2]["materialStores"][0]);
-   string original=wire.ToString();Directory.CreateDirectory(directory);string path=Path.Combine(directory,RoomStorage.FileName);File.WriteAllText(path,original);
+   string original=wire.ToString();Directory.CreateDirectory(directory);string path=Path.Combine(directory,"room.v44.json");File.WriteAllText(path,original);
    var restored=new RoomStorage(directory).Load(out var error);Assert.IsNotNull(restored,error);Same(Store(room),Store(restored));Assert.AreEqual(original,File.ReadAllText(path));
   }
   [TestCase(false)][TestCase(true)]public void MaterialNewerRoomOrStoreVersionRemainsPreservedAndReadOnly(bool component){

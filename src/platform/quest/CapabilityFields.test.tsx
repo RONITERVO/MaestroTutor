@@ -141,3 +141,14 @@ it('lets the book opt into deferred creation and return to the original immediat
  screen.rerender(<CapabilityFields label="Create" schema={action.input} value={deferred} objects={[]} onChange={onChange}/>);
  fireEvent.click(screen.getByLabelText('Include Create loading'));expect(onChange.mock.calls[onChange.mock.calls.length-1][0]).toEqual(args);
 });
+
+it('edits underwater tint and density through the same registered fields used by agents',()=>{
+ const action=capabilityDefinition('object.container.view.configure')!,call=structuredClone(action.example!);
+ const onChange=vi.fn(),screen=render(<CapabilityFields label="Water view" schema={action.input} value={call} objects={[]} onChange={onChange}/>);
+ fireEvent.change(screen.getByLabelText('Water view settings tint'),{target:{value:'#103060'}});
+ expect(onChange).toHaveBeenCalledWith({...call,settings:{...(call.settings as object),tint:'#103060'}});
+ fireEvent.change(screen.getByLabelText('Water view settings densityPerMetre'),{target:{value:'1.2'}});
+ const updated={...call,settings:{...(call.settings as object),densityPerMetre:1.2}};
+ expect(onChange).toHaveBeenCalledWith(updated);expect(validateCapabilityArguments(action.id,1,updated)).toBeNull();
+ expect(validateCapabilityArguments(action.id,1,{...updated,settings:{...(updated.settings as object),densityPerMetre:9}})).not.toBeNull();
+});

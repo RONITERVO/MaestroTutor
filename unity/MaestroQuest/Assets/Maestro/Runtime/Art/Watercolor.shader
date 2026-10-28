@@ -92,7 +92,7 @@ Shader "Maestro/Watercolor"
                     UNITY_LIGHT_ATTENUATION(attenuation, input, input.world);
                     float facing = saturate(dot(normalize(input.worldNormal), normalize(UnityWorldSpaceLightDir(input.world))));
                     float fog = exp(-max(0, _MaestroFogDensity) * length(UnityWorldSpaceViewDir(input.world)));
-                    return half4(surface.rgb * surface.a * _LightColor0.rgb * attenuation * facing * fog, 0);
+                    return half4(surface.rgb * surface.a * _LightColor0.rgb * attenuation * facing * fog * MaestroUnderwater(input.world).w, 0);
                 #endif
             }
             ENDCG

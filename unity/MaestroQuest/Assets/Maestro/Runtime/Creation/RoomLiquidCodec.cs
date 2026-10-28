@@ -12,6 +12,7 @@ namespace Maestro.Quest.Creation {
         internal static void Write(RoomContainer source,JObject wire){
             // JObject replacement can consider nearby floating values equal. Remove
             // the old tokens first so even a one-ULP difference survives.
+            wire["underwater"]=JObject.FromObject(UnderwaterViewSettings.Effective(source.underwater));
             wire.Remove("capacityMl");wire.Add("capacityMl",source.capacityMl);
             wire.Remove("amountMl");wire.Add("amountMl",source.amountMl);
         }
@@ -22,6 +23,8 @@ namespace Maestro.Quest.Creation {
                 return value;
             }
             target.capacityMl=Number("capacityMl");target.amountMl=Number("amountMl");
+            if(wire["underwater"]!=null&&wire["underwater"].Type!=JTokenType.Null&&!UnderwaterViewSettings.Wire(wire["underwater"]))throw new ArgumentException("Invalid underwater presentation");
+            target.underwater=wire["underwater"] is JObject view?view.ToObject<UnderwaterViewSettings>():new();
         }
         internal static void Containers(RoomContainer[] values,JToken wire,bool writing){
             if(values==null||values.Length==0)return;

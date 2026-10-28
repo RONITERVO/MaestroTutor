@@ -131,9 +131,12 @@ leaves the room unchanged; after acceptance its save drains and an interruption
 identifies the affected resource for inspection. Undo and temporary Keep/Discard
 remain available, and unchanged choices add no Undo.
 
-Current saved limits remain 16 profiles with at most 16 bound objects per
-profile. Virtual-only movement requires accepted authored ground within the
-existing simulation bounds. This does not override the headset's system boundary
+Current saved limits are 16 profiles, each supporting all 258 saved identities
+(256 creations, Maestro and the book). This is saved membership, not simultaneous
+native simulation capacity. Expanded edits require `environmentWorldMembers.v1`
+and, for larger request frames, `roomSnapshot64K.v1`; the compact summary and
+paged membership contract below keep reads bounded. Virtual-only movement
+requires accepted authored ground within the existing simulation bounds. This does not override the headset's system boundary
 or establish physical room alignment. Those limits and the distinction between
 collision, visual and acoustic policy are part of the shared contract.
 
@@ -183,9 +186,12 @@ or clearing an obstacle must not replay an old action or throw.
 ## Collision-profile scaling contract
 
 Saved settings, compact summaries and canonical edits over deliberately unloaded
-members are implemented. The current 16-member limit remains in force. Collision
-participation uses the same saved journal as appearance and visibility, with
-additional physical admission and recovery for resident/restored geometry.
+members are implemented. A profile can now cover the 258 saved identities within
+the unchanged 16-profile limit. Collision participation uses the same saved
+journal as appearance and visibility, with additional physical admission and
+recovery for resident/restored geometry. The compatibility `environment.profile`
+fact still has a 16-member value limit and returns unavailable above it; use
+`environment.profile.summary` and `resource.members` for complete larger reads.
 
 The durable world should store what an object is meant to collide with. A native
 view should separately report what is currently prepared and safe to simulate.
@@ -200,13 +206,13 @@ Maintain these invariants as the limits and world systems grow:
    preparing, unavailable ground and obstruction explicitly. An absent
    body is not evidence that the requested policy is disabled or that motion is
    ready. The human inspector and agent facts must return the same distinction.
-2. The shared `resource.members` continuation now detects definition and
-   membership changes without loading objects. Before raising the collision
-   profile limit, use the compact `environment.profile.summary` and explicit
-   member pages. The older `environment.profile` includes all members in one
-   program value and cannot silently grow beyond its value budget. Every affected object still needs an exact guard and ownership
-   claim. Saved programs retain their declared resource budget; a large one-off
-   edit is not a license for an unbounded program action.
+2. The shared `resource.members` continuation detects definition and membership
+   changes without loading objects. Expanded profile edits use the compact
+   `environment.profile.summary` and explicit member pages. The older
+   `environment.profile` cannot silently grow beyond its value budget. Every
+   affected object still needs an exact guard and ownership claim. Saved programs
+   retain their declared resource budget; a large one-off edit does not enlarge
+   a program's allowed resources or values.
 3. Native restoration now arms a per-object hold before enabling a candidate and
    checks current enabled shapes after the complete group is published. It checks
    the selected ground for dynamic objects and real-room participants; fixed
@@ -230,8 +236,9 @@ Maintain these invariants as the limits and world systems grow:
 `RoomNativeResidency.ActivateNativeTargets` prepares staged roots and publishes
 identities together and checks the same geometry proof while restored bodies are
 held. Canonical dormant policy edits share atomic acceptance and exact
-membership/member revision guards. Existing limits are unchanged; raising them
-requires a separate resource-budget contract. Existing `RoomSimulationEnvironment` bounds and
+membership/member revision guards. The expanded saved-membership contract does
+not raise the native-root budget, user-program limits or simulation bounds.
+Existing `RoomSimulationEnvironment` bounds and
 `RigidRoomItem` readiness gates remain necessary; a centre-in-bounds check does
 not replace exact overlap proof.
 

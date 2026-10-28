@@ -2,7 +2,13 @@
 
 Status: active implementation. Nothing in this document claims store readiness.
 
-The latest [finite-water geometry increment](#shared-finite-water-segments--2026-10-28)
+The latest [authored underwater view](#authored-underwater-view--2026-10-28)
+adds opt-in finite-distance shading through shared user/agent settings. Its
+full native tests, actual Headless/Book/first-learner journeys, text-to-Live
+with native restart, and unsigned Android compilation pass. Physical Quest
+acceptance remains open.
+
+The preceding [finite-water geometry increment](#shared-finite-water-segments--2026-10-28)
 measures wet ray lengths through the existing water geometry and bounds terrain
 traversal to crossed cells. It also serves the existing rain-contact path.
 The preceding [native liquid appearance increment](#independent-liquid-appearance-and-back-face-rendering--2026-10-28)
@@ -18201,3 +18207,96 @@ generated record, without changing the runtime verified above. Retained evidence
 `catalog-editmode.xml` and the before/after native catalog JSON. The failed
 [release job](https://github.com/RONITERVO/MaestroTutor/actions/runs/40767509931/job/123095516356)
 is not counted as a passing release gate.
+
+
+## Authored underwater view — 2026-10-28
+
+The shared implementation now has complete offline integration and unsigned
+Android compilation evidence.
+`object.container.view.configure` and `object.container.view` share the
+catalog, generated book fields, current-value reads, program invocation and
+native saved completion. Settings belong to a cavity and survive ordinary
+container edits; transfer does not move them. Old typed container facts remain
+unchanged. The effect starts disabled and applies only to virtual world pigment
+from a viewpoint inside finite water. Actual wet distances, terrain triangles,
+live quantities and cavity transforms remain authoritative.
+
+New room saves use format 45. Older readers preserve the newer file and become
+read-only. Format 44 retains its original file while loading disabled defaults.
+The new test also keeps the existing precise-quantity legacy fixture under its
+actual `room.v44.json` filename. Component versions newer than supported remain
+protected independently.
+
+Focused evidence in `.quest-evidence/underwater-view-20261028/`:
+**65 EditMode** cases pass at `editmode-4.xml`, including native catalog equality,
+legacy/newer saves and precise liquid/material quantities. **31 PlayMode**
+cases pass at `playmode-4.xml` for rendered distances, terrain resolutions,
+transparency, readable book/control materials, camera lifecycle, saved edits
+and Undo. The later changes add feature advertisement and save-format protection;
+the complete native rerun below qualifies their combined source.
+**3,676 web tests** pass at `web-full.json`. Fresh native catalog export 2
+changes source provenance only from the export used by those web tests; all
+catalog definitions are identical. The source verifier passes.
+
+Earlier failed attempts remain recorded: a reserved shader identifier, a control
+test that incorrectly assumed untextured white, callback observation order,
+the increased catalog mapping count, and a legacy test using the new filename.
+The second complete integration attempt was intentionally stopped after review
+found the save-format gap; its process exit is not counted as a successful gate.
+Attempt 3 passed all 1,785 EditMode tests, then failed one controller-button test
+in the first PlayMode partition (963 passed; three expected private-asset skips).
+Its source freeze was verified. The test sent a click before asynchronous binding
+saving had confirmed and issued two setting changes without waiting for either.
+It now waits for confirmed saving, checks the resulting binding and both stick
+swaps, and retains its held-button assertions. Five focused controller cases
+pass, including deliberately held saving; controller runtime behavior is unchanged.
+
+Attempt 4 passes the complete native inventory: **1,785 EditMode and
+2,459 PlayMode cases**, with three expected private-asset skips, accounting
+for all 4,247 discovered cases. Actual Headless `036680ea`, rendered Book
+`81523327` and production first learner `40dd9d79` also pass with client/editor
+exit zero. The inspected underwater receipts confirm saved completion,
+current-value reads, preservation during an ordinary fill edit and Undo/Redo.
+The visible form shows the chosen values; Undo retains the 100 ml quantity.
+The full Book journey has 2,412 native requests, 7,275 observations and no
+room-command replay on reload.
+
+That original wrapper then stopped at a TypeScript inference error in the new
+test file. One explicit record annotation corrects it; both affected tests and
+the production TypeScript/Vite build pass. Native and production inputs are
+unchanged. `integration-4-resume/boundary.json` records the exact one-file
+difference and the continuation through the remaining build stages, without
+repeating the unchanged native suite. The original failed wrapper is retained.
+
+Unsigned Android export `Android-compile-20261028-232542-b5dcb45d` succeeds
+under Unity 6000.3.24f1 with zero errors and five warnings. Explicit Gradle
+compilation/merge tasks pass, with 22 selected ARM64 libraries meeting 16 KiB
+ELF LOAD alignment. Five unselected dependency libraries remain in the
+intermediate; final APK filtering is not established. Native browser AAR/lint
+succeeds; Gradle reuses the unchanged 128 passing/two skipped unit results.
+No APK/AAB, signing, installation or Store action occurs.
+
+Fresh production text-to-Live/native-restart `93361ff1` passes against the
+same frozen source: 92 requests, 471 observations and three mutation receipts.
+The tree remains deleted, the same apple plus five original objects survive
+the checkpointed process termination, and actions are not replayed. Synthetic
+capture delivers 138 PCM packets / 441,600 bytes; nine delegated media checks
+match, four acquired audio tracks end and reload acquires none. Model-file
+abort events are reconciled with verified full-delivery/cache evidence;
+intentional font blocks and range-request diagnostics remain in the report.
+This exercises actual app composition, local speech-worker initialization and
+native execution with scripted provider responses and synthetic media, not
+recognition quality, real-provider judgment or headset audibility.
+
+The two source boundaries each retain 5,509 non-document inputs; all 14
+unrelated files remain unchanged. Native batch hashes and exact coverage are
+in `native-complete.json`; combined results are in `verification.json` under
+`.quest-evidence/underwater-view-20261028/`. Successful terminal receipts are
+`integration-4-resume/run.json` and `post-build-live/run.json`.
+
+Book/passthrough readability, optical appearance, collision participation,
+contact events and sound remain independent. This is not refraction or a
+general volume renderer. Quest stereo/thermal/frame cost, physical comfort
+and broader underwater interaction remain acceptance work.
+No new device, paid provider, signing, deployment or Meta action is authorized
+by these desktop results. See [world authoring](QUEST_WORLD_AUTHORING.md#authored-underwater-view).

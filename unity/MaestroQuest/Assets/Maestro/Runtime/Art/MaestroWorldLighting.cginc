@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 #ifndef MAESTRO_WORLD_LIGHTING_INCLUDED
 #define MAESTRO_WORLD_LIGHTING_INCLUDED
+#include "MaestroUnderwater.cginc"
 // Uniforms deliberately are not material properties: one accepted active region,
 // no per-object material allocation and no writes to authored appearance data.
 float _MaestroLightingEnabled, _WorldLighting;
@@ -16,6 +17,9 @@ float4 _MaestroFogColor;
 float3 MaestroAtmosphere(float3 color, float3 world)
 {
     float amount = 1 - exp(-max(0, _MaestroFogDensity) * length(UnityWorldSpaceViewDir(world)));
-    return lerp(color, _MaestroFogColor.rgb, saturate(amount * _WorldLighting));
+    color=lerp(color, _MaestroFogColor.rgb, saturate(amount * _WorldLighting));
+    if(_WorldLighting<.5)return color;
+    float4 water=MaestroUnderwater(world);
+    return lerp(water.rgb,color,water.w);
 }
 #endif

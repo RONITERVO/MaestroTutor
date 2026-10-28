@@ -21,6 +21,11 @@ namespace Maestro.Quest.Creation {
         double minimum,maximum,lastFraction;float lastLevel;
         internal readonly float Ceiling;
         internal double Volume {get;}
+        internal int OpticalCells=>bed.cells;
+        internal void CopyOpticalHeights(float[] target,int offset){
+            Array.Clear(target,offset,17*17);
+            for(int z=0;z<=bed.cells;z++)for(int x=0;x<=bed.cells;x++)target[offset+z*17+x]=points[z*(bed.cells+1)+x].y;
+        }
         internal TerrainLiquidGeometry(RoomHeightField field,float ceiling){
             if(field==null||!field.Validate(out _)||!float.IsFinite(ceiling)||ceiling<=0)throw new ArgumentException("Invalid terrain liquid cavity");
             bed=field.Copy();Ceiling=ceiling;int n=bed.heights.Length;

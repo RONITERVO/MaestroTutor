@@ -9,6 +9,9 @@ namespace Maestro.Quest.Creation {
         internal readonly Rigidbody Body;
         readonly TerrainLiquidGeometry terrain;readonly Vector3 terrainNormal;readonly float terrainLevel;
         internal readonly float Level,Volume;internal readonly Vector3 Up;readonly Matrix4x4 inverse;
+        internal Matrix4x4 ToLocal=>inverse;
+        internal Vector4 LocalSurface=>new(terrainNormal.x,terrainNormal.y,terrainNormal.z,terrainLevel);
+        internal TerrainLiquidGeometry Terrain=>terrain;
         internal LiquidMediumGeometry(string id,RoomItem item,RoomContainer contents,Vector3 up,Rigidbody body){
             Id=id;Item=item;Contents=contents;Up=up;Body=body;
             var t=item.transform;float scale=Mathf.Abs(t.lossyScale.x);
