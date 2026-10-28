@@ -136,7 +136,7 @@ open until every required row has matching release-candidate evidence.
 
 | Requirement | Current evidence | Remaining work and acceptance limits |
 | --- | --- | --- |
-| Familiar language-learning chat and full-page book | Original web components, both book layouts, inline artifacts and ribbon bookmark; recorded offline Headless and visible Book journeys against their named desktop Unity sources. A separate production-entry offline lesson covers visible onboarding, English/Spanish selection, proactive artifact plus image tool and reload. The focused native Book fixture still bypasses several Live/media controllers; complete lesson/native/Live composition remains open. | Fresh first-lesson, smalltalk, proactive artifact/tool combinations, image, weather, room actions and text-to-Live continuation on the chosen Quest candidate, through both managed and BYOK providers. See [coverage](QUEST_AGENT_RELEASE_COVERAGE.md) and [device QA](QUEST_DEVICE_QA.md). |
+| Familiar language-learning chat and full-page book | Original web components, both book layouts, inline artifacts and ribbon bookmark; recorded offline Headless and visible Book journeys against their named desktop Unity sources. A separate production-entry offline English/Spanish lesson covers onboarding, proactive artifact plus image, chat/native/Live composition and a native restart after completed saves. These use scripted provider responses and synthetic microphone input; the focused Book fixture alone does not cover every Live/media controller. | Fresh first-lesson, smalltalk, proactive artifact/tool combinations, image, weather, room actions and text-to-Live continuation on the chosen Quest candidate, through both managed and BYOK providers. See [coverage](QUEST_AGENT_RELEASE_COVERAGE.md) and [device QA](QUEST_DEVICE_QA.md). |
 | Language-first, shared user/agent actions | Shared capability catalog, generated user controls, event-driven programs, traces, cancellation and ownership; deterministic and actual Unity integration coverage. | Real-provider multi-step completion, recovery and understandable learner feedback on the release candidate. Offline execution cannot establish model reliability. |
 | Creation, import and reusable authored worlds | Primitive/recipe/drawing/template creation, GLB/VRM models and motion collections, materials/images, editable constructions and shared saved completion. | Candidate import/rendering, memory pressure, interrupted work and restore acceptance with representative user content. Validate the declared capacity; the current 256 saved creations, 128 native roots, 16 liquid containers, 25-metre bounds and four height fields are not a city-scale promise. See [world authoring](QUEST_WORLD_AUTHORING.md) and [model imports](QUEST_MODEL_IMPORTS.md). |
 | Default Maestro, custom avatars and animation | Included avatar/motions, exact compatible motion IDs, activity/gait bindings, joint posing, recording, shared walk/follow and attention paths; optional exact-model foot fitting through the shared catalog. | Current-candidate motion fidelity, humanoid variety, hands-on posing, transitions and sustained performance. Bounded foot fitting uses a rest-bound shoe-plane estimate with explicit trims; visual calibration, real-headset acceptance and general crowd/interior planning remain unfinished. See [animation authoring](QUEST_ANIMATION_AUTHORING.md) and [library](QUEST_ANIMATION_LIBRARY.md). |
@@ -18088,3 +18088,65 @@ This remains a styled finite surface, without refraction or volumetric optics.
 Transparent overlap ordering, Quest stereo/comfort/performance, full underwater
 presentation and the broader release acceptance remain open. No fresh Android
 candidate, device, real-provider, signing, deployment or Meta action is claimed.
+
+## Complete native and Android checkpoint — 2026-10-28
+
+The full verification at **e55ab20dcb7f2849afd9629fa8a414cfc56a722c**
+finished successfully from 19:03:19 to 20:19:50 UTC. Its source freeze covered
+5,631 files, including the 14 preserved unrelated files; hashes matched before
+and after execution. The separate serial Live/restart follow-up used the same
+unchanged inputs and finished at 20:22:28 UTC.
+
+| Freshly executed scope | Result |
+| --- | --- |
+| Unity EditMode | 1,759 passed |
+| Unity PlayMode, three non-overlapping batches | 2,444 passed; three expected optional private-asset skips |
+| Actual native Headless | `8c596b431c17494cbadeee1b26ee6584` passed |
+| Rendered Book/original-chat integration | `1194696508974e23b7df64e66729bc92` passed |
+| Production first learner and browser reload | `60ee91eca23d4ca2a57eef5c8e90e2ea` passed |
+| Production text-to-Live and native restart | `ee637cddcf0d499b88b7d614d21ed10c` passed |
+| Unsigned Android export and explicit compilation/merging | Succeeded; 22 selected ARM64 libraries meet 16 KiB ELF LOAD alignment |
+
+TestRunner discovery and the coverage gate account for all **4,206 cases**:
+4,203 pass and three skip. The optional external model, humanoid and motion
+fidelity inputs were absent; these skips do not qualify those assets. Every
+journey has matching client/Editor/terminal evidence. The Book journey preserves
+a newer human edit, refuses stale agent paint and reloads without replay.
+
+The production Live/restart run took 87.174 seconds within its wrapper and
+recorded 92 native requests, 457 accepted observations and three completed
+mutations. Chat creates a tree and a separate apple; Live deletes only the exact
+tree. The parent then terminates the owned native process after a clean
+checkpoint and reopens the same workspace in a distinct process. Complete
+directory reads and fresh facts retain original membership plus the same apple,
+without repeating mutations. This run does not interrupt an in-flight write.
+
+The actual browser capture/worklet sends 136 packets / 435,200 PCM bytes.
+All nine delegated Live planning calls receive matching captured media.
+Stop/Pause ends all four acquired audio tracks; the reload has no retained track.
+The pinned local Whisper assets and actual worker are exercised, while model
+replies/transcripts and the microphone are explicitly scripted/synthetic. Two
+external font requests are deliberately blocked. One raw Chromium model-fetch
+abort is retained and reconciled only through full server delivery and exact
+browser-cache bytes. These are not real-provider or speech-quality results.
+
+The web production build also passed. Native-browser Gradle checks succeeded
+with reused up-to-date unit/AAR/lint outputs: 128 passing tests, two skips and
+six lint warnings. Android export has zero errors and five warnings; retained
+logs include chunk-size, Gradle deprecation and manifest merge notices. Five
+unselected dependency libraries remain in the intermediate; final APK filtering
+is not claimed. No APK/AAB, signing or installation was produced.
+
+Evidence is retained in `.quest-evidence/full-integration-20261028/` and
+`.quest-evidence/post-build-live-20261028/`, with explicit completed-stage hashes.
+The former's copied mirror log archive also contains historical files; only
+the fresh inventory/results and named stage reports above qualify this run.
+Both [Release gate](https://github.com/RONITERVO/MaestroTutor/actions/runs/40750217854)
+and [Native echo evaluation](https://github.com/RONITERVO/MaestroTutor/actions/runs/40750217827)
+passed for e55ab20d. The 31 existing aligned audio-quality failures remain open.
+
+These results establish offline composition and compilation, not the complete
+nine-turn real-provider lesson, Android/WebView input or texture, physical scan,
+stereo, acoustics, frame/thermal budgets or Store readiness. All release rows
+above remain open. Installed and packaged candidates, provider/device holds,
+signing, deployment and Meta state are unchanged.

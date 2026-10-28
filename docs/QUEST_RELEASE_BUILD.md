@@ -984,3 +984,35 @@ and exact-source desktop receipts. This geometric query does not implement
 swimming or prove populated-world performance. No APK/AAB, signing, installation,
 provider, deployment or Meta action occurred. Installed **D85F3CB7 / f58dab48**,
 packaged **5899972E / 5100f612**, holds and broader release gates remain unchanged.
+
+## Full integration compile checkpoint — 2026-10-28
+
+Frozen source **e55ab20dcb7f2849afd9629fa8a414cfc56a722c** passed the complete
+native inventory (1,759 EditMode and 2,444 PlayMode passes, three optional
+private-asset skips), actual Headless, Book and production first-learner journeys,
+then a fresh web build and unsigned Android export/compilation. A separate
+serial production text-to-Live/native-restart journey subsequently passed with
+the same 5,631 frozen input hashes. See the
+[full evidence boundary](QUEST_V1_PLAN.md#complete-native-and-android-checkpoint--2026-10-28).
+
+The owned export is
+`D:/Projects/Builds/MaestroQuestVerify/Builds/Android-compile-20261028-201417-ae877507`.
+Its report records Unity 6000.3.24f1, zero errors, five warnings and a successful
+development-only export. Explicit Gradle compilation/merge tasks succeeded.
+The merged manifest contains `com.maestro.quest.development`, one GameActivity,
+Quest 3 only, minimum API 32 and target API 34. That target matches Meta's
+[release manifest requirements](https://developers.meta.com/vr/resources/publish-mobile-manifest/)
+as checked on October 28 (page updated October 15).
+
+All 22 selected ARM64 libraries pass 16 KiB ELF LOAD alignment; five unselected
+dependency libraries remain in the intermediate. Final package filtering is
+not verified. Native-browser test/AAR/lint outputs were up-to-date and reused:
+128 passes/two skips, zero lint errors and six lint warnings. Web chunk-size,
+Gradle deprecation and manifest merge warnings remain in the retained logs.
+
+`.quest-evidence/full-integration-20261028/completed-android.json` identifies
+the export, manifest, library hashes and completed log hashes. Its `run.json`
+records the successful wrapper completion. No APK/AAB, signing, installation,
+provider call, deployment or Meta action occurred. Installed **D85F3CB7 / f58dab48**
+and packaged **5899972E / 5100f612** remain unchanged; physical and release
+acceptance remain open.

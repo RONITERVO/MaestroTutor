@@ -309,6 +309,31 @@ successful execution certifies neither speech nor device quality. The original
 causal limits remain in `.quest-evidence/echo-passive-trace-20261026/attempt3/` and
 `attempt4b-history/`. No private upstream patch or recorded voice is shipped.
 
+## Mobile-AEC screening — 2026-10-28
+
+A private relink first reproduced all 39 aligned and 40 standalone measured32
+metrics. The screened replacement enables APM mobile mode and omits the custom
+EchoControl factory, which would otherwise override that selection. It uses the
+pinned upstream AECM with its default speakerphone route and comfort noise off.
+
+All **39 aligned cases fail**, compared with 31 baseline failures: all eight
+existing passes are lost and no new case passes. The candidate is rejected.
+Its standalone core runner stops at its first failing echo case; seven remaining
+core cases are unrun. Other groups complete with noise 1/1, onset 3/5, path 2/2
+and delay 24/24 failures. This is not a complete 40-case candidate result.
+
+A separate direct-API control compares WebRtcAecm with APM mobile mode using the
+same 16 kHz, 40 ms delayed echo-only input and a 10–20 second measurement window.
+White-noise reduction is approximately .071/.133 dB; two-tone reduction is
+.071/.078 dB respectively. It provides no evidence that changing only the APM
+wrapper fixes this candidate. It does not isolate the failure's cause or prove
+that all possible AECM integrations are unsuitable.
+
+Commands, hashes, full results and the direct control are retained in
+`.quest-evidence/echo-mobile-20261028/`. The previous evidence authority, app DSP,
+dependency source, original thresholds and 14 unrelated files are unchanged.
+No backend is promoted; the original 31 aligned quality failures remain open.
+
 ## Decision
 
 Keep one shared capture/output ownership and timing contract. Keep both the cold
