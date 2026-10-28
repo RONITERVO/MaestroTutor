@@ -18189,3 +18189,15 @@ visibility. Tint/refraction, underwater audio treatment, Quest stereo/comfort an
 performance remain unfinished. The complete integration/Android evidence above
 belongs to e55ab20d, not this later source. No new device, real-provider, signing,
 deployment or Meta action was taken.
+
+### Finite-water provenance correction — 2026-10-28
+
+CI for 8189b862 correctly rejected the omitted native source provenance update.
+A fresh Unity export includes the new LiquidSegment helper and the two changed
+geometry files; every catalog definition remains identical. The local source
+verifier and all 17 BehaviourCatalog EditMode tests pass. This corrects the
+generated record, without changing the runtime verified above. Retained evidence:
+`.quest-evidence/liquid-segments-20261028/catalog-export.log`,
+`catalog-editmode.xml` and the before/after native catalog JSON. The failed
+[release job](https://github.com/RONITERVO/MaestroTutor/actions/runs/40767509931/job/123095516356)
+is not counted as a passing release gate.

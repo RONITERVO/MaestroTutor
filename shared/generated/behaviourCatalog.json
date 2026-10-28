@@ -50906,7 +50906,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidMediumGeometry.cs",
-      "sha256": "60da2a150ec4407b9856255bba94346f3bb890b4d9cb5a1da898a3944bae42fc"
+      "sha256": "c2285195441202c7493bb8e4c250675405389b449664f7032adf98a2748818d2"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidMediumPhysics.cs",
@@ -50927,6 +50927,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidRouteFootprint.cs",
       "sha256": "9a175a8f7c753c8e5be7871439cc3139a555bbc132f96b9acf87ae11f8b48a7d"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidSegment.cs",
+      "sha256": "f30003022bce1e7378070d9eb0a696df65457cbd2f620d225eb5d1745718b32c"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidStreamGeometry.cs",
@@ -51786,7 +51790,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/TerrainLiquidSurfaceQueries.cs",
-      "sha256": "540d8d8596e0769e06747ce56801af818a949e846703dfcce3e686606d0f2faf"
+      "sha256": "efcdb73c90a29fbc989524b6c06a94f34484681c22ce904e406e608bb5a3dd05"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/VersionedRoomFile.cs",
