@@ -2204,3 +2204,54 @@ plus fresh host/profile recovery. Both OS processes and the native session stay
 alive. It does not qualify an OS crash, native restart during execution, an
 interrupted file publication, rendered chat recovery, headset input or real
 provider judgment. The separate completed-save restart proof remains unchanged.
+
+
+### Process termination during a running action
+
+Use the separate offline `-Journey Headless -ActionInterruption` mode with the
+same required Editor and owned BuildMirror arguments. Do not combine it with
+NativeRestart, FirstLearner, provider, asset, resume or other focused modes.
+It starts a fresh English-to-Spanish headless profile and native workspace.
+
+The production tutor/verifier/task path receives a simple thirty-second wave
+request. Scripted provider streams inspect the animation capability, Maestro's
+definition and clean persistence state, then start one real native action. After
+Unity acknowledges `running` and the task commits that receipt, the next planner
+request stays pending. The fixture does not inject a save, cancel, failure
+response, shutdown callback or journal repair. It records the actual source
+journal and profile hashes, native issued run ID and pending provider request.
+
+The parent validates its exact Node handle by PID and OS creation time, checks
+the live native action, kills that client and confirms its exit. It freezes
+another native `running` observation, then kills the exact owned Unity process.
+Both old processes must exit before their replacements. The client is launched
+directly with `node --import tsx`, so the owned PID is the actual TypeScript
+process rather than an intermediate launcher. No device ADB or provider is used.
+
+The new Unity process opens the original workspace in place. The new client
+opens the original profile in place; its profile and task-journal bytes must
+match the hashes taken before termination. Production restoration projects an
+interrupted, read-only task into chat and rejects reuse of the old claim or
+handoff, with no provider call or agent dispatch. Complete native directory
+reads separately verify unchanged saved world membership and a new session.
+
+A new learner request asks only what happened. The shared tutor/verifier/task
+path inspects the original run ID and must receive `interrupted`, with the
+original call/resources and no result or running animation. Exactly one action
+start is permitted across both processes. The old journal stays unchanged;
+the fresh inspection task has its own completed read receipt.
+
+`action-interruption-source.json`, `action-interruption-native.json`,
+`client-restart.json`, `restart.json` and `action-interruption-result.json`
+retain the boundary and recovery evidence. The independent final gate compares
+those files with both native ready receipts. The wrapper also requires the
+resumed client, Editor and native terminal to exit successfully. CI checks
+positive and misleading-report cases and the pure PowerShell contracts; local
+Unity admission tests and this actual two-process run provide native coverage.
+
+This qualifies abrupt desktop process loss during an acknowledged timed action
+with clean room/behaviour stores. It does not qualify death during file
+publication, native program continuation, browser/WebView task restoration,
+Android process death, actual provider judgment or physical headset behavior.
+The completed-save production Book/Live restart and lost-acknowledgement tests
+remain separate scenarios.

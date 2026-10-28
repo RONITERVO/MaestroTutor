@@ -3,6 +3,7 @@
 param([string]$ReportPath)
 $ErrorActionPreference='Stop'
 . (Join-Path $PSScriptRoot 'QuestProbeRestart.ps1')
+. (Join-Path $PSScriptRoot 'QuestProbeActionInterruption.ps1')
 $cases=[Collections.Generic.List[object]]::new()
 function Check([string]$Name,[scriptblock]$Action,[bool]$Accepted=$true){
  $failure=$null;try{& $Action | Out-Null}catch{$failure=$_.Exception.Message}
@@ -84,9 +85,9 @@ try{
  $wrapper=Join-Path $PSScriptRoot 'Run-QuestRoomProbe.ps1';$tokens=$null;$errors=$null
  $ast=[Management.Automation.Language.Parser]::ParseFile($wrapper,[ref]$tokens,[ref]$errors)
  if($errors.Count){throw ($errors | Out-String)}
- $guards=$ast.FindAll({param($node)$node -is [Management.Automation.Language.IfStatementAst] -and ($node.Extent.Text.StartsWith('if($NativeRestart -and') -or $node.Extent.Text.StartsWith('if($LiveContinuity -and') -or $node.Extent.Text.StartsWith('if($FirstLearner -and'))},$true)
- if($guards.Count -ne 3){throw 'Missing exact early offline restart guards'}
- function Check-Admission([string]$Name,[hashtable]$Values,[bool]$Accepted){Check $Name {& {param($Values,$Guards)$NativeRestart=$false;$FirstLearner=$false;$LiveContinuity=$false;$Journey='Headless';foreach($key in $Values.Keys){Set-Variable -Name $key -Value $Values[$key]};foreach($guard in $Guards){. ([scriptblock]::Create($guard.Extent.Text))}} $Values $guards} $Accepted}
+ $guards=$ast.FindAll({param($node)$node -is [Management.Automation.Language.IfStatementAst] -and ($node.Extent.Text.StartsWith('if($ActionInterruption -and') -or $node.Extent.Text.StartsWith('if($NativeRestart -and') -or $node.Extent.Text.StartsWith('if($LiveContinuity -and') -or $node.Extent.Text.StartsWith('if($FirstLearner -and'))},$true)
+ if($guards.Count -ne 4){throw 'Missing exact early offline restart guards'}
+ function Check-Admission([string]$Name,[hashtable]$Values,[bool]$Accepted){Check $Name {& {param($Values,$Guards)$ActionInterruption=$false;$NativeRestart=$false;$FirstLearner=$false;$LiveContinuity=$false;$Journey='Headless';foreach($key in $Values.Keys){Set-Variable -Name $key -Value $Values[$key]};foreach($guard in $Guards){. ([scriptblock]::Create($guard.Extent.Text))}} $Values $guards} $Accepted}
  Check-Admission 'ordinary-headless-unmodified' @{} $true
  Check-Admission 'ordinary-book-unmodified' @{Journey='Book'} $true
  Check-Admission 'ordinary-live-unmodified' @{Journey='Book';FirstLearner=$true;LiveContinuity=$true} $true
@@ -95,7 +96,40 @@ try{
  Check-Admission 'restart-requires-book' @{Journey='Headless';FirstLearner=$true;LiveContinuity=$true;NativeRestart=$true} $false
  foreach($option in @('ProviderScenario','Prompt','SpeechFixture','ResumeIdentityRun','ResumeLearnerRun','TransportOnly','MotionOnly','SteeringOnly','IdentityOnly','SparseObjectView','SyntheticRoomScan','SyntheticSound','SyntheticLiveSound','SyntheticImage','SyntheticModel','SyntheticGait')){$values=@{Journey='Book';FirstLearner=$true;LiveContinuity=$true;NativeRestart=$true};$values[$option]=$(if($option -in @('ProviderScenario','Prompt','SpeechFixture','ResumeIdentityRun','ResumeLearnerRun')){'forbidden'}else{$true});Check-Admission "restart-rejects-$option" $values $false}
  $source=[IO.File]::ReadAllText($wrapper)
- Check 'owner-and-final-receipt-record-mode' {if([regex]::Matches($source,'nativeRestart=\[bool\]\$NativeRestart').Count -ne 2){throw 'Missing mode receipt'}}
+ Check 'owner-and-final-receipt-record-mode' {if([regex]::Matches($source,'nativeRestart=\[bool\]\$restarting').Count -ne 2){throw 'Missing mode receipt'}}
+
+ Check-Admission 'explicit-action-interruption-admitted' @{ActionInterruption=$true} $true
+ foreach($option in @('NativeRestart','FirstLearner','LiveContinuity','ProviderScenario','Prompt','SpeechFixture','ResumeIdentityRun','ResumeLearnerRun','TransportOnly','MotionOnly','SteeringOnly','IdentityOnly','SparseObjectView','SyntheticRoomScan','SyntheticSound','SyntheticLiveSound','SyntheticImage','SyntheticModel','SyntheticGait')){
+  $values=@{ActionInterruption=$true};$values[$option]=$(if($option -in @('ProviderScenario','Prompt','SpeechFixture','ResumeIdentityRun','ResumeLearnerRun')){'forbidden'}else{$true})
+  Check-Admission "action-rejects-$option" $values $false
+ }
+ Check-Admission 'action-rejects-book' @{ActionInterruption=$true;Journey='Book'} $false
+ function ActionRequest {$r=Request;$r.version=2;$r.Remove('appleId');$r.Remove('treeId');$r.runId='5'*32;$r.taskId='room-task:assistant';return $r}
+ Check 'action-request-admitted' {Assert-QuestProbeRestartRequest (ActionRequest) $probe}
+ foreach($field in @('runId','taskId','version')){Check "action-invalid-$field" {$r=ActionRequest;$r[$field]='../wrong';Assert-QuestProbeRestartRequest $r $probe} $false}
+ Check 'action-rejects-old-object-fields' {$r=ActionRequest;$r.appleId='7'*32;Assert-QuestProbeRestartRequest $r $probe} $false
+ function Boundary {
+  $r=ActionRequest
+  return @{request=$r;source=@{version=1;phase='awaiting-process-termination';nodeProcessId=123;request=$r};envelope=@{version=1;id=$probe;clientId=$r.clientId;state=@{session=$r.nativeSession;execution=@{selected=@{id=$r.runId;phase='running';capability='animation.play'};running=@(@{id=$r.runId;phase='running'})}}}}
+ }
+ Check 'running-owned-action-boundary' {$f=Boundary;Assert-QuestActionInterruptionBoundary $f.request $f.source $f.envelope $expected $probe}
+ foreach($change in @('process','session','client','probe','selected','finished','missing-running','cleanup')){
+  Check "action-boundary-rejects-$change" {
+   $f=Boundary
+   switch($change){
+    process {$f.source.nodeProcessId=999}
+    session {$f.envelope.state.session='8'*32}
+    client {$f.envelope.clientId='8'*32}
+    probe {$f.envelope.id='8'*32}
+    selected {$f.envelope.state.execution.selected.id='8'*32}
+    finished {$f.envelope.state.execution.selected.phase='completed'}
+    missing-running {$f.envelope.state.execution.running=@()}
+    cleanup {$f.source.phase='completed'}
+   }
+   Assert-QuestActionInterruptionBoundary $f.request $f.source $f.envelope $expected $probe
+  } $false
+ }
+
  $report=@{status='passed';mode='Pure restart validation and extracted wrapper admission only; no native/browser/process lifecycle launched';cases=$cases;helperSha256=(Get-FileHash -LiteralPath (Join-Path $PSScriptRoot 'QuestProbeRestart.ps1')).Hash;wrapperSha256=(Get-FileHash -LiteralPath $wrapper).Hash}
  if($ReportPath){$report | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath $ReportPath -Encoding utf8}
  Write-Output "Passed $($cases.Count) restart contracts; no runtime launched."

@@ -22,11 +22,13 @@ namespace Maestro.Quest.Editor
             Need(Version(owner)&&GuidId(owner,"id"),"Invalid probe owner.");
             bool restart=owner.Property("restartOf")!=null;
             if(!restart){
+                if(owner.Property("actionInterruption")!=null)Need(owner["actionInterruption"].Type==JTokenType.Boolean,"Invalid action interruption flag.");
+                if(Enabled(owner,"actionInterruption"))Need(RestartMode(owner),"Action interruption requires explicit native restart.");
                 if(owner.Property("nativeRestart")!=null)Need(owner["nativeRestart"].Type==JTokenType.Boolean,"Invalid native restart flag.");
-                if(Enabled(owner,"nativeRestart"))Need(Enabled(owner,"firstLearner")&&Enabled(owner,"liveContinuity"),"Native restart requires the production Live learner mode.");
+                if(Enabled(owner,"nativeRestart"))Need(RestartMode(owner),"Native restart requires an explicit supported journey mode.");
                 return new QuestRoomProbeRestart(Path.Combine(directory,"workspace"),"");
             }
-            Need(Enabled(owner,"nativeRestart")&&Enabled(owner,"firstLearner")&&Enabled(owner,"liveContinuity")&&GuidId(owner,"restartOf"),"Invalid restart child owner.");
+            Need(RestartMode(owner)&&GuidId(owner,"restartOf"),"Invalid restart child owner.");
             var parent=Directory.GetParent(directory)?.FullName;
             Need(parent!=null&&SamePath(directory,Path.Combine(parent,"restart")),"Restart is permitted only in the direct restart child.");
             Need((string)owner["id"]!=(string)owner["restartOf"],"A restart needs a fresh owner identity.");
@@ -38,7 +40,7 @@ namespace Maestro.Quest.Editor
             Need(!Exists(Path.Combine(parent,"terminal.json")),"A checkpointed interruption cannot have a source terminal receipt.");
             var sourceOwner=Read(parent,"owner.json");
             Need(Version(sourceOwner)&&GuidId(sourceOwner,"id")&&(string)sourceOwner["id"]==(string)owner["restartOf"]&&sourceOwner.Property("restartOf")==null,"Wrong original probe owner.");
-            Need(Enabled(sourceOwner,"nativeRestart")&&Enabled(sourceOwner,"firstLearner")&&Enabled(sourceOwner,"liveContinuity"),"The source did not opt into native restart.");
+            Need(RestartMode(sourceOwner)&&Enabled(sourceOwner,"actionInterruption")==Enabled(owner,"actionInterruption"),"The source did not opt into native restart.");
             var receipt=Read(parent,"restart.json");
             Need(Version(receipt)&&Text(receipt,"id")==Text(sourceOwner,"id")&&Text(receipt,"method")=="terminate-after-checkpoint","Invalid restart receipt.");
             Need(SamePath(Text(receipt,"workspace"),workspace),"Restart must use the exact original workspace.");
@@ -55,13 +57,19 @@ namespace Maestro.Quest.Editor
             string hash=BitConverter.ToString(digest.ComputeHash(bytes)).Replace("-","").ToLowerInvariant();
             Need(Text(receipt,"requestSha256")==hash,"The restart request changed after checkpointing.");
             var request=Parse(bytes);
-            Need(Version(request)&&Text(request,"id")==Text(sourceOwner,"id")&&Text(request,"operation")=="restart","Wrong restart request owner or operation.");
-            foreach(var key in new[]{"clientId","nativeSession","appleId","treeId"})Need(GuidId(request,key),"Missing restart checkpoint identity.");
-            Need(Text(request,"appleId")!=Text(request,"treeId"),"Independent tree and apple identities are required.");
+            bool action=Enabled(owner,"actionInterruption");
+            Need(request["version"]?.Type==JTokenType.Integer&&Integer(request,"version")==(action?2:1)&&Text(request,"id")==Text(sourceOwner,"id")&&Text(request,"operation")=="restart","Wrong restart request owner or operation.");
+            foreach(var key in action?new[]{"clientId","nativeSession","runId"}:new[]{"clientId","nativeSession","appleId","treeId"})Need(GuidId(request,key),"Missing restart checkpoint identity.");
+            if(action){
+                Need(request.Properties().Count()==8&&System.Text.RegularExpressions.Regex.IsMatch(Text(request,"taskId")??"","^room-task:[a-zA-Z0-9:_-]{1,200}$"),"Invalid interrupted task identity.");
+            }else Need(Text(request,"appleId")!=Text(request,"treeId"),"Independent tree and apple identities are required.");
             var checkpoint=request["checkpoint"] as JObject;
             Need(checkpoint!=null&&checkpoint.Properties().Count()==2&&Clean(checkpoint["room"] as JObject)&&Clean(checkpoint["behaviours"] as JObject),"Restart requires both durable stores to be clean and unheld.");
             return new QuestRoomProbeRestart(workspace,Text(sourceOwner,"id"));
         }
+        static bool RestartMode(JObject value)=>Enabled(value,"nativeRestart")&&
+            (Enabled(value,"actionInterruption")?Disabled(value,"firstLearner")&&Disabled(value,"liveContinuity"):
+            (value.Property("actionInterruption")==null||Disabled(value,"actionInterruption"))&&Enabled(value,"firstLearner")&&Enabled(value,"liveContinuity"));
         static bool Clean(JObject store)=>store!=null&&store.Properties().Count()==5&&Text(store,"phase")=="idle"&&Disabled(store,"pending")&&Disabled(store,"dirty")&&Disabled(store,"dispatchHeld")&&Text(store,"error")=="";
         static bool Enabled(JObject value,string key)=>value?[key]?.Type==JTokenType.Boolean&&(bool)value[key];
         static bool Disabled(JObject value,string key)=>value?[key]?.Type==JTokenType.Boolean&&!(bool)value[key];

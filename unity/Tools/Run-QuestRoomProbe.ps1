@@ -18,6 +18,7 @@ param(
  [switch]$FirstLearner,
  [switch]$LiveContinuity,
  [switch]$NativeRestart,
+ [switch]$ActionInterruption,
  [switch]$TransportOnly,
  [switch]$MotionOnly,
  [switch]$SteeringOnly,
@@ -27,13 +28,16 @@ param(
  [ValidateSet('Headless','Book')][string]$Journey = 'Headless'
 )
 $ErrorActionPreference='Stop'
+$restarting=$NativeRestart -or $ActionInterruption
+if($ActionInterruption -and ($NativeRestart -or $FirstLearner -or $LiveContinuity -or $Journey -ne 'Headless' -or $ProviderScenario -or ![string]::IsNullOrWhiteSpace($Prompt) -or $SpeechFixture -or $ResumeLearnerRun -or $ResumeIdentityRun -or $TransportOnly -or $MotionOnly -or $SteeringOnly -or $IdentityOnly -or $SparseObjectView -or $SyntheticRoomScan -or $SyntheticSound -or $SyntheticLiveSound -or $SyntheticImage -or $SyntheticModel -or $SyntheticGait)){throw 'ActionInterruption requires its separate offline Headless mode without other journey options.'}
 if($NativeRestart -and (!$LiveContinuity -or !$FirstLearner -or $Journey -ne 'Book')){throw 'NativeRestart requires the explicit offline Journey Book FirstLearner LiveContinuity mode.'}
 if($LiveContinuity -and (!$FirstLearner -or $Journey -ne 'Book')){throw 'LiveContinuity requires the explicit offline Journey Book FirstLearner mode.'}
 if($FirstLearner -and ($Journey -ne 'Book' -or $ProviderScenario -or ![string]::IsNullOrWhiteSpace($Prompt) -or $SpeechFixture -or $ResumeLearnerRun -or $ResumeIdentityRun -or $TransportOnly -or $MotionOnly -or $SteeringOnly -or $IdentityOnly -or $SparseObjectView -or $SyntheticRoomScan -or $SyntheticSound -or $SyntheticLiveSound -or $SyntheticImage -or $SyntheticModel -or $SyntheticGait)){throw 'FirstLearner requires offline Journey Book without provider, resume, focused or synthetic asset options.'}
 # A successful ordinary learner result must never qualify the separate Live journey.
 # This pure check is also exercised without starting a browser or native Editor.
 . (Join-Path $PSScriptRoot 'Assert-QuestLiveContinuity.ps1')
-if($NativeRestart){. (Join-Path $PSScriptRoot 'QuestProbeRestart.ps1')}
+if($restarting){. (Join-Path $PSScriptRoot 'QuestProbeRestart.ps1')}
+if($ActionInterruption){. (Join-Path $PSScriptRoot 'QuestProbeActionInterruption.ps1')}
 
 if($TransportOnly -and ($IdentityOnly -or $MotionOnly -or $SteeringOnly -or $Journey -ne 'Headless' -or $ProviderScenario -or ![string]::IsNullOrWhiteSpace($Prompt) -or $ResumeLearnerRun -or $ResumeIdentityRun)){throw 'TransportOnly is an offline Headless wire-boundary fixture; other focused, provider, Book and resume modes are excluded.'}
 if($IdentityOnly -and ($MotionOnly -or $SteeringOnly -or $Journey -ne 'Headless' -or $ProviderScenario -or ![string]::IsNullOrWhiteSpace($Prompt) -or $ResumeLearnerRun)){throw 'IdentityOnly is an offline Headless fixture; other focused, provider, Book and learner resume modes are excluded.'}
@@ -86,7 +90,7 @@ if($LiveContinuity){
  if($LASTEXITCODE -ne 0){throw 'Offline Live speech assets are missing or invalid; no Editor was started. See QUEST_NATIVE_ROOM_PROBE.md.'}
 }
 $restartNode=$null;$restartTsx=$null
-if($NativeRestart){
+if($restarting){
  $restartNode=(Get-Command node -CommandType Application -ErrorAction Stop | Select-Object -First 1).Source
  $restartTsx=Join-Path $repoRoot 'node_modules/tsx/dist/cli.mjs'
  if(!(Test-Path -LiteralPath $restartNode -PathType Leaf) -or !(Test-Path -LiteralPath $restartTsx -PathType Leaf)){throw 'NativeRestart requires the installed Node and tsx CLI before starting an Editor.'}
@@ -106,7 +110,7 @@ foreach($running in Get-CimInstance Win32_Process -Filter "Name='Unity.exe'"){
 }
 $id=[Guid]::NewGuid().ToString('N');$directory=Join-Path $repoRoot ".quest-evidence/native-room/$id"
 New-Item -ItemType Directory -Path $directory | Out-Null
-@{version=1;id=$id;firstLearner=[bool]$FirstLearner;liveContinuity=[bool]$LiveContinuity;nativeRestart=[bool]$NativeRestart;sparseObjectView=[bool]$SparseObjectView;motionOnly=[bool]$MotionOnly;steeringOnly=[bool]$SteeringOnly;identityOnly=[bool]$IdentityOnly;transportOnly=[bool]$TransportOnly} | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $directory 'owner.json') -Encoding utf8
+@{version=1;id=$id;firstLearner=[bool]$FirstLearner;liveContinuity=[bool]$LiveContinuity;nativeRestart=[bool]$restarting;actionInterruption=[bool]$ActionInterruption;sparseObjectView=[bool]$SparseObjectView;motionOnly=[bool]$MotionOnly;steeringOnly=[bool]$SteeringOnly;identityOnly=[bool]$IdentityOnly;transportOnly=[bool]$TransportOnly} | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $directory 'owner.json') -Encoding utf8
 if($ResumeIdentityRun){
  $previousRun=Join-Path $repoRoot ".quest-evidence/native-room/$ResumeIdentityRun"
  $previousOwner=Get-Content -LiteralPath (Join-Path $previousRun 'owner.json') -Raw | ConvertFrom-Json
@@ -145,18 +149,29 @@ $activeDirectory=$directory;$activeId=$id;$initialLog=$log;$clientProcess=$null;
 $initialIdentity=$null
 $previousPrompt=$env:MAESTRO_ROOM_PROBE_PROMPT;$previousProfile=$env:MAESTRO_ROOM_PROBE_PROFILE;$previousScenario=$env:MAESTRO_ROOM_PROBE_SCENARIO;$previousSpeech=$env:MAESTRO_ROOM_PROBE_SPEECH
 try{
- if($NativeRestart){$initialIdentity=Get-QuestProbeProcessIdentity $process}
+ if($restarting){$initialIdentity=Get-QuestProbeProcessIdentity $process}
  $env:MAESTRO_ROOM_PROBE_PROMPT=$Prompt;$env:MAESTRO_ROOM_PROBE_PROFILE=$Profile;$env:MAESTRO_ROOM_PROBE_SCENARIO=$ProviderScenario;$env:MAESTRO_ROOM_PROBE_SPEECH=$SpeechFixture
  Push-Location $repoRoot
  try{
-  $clientScript=$(if($LiveContinuity){'scripts/probe-quest-first-learner-live.ts'}elseif($FirstLearner){'scripts/probe-quest-first-learner-native.ts'}elseif($TransportOnly){'scripts/probe-room-transport.ts'}elseif($ProviderScenario -eq 'LearnerConversation'){'scripts/probe-learner-room.ts'}elseif($Journey -eq 'Book' -and $ProviderScenario){'scripts/probe-provider-book.ts'}elseif($Journey -eq 'Book'){'scripts/probe-native-book.ts'}else{'scripts/probe-native-room.ts'})
-  if($NativeRestart){
-   $clientProcess=Start-Process -FilePath $restartNode -WindowStyle Hidden -PassThru -WorkingDirectory $repoRoot -ArgumentList @(('"'+$restartTsx+'"'),('"'+(Join-Path $repoRoot $clientScript)+'"'),('"'+$directory+'"')) -RedirectStandardOutput (Join-Path $directory 'client.log') -RedirectStandardError (Join-Path $directory 'client-errors.log')
+  $clientScript=$(if($ActionInterruption){'scripts/probe-quest-action-interruption.ts'}elseif($LiveContinuity){'scripts/probe-quest-first-learner-live.ts'}elseif($FirstLearner){'scripts/probe-quest-first-learner-native.ts'}elseif($TransportOnly){'scripts/probe-room-transport.ts'}elseif($ProviderScenario -eq 'LearnerConversation'){'scripts/probe-learner-room.ts'}elseif($Journey -eq 'Book' -and $ProviderScenario){'scripts/probe-provider-book.ts'}elseif($Journey -eq 'Book'){'scripts/probe-native-book.ts'}else{'scripts/probe-native-room.ts'})
+  if($restarting){
+   $startActionClient={param([string]$phase)
+    Start-Process -FilePath $restartNode -WindowStyle Hidden -PassThru -WorkingDirectory $repoRoot -ArgumentList @('--import','tsx',('"'+(Join-Path $repoRoot $clientScript)+'"'),('"'+$directory+'"'),$phase) -RedirectStandardOutput (Join-Path $directory ('client-'+$phase+'.log')) -RedirectStandardError (Join-Path $directory ('client-'+$phase+'-errors.log'))
+   }
+   if($ActionInterruption){$clientProcess=& $startActionClient 'source';$clientIdentity=Get-QuestProbeProcessIdentity $clientProcess}
+   else{$clientProcess=Start-Process -FilePath $restartNode -WindowStyle Hidden -PassThru -WorkingDirectory $repoRoot -ArgumentList @(('"'+$restartTsx+'"'),('"'+(Join-Path $repoRoot $clientScript)+'"'),('"'+$directory+'"')) -RedirectStandardOutput (Join-Path $directory 'client.log') -RedirectStandardError (Join-Path $directory 'client-errors.log')}
    $clientDeadline=[DateTime]::UtcNow.AddMinutes(15)
    while(!$clientProcess.WaitForExit(250)){
     if(!$restart -and (Test-Path -LiteralPath (Join-Path $directory 'restart-request.json'))){
-     $restart=Invoke-QuestProbeNativeRestart -Process $process -Identity $initialIdentity -RootDirectory $directory -ProbeId $id -Launch $startEditor
+     if($ActionInterruption){$clientReceipt=Stop-QuestActionInterruptionClient -Process $clientProcess -Identity $clientIdentity -RootDirectory $directory -ProbeId $id}
+     $restart=Invoke-QuestProbeNativeRestart -Process $process -Identity $initialIdentity -RootDirectory $directory -ProbeId $id -Launch $startEditor -ActionInterruption:$ActionInterruption
      $process=$restart.process;$activeDirectory=$restart.directory;$activeId=$restart.id;$log=$restart.log
+     if($ActionInterruption){
+      $clientProcess=& $startActionClient 'resume';$resumedClient=Get-QuestProbeProcessIdentity $clientProcess
+      if($resumedClient.hasExited -or $resumedClient.processId -eq $clientIdentity.processId -or $resumedClient.startedAt -lt $clientReceipt.source.exitedAt){throw 'Invalid resumed client process.'}
+      $clientReceipt.resumed=@{processId=$resumedClient.processId;startedAt=$resumedClient.startedAt}
+      Write-QuestProbeRestartJson (Join-Path $directory 'client-restart.json') $clientReceipt
+     }
     }
     if([DateTime]::UtcNow -gt $clientDeadline){throw "Native restart client exceeded its bounded duration. Evidence: $directory"}
    }
@@ -192,9 +207,13 @@ try{
    if($LASTEXITCODE -ne 0){throw "Native process restart evidence failed. Evidence: $directory"}
   }
  }
- if($NativeRestart){& (Join-Path $PSScriptRoot 'Assert-QuestUnityLog.ps1') -LogPath $initialLog}
+ if($ActionInterruption){
+  & $runner (Join-Path $repoRoot 'scripts/assert-quest-action-interruption.ts') $directory
+  if($LASTEXITCODE -ne 0){throw "Action interruption evidence failed. Evidence: $directory"}
+ }
+ if($restarting){& (Join-Path $PSScriptRoot 'Assert-QuestUnityLog.ps1') -LogPath $initialLog}
  & (Join-Path $PSScriptRoot 'Assert-QuestUnityLog.ps1') -LogPath $log
- @{version=1;id=$id;clientExit=$clientExit;editorExit=$process.ExitCode;directory=$directory;providerUsed=![string]::IsNullOrWhiteSpace($Prompt);journey=$Journey;firstLearner=[bool]$FirstLearner;liveContinuity=[bool]$LiveContinuity;nativeRestart=[bool]$NativeRestart;sparseObjectView=[bool]$SparseObjectView;motionOnly=[bool]$MotionOnly;steeringOnly=[bool]$SteeringOnly;identityOnly=[bool]$IdentityOnly;transportOnly=[bool]$TransportOnly;providerScenario=$ProviderScenario;outcome=$(if($ProviderScenario -eq 'LearnerConversation'){'collected-requires-semantic-review'}else{'passed'});resumedFrom=$(if($ResumeIdentityRun){$ResumeIdentityRun}else{$ResumeLearnerRun})} | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $directory 'verified.json')
+ @{version=1;id=$id;clientExit=$clientExit;editorExit=$process.ExitCode;directory=$directory;providerUsed=![string]::IsNullOrWhiteSpace($Prompt);journey=$Journey;firstLearner=[bool]$FirstLearner;liveContinuity=[bool]$LiveContinuity;nativeRestart=[bool]$restarting;actionInterruption=[bool]$ActionInterruption;sparseObjectView=[bool]$SparseObjectView;motionOnly=[bool]$MotionOnly;steeringOnly=[bool]$SteeringOnly;identityOnly=[bool]$IdentityOnly;transportOnly=[bool]$TransportOnly;providerScenario=$ProviderScenario;outcome=$(if($ProviderScenario -eq 'LearnerConversation'){'collected-requires-semantic-review'}else{'passed'});resumedFrom=$(if($ResumeIdentityRun){$ResumeIdentityRun}else{$ResumeLearnerRun})} | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $directory 'verified.json')
  if($ProviderScenario -eq 'LearnerConversation'){Write-Output "Learner session collected (manual outcome review required): $directory"}else{Write-Output "Native room probe passed: $directory"}
 }finally{
  $env:MAESTRO_ROOM_PROBE_PROMPT=$previousPrompt;$env:MAESTRO_ROOM_PROBE_PROFILE=$previousProfile;$env:MAESTRO_ROOM_PROBE_SCENARIO=$previousScenario;$env:MAESTRO_ROOM_PROBE_SPEECH=$previousSpeech

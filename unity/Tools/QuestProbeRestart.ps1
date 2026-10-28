@@ -10,10 +10,12 @@ function Test-QuestProbeRestartInteger($Value){
  return ($Value -is [int] -or $Value -is [long]) -and $Value -ge 0 -and $Value -le 9007199254740991
 }
 function Assert-QuestProbeRestartRequest($Request,[string]$ProbeId){
- Assert-QuestProbeRestartKeys $Request @('version','id','operation','clientId','nativeSession','appleId','treeId','checkpoint')
- if(!(Test-QuestProbeRestartInteger $Request.version) -or $Request.version -ne 1 -or $ProbeId -cnotmatch '^[a-f0-9]{32}$' -or $Request.id -isnot [string] -or $Request.id -cne $ProbeId -or $Request.operation -isnot [string] -or $Request.operation -cne 'restart'){throw 'Restart request has the wrong owner or operation.'}
- foreach($name in @('clientId','nativeSession','appleId','treeId')){if($Request.$name -isnot [string] -or $Request.$name -cnotmatch '^[a-f0-9]{32}$'){throw "Invalid restart identity: $name"}}
- if($Request.appleId -ceq $Request.treeId){throw 'Restart must preserve distinct tree and apple identities.'}
+ $action=$Request.version -ceq 2
+ Assert-QuestProbeRestartKeys $Request $(if($action){@('version','id','operation','clientId','nativeSession','runId','taskId','checkpoint')}else{@('version','id','operation','clientId','nativeSession','appleId','treeId','checkpoint')})
+ if(!(Test-QuestProbeRestartInteger $Request.version) -or $Request.version -notin @(1,2) -or $ProbeId -cnotmatch '^[a-f0-9]{32}$' -or $Request.id -isnot [string] -or $Request.id -cne $ProbeId -or $Request.operation -isnot [string] -or $Request.operation -cne 'restart'){throw 'Restart request has the wrong owner or operation.'}
+ foreach($name in $(if($action){@('clientId','nativeSession','runId')}else{@('clientId','nativeSession','appleId','treeId')})){if($Request.$name -isnot [string] -or $Request.$name -cnotmatch '^[a-f0-9]{32}$'){throw "Invalid restart identity: $name"}}
+ if($action){if($Request.taskId -isnot [string] -or $Request.taskId -cnotmatch '^room-task:[a-zA-Z0-9:_-]{1,200}$'){throw 'Invalid interrupted task identity.'}}
+ elseif($Request.appleId -ceq $Request.treeId){throw 'Restart must preserve distinct tree and apple identities.'}
  Assert-QuestProbeRestartKeys $Request.checkpoint @('room','behaviours')
  foreach($name in @('room','behaviours')){
   $store=$Request.checkpoint.$name;Assert-QuestProbeRestartKeys $store @('phase','pending','dirty','dispatchHeld','error')
@@ -78,11 +80,12 @@ function Write-QuestProbeRestartJson([string]$Path,$Value){
  if($bytes.Length -gt 16384){throw 'Restart receipt exceeds its byte limit.'}
  $pending=$Path+'.pending';[IO.File]::WriteAllBytes($pending,$bytes);[IO.File]::Move($pending,$Path,$true)
 }
-function Invoke-QuestProbeNativeRestart([Diagnostics.Process]$Process,$Identity,[string]$RootDirectory,[string]$ProbeId,[scriptblock]$Launch){
+function Invoke-QuestProbeNativeRestart([Diagnostics.Process]$Process,$Identity,[string]$RootDirectory,[string]$ProbeId,[scriptblock]$Launch,[switch]$ActionInterruption){
  $paths=Get-QuestProbeRestartPaths $RootDirectory
  Assert-QuestProbeRestartDirectory $paths.root;Assert-QuestProbeRestartDirectory $paths.workspace
  if(!(Test-Path -LiteralPath $paths.workspace -PathType Container) -or (Test-Path -LiteralPath $paths.child) -or (Test-Path -LiteralPath $paths.receipt)){throw 'Restart requires one existing workspace and a fresh child/receipt.'}
  $request=Read-QuestProbeRestartRequest $paths.request $ProbeId
+ if(($request.request.version -eq 2) -ne [bool]$ActionInterruption){throw 'Restart request does not match the owned journey mode.'}
  $actual=Get-QuestProbeProcessIdentity $Process
  Assert-QuestProbeProcessIdentity $Identity $actual (Test-Path -LiteralPath $paths.terminal)
  # Kill only this exact still-live process handle. No normal stop/terminal is fabricated.
@@ -90,7 +93,7 @@ function Invoke-QuestProbeNativeRestart([Diagnostics.Process]$Process,$Identity,
  if(Test-Path -LiteralPath $paths.terminal){throw 'The first Editor unexpectedly produced a normal terminal during interruption.'}
  $exitAt=[DateTimeOffset]::new($Process.ExitTime.ToUniversalTime()).ToUnixTimeMilliseconds()
  $childId=[Guid]::NewGuid().ToString('N');[void][IO.Directory]::CreateDirectory($paths.child)
- Write-QuestProbeRestartJson (Join-Path $paths.child 'owner.json') @{version=1;id=$childId;firstLearner=$true;liveContinuity=$true;nativeRestart=$true;restartOf=$ProbeId}
+ Write-QuestProbeRestartJson (Join-Path $paths.child 'owner.json') @{version=1;id=$childId;firstLearner=(!$ActionInterruption);liveContinuity=(!$ActionInterruption);nativeRestart=$true;actionInterruption=[bool]$ActionInterruption;restartOf=$ProbeId}
  $receipt=@{version=1;id=$ProbeId;method='terminate-after-checkpoint';workspace=$paths.workspace;requestSha256=$request.sha256;source=@{id=$ProbeId;processId=$Identity.processId;startedAt=$Identity.startedAt;exitedAt=$exitAt;exitCode=$Process.ExitCode;terminalExisted=$false};resumed=@{id=$childId;directory=$paths.child}}
  Assert-QuestProbeRestartReceipt $receipt $paths.root $ProbeId $request.sha256
  Write-QuestProbeRestartJson $paths.receipt $receipt

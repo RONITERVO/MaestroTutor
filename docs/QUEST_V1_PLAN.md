@@ -7,7 +7,8 @@ Start with the [accepted product scope](#accepted-product-scope) and
 [complete integration checkpoint](#complete-native-book-and-unsigned-android-verification--2026-10-26) and
 [production text-to-Live increment](#production-text-to-live-continuity--2026-10-26) and
 [checkpointed native restart](#checkpointed-native-process-restart--2026-10-28) and
-[lost action acknowledgement](#lost-running-action-acknowledgement--2026-10-28). The current
+[lost action acknowledgement](#lost-running-action-acknowledgement--2026-10-28) and
+[running-action process termination](#process-termination-during-a-running-action--2026-10-28). The current
 [pointer and solid geometry checkpoint](#shared-pointer-and-solid-geometry--2026-10-25) separates book interaction from physical queries. The preceding
 [collision availability checkpoint](#shared-passive-collision-availability--2026-10-25) adds explicit user/program/agent inspection. The preceding
 [saved-world rain checkpoint](#passive-saved-world-rain-cover--2026-10-25) extends exposure readiness;
@@ -17904,3 +17905,46 @@ This is deliberate host delivery loss and fresh host/profile restoration within
 one live native session. Native process death during an active action, interrupted
 writes, browser/WebView task restoration, providers and physical-device acceptance
 remain separate open gates. Product runtime and saved formats are unchanged.
+
+
+### Process termination during a running action — 2026-10-28
+
+The new explicit offline Headless ActionInterruption mode terminates both the
+actual chat client and Unity while an agent-requested animation is running.
+The shared tutor/verifier/task runner starts one thirty-second wave, commits its
+real native acknowledgement, and reaches the next planner request. The parent
+kills the exact owned Node process, verifies that the native action still runs,
+then kills the exact owned Editor. No graceful save or task cleanup is injected.
+
+Run `ac7004b871c84d36991c4bb051210b85` passed. Source Node PID 20376 and
+Unity PID 7784 both exited with -1. Distinct Node PID 24480 and Unity PID 28224
+opened the original profile and workspace in place. Profile and task-journal
+hashes matched across the process boundary. Production task restoration marked
+the unfinished task interrupted and read-only, restored its chat projection,
+and refused reuse of its claim or old handoff without spending or dispatching.
+Complete directory reads preserved all original world/object IDs.
+
+A new ordinary chat request inspected native run
+`d626eb7ec5fd490ba61436ee52bf7c70`. Unity reported `interrupted` with the
+original call/resources, no completed result and no running animation. Exactly
+one start occurred. The inspection completed as a separate task; the original
+journal remained unchanged. Both resumed processes and the native terminal
+exited normally. Provider responses were scripted and network access was
+refused; this is production headless/native integration, not provider judgment.
+
+Validation: 55 Unity EditMode admission cases, 130 pure PowerShell supervisor
+contracts, 138 focused JS/TS contracts and the complete 3,664-test/378-file app
+suite passed. Probe type checking and scoped lint passed. Evidence is retained
+in `.quest-evidence/native-room/ac7004b871c84d36991c4bb051210b85/` and
+`.quest-evidence/action-interruption-20261028/`. See the
+[explicit interruption contract](QUEST_NATIVE_ROOM_PROBE.md#process-termination-during-a-running-action).
+
+The separate production Book/Live completed-save restart also passed again as
+run `bd3c45b2f6ee448c886d5297cebfd1d8`, using the unchanged prior Live and
+completed-receipt gates. This checks that the added mode preserves the original
+browser/Live/native restart path.
+
+No product runtime or saved format changed. Death during file publication,
+native program continuation, rendered browser/WebView task recovery, Android
+process death, headset behavior, provider acceptance and the existing audio
+quality failures remain open release gates.

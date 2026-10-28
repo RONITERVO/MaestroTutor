@@ -46,6 +46,28 @@ namespace Maestro.Quest.Tests
             var after=Directory.GetFiles(directory,"*",SearchOption.AllDirectories).ToDictionary(x=>x,x=>Hash(File.ReadAllBytes(x)));
             Assert.That(after.Keys,Is.EquivalentTo(before.Keys));foreach(var pair in before)Assert.That(after[pair.Key],Is.EqualTo(pair.Value));
         }
+        void ActionMode()
+        {
+            foreach(var value in new[]{owner,sourceOwner}){value["actionInterruption"]=true;value["firstLearner"]=false;value["liveContinuity"]=false;}
+            request["version"]=2;request.Remove("appleId");request.Remove("treeId");request["runId"]=new string('5',32);request["taskId"]="room-task:assistant";
+            WriteRequest();SaveEvidence();
+        }
+        [Test] public void ExplicitActionInterruptionUsesOriginalWorkspace()
+        {
+            ActionMode();var result=QuestRoomProbeRestart.Resolve(child,owner);
+            Assert.That(result.WorkspaceDirectory,Is.EqualTo(workspace));Assert.That(result.RestartOf,Is.EqualTo(sourceId));
+            Assert.That(QuestRoomProbeRestart.Resolve(directory,sourceOwner).WorkspaceDirectory,Is.EqualTo(workspace));
+        }
+        [TestCase("firstLearner")][TestCase("liveContinuity")]
+        public void ActionModeCannotBeMixedWithLiveJourney(string field){ActionMode();owner[field]=true;Refused();}
+        [TestCase("runId")][TestCase("taskId")]
+        public void ActionModeRequiresExplicitActionAndTask(string field){ActionMode();request[field]="../wrong";WriteRequest();Refused();}
+        [Test] public void ActionModeCannotUseCompletedSaveRequest(){ActionMode();request["version"]=1;WriteRequest();Refused();}
+        [Test] public void ActionModeCannotChangeBetweenProcesses(){ActionMode();sourceOwner["actionInterruption"]=false;sourceOwner["firstLearner"]=true;sourceOwner["liveContinuity"]=true;Refused();}
+        [Test] public void ActionModeRefusesExtraRequestFields(){ActionMode();request["appleId"]=new string('6',32);WriteRequest();Refused();}
+        [Test] public void ActionModeMustOptIntoNativeRestart(){ActionMode();sourceOwner["nativeRestart"]=false;Assert.Throws<InvalidDataException>(()=>QuestRoomProbeRestart.Resolve(directory,sourceOwner));}
+        [Test] public void ActionFlagCannotBeCoerced(){owner["actionInterruption"]="false";Refused();sourceOwner["actionInterruption"]="false";Assert.Throws<InvalidDataException>(()=>QuestRoomProbeRestart.Resolve(directory,sourceOwner));}
+
         [Test] public void OrdinaryAdmissionKeepsItsOwnWorkspaceAndDoesNotRequireRestartEvidence()
         {
             var ordinary=new JObject{["version"]=1,["id"]=sourceId,["nativeRestart"]=false};
