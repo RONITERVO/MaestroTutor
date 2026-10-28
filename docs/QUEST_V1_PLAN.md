@@ -5,7 +5,8 @@ Status: active implementation. Nothing in this document claims store readiness.
 Start with the [accepted product scope](#accepted-product-scope) and
 [release evidence checklist](#release-evidence-still-required) and the latest
 [complete integration checkpoint](#complete-native-book-and-unsigned-android-verification--2026-10-26) and
-[production text-to-Live increment](#production-text-to-live-continuity--2026-10-26). The current
+[production text-to-Live increment](#production-text-to-live-continuity--2026-10-26) and
+[checkpointed native restart](#checkpointed-native-process-restart--2026-10-28). The current
 [pointer and solid geometry checkpoint](#shared-pointer-and-solid-geometry--2026-10-25) separates book interaction from physical queries. The preceding
 [collision availability checkpoint](#shared-passive-collision-availability--2026-10-25) adds explicit user/program/agent inspection. The preceding
 [saved-world rain checkpoint](#passive-saved-world-rain-cover--2026-10-25) extends exposure readiness;
@@ -17801,3 +17802,67 @@ signature, deployment, store submission or change to the existing Alpha build.
 The final run pins model-manifest and voice-metadata line endings through
 `.gitattributes`, so checkout conversion cannot change their evidence hashes.
 The preceding successful run `37f02f5750b04dbc89f05ed7d028e0d1` is also retained.
+
+### Long-term immersion decisions — 2026-10-28
+
+The owner's direction is consistent behaviour in one editable world, with the
+agent and user sharing authority and evidence. Keep the existing per-entity
+real-room collision policy: a cup may obey the scanned table while Maestro or a
+robot walks on supported virtual terrain below the scanned floor. Navigation,
+swept movement and physics must honour the same selected policy. Visual depth,
+reality blending and acoustic participation remain independently configurable;
+changing visibility must not silently change physical support or movement.
+
+Build new terrain, weather, water, sound and appearance features as shared
+components and capabilities with inspectable state, bounded work and explicit
+readiness. Missing geometry is not clear space, missing ground is not permission
+to fall, and paused or unloaded work must not silently catch up or replay.
+Ordinary language remains the main entry, while generated controls and editable
+programs expose the same operations. Preserve stable saved identities and human
+edits rather than reconstructing a convincing-looking substitute scene.
+
+Release proof must include saving, leaving and returning to those worlds. The
+checkpointed native-restart probe extends that evidence without claiming general
+city scale, headset performance or interrupted-action recovery. Current published
+capacity limits remain in force until measured expansion is implemented. These
+principles guide subsequent increments; they do not mark unfinished world,
+audio or physical-device acceptance as complete.
+
+### Checkpointed native process restart — 2026-10-28
+
+Run `ee1137f398a0408ba30cad58807a5391` passed the complete offline production
+lesson with an actual native interruption and restart. The App journey took
+85.462 seconds, with 92 native requests, 467 accepted observations and exactly
+three completed mutations. The initial five saved identities (book, Maestro and
+three starter objects) plus the independent apple survive in the same workspace;
+the deleted tree remains absent. Two complete directory passes before and after
+restart establish full membership. All three original completed action receipts
+are inspected through visible controls after reload, with matching calls/results
+and no action replay. Four microphone tracks remain ended; the nine delegated
+media comparisons and the unchanged Live evidence gate also pass.
+
+The supervisor records distinct actual process IDs/creation times, observed
+source exit and the same workspace path. The interrupted source has no normal
+terminal receipt; the resumed process, client and final wrapper all exit zero.
+The native request and process receipts are independently checked against the
+retained result. This does not copy or seed the workspace, fabricate observations,
+flush saves at the boundary or inject a recovery action. The apple's saved data
+matches; its new session revision is retained separately because the journal's
+in-memory edit clock is reconstructed on load.
+
+The 45 Unity EditMode admission cases, 95 supervisor contracts and 91 focused
+JS/TS contracts pass, with probe type checking and scoped lint. The complete web
+suite passed 3,600 tests across 376 files before the final six report-contract
+cases were added; those final cases are included in the 91 focused results.
+All 14 unrelated files remain byte-identical. The three failed development
+attempts are retained: multi-installation Node resolution, a false assumption
+that fresh rooms contain no starter objects, and comparing edit-clock numbers
+across native sessions. None is counted as a successful interruption test.
+
+Evidence is in `.quest-evidence/native-room/ee1137f398a0408ba30cad58807a5391/`
+and `.quest-evidence/native-restart-20261028/`. The
+[explicit contract](QUEST_NATIVE_ROOM_PROBE.md#checkpointed-native-process-interruption)
+requires completion before interruption. In-flight action/write recovery,
+Android process death, retained microphone permission, real providers and
+headset behavior remain unqualified. No native runtime, save format, release
+package, signing, deployment or Meta state changes in this increment.

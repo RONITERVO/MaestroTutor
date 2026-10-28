@@ -11,6 +11,9 @@ import {NativeLearner,readFirstLearnerPlannerInput,readFirstLearnerSuggestionMes
 import {runQuestFirstLearner,type ScriptedRequest} from './probe-quest-first-learner.mjs';
 import {firstLearnerLive,LIVE_REQUEST,LIVE_REPLY} from './first-learner-live.mjs';
 import {RoomProbeChannel} from '../src/headless/roomTransport';
+import {restartNativeLearner,restartCheckpoint,assertRestartedDefinition} from './first-learner-native-restart';
+import {readNativeObjectIdentity,assertResumedNativeIdentity,type NativeObjectIdentity} from './native-probe-identity';
+import type {ExecutionDetail} from '../shared/roomExecutions';
 import type {RoomAgentState,RoomCommand} from '../src/core-sdk/room/roomAgent';
 import {readObjectReference} from '../shared/objectReference';
 import {readRoomObjectObservation} from '../src/core-sdk/room/roomObjectContext';
@@ -40,6 +43,39 @@ class LiveContinuityLearner extends NativeLearner {
  private beforeReloadLive=0;private restored:unknown;private afterDeletion:unknown;
  private speechWorkers:unknown;private restoredSpeechWorkers:unknown;
  private beforeReloadCapture:unknown;private restoredCapture:unknown;
+ private readonly originalProbeId:string;private readonly originalReady:Record<string,unknown>;
+ private restartProof:any=null;
+ private initialWorld:{identity:NativeObjectIdentity;identityPages:unknown[]}|null=null;
+ private beforeIdentity:NativeObjectIdentity|null=null;private beforeIdentityPages:unknown[]=[];
+ constructor(channel:RoomProbeChannel,ready:Record<string,unknown>,out:string,private readonly nativeRestart=false) {
+  super(channel,ready,out);this.originalProbeId=channel.id;this.originalReady=structuredClone(ready);
+ }
+ private async readIdentity() {
+  const pages:unknown[]=[];
+  const identity=await readNativeObjectIdentity(async commands=>{
+   assert.equal(commands.length,1);const c=commands[0];assert(c.action==='catalog'&&c.catalog?.operation==='inspect'&&c.catalog.capability==='world.objects');
+   const args=c.catalog.arguments;assert(args&&args.query===''&&args.kind==='all'&&typeof args.cursor==='string');
+   const view=await this.readFact('world.objects',undefined,{query:'',cursor:args.cursor});pages.push(view);
+   assert(this.latest?.workspaceReady===true);return structuredClone(this.latest);
+  });
+  if(this.initialWorld)assert.deepEqual(identity.ids,[...this.initialWorld.identity.ids,this.appleId].sort(),'The complete saved world must preserve its original membership plus the same apple');
+  return {identity,pages};
+ }
+ private async inspectRestoredReceipts() {
+  const back=this.page.getByRole('button',{name:'Back to workshop',exact:true}).filter({visible:true});if(await back.count())await back.click();
+  await this.page.getByRole('button',{name:'Action catalog',exact:true}).click();
+  await this.page.getByLabel('Catalog category',{exact:true}).selectOption('actions');
+  const lane=this.page.getByRole('region',{name:'One-off actions',exact:true});await lane.waitFor();
+  await lane.getByText('Recent action results',{exact:true}).click();
+  const values:ExecutionDetail[]=[];
+  for(const expected of this.receipts as ExecutionDetail[]) {
+   const button=lane.getByRole('button').filter({hasText:expected.id.slice(0,6)});assert.equal(await button.count(),1);
+   const revision=this.latest!.revision;await button.click();
+   await this.until(()=>this.latest!.revision>revision&&this.latest?.execution?.selected?.id===expected.id,'Restored action receipt was not re-inspected');
+   const current=this.latest!.execution!.selected;assert.deepEqual(current,expected);values.push(structuredClone(current!));
+  }
+  return values;
+ }
  async attach(page:Page,origin:string) {await page.context().addInitScript(installFirstLearnerSpeechObserver);await super.attach(page,origin);}
  private async readSpeechWorkers(requireReady:boolean) {
   const result=await this.page.evaluate(()=>(globalThis as any).__firstLearnerSpeechWorkers());
@@ -152,6 +188,7 @@ class LiveContinuityLearner extends NativeLearner {
   assert.equal(this.deleteResults++,0);assert.equal(this.deletePlans,9);assert(systemText.includes(this.treeId));return {kind:'native-result',text:DELETE_RESULT};
  }
  async afterLesson() {
+  if(this.nativeRestart){const read=await this.readIdentity();this.initialWorld={identity:read.identity,identityPages:read.pages};await this.backToChat();}
   this.mode='create';const composer=this.page.locator('textarea').filter({visible:true});await composer.fill(CREATE_REQUEST);await this.page.getByRole('button',{name:'Send message',exact:true}).click();
   await this.page.getByText('Our tree and our separate apple are ready.',{exact:false}).first().waitFor({timeout:60000});await this.until(()=>this.verifiers===2,'Creation result verifier did not complete');
   await this.page.waitForFunction(()=>window.maestroBook?.snapshot().activity==='idle');this.checkMutations();await this.checkpoint();await this.backToChat();
@@ -178,10 +215,12 @@ class LiveContinuityLearner extends NativeLearner {
   await this.page.waitForFunction(()=>window.maestroBook?.snapshot().activity==='idle');await this.live.settled();this.checkMutations();
   const directory=await this.readFact('world.objects',undefined,{query:this.treeId});assert.equal(readObjectSearchPage(directory,objectSearchRequest(this.treeId,'all',''))?.total,0);
   const apple=await this.readFact('object.definition',this.appleId);assert.deepEqual(apple.value,(this.appleDefinition as any).value);
+  if(this.nativeRestart){const read=await this.readIdentity();this.beforeIdentity=read.identity;this.beforeIdentityPages=read.pages;}
   await this.checkpoint();await this.page.screenshot({path:join(this.out,'native-live-continuity.png')});await this.backToChat();
   assert.equal(this.images,1);assert.equal(this.creates,1);assert.equal(this.createPlans,9);assert.equal(this.deletePlans,9);
  }
  async beforeReload() {
+  const sourceState=structuredClone(this.latest),sourceClient=this.clientId;
   this.beforeReloadLive=this.live.evidence().sessions.length;await super.beforeReload();
   // This finite fixture supplies exactly one utterance, then verified silence.
   // Withdraw its isolated microphone grant at the reload boundary; retained-
@@ -191,22 +230,44 @@ class LiveContinuityLearner extends NativeLearner {
   this.beforeReloadCapture=await this.live.assertReleased(this.page);
   assert.deepEqual(this.beforeReloadCapture,this.releasedCapture,'Paused observation reacquired capture before reload');
   await this.page.context().clearPermissions();this.mode='restored';
+  if(this.nativeRestart) {
+   assert(sourceState?.workspaceReady===true&&this.beforeIdentity);
+   const checkpoint=restartCheckpoint((this.persistence as any).value);
+   const request={version:1,id:this.originalProbeId,operation:'restart',clientId:sourceClient,nativeSession:sourceState.session,appleId:this.appleId,treeId:this.treeId,checkpoint};
+   const resumed=await restartNativeLearner(this.channel,this.originalReady,request);
+   this.restartProof={version:1,qualified:false,initialWorld:this.initialWorld,sourceProbeId:this.originalProbeId,childProbeId:resumed.channel.id,request,process:resumed.process,sourceReady:this.originalReady,resumedReady:resumed.ready,
+    before:{identity:this.beforeIdentity,identityPages:this.beforeIdentityPages,persistence:structuredClone(this.persistence),receipts:structuredClone(this.receipts),state:{session:sourceState.session,workspaceReady:sourceState.workspaceReady,temporaryRoom:sourceState.temporaryRoom??null},capture:this.beforeReloadCapture},requestsBeforeRestart:this.beforeReloadRequests};
+   this.channel=resumed.channel;this.ready=resumed.ready;
+  }
  }
  async afterReload() {
-  this.start();await this.until(()=>Boolean(this.latest?.session),'Reload did not accept the fresh native handshake');assert.notEqual(this.clientId,this.firstClient);assert.equal(this.clients.length,2);assert.equal(this.latest?.visible,false);assert.equal(this.requests.size,this.beforeReloadRequests);
+  this.start();await this.until(()=>Boolean(this.latest?.session)&&this.latest?.workspaceReady===true,'Reload did not accept a ready native workspace');assert.notEqual(this.clientId,this.firstClient);assert.equal(this.clients.length,2);assert.equal(this.latest?.visible,false);assert.equal(this.requests.size,this.beforeReloadRequests);
   await this.page.getByText(CREATE_REQUEST,{exact:true}).first().waitFor();await this.page.getByText(LIVE_REQUEST,{exact:true}).first().waitFor();await this.page.getByText('The tree is gone and our same apple is still here.',{exact:false}).first().waitFor();
-  const apple=await this.readFact('object.definition',this.appleId);assert.deepEqual(apple.value,(this.appleDefinition as any).value);
+  const apple=await this.readFact('object.definition',this.appleId);
+  if(this.nativeRestart)assertRestartedDefinition(this.appleDefinition,apple,this.appleId);else assert.deepEqual(apple.value,(this.appleDefinition as any).value);
   const directory=await this.readFact('world.objects',undefined,{query:this.treeId});assert.equal(readObjectSearchPage(directory,objectSearchRequest(this.treeId,'all',''))?.total,0);this.restored={apple,directory};
-  await this.checkpoint();this.checkMutations();assert([...this.requests.values()].filter(x=>x.clientId===this.clientId).every(x=>x.request.commands.every(c=>c.action==='catalog'||c.action==='workspace')));
+  if(this.nativeRestart) {
+   const read=await this.readIdentity();assertResumedNativeIdentity(this.beforeIdentity,read.identity);
+   const receipts=await this.inspectRestoredReceipts();
+   this.restartProof.after={identity:read.identity,identityPages:read.pages,receipts,state:{session:this.latest!.session,workspaceReady:this.latest!.workspaceReady,temporaryRoom:this.latest!.temporaryRoom??null}};
+  }
+  await this.checkpoint();this.checkMutations();
+  if(this.nativeRestart)this.restartProof.after.persistence=structuredClone(this.persistence);
+  assert([...this.requests.values()].filter(x=>x.clientId===this.clientId).every(x=>x.request.commands.every(c=>{
+   if(c.action==='catalog'||c.action==='workspace')return true;
+   const execution=c.action==='execution'?c.execution:undefined;
+   return this.nativeRestart&&execution?.operation==='inspect'&&(this.receipts as ExecutionDetail[]).some(r=>r.id===execution.runId);
+  })));
   assert.equal(this.live.evidence().sessions.length,this.beforeReloadLive);
   await this.backToChat();await this.page.getByRole('button',{name:'Start Live',exact:true}).waitFor();
   await this.page.waitForFunction(()=>{const x=(globalThis as any).__firstLearnerCapture();return x.tracks.length===0&&x.attempts.every((a:any)=>a.state==='rejected');});
   this.restoredCapture=await this.page.evaluate(()=>(globalThis as any).__firstLearnerCapture());
   const capture=this.restoredCapture as any;assert.deepEqual(capture.tracks,[]);assert(capture.attempts.every((a:any)=>a.state==='rejected'&&a.audio===true&&a.video===false),'Reload retained an active or non-audio capture acquisition');
   this.restoredSpeechWorkers=await this.readSpeechWorkers(false);this.check();this.qualified=true;
+  if(this.nativeRestart){this.restartProof.after.capture=this.restoredCapture;this.restartProof.qualified=true;}
  }
- evidence() {return {nativeProbeId:this.channel.id,qualified:this.qualified,realProvider:false,physicalDevice:false,syntheticPhysics:this.ready.syntheticPhysics,syntheticScan:this.ready.syntheticScan,
-  boundary:'Production App onboarding/text/Live capture/shared handoff plus actual Unity Editor receipts; scripted provider and synthetic browser microphone. Synthetic microphone permission withdrawn before browser reload; no native restart, real provider, physical headset/mic/camera, recognition, audible speech or AEC quality claim.',
+ evidence() {return {nativeProbeId:this.originalProbeId,restart:this.restartProof,qualified:this.qualified,realProvider:false,physicalDevice:false,syntheticPhysics:this.ready.syntheticPhysics,syntheticScan:this.ready.syntheticScan,
+  boundary:this.nativeRestart?'Production App and actual native process interruption after accepted save, same-workspace restart and browser reload; scripted provider and synthetic microphone. No in-flight action interruption, real provider, physical headset/mic/camera, recognition, audible speech or AEC quality claim.':'Production App onboarding/text/Live capture/shared handoff plus actual Unity Editor receipts; scripted provider and synthetic browser microphone. Synthetic microphone permission withdrawn before browser reload; no native restart, real provider, physical headset/mic/camera, recognition, audible speech or AEC quality claim.',
   speechWorkers:this.speechWorkers,restoredSpeechWorkers:this.restoredSpeechWorkers,treeId:this.treeId,appleId:this.appleId,treeDefinition:this.treeDefinition,appleDefinition:this.appleDefinition,appleObservation:this.appleObservation,receipts:this.receipts,afterDeletion:this.afterDeletion,restored:this.restored,mediaChecks:this.mediaChecks,releasedCapture:this.releasedCapture,beforeReloadCapture:this.beforeReloadCapture,restoredCapture:this.restoredCapture,
   counts:{createPlanner:this.createPlans,deletePlanner:this.deletePlans,verifiers:this.verifiers,creationTutor:this.creates,creationResults:this.createResults,deletionResults:this.deleteResults,images:this.images},live:this.live?.evidence(),clients:this.clients,workspaceCloseAcks:this.workspaceCloseAcks,requests:[...this.requests.values()],observations:this.observations,plans:this.plans};}
 }
@@ -214,6 +275,6 @@ export async function runNativeLiveContinuity(directory:string) {
  const owner=JSON.parse(await readFile(join(directory,'owner.json'),'utf8'));assert.equal(owner.firstLearner,true);assert.equal(owner.liveContinuity,true,'Root wrapper must explicitly identify this scenario');
  const channel=await RoomProbeChannel.connect(directory,120000),ready=JSON.parse(await readFile(join(directory,'ready.json'),'utf8'));
  assert.equal(ready.id,channel.id);assert.equal(ready.version,1);assert.equal(ready.syntheticPhysics,true);assert.equal(ready.syntheticScan,false);
- const native=new LiveContinuityLearner(channel,ready,join(directory,'first-learner'));await runQuestFirstLearner({out:join(directory,'first-learner'),native});
+ const native=new LiveContinuityLearner(channel,ready,join(directory,'first-learner'),owner.nativeRestart===true);await runQuestFirstLearner({out:join(directory,'first-learner'),native});
 }
 if(process.argv[1]&&resolve(process.argv[1])===fileURLToPath(import.meta.url)){assert(process.argv[2]);await runNativeLiveContinuity(resolve(process.argv[2]));}

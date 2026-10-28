@@ -2124,3 +2124,51 @@ performance and native-process restart recovery still need their own evidence.
 The final run pins model-manifest and voice-metadata line endings through
 `.gitattributes`, so checkout conversion cannot change their evidence hashes.
 The preceding successful run `37f02f5750b04dbc89f05ed7d028e0d1` is also retained.
+
+## Checkpointed native process interruption
+
+Add `-NativeRestart` to the explicit `-Journey Book -FirstLearner
+-LiveContinuity` invocation. This mode uses the same production App, scripted
+provider boundary, real local speech worker and synthetic microphone/floor.
+It excludes provider scenarios, seeded imports and copied-workspace resume modes.
+The ordinary Live mode continues to use one running Editor.
+
+Before creating the lesson tree and apple, the client reads the complete starting
+world twice through the visible catalog. After Live removes the tree, it requires
+the exact starting membership plus the independent apple, clean room and behaviour
+journals, completed action receipts, ended capture and an acknowledged return to
+chat. Only then does it publish a bounded restart request. No extra save/flush or
+native mutation is injected to make the checkpoint pass.
+
+The parent validates its owned process handle by PID and OS creation time,
+terminates that process, observes its exit and starts a distinct Editor. The
+second wire directory is a fresh `restart/` child, but the native room opens the
+original `workspace/` directory in place. Admission checks the source owner,
+ready attestation, request SHA256, observed process lifetime and fixed paths.
+The interrupted source must have no successful terminal receipt. The resumed
+Editor must have matching ready/process identities and eventually exit normally.
+Neither process ownership nor restart is inferred from a browser session change.
+
+After browser reload and native workspace readiness, visible controls read the
+complete world twice again and inspect all three original action receipts.
+Every original object ID, the apple's authored definition and the complete
+receipt calls/results must match. The tree must stay absent. `RoomJournal`
+reconstructs its in-memory revision clock when opening the saved document;
+therefore the new positive object revision is retained as new session evidence,
+not required to equal the old session's edit authority. All other definition
+fields must match. No action start, recover, cancel or replay is permitted after
+the restart; catalog reads, receipt inspection and workspace visibility are the
+only allowed requests.
+
+The result retains `native.restart` with before/after directory pages, identities,
+checkpoint facts, receipts and capture state. Parent-owned `restart.json`, initial
+and resumed `ready.json`, and the resumed `terminal.json` are independently
+cross-checked by `scripts/assert-quest-native-restart.ts`, in addition to the
+unchanged Live evidence gate. CI runs the pure report/file tests and
+`unity/Tools/Test-QuestProbeRestart.ps1`; Unity admission has EditMode coverage.
+
+This is interruption **after completed saves and actions**. It does not qualify
+an interrupted write, in-flight action recovery, native program continuation,
+retained microphone permission, Android process death, headset media or real
+provider behavior. Those need separate scenarios and must not be inferred from
+this result.

@@ -17,6 +17,7 @@ param(
  [switch]$SparseObjectView,
  [switch]$FirstLearner,
  [switch]$LiveContinuity,
+ [switch]$NativeRestart,
  [switch]$TransportOnly,
  [switch]$MotionOnly,
  [switch]$SteeringOnly,
@@ -26,11 +27,13 @@ param(
  [ValidateSet('Headless','Book')][string]$Journey = 'Headless'
 )
 $ErrorActionPreference='Stop'
+if($NativeRestart -and (!$LiveContinuity -or !$FirstLearner -or $Journey -ne 'Book')){throw 'NativeRestart requires the explicit offline Journey Book FirstLearner LiveContinuity mode.'}
 if($LiveContinuity -and (!$FirstLearner -or $Journey -ne 'Book')){throw 'LiveContinuity requires the explicit offline Journey Book FirstLearner mode.'}
 if($FirstLearner -and ($Journey -ne 'Book' -or $ProviderScenario -or ![string]::IsNullOrWhiteSpace($Prompt) -or $SpeechFixture -or $ResumeLearnerRun -or $ResumeIdentityRun -or $TransportOnly -or $MotionOnly -or $SteeringOnly -or $IdentityOnly -or $SparseObjectView -or $SyntheticRoomScan -or $SyntheticSound -or $SyntheticLiveSound -or $SyntheticImage -or $SyntheticModel -or $SyntheticGait)){throw 'FirstLearner requires offline Journey Book without provider, resume, focused or synthetic asset options.'}
 # A successful ordinary learner result must never qualify the separate Live journey.
 # This pure check is also exercised without starting a browser or native Editor.
 . (Join-Path $PSScriptRoot 'Assert-QuestLiveContinuity.ps1')
+if($NativeRestart){. (Join-Path $PSScriptRoot 'QuestProbeRestart.ps1')}
 
 if($TransportOnly -and ($IdentityOnly -or $MotionOnly -or $SteeringOnly -or $Journey -ne 'Headless' -or $ProviderScenario -or ![string]::IsNullOrWhiteSpace($Prompt) -or $ResumeLearnerRun -or $ResumeIdentityRun)){throw 'TransportOnly is an offline Headless wire-boundary fixture; other focused, provider, Book and resume modes are excluded.'}
 if($IdentityOnly -and ($MotionOnly -or $SteeringOnly -or $Journey -ne 'Headless' -or $ProviderScenario -or ![string]::IsNullOrWhiteSpace($Prompt) -or $ResumeLearnerRun)){throw 'IdentityOnly is an offline Headless fixture; other focused, provider, Book and learner resume modes are excluded.'}
@@ -82,6 +85,12 @@ if($LiveContinuity){
  & $runner (Join-Path $repoRoot 'scripts/first-learner-speech-assets.mjs') --verify $speechFolder $speechManifest
  if($LASTEXITCODE -ne 0){throw 'Offline Live speech assets are missing or invalid; no Editor was started. See QUEST_NATIVE_ROOM_PROBE.md.'}
 }
+$restartNode=$null;$restartTsx=$null
+if($NativeRestart){
+ $restartNode=(Get-Command node -CommandType Application -ErrorAction Stop | Select-Object -First 1).Source
+ $restartTsx=Join-Path $repoRoot 'node_modules/tsx/dist/cli.mjs'
+ if(!(Test-Path -LiteralPath $restartNode -PathType Leaf) -or !(Test-Path -LiteralPath $restartTsx -PathType Leaf)){throw 'NativeRestart requires the installed Node and tsx CLI before starting an Editor.'}
+}
 $typeChecker=Join-Path $repoRoot 'node_modules/.bin/tsc.cmd'
 & $typeChecker -p (Join-Path $repoRoot 'tsconfig.quest-probes.json') --pretty false
 if($LASTEXITCODE -ne 0){throw 'Native integration drivers failed type checking; no Editor was started.'}
@@ -97,7 +106,7 @@ foreach($running in Get-CimInstance Win32_Process -Filter "Name='Unity.exe'"){
 }
 $id=[Guid]::NewGuid().ToString('N');$directory=Join-Path $repoRoot ".quest-evidence/native-room/$id"
 New-Item -ItemType Directory -Path $directory | Out-Null
-@{version=1;id=$id;firstLearner=[bool]$FirstLearner;liveContinuity=[bool]$LiveContinuity;sparseObjectView=[bool]$SparseObjectView;motionOnly=[bool]$MotionOnly;steeringOnly=[bool]$SteeringOnly;identityOnly=[bool]$IdentityOnly;transportOnly=[bool]$TransportOnly} | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $directory 'owner.json') -Encoding utf8
+@{version=1;id=$id;firstLearner=[bool]$FirstLearner;liveContinuity=[bool]$LiveContinuity;nativeRestart=[bool]$NativeRestart;sparseObjectView=[bool]$SparseObjectView;motionOnly=[bool]$MotionOnly;steeringOnly=[bool]$SteeringOnly;identityOnly=[bool]$IdentityOnly;transportOnly=[bool]$TransportOnly} | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $directory 'owner.json') -Encoding utf8
 if($ResumeIdentityRun){
  $previousRun=Join-Path $repoRoot ".quest-evidence/native-room/$ResumeIdentityRun"
  $previousOwner=Get-Content -LiteralPath (Join-Path $previousRun 'owner.json') -Raw | ConvertFrom-Json
@@ -128,20 +137,40 @@ if($ResumeLearnerRun){
 }
 $log=Join-Path $directory 'unity.log'
 Stop-QuestBuildHelper
-$process=Start-Process -FilePath $editorPath -WindowStyle Hidden -PassThru -ArgumentList @('-batchmode','-force-d3d11','-buildTarget','Win64','-projectPath',('"'+$mirror+'"'),'-executeMethod','Maestro.Quest.Editor.QuestRoomProbe.Start','-logFile',('"'+$log+'"')) -Environment @{ADB_SERVER_SOCKET='tcp:localhost:5041';MAESTRO_ROOM_PROBE_DIRECTORY=$directory;MAESTRO_ROOM_PROBE_SPARSE_OBJECTS=$(if($SparseObjectView){'1'}else{''});MAESTRO_ROOM_PROBE_GAIT=$(if($SyntheticGait){Join-Path $repoRoot 'test-fixtures/models/walking-character.glb'}else{''});MAESTRO_ROOM_PROBE_MODEL=$(if($ProviderScenario -eq 'ModelGeometry' -or $SyntheticModel){Join-Path $repoRoot 'test-fixtures/models/room-building.glb'}else{''});MAESTRO_ROOM_PROBE_IMAGE=$(if($ProviderScenario -eq 'ImportedImage' -or $SyntheticImage){'1'}else{''});MAESTRO_ROOM_PROBE_AUDIO=$(if($ProviderScenario -eq 'ImportedAudio' -or $SyntheticSound){'1'}else{''});MAESTRO_ROOM_PROBE_LIVE_AUDIO=$(if($SyntheticLiveSound){'1'}else{''});MAESTRO_ROOM_PROBE_SCAN=$(if($SyntheticRoomScan){'1'}else{''});MAESTRO_ROOM_PROBE_LEARNER=$(if($ProviderScenario -eq 'LearnerConversation'){'1'}else{''});MAESTRO_ROOM_PROBE_AVATAR=$(if($ProviderScenario -in @('AvatarAnimation','LearnerConversation')){'1'}else{''});MAESTRO_ROOM_PROBE_PHYSICS=$(if([string]::IsNullOrWhiteSpace($Prompt) -or $ProviderScenario -in @('PhysicsLaunch','LearnerConversation')){'1'}else{''});MAESTRO_QUEST_RELEASE_PROFILE='';MAESTRO_QUEST_KEYSTORE='';MAESTRO_QUEST_KEY_ALIAS='';MAESTRO_QUEST_STORE_PASSWORD='';MAESTRO_QUEST_KEY_PASSWORD=''}
+$startEditor={param([string]$probeDirectory,[string]$probeLog)
+ Start-Process -FilePath $editorPath -WindowStyle Hidden -PassThru -ArgumentList @('-batchmode','-force-d3d11','-buildTarget','Win64','-projectPath',('"'+$mirror+'"'),'-executeMethod','Maestro.Quest.Editor.QuestRoomProbe.Start','-logFile',('"'+$probeLog+'"')) -Environment @{ADB_SERVER_SOCKET='tcp:localhost:5041';MAESTRO_ROOM_PROBE_DIRECTORY=$probeDirectory;MAESTRO_ROOM_PROBE_SPARSE_OBJECTS=$(if($SparseObjectView){'1'}else{''});MAESTRO_ROOM_PROBE_GAIT=$(if($SyntheticGait){Join-Path $repoRoot 'test-fixtures/models/walking-character.glb'}else{''});MAESTRO_ROOM_PROBE_MODEL=$(if($ProviderScenario -eq 'ModelGeometry' -or $SyntheticModel){Join-Path $repoRoot 'test-fixtures/models/room-building.glb'}else{''});MAESTRO_ROOM_PROBE_IMAGE=$(if($ProviderScenario -eq 'ImportedImage' -or $SyntheticImage){'1'}else{''});MAESTRO_ROOM_PROBE_AUDIO=$(if($ProviderScenario -eq 'ImportedAudio' -or $SyntheticSound){'1'}else{''});MAESTRO_ROOM_PROBE_LIVE_AUDIO=$(if($SyntheticLiveSound){'1'}else{''});MAESTRO_ROOM_PROBE_SCAN=$(if($SyntheticRoomScan){'1'}else{''});MAESTRO_ROOM_PROBE_LEARNER=$(if($ProviderScenario -eq 'LearnerConversation'){'1'}else{''});MAESTRO_ROOM_PROBE_AVATAR=$(if($ProviderScenario -in @('AvatarAnimation','LearnerConversation')){'1'}else{''});MAESTRO_ROOM_PROBE_PHYSICS=$(if([string]::IsNullOrWhiteSpace($Prompt) -or $ProviderScenario -in @('PhysicsLaunch','LearnerConversation')){'1'}else{''});MAESTRO_QUEST_RELEASE_PROFILE='';MAESTRO_QUEST_KEYSTORE='';MAESTRO_QUEST_KEY_ALIAS='';MAESTRO_QUEST_STORE_PASSWORD='';MAESTRO_QUEST_KEY_PASSWORD=''}
+}
+$process=& $startEditor $directory $log
+$activeDirectory=$directory;$activeId=$id;$initialLog=$log;$clientProcess=$null;$restart=$null
+$initialIdentity=$null
 $previousPrompt=$env:MAESTRO_ROOM_PROBE_PROMPT;$previousProfile=$env:MAESTRO_ROOM_PROBE_PROFILE;$previousScenario=$env:MAESTRO_ROOM_PROBE_SCENARIO;$previousSpeech=$env:MAESTRO_ROOM_PROBE_SPEECH
 try{
+ if($NativeRestart){$initialIdentity=Get-QuestProbeProcessIdentity $process}
  $env:MAESTRO_ROOM_PROBE_PROMPT=$Prompt;$env:MAESTRO_ROOM_PROBE_PROFILE=$Profile;$env:MAESTRO_ROOM_PROBE_SCENARIO=$ProviderScenario;$env:MAESTRO_ROOM_PROBE_SPEECH=$SpeechFixture
  Push-Location $repoRoot
  try{
   $clientScript=$(if($LiveContinuity){'scripts/probe-quest-first-learner-live.ts'}elseif($FirstLearner){'scripts/probe-quest-first-learner-native.ts'}elseif($TransportOnly){'scripts/probe-room-transport.ts'}elseif($ProviderScenario -eq 'LearnerConversation'){'scripts/probe-learner-room.ts'}elseif($Journey -eq 'Book' -and $ProviderScenario){'scripts/probe-provider-book.ts'}elseif($Journey -eq 'Book'){'scripts/probe-native-book.ts'}else{'scripts/probe-native-room.ts'})
-  & $runner $clientScript $directory *> (Join-Path $directory 'client.log');$clientExit=$LASTEXITCODE
+  if($NativeRestart){
+   $clientProcess=Start-Process -FilePath $restartNode -WindowStyle Hidden -PassThru -WorkingDirectory $repoRoot -ArgumentList @(('"'+$restartTsx+'"'),('"'+(Join-Path $repoRoot $clientScript)+'"'),('"'+$directory+'"')) -RedirectStandardOutput (Join-Path $directory 'client.log') -RedirectStandardError (Join-Path $directory 'client-errors.log')
+   $clientDeadline=[DateTime]::UtcNow.AddMinutes(15)
+   while(!$clientProcess.WaitForExit(250)){
+    if(!$restart -and (Test-Path -LiteralPath (Join-Path $directory 'restart-request.json'))){
+     $restart=Invoke-QuestProbeNativeRestart -Process $process -Identity $initialIdentity -RootDirectory $directory -ProbeId $id -Launch $startEditor
+     $process=$restart.process;$activeDirectory=$restart.directory;$activeId=$restart.id;$log=$restart.log
+    }
+    if([DateTime]::UtcNow -gt $clientDeadline){throw "Native restart client exceeded its bounded duration. Evidence: $directory"}
+   }
+   $clientExit=$clientProcess.ExitCode
+   if(!$restart){throw "The native restart journey did not request and observe an actual interruption. Evidence: $directory"}
+  }else{
+   & $runner $clientScript $directory *> (Join-Path $directory 'client.log');$clientExit=$LASTEXITCODE
+  }
  }finally{Pop-Location}
  if($clientExit -ne 0 -and !$process.HasExited){
-  $stop=@{version=1;id=$id;operation='stop'} | ConvertTo-Json -Compress
-  $pending=Join-Path $directory 'request.json.shutdown'
+  $stop=@{version=1;id=$activeId;operation='stop'} | ConvertTo-Json -Compress
+  $pending=Join-Path $activeDirectory 'request.json.shutdown'
   [IO.File]::WriteAllText($pending,$stop,[Text.UTF8Encoding]::new($false))
-  [IO.File]::Move($pending,(Join-Path $directory 'request.json'),$true)
+  [IO.File]::Move($pending,(Join-Path $activeDirectory 'request.json'),$true)
  }
  $deadline=[DateTime]::UtcNow.AddSeconds(60);$shutdownAt=$null;$helperStopped=$false
  while(!$process.WaitForExit(1000)){
@@ -152,18 +181,24 @@ try{
   if(!$helperStopped -and $shutdownAt -and [DateTime]::UtcNow -gt $shutdownAt.AddSeconds(10)){Stop-QuestBuildHelper;$helperStopped=$true}
   if([DateTime]::UtcNow -gt $deadline){$process.Kill();$process.WaitForExit();throw "Probe Editor did not exit. Evidence: $directory"}
  }
- $terminal=Get-Content -LiteralPath (Join-Path $directory 'terminal.json') -Raw | ConvertFrom-Json
- if($clientExit -ne 0 -or $process.ExitCode -ne 0 -or $terminal.exitCode -ne 0 -or $terminal.id -ne $id){throw "Native room probe failed. Evidence: $directory"}
+ $terminal=Get-Content -LiteralPath (Join-Path $activeDirectory 'terminal.json') -Raw | ConvertFrom-Json
+ if($clientExit -ne 0 -or $process.ExitCode -ne 0 -or $terminal.exitCode -ne 0 -or $terminal.id -ne $activeId){throw "Native room probe failed. Evidence: $directory"}
  if($FirstLearner){
   $learnerResult=Get-Content -LiteralPath (Join-Path $directory 'first-learner/result.json') -Raw | ConvertFrom-Json
   if($learnerResult.status -ne 'passed' -or $learnerResult.nativeProbeId -ne $id -or $learnerResult.nativeExecution -ne $true -or $learnerResult.productionComposition -ne $true -or $learnerResult.realProvider -ne $false){throw "Production-entry learner did not prove the owned offline native journey. Evidence: $directory"}
   if($LiveContinuity){Assert-QuestLiveContinuityResult -Result $learnerResult -ProbeId $id -EvidenceDirectory $directory}
+  if($NativeRestart){
+   & $runner (Join-Path $repoRoot 'scripts/assert-quest-native-restart.ts') $directory
+   if($LASTEXITCODE -ne 0){throw "Native process restart evidence failed. Evidence: $directory"}
+  }
  }
+ if($NativeRestart){& (Join-Path $PSScriptRoot 'Assert-QuestUnityLog.ps1') -LogPath $initialLog}
  & (Join-Path $PSScriptRoot 'Assert-QuestUnityLog.ps1') -LogPath $log
- @{version=1;id=$id;clientExit=$clientExit;editorExit=$process.ExitCode;directory=$directory;providerUsed=![string]::IsNullOrWhiteSpace($Prompt);journey=$Journey;firstLearner=[bool]$FirstLearner;liveContinuity=[bool]$LiveContinuity;sparseObjectView=[bool]$SparseObjectView;motionOnly=[bool]$MotionOnly;steeringOnly=[bool]$SteeringOnly;identityOnly=[bool]$IdentityOnly;transportOnly=[bool]$TransportOnly;providerScenario=$ProviderScenario;outcome=$(if($ProviderScenario -eq 'LearnerConversation'){'collected-requires-semantic-review'}else{'passed'});resumedFrom=$(if($ResumeIdentityRun){$ResumeIdentityRun}else{$ResumeLearnerRun})} | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $directory 'verified.json')
+ @{version=1;id=$id;clientExit=$clientExit;editorExit=$process.ExitCode;directory=$directory;providerUsed=![string]::IsNullOrWhiteSpace($Prompt);journey=$Journey;firstLearner=[bool]$FirstLearner;liveContinuity=[bool]$LiveContinuity;nativeRestart=[bool]$NativeRestart;sparseObjectView=[bool]$SparseObjectView;motionOnly=[bool]$MotionOnly;steeringOnly=[bool]$SteeringOnly;identityOnly=[bool]$IdentityOnly;transportOnly=[bool]$TransportOnly;providerScenario=$ProviderScenario;outcome=$(if($ProviderScenario -eq 'LearnerConversation'){'collected-requires-semantic-review'}else{'passed'});resumedFrom=$(if($ResumeIdentityRun){$ResumeIdentityRun}else{$ResumeLearnerRun})} | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $directory 'verified.json')
  if($ProviderScenario -eq 'LearnerConversation'){Write-Output "Learner session collected (manual outcome review required): $directory"}else{Write-Output "Native room probe passed: $directory"}
 }finally{
  $env:MAESTRO_ROOM_PROBE_PROMPT=$previousPrompt;$env:MAESTRO_ROOM_PROBE_PROFILE=$previousProfile;$env:MAESTRO_ROOM_PROBE_SCENARIO=$previousScenario;$env:MAESTRO_ROOM_PROBE_SPEECH=$previousSpeech
+ if($clientProcess -and !$clientProcess.HasExited){$clientProcess.Kill($true);$clientProcess.WaitForExit()}
  if(!$process.HasExited){$process.Kill();$process.WaitForExit()}
  Stop-QuestBuildHelper
 }

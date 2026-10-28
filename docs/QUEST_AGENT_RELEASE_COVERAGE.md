@@ -3568,3 +3568,30 @@ physical capture/room behavior and headset performance remain unqualified.
 The final run pins model-manifest and voice-metadata line endings through
 `.gitattributes`, so checkout conversion cannot change their evidence hashes.
 The preceding successful run `37f02f5750b04dbc89f05ed7d028e0d1` is also retained.
+
+## Checkpointed native process restart (2026-10-28)
+
+The explicit `-NativeRestart` extension passed as
+`ee1137f398a0408ba30cad58807a5391`, opening the original workspace after actual
+termination of its first Unity process. The normal production lesson, chat tree
+and apple creation, Live tree deletion and browser reload remain in the journey.
+All five original object identities and the apple persist; the tree stays absent.
+The same three completed action receipts are re-inspected without replay.
+The App run took 85.462 seconds with 92 native requests and 467 observations.
+Both complete directory passes, clean persistence, released capture, exact saved
+apple metadata and actual process lifetime evidence are mandatory. Source and
+resumed native session revision numbers are retained, not conflated.
+
+The final wrapper, client and resumed Editor passed; the deliberately terminated
+first process has no normal terminal. The unchanged Live gate also passed.
+Forty-five EditMode admission tests, 95 pure supervisor contracts and 91 focused
+JS/TS tests passed. The additional report gate reuses shared object/directory
+validation instead of maintaining a separate interpretation of those schemas.
+Pure contracts run in CI; the native journey requires the separately prepared
+local model assets and an owned Editor mirror.
+
+This qualifies interruption after journal completion, not an in-flight native
+action, interrupted save, program continuation or Android process death. It uses
+scripted providers, synthetic microphone input and a synthetic floor. Real
+managed/BYOK judgment, native acoustic quality and physical device acceptance
+remain separate open gates.

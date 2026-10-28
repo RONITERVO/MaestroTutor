@@ -30,8 +30,9 @@ namespace Maestro.Quest.Editor
             directory=Path.GetFullPath(directory);var owner=JObject.Parse(File.ReadAllText(Path.Combine(directory,"owner.json")));
             if((int?)owner["version"]!=1||!Guid.TryParseExact((string)owner["id"],"N",out _))throw new InvalidOperationException("Invalid probe owner receipt.");
             foreach(var name in new[]{"ready.json","state.json","terminal.json"})if(File.Exists(Path.Combine(directory,name))||Directory.Exists(Path.Combine(directory,name)))throw new InvalidOperationException("Probe directories cannot be reused.");
+            var admission=QuestRoomProbeRestart.Resolve(directory,owner);
             if(File.Exists(Path.Combine(directory,"workspace")))throw new InvalidOperationException("The probe workspace must be a directory.");
-            if(Directory.Exists(Path.Combine(directory,"workspace"))){
+            if(string.IsNullOrEmpty(admission.RestartOf)&&Directory.Exists(Path.Combine(directory,"workspace"))){
                 var resumePath=Path.Combine(directory,"learner-resume.json");
                 if((Environment.GetEnvironmentVariable("MAESTRO_ROOM_PROBE_LEARNER")!="1"&&(bool?)owner["identityOnly"]!=true)||!File.Exists(resumePath))throw new InvalidOperationException("An existing workspace requires an explicit closed learner or identity-probe copy.");
                 var resume=JObject.Parse(File.ReadAllText(resumePath));
@@ -47,14 +48,15 @@ namespace Maestro.Quest.Editor
             if(state==PlayModeStateChange.EnteredPlayMode){
                 directory=SessionState.GetString(Key,"");if(string.IsNullOrEmpty(directory))return;
                 try{
-                    id=(string)JObject.Parse(File.ReadAllText(Path.Combine(directory,"owner.json")))["id"];
+                    var owner=JObject.Parse(File.ReadAllText(Path.Combine(directory,"owner.json")));id=(string)owner["id"];
+                    var admission=QuestRoomProbeRestart.Resolve(directory,owner);
                     started=EditorApplication.timeSinceStartup;next=0;finishing=false;
                     // Deliberate interactive learner sessions need time between user turns.
                     timeoutSeconds=Environment.GetEnvironmentVariable("MAESTRO_ROOM_PROBE_LEARNER")=="1"?3600:900;
                     avatarProbe=Environment.GetEnvironmentVariable("MAESTRO_ROOM_PROBE_AVATAR")=="1"?new QuestAvatarProbe():null;
                     Application.runInBackground=true;Application.targetFrameRate=72;
                     root=new GameObject("Maestro probe app");root.SetActive(false);
-                    var room=root.AddComponent<MaestroRoom>();room.ProbeWorkspaceDirectory=Path.Combine(directory,"workspace");root.SetActive(true);
+                    var room=root.AddComponent<MaestroRoom>();room.ProbeWorkspaceDirectory=admission.WorkspaceDirectory;root.SetActive(true);
                     agent=root.GetComponent<RoomAgent>();
                     bool synthetic=Environment.GetEnvironmentVariable("MAESTRO_ROOM_PROBE_PHYSICS")=="1";
                     if(synthetic){
@@ -69,7 +71,8 @@ namespace Maestro.Quest.Editor
                     if(Environment.GetEnvironmentVariable("MAESTRO_ROOM_PROBE_IMAGE")=="1")Publish("image-fixture.json",QuestRoomProbeImage.Seed(root));
                     if(Environment.GetEnvironmentVariable("MAESTRO_ROOM_PROBE_AUDIO")=="1")Publish("sound-fixture.json",QuestRoomProbeSound.Seed(root));
                     if(Environment.GetEnvironmentVariable("MAESTRO_ROOM_PROBE_LIVE_AUDIO")=="1")Publish("live-sound-fixture.json",QuestRoomProbeLiveSound.Seed());
-                    Publish("ready.json",new JObject {["version"]=1,["id"]=id,["boundary"]="Real Unity app in Editor; no Android WebView, headset or real room scan",["syntheticPhysics"]=synthetic,["syntheticScan"]=syntheticScan});
+                    using var process=System.Diagnostics.Process.GetCurrentProcess();
+                    Publish("ready.json",new JObject {["version"]=1,["id"]=id,["boundary"]="Real Unity app in Editor; no Android WebView, headset or real room scan",["syntheticPhysics"]=synthetic,["syntheticScan"]=syntheticScan,["processId"]=process.Id,["processStartedAt"]=new DateTimeOffset(process.StartTime.ToUniversalTime()).ToUnixTimeMilliseconds(),["workspaceDirectory"]=admission.WorkspaceDirectory,["restartOf"]=admission.RestartOf});
                 }catch(Exception e){Fail(e);}
             }else if(state==PlayModeStateChange.EnteredEditMode){
                 directory=SessionState.GetString(Key,"");if(string.IsNullOrEmpty(directory))return;

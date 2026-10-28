@@ -97,7 +97,7 @@ export class NativeLearner implements NativeFirstLearnerAdapter {
  private creationReceipt:unknown;
  private definition:unknown;
  private observation:unknown;
- private persistence:unknown;
+ protected persistence:unknown;
  private restoredDefinition:unknown;
  private restoredObservation:unknown;
  protected beforeReloadRequests=0;

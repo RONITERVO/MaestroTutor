@@ -40,7 +40,10 @@
     "scripts/native-probe-identity.test.ts",
     "scripts/probe-quest-first-learner-native.ts",
     "scripts/first-learner-verifier-contract.test.ts",
-    "scripts/probe-quest-first-learner-live.ts"
+    "scripts/probe-quest-first-learner-live.ts",
+    "scripts/first-learner-native-restart.test.ts",
+    "scripts/assert-quest-native-restart.ts",
+    "scripts/assert-quest-native-restart.test.ts"
   ],
   "references": []
 }
