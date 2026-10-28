@@ -17948,3 +17948,40 @@ No product runtime or saved format changed. Death during file publication,
 native program continuation, rendered browser/WebView task recovery, Android
 process death, headset behavior, provider acceptance and the existing audio
 quality failures remain open release gates.
+
+
+### Reproducible audio history attribution — 2026-10-28
+
+The isolated native evaluation now includes matched four-stream history controls.
+Near-only speech with a silent reference is compared with the same input plus a
+render reference but no acoustic echo; independent echo-only and mixed owners
+retain context. Every frame checks sample/clock parity and distinct ownership.
+Six original generated-source cases and two explicit pre-six-second history
+interventions report 24 fixed source-time windows. They use the same extracted
+fixture formulas as the existing quality probe, without private upstream patches,
+recorded voices, devices or providers.
+
+The fresh measured32 Windows build at `echo-native/hc2w` passed the existing
+ownership/timing/drain/session and standalone requirements. All 39 original
+aligned metric rows are identical to the retained baseline; its **31 quality
+failures remain open**. Eight native comparison-metric contracts and 45 Python
+evidence tests passed. An independent read of all eight retained raw four-stream
+recordings reproduces all 24 new windows: maximum difference from printed
+nine-decimal measurements is below 5e-10. All 14 unrelated files are unchanged.
+
+This preserves the completed October 26 history intervention as a repeatable
+diagnostic. It establishes dependence on aggregate earlier microphone history in
+two quiet-voice controls, not one faulty coefficient or a fix. A new single-setting
+startup-rate experiment (.95 to .70) loses five existing aligned passes and is
+rejected. It changes no selected DSP or quality threshold. The new diagnostic is
+wired into all three CI evaluation profiles, separately from speech acceptance
+and the original failure totals.
+
+See [audio attribution](../unity/Tools/EchoProcessing/TONAL_DIAGNOSIS.md) and
+[reproduction](../unity/Tools/EchoProcessing/README.md#matched-history-controls).
+Commands, raw-evidence comparisons and the rejected candidate remain in
+`.quest-evidence/echo-startup-20261028/`. The Android ARM64 cross-build at `echo-native/hc1a` also passes
+linkage and 16 KiB alignment checks for the added diagnostic. Its native sources
+match the final Windows build; it was not run on a device. Product capture
+ownership, app/world behavior, save formats and release packages are unchanged. Native acoustic
+quality, production integration and physical/provider acceptance remain open.

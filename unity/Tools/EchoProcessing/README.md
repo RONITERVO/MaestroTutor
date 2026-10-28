@@ -271,6 +271,44 @@ sources, verify permission/pause/stop lifecycles, and test actual Quest
 playback/capture and the original Live provider path. Production reflections and
 microphone gates must not be relaxed on the strength of a cross-build.
 
+## Matched history controls
+
+`HistoryProbe.cpp` runs four independent real DuplexProcessor/APM owners on the
+same measured input timeline: near signal with silent reference, echo/reference,
+near plus echo/reference, and the identical near signal with reference but no
+acoustic echo. The last control makes reference-induced distortion observable
+without mistaking leftover echo for lost speech. The original generated sources
+are shared in `AlignedAudioFixture.h`; their formulas and original acceptance
+windows are unchanged.
+
+The eight diagnostic cases comprise six original broadband/cold-tone/trained-tone/
+changed-path normal/quiet/burst examples and two explicit causal interventions.
+The interventions set only pre-six-second near input to zero in two quiet cases.
+They change aggregate history and introduce an onset; they do not isolate one
+coefficient and are never an app microphone policy. Each run processes 1,800
+frames and verifies all four streams' source/clock identities and distinct owners.
+
+Three fixed input-source-time windows (6.02–8, 8–11 and 11–17 seconds) report
+projected gain, correlation, RMS ratio and normalized difference RMS for the
+mixed and no-echo-reference outputs against the processed silent-reference
+baseline. Baseline/raw source RMS, echo reduction, modeled delay and cumulative
+clipping are retained. No window shifts, gain normalization or lag search occur.
+These input coordinates are not acoustic output time or the original quality
+suite's fixed output-index windows. Simulated continuation is not a Close/drain
+claim.
+
+`Build.py` runs this diagnostic and its eight native metric contracts on Windows;
+Android only cross-compiles it. `HistoryResults.py` requires all 24 unique windows,
+unchanged fixtures/clocks, coherent lifetime metadata, finite measurements and
+consistent energy identities. It explicitly retains adverse observations and
+rejects a speech-acceptance claim. CI publishes these separately: a successful
+diagnostic means complete evidence, **not passing audio quality**. Existing
+quality thresholds, passing identities and open-failure counts stay unchanged.
+Run the emitted `maestro_history_probe.exe` directly, or pass
+`--metric-contracts` for its independent measurement checks. Python evidence
+contracts run with `python -B -m unittest discover -s unity/Tools/EchoProcessing
+-p "test_*results.py"`.
+
 ## Clock-aligned duplex candidate
 
 `DuplexProcessor` accepts frames from the existing native capture/output owners,

@@ -24,7 +24,7 @@ APM_MIRROR_SHA256 = "35e86b986d02ea15f3d04741a1a5a735ba399bc0fac0ee089c39480e35f
 SOURCES = ("EchoProcessor.h", "EchoProcessor.cpp", "Probe.cpp", "meson.build", "Build.py", "QualityResults.py", "test_quality_results.py", "aligned-quality-baseline.json", "Make-SpeechFixtures.ps1",
     "CaptureInput.h", "CaptureInput.cpp", "AndroidCaptureDevice.cpp", "CaptureProbe.cpp",
     "CaptureEffects.h", "CaptureEffects.cpp", "DeviceAudioClock.h", "PlaybackOutput.h", "PlaybackOutput.cpp", "AndroidPlaybackDevice.cpp", "PlaybackProbe.cpp",
-    "ClockAlignment.h", "ClockAlignment.cpp", "DuplexProcessor.h", "DuplexProcessor.cpp", "AlignmentProbe.cpp", "DrainProbe.cpp", "CaptureSession.h", "CaptureSession.cpp", "SessionProbe.cpp", "TerminationProbe.cpp", "AudioFixture.h")
+    "ClockAlignment.h", "ClockAlignment.cpp", "DuplexProcessor.h", "DuplexProcessor.cpp", "AlignmentProbe.cpp", "DrainProbe.cpp", "CaptureSession.h", "CaptureSession.cpp", "SessionProbe.cpp", "TerminationProbe.cpp", "AudioFixture.h", "AlignedAudioFixture.h", "HistoryProbe.cpp", "HistoryResults.py", "test_history_results.py")
 
 def digest(path):
     return hashlib.sha256(path.read_bytes()).hexdigest()
@@ -101,6 +101,7 @@ def cross_file(ndk, output):
 
 def main():
     from QualityResults import GROUPS, load_baseline, validate_group, validate_metric_contracts
+    import HistoryResults
 
     parser = argparse.ArgumentParser(description=__doc__)
     for name in INPUTS:
@@ -223,7 +224,7 @@ def main():
                 record[label + "Probe"] = {"status": "cross-compiled-not-executed", "binarySha256": digest(device_binary),
                     "androidNeeded": device_needed, "androidLoadAlignment": [int(line.split()[-1], 16) for line in device_loads],
                     "deviceOpened": False}
-            for label in ("alignment", "drain", "session", "termination"):
+            for label in ("alignment", "drain", "session", "termination", "history"):
                 worker_binary = build / ("maestro-probe/maestro_" + label + "_probe")
                 run([readelf, "-h", "-l", "-d", "-Ws", worker_binary], "android-" + label + "-elf", 30)
                 metadata = (output / ("android-" + label + "-elf.log")).read_text()
@@ -264,6 +265,14 @@ def main():
                 save()
                 if suffix == "Quality" and alignment_code != 0:
                     raise RuntimeError("Clock-aligned broadband regression")
+            history_executable = build / "maestro-probe/maestro_history_probe.exe"
+            history_metrics = run([history_executable, "--metric-contracts"], "history-metric-contracts", 30)
+            record["historyMetricContracts"] = HistoryResults.validate_metric_contracts(
+                (output / "history-metric-contracts.log").read_text(), history_metrics)
+            history_code = run([history_executable], "history-controls", 120)
+            record["historyDiagnostic"] = HistoryResults.validate_history(
+                (output / "history-controls.log").read_text(), history_code)
+            save()
             termination_executable = build / "maestro-probe/maestro_termination_probe.exe"
             run([termination_executable], "termination-diagnostic", 60)
             termination = json.loads((output / "termination-diagnostic.log").read_text().splitlines()[-1])

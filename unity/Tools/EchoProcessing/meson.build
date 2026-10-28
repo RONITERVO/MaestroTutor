@@ -57,3 +57,9 @@ test('scripted-capture-session', session_probe, timeout: 30)
 # selected graceful-shutdown path. Do not count these outcomes as quality passes.
 termination_probe = executable('maestro_termination_probe', 'TerminationProbe.cpp',
   link_with: echo_lib, install: false)
+
+
+# Reference-without-acoustic-echo and causal history controls. The observations
+# remain separate from the unchanged acceptance matrices and never certify audio.
+history_probe = executable('maestro_history_probe', 'HistoryProbe.cpp',
+  link_with: [alignment_lib, echo_lib], install: false)

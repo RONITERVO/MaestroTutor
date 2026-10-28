@@ -261,6 +261,54 @@ seven-column sample exports, candidate commands/hashes and independent reviews.
 `echo-native/sp1w` is the fresh baseline; `sp2w` and `sp3w` are rejected controls.
 Private diagnostic sources and recordings are not app assets.
 
+## History attribution and startup-rate rejection — 2026-10-28
+
+The completed private passive trace from October 26 accounts for bypassed input
+blocks and delay-buffer reinitialization. All 39 original cases retain identical
+PCM, metrics and verdicts; six four-stream controls retain matching outputs.
+Warm quiet-voice cases with an identical microphone source and no acoustic echo
+already acquire distortion in the coarse/refined filters before final suppression.
+Cold quiet and burst controls do not show that same pattern. A projected gain near
+one alone therefore cannot establish clean speech: added error can preserve
+projection while reducing correlation.
+
+A separate, completed intervention in `attempt4b-history` sets only the near
+source before six seconds to zero in two quiet cases. Render, modeled echo,
+timing, DSP and the source suffix from six seconds onward stay unchanged.
+For nominal trained tones, final no-echo-reference correlation in the three source
+windows improves from approximately .702/.631/.663 to 1. For the changed-path
+drift case it improves from .745/.710/.727 to 1. This establishes aggregate history
+dependence in those controls. The intervention also changes early tonal history,
+detector/filter state and the onset at six seconds; it does not isolate the
+broadband interval, one coefficient or the cause of every open failure. Changing
+the test input is attribution, not an accepted quality fix.
+
+A bounded supported-setting experiment at source `39d20860` changes only
+`filter.coarse_initial.rate` from .95 to .70. The steady-state rate, upstream
+guards, selection and stationarity settings remain unchanged. A newly linked
+unchanged control first reproduces every retained aligned and standalone metric.
+
+| Private control | Aligned failures / 39 | Existing passes lost | Standalone failures / 40 |
+| --- | ---: | ---: | ---: |
+| Unchanged measured32 | 31 | 0 | 0 |
+| Initial coarse rate .70 | 36 | 5 | 0 |
+
+The candidate loses both trained-tone drift passes and all three previously
+passing overlapping cases. It is rejected without further speech qualification;
+passing standalone checks cannot override these regressions. No app DSP,
+configuration, dependency authority or original threshold changes. Commands,
+source/binary hashes, complete failed results and unchanged-authority checks are
+retained in `.quest-evidence/echo-startup-20261028/`.
+
+The maintained `HistoryProbe.cpp` now makes the four-stream controls reproducible
+without private upstream instrumentation or binary sample exports. Six original
+cases plus the two prefix interventions report 24 fixed input-source-time windows.
+This diagnostic separates reference-induced distortion from residual echo; its
+successful execution certifies neither speech nor device quality. The original
+39-case quality gate remains independent. Private stage-level attribution and
+causal limits remain in `.quest-evidence/echo-passive-trace-20261026/attempt3/` and
+`attempt4b-history/`. No private upstream patch or recorded voice is shipped.
+
 ## Decision
 
 Keep one shared capture/output ownership and timing contract. Keep both the cold
