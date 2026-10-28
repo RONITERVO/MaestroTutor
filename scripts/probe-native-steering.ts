@@ -11,6 +11,7 @@ import {runAgentSteeringProof,type ReceiptObserver} from './probe-agent-steering
 import {readNativeObjects} from './native-probe-read-set';
 import {assertSameRoomObjects} from './agent-provider-contract';
 import {bookProviderStage} from './book-provider-evidence';
+import {probeNativeActionLoss} from './probe-native-action-loss';
 /** Script only the provider transport; tutor/verifier/handoff/task/control/store
  * logic and native actions use the actual application. All network is refused. */
 export async function probeNativeSteering(execute:(commands:RoomCommand[])=>Promise<RoomAgentState>,lease:()=>RoomAgentLease,directory:string,sparseObjectView=false){
@@ -61,4 +62,5 @@ export async function probeNativeSteering(execute:(commands:RoomCommand[])=>Prom
   catch(error){evidence.phase='failed';evidence.cleanupError=String(error);throw error;}
   finally{globalThis.fetch=originalFetch;await writeFile(join(directory,'native-steering.json'),JSON.stringify({...evidence,requests,networkAttempts},null,2));}
  }
+ await probeNativeActionLoss(execute,lease,directory);
 }

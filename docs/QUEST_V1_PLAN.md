@@ -6,7 +6,8 @@ Start with the [accepted product scope](#accepted-product-scope) and
 [release evidence checklist](#release-evidence-still-required) and the latest
 [complete integration checkpoint](#complete-native-book-and-unsigned-android-verification--2026-10-26) and
 [production text-to-Live increment](#production-text-to-live-continuity--2026-10-26) and
-[checkpointed native restart](#checkpointed-native-process-restart--2026-10-28). The current
+[checkpointed native restart](#checkpointed-native-process-restart--2026-10-28) and
+[lost action acknowledgement](#lost-running-action-acknowledgement--2026-10-28). The current
 [pointer and solid geometry checkpoint](#shared-pointer-and-solid-geometry--2026-10-25) separates book interaction from physical queries. The preceding
 [collision availability checkpoint](#shared-passive-collision-availability--2026-10-25) adds explicit user/program/agent inspection. The preceding
 [saved-world rain checkpoint](#passive-saved-world-rain-cover--2026-10-25) extends exposure readiness;
@@ -17866,3 +17867,40 @@ requires completion before interruption. In-flight action/write recovery,
 Android process death, retained microphone permission, real providers and
 headset behavior remain unqualified. No native runtime, save format, release
 package, signing, deployment or Meta state changes in this increment.
+
+
+### Lost running-action acknowledgement — 2026-10-28
+
+The new offline headless recovery scenario exercises an uncertain in-flight
+operation against real Unity: Maestro starts a thirty-second wave, but its task
+never receives the native acknowledgement. The durable journal is read before
+dispatch, and the actual native reply proves that this is a running action rather
+than a rejected or merely queued request. The shared task runner records an
+interrupted, unconfirmed outcome and does not generate a completion reply.
+
+A duplicate handoff does not replay. A fresh client opens the same saved headless
+profile and restores the original task and chat status without provider work or
+native commands. New ordinary learner requests first inspect and then stop that
+exact run. The original uncertain journal remains unchanged; the new tasks carry
+their own native receipts. The scenario checks one start, six total agent-native
+batches, sixteen scripted provider calls and zero network attempts. Saved world
+objects and their physics remain unchanged. It is now included in both the
+standard offline Headless journey and its focused SteeringOnly mode.
+
+Focused run `36ea3d03ecc74708833af912a7547186` passed with the complete
+pre-dispatch evidence. Earlier development run `b77c95c86e3747859b69181fb2a1a933`
+passed the delivery-loss and restore path before the independent pre-dispatch
+journal assertion was added; it is not the final write-ahead qualification.
+The standard offline Headless run `0ec8247ce2e64a7aa8f97894a745364c` also
+passed with 2,630 explicit observations and clean client, Editor and terminal
+receipts. Its shared steering phase includes this new failure scenario.
+Final focused run `1c15d5807b354f0485e64884f047b8b3` passed after the
+fixture handoff wording was made neutral for inspection and cancellation.
+The complete app suite passed 3,630 tests across 377 files, including 24 new
+negative/positive recovery contracts. Probe types and scoped lint passed.
+
+See [the recovery contract](QUEST_NATIVE_ROOM_PROBE.md#lost-acknowledgement-during-a-running-action).
+This is deliberate host delivery loss and fresh host/profile restoration within
+one live native session. Native process death during an active action, interrupted
+writes, browser/WebView task restoration, providers and physical-device acceptance
+remain separate open gates. Product runtime and saved formats are unchanged.

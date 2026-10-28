@@ -2172,3 +2172,35 @@ an interrupted write, in-flight action recovery, native program continuation,
 retained microphone permission, Android process death, headset media or real
 provider behavior. Those need separate scenarios and must not be inferred from
 this result.
+
+
+### Lost acknowledgement during a running action
+
+The standard offline Headless journey and focused `-SteeringOnly` mode now run
+`probeNativeActionLoss` after the Stop/revise/continue proof and its cleanup.
+The production headless client selects English/Spanish, sends an ordinary request
+for a thirty-second wave and uses the common tutor, verifier and delegated task.
+Only provider streams are scripted; all native observations and actions come from
+the running Unity app. Network requests are refused.
+
+The fixture reads the durable task journal before dispatching `animation.play`.
+Unity accepts the exact issued run ID and reports `running`. The host deliberately
+withholds that one acknowledgement and raises a delivery interruption. The task
+must retain its write-ahead intent without a receipt, project `interrupted` into
+chat, and make no completion-reply request. Repeating the same handoff must neither
+spend nor dispatch. A new headless client opens the same persisted profile, and a
+new task store restores the original journal and chat status without replay.
+
+Separate new learner requests inspect and then cancel the same native run ID.
+Inspection must still report `running`; cancellation must report `cancelled`.
+Exactly one start is permitted across the complete scenario. Historical uncertain
+intent is preserved, while later tasks retain their own exact native receipts.
+Saved object membership, placement and physics must match the starting read set.
+`native-action-loss.json` retains the pre-dispatch journal, withheld receipt,
+restored record, follow-up tasks, complete dispatches and scripted-provider calls.
+
+This qualifies a lost host acknowledgement after a real timed action starts,
+plus fresh host/profile recovery. Both OS processes and the native session stay
+alive. It does not qualify an OS crash, native restart during execution, an
+interrupted file publication, rendered chat recovery, headset input or real
+provider judgment. The separate completed-save restart proof remains unchanged.
