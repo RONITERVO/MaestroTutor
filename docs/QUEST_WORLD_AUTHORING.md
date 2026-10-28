@@ -3791,6 +3791,21 @@ acceptance remain unfinished. Current desktop evidence includes bound-camera
 sampling without controllers, finite boundaries, lifecycle/freshness, global
 collision readiness, reentrant event delivery, and discrete world relocation.
 
+## Shared finite-water geometry for presentation
+
+The shared geometry used by native rain queries measures the wet portion of a
+finite segment through a cylinder,
+rectangular vessel or the actual terrain triangles; a dry ridge separating two
+pools contributes no wet distance. Terrain queries visit only crossed cells,
+with a fixed upper bound from the accepted terrain resolution.
+
+This geometric result is independent of simulation pause and is not itself a
+gameplay contact event or a geometry-readiness guarantee. The viewer contact
+facts above retain their tracking, pause and unknown-state rules. Full
+underwater visuals and audio treatment remain unfinished; the new calculation
+does not tint a camera feed, create another liquid inventory or alter collision
+participation.
+
 ## Independent native liquid appearance
 
 Liquid surfaces and pouring streams use the existing shared appearance library.

@@ -2,7 +2,10 @@
 
 Status: active implementation. Nothing in this document claims store readiness.
 
-The latest [native liquid appearance increment](#independent-liquid-appearance-and-back-face-rendering--2026-10-28)
+The latest [finite-water geometry increment](#shared-finite-water-segments--2026-10-28)
+measures wet ray lengths through the existing water geometry and bounds terrain
+traversal to crossed cells. It also serves the existing rain-contact path.
+The preceding [native liquid appearance increment](#independent-liquid-appearance-and-back-face-rendering--2026-10-28)
 adds shared surface/stream styling and fixes transparent back-face outlines.
 The preceding [viewer immersion increment](#shared-viewer-water-contact--2026-10-28)
 supplies the tracked viewpoint's finite-water contacts. These do not complete
@@ -10,7 +13,7 @@ underwater presentation or replace the candidate/device release gates.
 
 Start with the [accepted product scope](#accepted-product-scope) and
 [release evidence checklist](#release-evidence-still-required) and the latest
-[complete integration checkpoint](#complete-native-book-and-unsigned-android-verification--2026-10-26) and
+[complete integration checkpoint](#complete-native-and-android-checkpoint--2026-10-28) and
 [production text-to-Live increment](#production-text-to-live-continuity--2026-10-26) and
 [checkpointed native restart](#checkpointed-native-process-restart--2026-10-28) and
 [lost action acknowledgement](#lost-running-action-acknowledgement--2026-10-28) and
@@ -18150,3 +18153,39 @@ nine-turn real-provider lesson, Android/WebView input or texture, physical scan,
 stereo, acoustics, frame/thermal budgets or Store readiness. All release rows
 above remain open. Installed and packaged candidates, provider/device holds,
 signing, deployment and Meta state are unchanged.
+
+## Shared finite-water segments — 2026-10-28
+
+`LiquidMediumGeometry.MeasureSegment` now provides first/last wet contact and
+the summed wet fraction of a finite ray. Cylinders use their exact circular
+cross-section; rectangular and terrain containers retain their actual cavity,
+gravity-aligned level, scale and pose. Dry ridges between separated pools do not
+count as water. The existing rain side-entry/suppression query uses this same
+calculation, so it is an exercised runtime path rather than a second inventory
+or an unused optical model.
+
+Terrain traversal visits only crossed grid cells, with at most `2*cells+3`
+visits (35 for the current largest grid), rather than scanning up to 256 cells.
+Each visit clips against the same two bed triangles; overlapping diagonal
+intervals count once. It reads exact grid vertices and relies on the already
+clipped footprint for the outer exit. An independent irregular-terrain sampling
+test exposed a reverse-path rounding failure at that exit during development;
+the retained failed result and corrected reruns show the regression.
+
+Final desktop verification passed **50 selected EditMode** and **38 selected
+PlayMode** cases. Coverage includes independent sampling at four grid/aspect
+configurations, forward/reverse rays, dry ridges, exact grid edges, empty water,
+tilted and scaled vessels, actual rain and stream presentation, nearest-surface
+selection, geometry readiness and viewer contact lifecycle. All 14 unrelated
+files remain byte-identical. Evidence and source hashes are in
+`.quest-evidence/liquid-segments-20261028/completed.json`; final results are
+`editmode-5.xml` and `playmode-2.xml`. Earlier results remain separate.
+
+This increment changes no catalog, saved schema or user control. Geometric
+measurement is independent of physics pause but does not grant geometry
+readiness or movement permission. Underwater rendering must still respect the
+actual viewing camera, finite water, authored appearance and separate real-world
+visibility. Tint/refraction, underwater audio treatment, Quest stereo/comfort and
+performance remain unfinished. The complete integration/Android evidence above
+belongs to e55ab20d, not this later source. No new device, real-provider, signing,
+deployment or Meta action was taken.
