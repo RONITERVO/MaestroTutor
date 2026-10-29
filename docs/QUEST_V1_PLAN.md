@@ -2,7 +2,13 @@
 
 Status: active implementation. Nothing in this document claims store readiness.
 
-The latest [authored underwater view](#authored-underwater-view--2026-10-28)
+The latest [shared liquid-path query](#shared-liquid-path-observations--2026-10-29)
+exposes the current finite water geometry to the same user/program/agent catalog.
+It preserves dry gaps and assigns overlapping water once, with explicit missing
+geometry states. This is the geometry foundation for authored sound treatment;
+it does not yet process audio or complete underwater acceptance.
+
+The preceding [authored underwater view](#authored-underwater-view--2026-10-28)
 adds opt-in finite-distance shading through shared user/agent settings. Its
 full native tests, actual Headless/Book/first-learner journeys, text-to-Live
 with native restart, and unsigned Android compilation pass. Physical Quest
@@ -18328,3 +18334,50 @@ now places the shared immersion contract near its product decision: per-entity
 physical-room participation, independent visibility/audio, shared human/agent
 execution and explicit outcome, persistence and capacity evidence. This records
 the accepted direction; it does not close any release acceptance row.
+
+
+## Shared liquid-path observations — 2026-10-29
+
+Implemented `world.medium.path` / `liquidPaths.v1` through the shared catalog,
+generated fact inputs, typed programs and agent discovery. It reads the current
+finite native liquid geometry along an authored line within the existing
+25-metre world boundary. It reports total/wet/dry metres and an optional exact
+cavity's contribution, without loading objects, resuming physics or changing
+saved/live water.
+
+The existing terrain ray traversal now optionally collects disjoint wet spans.
+A bounded reusable partition assigns each span once by cavity volume and stable
+ID. Dry ridges remain dry; overlapping, disabled-view and nested water retain
+their own geometry. The same priority now serves point, first-contact, view and
+path selection. The whole segment must have complete native geometry: a missing
+cavity beyond the first hit still makes the path unavailable. Pending loading
+and unavailable geometry return explicit states with zero placeholders, not a
+false dry-path result.
+
+Evidence in `.quest-evidence/liquid-path-20261029/verification.json`:
+
+- 47 focused geometry/medium EditMode checks and 17 catalog checks pass. Random
+  terrain and overlapping interval measurements are compared with independent
+  point sampling; reuse, ties, invalid/overflow inputs, transformed cavities,
+  zero-length and reversed segments are covered.
+- 40 distinct focused PlayMode checks pass across the retained runs. The five
+  new path cases cover paused read-only queries, nested/current placements,
+  missing water beyond the first hit, queued loading/recovery, live unsaved rain,
+  native retirement and the 25-metre input boundary.
+- Actual Unity wet/dry/unavailable observations are retained in
+  `test-fixtures/browser/nativeLiquidPath.json` and validated through the web
+  fact/program contract. The scoped web suites pass 2,093 tests; catalog
+  provenance matches all 806 native inputs and native export equality passes.
+- Initial validation caught a malformed new test metadata file, a missing test
+  namespace and an invalid capture newline; these were repaired and rerun.
+  A web assertion incorrectly expected the generic typed-value validator to
+  enforce a numeric range; the native geometry checks retain range/quantity
+  evidence and the corrected web test checks its actual typed-value contract.
+
+This is a scoped native/web verification increment, not a repeat of the complete
+release suite. It changes no PCM playback, microphone policy, reflection output,
+collision participation or physics stepping. Authored water audio treatment,
+real acoustic acceptance, full underwater interaction and the existing physical
+Quest/release gates remain open. The prior `1c99ccc3` Release gate and Native echo
+evaluation CI runs completed successfully; that does not close retained audio
+quality failures.

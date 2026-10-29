@@ -13,11 +13,11 @@ namespace Maestro.Quest.Creation
         // two terrain triangle columns used for quantity, collision and rendering.
         // At most 2*cells+3 visits, no allocation, independent of physics running.
         // This geometric calculation does not establish native geometry readiness.
-        internal bool MeasureSegment(Vector3 from,Vector3 to,Vector3 normal,float level,out LiquidSegment path)
+        internal bool MeasureSegment(Vector3 from,Vector3 to,Vector3 normal,float level,out LiquidSegment path,LiquidIntervals intervals=null)
         {
-            path=default;var change=to-from;
+            path=default;intervals?.Clear();var change=to-from;
             if(!RoomRecipe.Finite(from)||!RoomRecipe.Finite(to)||!RoomRecipe.Finite(change)||
-                !RoomRecipe.Finite(normal)||normal.sqrMagnitude<1e-12f||!float.IsFinite(level))return false;
+                !RoomRecipe.Finite(normal)||normal.sqrMagnitude<1e-12f||!float.IsFinite(level)){intervals?.Fail();return false;}
             float enter=0,exit=1;
             if(!LiquidMediumGeometry.Clip(from.x,change.x,bed.width*.5f,ref enter,ref exit)||
                 !LiquidMediumGeometry.Clip(-from.x,-change.x,bed.width*.5f,ref enter,ref exit)||
@@ -37,6 +37,10 @@ namespace Maestro.Quest.Creation
                 bool two=Column(x,z,1,from,change,(float)cursor,(float)end,out float c,out float d);
                 if(one||two){
                     found=true;
+                    if(intervals!=null){
+                        if(one&&two){if(a<=c){intervals.Add(a,b);intervals.Add(c,d);}else{intervals.Add(c,d);intervals.Add(a,b);}}
+                        else if(one)intervals.Add(a,b);else intervals.Add(c,d);
+                    }
                     if(one){earliest=Mathf.Min(earliest,a);latest=Mathf.Max(latest,b);wet+=(double)b-a;}
                     if(two){earliest=Mathf.Min(earliest,c);latest=Mathf.Max(latest,d);wet+=(double)d-c;}
                     // A ray on the shared diagonal can belong to both triangles.
@@ -47,7 +51,8 @@ namespace Maestro.Quest.Creation
                 if(tz<=end)z+=sz;
                 cursor=end;
             }
-            if(!found||!complete)return false;
+            if(!complete){intervals?.Fail();return false;}
+            if(!found)return false;
             path=new LiquidSegment(earliest,latest,Math.Clamp(wet,0,1),visits);return true;
         }
         float Boundary(int cell,int step,bool alongX,float origin,float change){

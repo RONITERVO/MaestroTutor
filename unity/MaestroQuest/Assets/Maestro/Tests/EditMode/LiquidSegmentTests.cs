@@ -86,7 +86,27 @@ namespace Maestro.Quest.Tests {
      var point=Vector3.LerpUnclamped(from,to,(i+.5f)/samples);
      if(Mathf.Abs(point.x)<=width*.5f&&Mathf.Abs(point.z)<=depth*.5f&&point.y>=bed.HeightAt(new Vector2(point.x,point.z))&&point.y<=1&&Vector3.Dot(point,up)<=level)wet++;
     }
-    bool hit=g.MeasureSegment(from,to,up,level,out var span);
+    var intervals=new LiquidIntervals();
+    bool hit=g.MeasureSegment(from,to,up,level,out var span,intervals);
+    Assert.That(intervals.Complete,Is.True,"Interval completeness, ray "+ray);
+    double measured=0;
+    for(int j=0;j<intervals.Count;j++){
+     var v=intervals[j];measured+=(double)v.y-v.x;
+     if(j>0)Assert.That(v.x,Is.GreaterThan(intervals[j-1].y));
+     for(int k=1;k<4;k++){
+      var p=Vector3.LerpUnclamped(from,to,Mathf.Lerp(v.x,v.y,k*.25f));
+      Assert.That(p.y,Is.GreaterThanOrEqualTo(bed.HeightAt(new Vector2(p.x,p.z))-.00001f));
+      Assert.That(Vector3.Dot(p,up),Is.LessThanOrEqualTo(level+.00001f));
+     }
+    }
+    Assert.That(measured,Is.EqualTo(hit?span.WetFraction:0).Within(.000002));
+    for(int i=0;i<samples;i++){
+     float t=(i+.5f)/samples;var p=Vector3.LerpUnclamped(from,to,t);
+     bool exact=Mathf.Abs(p.x)<=width*.5f&&Mathf.Abs(p.z)<=depth*.5f&&p.y>=bed.HeightAt(new Vector2(p.x,p.z))&&p.y<=1&&Vector3.Dot(p,up)<=level;
+     bool collected=false;for(int j=0;j<intervals.Count;j++)if(t>=intervals[j].x&&t<=intervals[j].y)collected=true;
+     // Bound float disagreement to points very near the triangulated boundary.
+     if(exact!=collected)Assert.That(Mathf.Abs(p.y-bed.HeightAt(new Vector2(p.x,p.z))),Is.LessThan(.00001f));
+    }
     bool reverseHit=g.MeasureSegment(to,from,up,level,out var reversed);
     Assert.That(reverseHit,Is.EqualTo(hit),"Reverse ray "+ray);
     Assert.That(hit?span.WetFraction:0,Is.EqualTo((double)wet/samples).Within(.005),"Independent sampled wet distance, ray "+ray);

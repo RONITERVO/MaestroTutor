@@ -130,12 +130,13 @@ namespace Maestro.Quest.Creation {
         bool FirstWetEntry(Vector3 from,Vector3 to,out float fraction){
             bool found=MeasureSegment(from,to,out var path);fraction=path.Enter;return found;
         }
-        internal bool MeasureSegment(Vector3 from,Vector3 to,out LiquidSegment path){
-            path=default;
-            if(Contents==null||Contents.amountMl<=0||!RoomRecipe.Finite(from)||!RoomRecipe.Finite(to))return false;
+        internal bool MeasureSegment(Vector3 from,Vector3 to,out LiquidSegment path,LiquidIntervals intervals=null){
+            path=default;intervals?.Clear();
+            if(Contents==null||!RoomRecipe.Finite(from)||!RoomRecipe.Finite(to)){intervals?.Fail();return false;}
+            if(Contents.amountMl<=0)return false;
             var a=inverse.MultiplyPoint3x4(from);var d=inverse.MultiplyVector(to-from);
-            if(!RoomRecipe.Finite(a)||!RoomRecipe.Finite(d))return false;
-            if(terrain!=null)return terrain.MeasureSegment(a,a+d,terrainNormal,terrainLevel,out path);
+            if(!RoomRecipe.Finite(a)||!RoomRecipe.Finite(d)){intervals?.Fail();return false;}
+            if(terrain!=null)return terrain.MeasureSegment(a,a+d,terrainNormal,terrainLevel,out path,intervals);
             float enter=0,exit=1;
             if(!Clip(-a.y,-d.y,0,ref enter,ref exit)||!Clip(a.y,d.y,Contents.height,ref enter,ref exit)||
                 !Clip(Vector3.Dot(from,Up),Vector3.Dot(to-from,Up),Level,ref enter,ref exit))return false;
@@ -156,7 +157,7 @@ namespace Maestro.Quest.Creation {
                     if(enter>exit)return false;
                 }
             }
-            path=new LiquidSegment(enter,exit,(double)exit-enter);return true;
+            intervals?.Add(enter,exit);path=new LiquidSegment(enter,exit,(double)exit-enter);return true;
         }
         internal bool ContainsAtOrBelowSurface(Vector3 point){
             if(Contents.amountMl<=0||!RoomRecipe.Finite(point)||Vector3.Dot(point,Up)>Level)return false;

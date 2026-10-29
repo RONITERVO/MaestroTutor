@@ -42472,6 +42472,118 @@
       ]
     },
     {
+      "id": "world.medium.path",
+      "version": 1,
+      "type": {
+        "record": {
+          "pathMetres": "number",
+          "wetMetres": "number",
+          "dryMetres": "number",
+          "targetMetres": "number",
+          "bodyCount": "number",
+          "reason": "text",
+          "availability": "text",
+          "dependencyCount": "number",
+          "dependencies": {
+            "list": {
+              "record": {
+                "target": "text",
+                "state": "text",
+                "boundsKnown": "boolean"
+              }
+            }
+          }
+        }
+      },
+      "label": "Liquid along a line",
+      "description": "Measure a straight finite line between from/to within the authored 25-metre sphere using current native liquid quantities and the same cylinder, rectangular cavity and triangulated terrain as water contact/rendering. Distances are physical metres. Dry gaps remain dry; overlapping water is counted once, assigned to the smallest cavity then stable object ID. target optionally reports that saved cavity's assigned metres; empty, absent or nonintersecting target returns zero. bodyCount counts cavities assigned a positive fraction, including at a zero-length wet point whose distances are all zero. availability must be ready before using any distances; unavailable/pending returns zero placeholders, never a clear path. Complete native cavity geometry is required along the whole segment, even beyond a first wet hit. Physics may be paused; visibility, view tint and real-room collision policy do not alter liquid geometry. Reading changes no audio, physics, quantities, ownership or loading. This is straight geometry, not acoustic transmission/refraction, visibility, floor support, swimming or route clearance. A relevant dormant cavity is pending only while native loading is queued/running, otherwise unavailable. Unknown cavity bounds are relevant; known distant or accepted empty cavities are excluded. dependencyCount counts missing relevant cavities; dependencies lists at most four stable IDs. Reasons explain the current failure; branch on availability.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "from": {
+            "type": "object",
+            "properties": {
+              "x": {
+                "type": "number",
+                "minimum": -25.0,
+                "maximum": 25.0
+              },
+              "y": {
+                "type": "number",
+                "minimum": -25.0,
+                "maximum": 25.0
+              },
+              "z": {
+                "type": "number",
+                "minimum": -25.0,
+                "maximum": 25.0
+              }
+            },
+            "required": [
+              "x",
+              "y",
+              "z"
+            ],
+            "additionalProperties": false
+          },
+          "to": {
+            "type": "object",
+            "properties": {
+              "x": {
+                "type": "number",
+                "minimum": -25.0,
+                "maximum": 25.0
+              },
+              "y": {
+                "type": "number",
+                "minimum": -25.0,
+                "maximum": 25.0
+              },
+              "z": {
+                "type": "number",
+                "minimum": -25.0,
+                "maximum": 25.0
+              }
+            },
+            "required": [
+              "x",
+              "y",
+              "z"
+            ],
+            "additionalProperties": false
+          },
+          "target": {
+            "type": "string",
+            "pattern": "^([a-zA-Z0-9_-]{1,64})?$",
+            "maxLength": 64
+          }
+        },
+        "required": [
+          "from",
+          "to",
+          "target"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "from": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        },
+        "to": {
+          "x": 1,
+          "y": 1,
+          "z": 0
+        },
+        "target": ""
+      },
+      "features": [
+        "factQueries.v1",
+        "liquidPaths.v1"
+      ]
+    },
+    {
       "id": "object.medium",
       "version": 1,
       "type": {
@@ -50521,6 +50633,10 @@
       "sha256": "3e53b4a31708a194da216773c220262f9dc68ae49163d87430f1c907880198fa"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/LiquidPathFact.cs",
+      "sha256": "c826a404627909332d8d6ebf51c6ef1c9fae254d2512a7492817e8e9eb28b244"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/LiquidResourceFacts.cs",
       "sha256": "146e1d16396b92091cc0525bf8d8613387b2b27c1deec6801a316eb9704b6ede"
     },
@@ -51093,12 +51209,28 @@
       "sha256": "2eec2c42e9c2c90c3e3b2d98dfe90119661603c64b56d73c65e361fb947f299c"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidIntervals.cs",
+      "sha256": "9d8075fc4ad8958140c35f72f9c9643e89739ca757f03c997c63423b1dcbbd64"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidMediumGeometry.cs",
-      "sha256": "34d1a695308797d33e652f937da3ec42f292620dc9bfd7328aac731a98c9dbc0"
+      "sha256": "5f0508db4812aa7163118428b5ed0d35990c6012b0539a2d89249ff2c6d5c219"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidMediumPhysics.cs",
-      "sha256": "4c521fe06112ef09a0e601afd05bdead72cd4b58737303d73245278514611ac2"
+      "sha256": "2448df49d1906b496ce61d922e5152e9f1bfe057c9fd7651044f0191555f6c13"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidPath.cs",
+      "sha256": "e950b972e8ad887b015e565e850a484274a40a4e4d963f731265924d19c563e4"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidPathPartition.cs",
+      "sha256": "e52cfdd34c0687f6bf65f5a9101f593615a67ef1f70202df12cde2bd341f9494"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidPathQueries.cs",
+      "sha256": "170c966fa6a667fd483e5451df194b7748ce0a5d7f9f2c91eafe84651f497751"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidPouring.cs",
@@ -51134,7 +51266,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidSurfaceQueries.cs",
-      "sha256": "562e0382cbb835667be162f7a226b4e9481cfa39abb2b9ef19eb1ab867bc595c"
+      "sha256": "52e29b0143a34bd171a87649addb40c20ccb8069980428fd3fa5d44493d06e8b"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/MaterialToolContentsView.cs",
@@ -51386,7 +51518,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomControls.cs",
-      "sha256": "a1fec6c0844763631f6f852e580eb2cf1185de14596254808b2e8d449a0d8d6c"
+      "sha256": "b7ee5b294d14c4154fd43a1eb0bf47304647695bd4d067fbc3ad56409d48526e"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomCreationBudget.cs",
@@ -51978,7 +52110,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/TerrainLiquidSurfaceQueries.cs",
-      "sha256": "efcdb73c90a29fbc989524b6c06a94f34484681c22ce904e406e608bb5a3dd05"
+      "sha256": "86ba7d009ab7104a1208d52cc95b80e3ee46620effad6c31b7fc0fc124300e77"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/UnderwaterViewProjection.cs",
@@ -52790,7 +52922,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "3fc1475f379743fb497a3769e52aae1e62a757793a7c65c739966c79263fe9ec"
+      "sha256": "77f3ba6215b0a085eade1f7c6e26df601c33b186da2f635662c9c8cc48ad2842"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourProgram.cs",

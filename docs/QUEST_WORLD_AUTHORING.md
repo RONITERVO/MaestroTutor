@@ -3835,6 +3835,33 @@ underwater view below uses this geometry. Audio treatment and full underwater
 acceptance remain unfinished; this calculation does not tint a camera feed,
 create another liquid inventory or alter collision participation.
 
+### Inspecting a line through water
+
+`world.medium.path` is the shared passive user/program/agent query, advertised
+as `liquidPaths.v1`. Supply `from` and `to` in authored coordinates, and an empty
+`target` or a cavity's exact object ID. When `availability` is `ready`, the result
+reports physical `pathMetres`, `wetMetres`, `dryMetres`, the selected cavity's
+`targetMetres`, and `bodyCount`. A zero-length wet point has zero distances but
+can still have one containing body.
+
+The query uses current liquid quantities, placements and terrain triangles.
+Dry ridges do not fill the gap between pools. Overlaps count once: the smaller
+cavity wins, with stable object ID breaking ties. A disabled underwater view
+does not remove its cavity from this geometric partition.
+
+Readiness applies to the entire line, including water beyond its first hit.
+A relevant dormant, inactive or incomplete cavity returns `pending` or
+`unavailable`, with bounded dependency details. All distance fields then contain
+zero placeholders; these must never be interpreted as a clear/dry path.
+Known distant and accepted empty cavities do not block the read. Queries do not
+load objects, resume physics, change water, acquire motion ownership or save.
+
+This is a reusable geometry observation. It supplies the finite path needed for
+later authored audio treatment; it does not currently filter sound or prove
+acoustic transmission, visibility, floor support or navigable clearance.
+Collision participation, visual presentation and audio treatment remain
+independent choices.
+
 ## Independent native liquid appearance
 
 Liquid surfaces and pouring streams use the existing shared appearance library.

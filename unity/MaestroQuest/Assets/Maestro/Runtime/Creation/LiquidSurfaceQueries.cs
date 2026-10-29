@@ -47,6 +47,6 @@ namespace Maestro.Quest.Creation
             return new(LiquidSurfaceState.Clear,to);
         }
         static bool Preferred(in LiquidMediumGeometry candidate,in LiquidMediumGeometry current)=>
-            candidate.Volume<current.Volume||candidate.Volume==current.Volume&&string.CompareOrdinal(candidate.Id,current.Id)<0;
+            LiquidPath.Preferred(candidate,current);
     }
 }

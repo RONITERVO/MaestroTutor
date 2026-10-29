@@ -37,7 +37,7 @@ namespace Maestro.Quest.Creation {
         bool SampleMedium(Vector3 point,RoomItem participant,string ignore,in RoomEnvironmentQueries.Batch environment,out LiquidMediumGeometry chosen,out float depth,out bool ready){
             chosen=default;depth=0;ready=false;bool found=false;
             if(!CapturedMediumAvailability(new Bounds(point,Vector3.zero),ignore).Ready)return false;
-            for(int i=0;i<mediaCount;i++){var m=media[i];if(m.Id==ignore||!m.Sample(point,out var d)||found&&m.Volume>=chosen.Volume)continue;chosen=m;depth=d;found=true;}
+            for(int i=0;i<mediaCount;i++){var m=media[i];if(m.Id==ignore||!m.Sample(point,out var d)||found&&!Preferred(m,chosen))continue;chosen=m;depth=d;found=true;}
             // Nested authored cavities select the smallest containing medium, then
             // stable ID order. Never add overlapping densities or skip an unavailable
             // inner medium to borrow readiness from another vessel.
