@@ -36,12 +36,13 @@ namespace Maestro.Quest.Creation {
         public string liquid="Water";
         public RoomFluid fluid=new();
         public UnderwaterViewSettings underwater=new();
+        public WaterAudioSettings waterAudio=new();
         internal bool SameLiquid(RoomContainer other)=>other!=null&&liquid==other.liquid&&color.Equals(other.color)&&RoomFluid.Same(fluid,other.fluid);
         public Color color=new(.16f,.55f,.85f,1);
-        public RoomContainer Copy()=>new(){version=version,rectangle=rectangle?.Copy(),frame=frame?.Copy(),radius=radius,height=height,capacityMl=capacityMl,amountMl=amountMl,liquid=liquid,fluid=RoomFluid.Effective(fluid).Copy(),underwater=UnderwaterViewSettings.Effective(underwater).Copy(),color=color};
+        public RoomContainer Copy()=>new(){version=version,rectangle=rectangle?.Copy(),frame=frame?.Copy(),radius=radius,height=height,capacityMl=capacityMl,amountMl=amountMl,liquid=liquid,fluid=RoomFluid.Effective(fluid).Copy(),underwater=UnderwaterViewSettings.Effective(underwater).Copy(),waterAudio=WaterAudioSettings.Effective(waterAudio).Copy(),color=color};
         public bool Validate(out string error){
             error="Use a cylindrical v1, rectangular v2 or terrain-backed v3/v4 container, normalized bottom frame, bounded dimensions and contents within capacity (1–32000000 ml)";
-            if(!UnderwaterViewSettings.Effective(underwater).Valid||!RoomFluid.Effective(fluid).Valid||version is not (1 or 2 or 3 or 4)||IsRectangular&&(rectangle==null||!(TerrainFloor?float.IsFinite(rectangle.width)&&rectangle.width>=.1f&&rectangle.width<=4&&float.IsFinite(rectangle.depth)&&rectangle.depth>=.1f&&rectangle.depth<=4:rectangle.Valid))||version==1&&rectangle!=null&&(rectangle.width!=0||rectangle.depth!=0)||frame?.Valid!=true||!float.IsFinite(radius)||radius<.005f||radius>1||!float.IsFinite(height)||height<.01f||height>2||!double.IsFinite(capacityMl)||capacityMl<1||capacityMl>MaximumMillilitres||!double.IsFinite(amountMl)||amountMl<0||amountMl>capacityMl||!RoomSnapPoint.Identifier(liquid)||liquid.Any(char.IsControl)||!Unit(color.r)||!Unit(color.g)||!Unit(color.b)||color.a!=1)return false;
+            if(!WaterAudioSettings.Effective(waterAudio).Valid||!UnderwaterViewSettings.Effective(underwater).Valid||!RoomFluid.Effective(fluid).Valid||version is not (1 or 2 or 3 or 4)||IsRectangular&&(rectangle==null||!(TerrainFloor?float.IsFinite(rectangle.width)&&rectangle.width>=.1f&&rectangle.width<=4&&float.IsFinite(rectangle.depth)&&rectangle.depth>=.1f&&rectangle.depth<=4:rectangle.Valid))||version==1&&rectangle!=null&&(rectangle.width!=0||rectangle.depth!=0)||frame?.Valid!=true||!float.IsFinite(radius)||radius<.005f||radius>1||!float.IsFinite(height)||height<.01f||height>2||!double.IsFinite(capacityMl)||capacityMl<1||capacityMl>MaximumMillilitres||!double.IsFinite(amountMl)||amountMl<0||amountMl>capacityMl||!RoomSnapPoint.Identifier(liquid)||liquid.Any(char.IsControl)||!Unit(color.r)||!Unit(color.g)||!Unit(color.b)||color.a!=1)return false;
             error=null;return true;
         }
         static bool Unit(float n)=>float.IsFinite(n)&&n>=0&&n<=1;

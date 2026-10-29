@@ -6,10 +6,15 @@ using UnityEngine;
 namespace Maestro.Quest.Creation {
     public sealed partial class LiquidPouring {
         readonly LiquidPath observedPath=new();
+        bool liquidPathsCaptured;
+        internal void CaptureLiquidPaths(){CaptureMedia(true);liquidPathsCaptured=true;}
         // A complete segment needs every relevant cavity, unlike first-contact
         // queries which can stop at their first proven hit. No loading or physics.
         internal MediumAvailability MeasureLiquidPath(Vector3 from,Vector3 to,LiquidPath result){
-            result.Clear();CaptureMedia(true);
+            CaptureLiquidPaths();return MeasureCapturedLiquidPath(from,to,result);
+        }
+        internal MediumAvailability MeasureCapturedLiquidPath(Vector3 from,Vector3 to,LiquidPath result){
+            result.Clear();if(!liquidPathsCaptured)return new("unavailable","Capture liquid paths before measuring");
             if(!RoomRecipe.Finite(from)||!RoomRecipe.Finite(to)||!float.IsFinite((to-from).sqrMagnitude))
                 return new("unavailable","Liquid path endpoints are invalid");
             var bounds=new Bounds(from,Vector3.zero);bounds.Encapsulate(to);

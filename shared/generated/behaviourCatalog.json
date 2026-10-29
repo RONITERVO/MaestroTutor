@@ -17690,6 +17690,39 @@
                                         "x-features": [
                                           "underwaterView.v1"
                                         ]
+                                      },
+                                      "waterAudio": {
+                                        "type": "object",
+                                        "properties": {
+                                          "version": {
+                                            "type": "integer",
+                                            "minimum": 1.0,
+                                            "maximum": 1.0
+                                          },
+                                          "enabled": {
+                                            "type": "boolean"
+                                          },
+                                          "attenuationDbPerMetre": {
+                                            "type": "number",
+                                            "minimum": 0.0,
+                                            "maximum": 24.0
+                                          },
+                                          "mufflingPerMetre": {
+                                            "type": "number",
+                                            "minimum": 0.0,
+                                            "maximum": 8.0
+                                          }
+                                        },
+                                        "required": [
+                                          "version",
+                                          "enabled",
+                                          "attenuationDbPerMetre",
+                                          "mufflingPerMetre"
+                                        ],
+                                        "additionalProperties": false,
+                                        "x-features": [
+                                          "waterAudio.v1"
+                                        ]
                                       }
                                     },
                                     "required": [
@@ -22225,6 +22258,107 @@
           "enabled": true,
           "tint": "#285B78",
           "densityPerMetre": 0.4
+        }
+      }
+    },
+    {
+      "id": "object.container.audio.configure",
+      "version": 1,
+      "label": "Configure water sound",
+      "input": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^[a-fA-F0-9]{32}$",
+            "maxLength": 32,
+            "x-resource": "object"
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 1.0,
+            "maximum": 2147483647.0
+          },
+          "settings": {
+            "type": "object",
+            "properties": {
+              "version": {
+                "type": "integer",
+                "minimum": 1.0,
+                "maximum": 1.0
+              },
+              "enabled": {
+                "type": "boolean"
+              },
+              "attenuationDbPerMetre": {
+                "type": "number",
+                "minimum": 0.0,
+                "maximum": 24.0
+              },
+              "mufflingPerMetre": {
+                "type": "number",
+                "minimum": 0.0,
+                "maximum": 8.0
+              }
+            },
+            "required": [
+              "version",
+              "enabled",
+              "attenuationDbPerMetre",
+              "mufflingPerMetre"
+            ],
+            "additionalProperties": false,
+            "x-features": [
+              "waterAudio.v1"
+            ]
+          }
+        },
+        "required": [
+          "target",
+          "revision",
+          "settings"
+        ],
+        "additionalProperties": false,
+        "x-current": {
+          "fact": "object.container.audio",
+          "version": 1,
+          "arguments": {
+            "target": "target"
+          },
+          "fields": {
+            "revision": [
+              "revision"
+            ],
+            "settings": [
+              "settings"
+            ]
+          },
+          "guards": [
+            "revision"
+          ]
+        }
+      },
+      "duration": "completion",
+      "ownership": "exclusiveTargetAndProp",
+      "channels": [
+        "wholeTarget"
+      ],
+      "requirements": [
+        "target.created",
+        "target.unheld",
+        "source.revision.current",
+        "storage.writable",
+        "target.container"
+      ],
+      "description": "Configure opt-in sound treatment for a finite liquid cavity. Spatial Maestro speech and authored spatial PCM sounds use the same live water path between emitter and tracked listener. attenuationDbPerMetre adds loss along assigned wet metres, capped at 48 dB; mufflingPerMetre increases a bounded low-pass treatment, capped at a 120 Hz minimum cutoff. Zero disables that part of the effect. This is styled sound, not acoustic refraction or a pressure simulation. Overlaps choose the smallest cavity then stable ID; disabled inner water keeps its intervals and does not borrow outer treatment. Settings belong to the cavity and do not pour with liquid. Newly configured and legacy cavities default to disabled. Existing voice/source/mix gain, nonspatial sounds, microphone input, visibility/opacity, underwater tint, real-room collision, physics pause and passthrough remain independent. Missing geometry, listener tracking or focus bypasses treatment and is exposed by world.audio.water; it never mutes speech or resumes physics/loads objects. Parameters refresh at up to 20 Hz and expire after 0.2 seconds, with a 20 ms audio ramp. Read object.container.audio for the current revision/settings. Ordinary container edits preserve them. Outside temporary play, prepares and publishes its save in the background with one Undo edit. Completion confirms native application and saving. Once preparation begins, newer authored changes invalidate its candidate. Cancellation before native acceptance leaves the requested edit unapplied. After acceptance, stopping cannot retract the edit or its pending save. A save conflict preserves files, blocks further saves and requires inspection; never blindly replay it. Runtime clock and viewer movement continue. Concurrent persisted object edits enter preparation in arrival order after earlier saves drain, without copying a waiting candidate. Stopping or invalidating a waiter releases its place; target changes while waiting require a new request. In a temporary room, changes the live room and local Undo; a kept snapshot makes it durable. Other objects keep running.",
+      "example": {
+        "target": "00000000000000000000000000000000",
+        "revision": 1,
+        "settings": {
+          "version": 1,
+          "enabled": true,
+          "attenuationDbPerMetre": 1.5,
+          "mufflingPerMetre": 1
         }
       }
     },
@@ -41745,6 +41879,66 @@
       ]
     },
     {
+      "id": "object.container.audio",
+      "version": 1,
+      "type": {
+        "record": {
+          "revision": "number",
+          "configured": "boolean",
+          "settings": {
+            "record": {
+              "version": "number",
+              "enabled": "boolean",
+              "attenuationDbPerMetre": "number",
+              "mufflingPerMetre": "number"
+            }
+          }
+        }
+      },
+      "label": "Water sound settings",
+      "description": "Saved water audio treatment and exact object revision. Reading does not load geometry, start audio/physics or capture anything. configured=false supplies disabled defaults; configure a container before editing sound treatment.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^[a-fA-F0-9]{32}$",
+            "maxLength": 32,
+            "x-resource": "object"
+          }
+        },
+        "required": [
+          "target"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "target": "00000000000000000000000000000000"
+      },
+      "features": [
+        "factQueries.v1",
+        "waterAudio.v1"
+      ]
+    },
+    {
+      "id": "world.audio.water",
+      "version": 1,
+      "type": {
+        "record": {
+          "state": "text",
+          "sources": "number",
+          "treatedSources": "number",
+          "unavailableSources": "number",
+          "reason": "text"
+        }
+      },
+      "label": "Water sound treatment",
+      "description": "Last bounded native water-audio control pass for this workspace. sources counts registered spatial PCM renderers, including paused/pending playback; treatedSources counts paths receiving nonzero treatment, not audible samples. idle has no sources; disabled has no enabled cavity settings; active has complete listener/path geometry; pending/unavailable marks missing paths or listener/runtime readiness. The whole snapshot becomes unavailable after 0.2 seconds or loss of focus. Individual missing paths bypass treatment, never mute speech. Nonspatial sounds and optional evaluation renderers are excluded. Reading does not start audio, capture a microphone, load geometry or change physics. Use object.container.audio for settings and world.medium.path for finite geometry.",
+      "features": [
+        "waterAudio.v1"
+      ]
+    },
+    {
       "id": "object.material",
       "version": 1,
       "type": {
@@ -50278,7 +50472,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Book/PcmOutputLease.Unity.cs",
-      "sha256": "6bd9ffe56661b527f7cce4bb57f6146080ac62a5244ced6f9fea69462ce70124"
+      "sha256": "819e4f2f79880b510a61e4a4f5732135d5a5a7aa65e3228b2ff427b3279139ea"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Book/PcmOutputLease.cs",
@@ -50337,6 +50531,10 @@
       "sha256": "cd2d39e9815384ba563a52db44acb6af54185009297f78ebc7a9f3b52d8b724a"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Book/RoomWaterAudio.cs",
+      "sha256": "ae37d502134811f9ee2cf813b4644e47e0f864e8670ad6a189ae18d4dcb0fa75"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Book/ScreenShareBookCamera.cs",
       "sha256": "eaf67fcc0ae20df9b2e782b725d85fda1304355c9f286a39cc774d2cfd363989"
     },
@@ -50346,7 +50544,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Book/SpeechPcmFilter.cs",
-      "sha256": "4a46fe51a96a73bb5a7c3ac31a10b7a448a7e3bb2c1298882e3f02f4774aa7a1"
+      "sha256": "910992fad763abaa718d57a05f8d6f2e6607dbaf9eff18f403e93a21f111911e"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Book/SpeechPcmStream.cs",
@@ -50355,6 +50553,14 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Book/SpeechSpatializer.cs",
       "sha256": "608ef81084d96f54fbbacd11f80c629e7f0a4aca3be5cceeeb09b043dc381e82"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Book/WaterPcmTreatment.cs",
+      "sha256": "93979afefe3a5c3bc0983d3364073348ed1380da3da58df78daa0436e85cdb4d"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Book/WaterSoundMix.cs",
+      "sha256": "3bfffde092b1f46516d9afcc3fef7b1b0d7fbdb4b42f161a4f46c383dbedf939"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/AnimationAuthoringCapability.cs",
@@ -50430,7 +50636,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilityModules.cs",
-      "sha256": "d4c8f7501f6b4c3a068d8559d853081dcea3bbafc98e8ad696a0c8bbef34910d"
+      "sha256": "caffec11bef0fcd12774556bb710192904111b08b23dc52ec75924b03ed00a72"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilitySchema.cs",
@@ -50478,7 +50684,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ContainerCapability.cs",
-      "sha256": "da2a4c0487bbd5ac1210e7d27df4faaacd599533a0885e2e7a17ffaac614147c"
+      "sha256": "b5fe7556b62028889ceacd4f2af9117ecbc1a7bd46a343bf6e4e48331ee91b0e"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ContainerPouringFacts.cs",
@@ -50897,6 +51103,14 @@
       "sha256": "e7690a57a5fa0b3af7eed2c789a74c216c146eb73ca4fb67efc82887e0d61ba1"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/WaterAudioCapability.cs",
+      "sha256": "96aa33b0d2d69075c60162e58fd9338809d3227726a2ab88d4fc4e19c309872b"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/WaterAudioFact.cs",
+      "sha256": "292a22d77b120fcf053355c8d77faac20d0b13f05bef7496cc2c7ff56ae85b6a"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/WaterHabitatFacts.cs",
       "sha256": "23b08e1bcb654aecd4e824dc08e99689b93035683c97d72ca7f6a2923a27582f"
     },
@@ -51230,7 +51444,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidPathQueries.cs",
-      "sha256": "170c966fa6a667fd483e5451df194b7748ce0a5d7f9f2c91eafe84651f497751"
+      "sha256": "f926815bb2a710904e9b80463207a8aca7475379e30f5fc9a125abece24c663d"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidPouring.cs",
@@ -51510,7 +51724,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomContainer.cs",
-      "sha256": "8e1f0b3b549cfd2b1a016cf70428fab5d3e94cf59ec6ee6cc08f78921e42bf07"
+      "sha256": "1fa36830e872de3bf40fdabc5575cf12921a2913c45528fe7977a15a31b19fa6"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomContainerEdits.cs",
@@ -51518,7 +51732,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomControls.cs",
-      "sha256": "b7ee5b294d14c4154fd43a1eb0bf47304647695bd4d067fbc3ad56409d48526e"
+      "sha256": "9504de72458aafe74a4c79005968834370894db9e152529e2c5f6097d0338a59"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomCreationBudget.cs",
@@ -51534,7 +51748,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomDocument.cs",
-      "sha256": "17e487abcbf6e91656daa8b0c32316e18488daaa58ab895282956c1c609bef3a"
+      "sha256": "157a0f3fb1c725c828b85660c7ca95a94ad0c6d0d0da9b60d85b99d52824bbaa"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomDormantRecovery.cs",
@@ -51562,7 +51776,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditor.cs",
-      "sha256": "abec677123ab38e4171866c21d488f6fa11e31c19b1de04d5b562cb443537bbf"
+      "sha256": "43fc8a442e51ccbffc57914c296b32645338a2c8446d1d19de7dcadaeb38b2a0"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEnvironmentEdits.cs",
@@ -51678,7 +51892,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomLiquidCodec.cs",
-      "sha256": "afe7a09d3de6e06e3e43123855e1190b792c3a191079d7251e827be5cfe1f600"
+      "sha256": "f97db9234c0388bceb8331bc7aabd8077892fc7aae7cf8bd08771dee8ec4b574"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomLiquidEdits.cs",
@@ -51706,7 +51920,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomMediumAvailability.cs",
-      "sha256": "637ecc4fd35dcc9ade83e3043521de51827811b6c508cd1f87690a8cd5d2a4b8"
+      "sha256": "81b625308221cb32c42557d643a31cf8149162a67806f673a622446f9bf3578b"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomModelCreation.cs",
@@ -51942,7 +52156,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomStorage.cs",
-      "sha256": "2b7a460f61e3bb7307817f49e8ca563fd1360cd8d13f1fefd58a04794240d4b4"
+      "sha256": "f619debaa9a797c0afa3ee5ff10459a5ff63f4716f1f7583d7e3782c5e0e7a58"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomStructure.cs",
@@ -52127,6 +52341,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/VirtualRoomCapture.cs",
       "sha256": "ff2c02ac55ea6852194d5c69800308d7b28ca0d90c038bfbdc82e4d99cb55871"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/WaterAudioSettings.cs",
+      "sha256": "8160b0feb1d9a1968a5dd9e89e73f1c7d354d014b08ef3510107301e7b587e20"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/WeatherCover.cs",
@@ -52758,7 +52976,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/WorkspaceViewpoint.cs",
-      "sha256": "843d1fe27171a464da5e36839b2c2e2baaab765e12f7b013a811293915ecb812"
+      "sha256": "435460ea25ca4263d55ab8ad325bcafd99ea93dab11303ad932d0c997deaf7bf"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Maestro.Quest.asmdef",
@@ -52790,7 +53008,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/RoomSnapshotTransaction.cs",
-      "sha256": "2e4f33b7539e26a69a3ef93330903de06636a6d8376cc26ebd59e6d97f2f32a0"
+      "sha256": "176efa3c481aefc0f26f522f5e1c233490aeae16dcd5d2f9f9e8e7ec172521fc"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceAcceptedSave.cs",
@@ -52922,7 +53140,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "77f3ba6215b0a085eade1f7c6e26df601c33b186da2f635662c9c8cc48ad2842"
+      "sha256": "00407dcda5240bc0781c9b4cd4e800f2cccd3c9074cc488660ab6bafe7ed56e1"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourProgram.cs",

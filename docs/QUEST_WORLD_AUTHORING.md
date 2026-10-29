@@ -3857,8 +3857,8 @@ Known distant and accepted empty cavities do not block the read. Queries do not
 load objects, resume physics, change water, acquire motion ownership or save.
 
 This is a reusable geometry observation. It supplies the finite path needed for
-later authored audio treatment; it does not currently filter sound or prove
-acoustic transmission, visibility, floor support or navigable clearance.
+the authored audio treatment below; the observation itself does not filter sound
+or prove acoustic transmission, visibility, floor support or navigable clearance.
 Collision participation, visual presentation and audio treatment remain
 independent choices.
 
@@ -3933,8 +3933,8 @@ properties, leaving each cavity's visual setting intact. Ordinary container
 edits preserve it. The new action uses the same revision checks, ownership,
 asynchronous saved completion, replay receipt and Undo path as other authored
 changes. Portable creations retain the setting; old typed container facts keep
-their previous shape. New room saves use format 45, requiring an explicit
-underwater setting on each container. Format 44 rooms load with disabled
+their previous shape. Room format 45 introduced an explicit underwater
+setting on each container; format 46 also adds water sound below. Format 44 rooms load with disabled
 defaults and are retained when saved in the new format. Older readers see the
 newer room and remain read-only instead of silently dropping the setting.
 
@@ -3953,3 +3953,44 @@ physics pause, removal, disabled nested cavities, save failure, persistence,
 Undo and duplicate/stale agent requests. These desktop checks do not establish
 Quest stereo image quality, thermal cost, transparent overlap ordering or
 real-device comfort. Keep those release checks open.
+
+
+## Authored water sound
+
+`object.container.audio.configure` and `object.container.audio` expose saved
+cavity settings through the same catalog, generated book controls and programs.
+`waterAudio.v1` is required. Version 1 has `enabled` (default false),
+`attenuationDbPerMetre` (0–24, default 1.5) and `mufflingPerMetre` (0–8, default 1).
+Zero removes that part of the effect. Ordinary container edits preserve these
+settings. They stay with the cavity when liquid pours elsewhere.
+
+Spatial Maestro speech and authored spatial PCM sources use their actual
+emitter-to-listener finite water paths. Wet overlaps count once, choosing the
+smallest cavity then stable ID; a disabled inner cavity retains its intervals.
+Missing relevant geometry bypasses treatment and remains explicitly unavailable.
+There is no guessed water plane, automatic loading or resumption of physics.
+
+Distance loss adds per wet metre, capped at 48 dB. Muffling increases with wet
+distance using a sample-rate-independent low-pass pole, bounded to a 120 Hz
+minimum cutoff. This deliberately styled effect is not pressure propagation,
+refraction or a physically accurate underwater sound simulation. Surface paint,
+visibility, passthrough, collisions, liquid identity and authored source gain
+remain separate. Nonspatial sounds and microphone input are unaffected.
+
+A workspace samples at most nine spatial PCM renderers (eight authored sources
+plus Maestro), up to 20 times per second, using one geometry capture. The audio
+callback uses a small value snapshot and a 20 ms parameter ramp. Targets expire
+after 0.2 seconds; loss of tracking/focus or unavailable geometry returns to clear
+sound. Default-off and fully recovered output are bit-exact. No geometry query
+or allocation runs on the audio thread.
+
+`world.audio.water` reports the last pass, registered/treated/unavailable source
+counts and its reason. Counts include paused or pending renderers and are not
+proof of audibility. A stale observation reports unavailable. Optional audio
+evaluation backends are excluded from this production Unity PCM path.
+
+Room format 46 requires explicit sound settings; older rooms receive disabled
+defaults and remain retained on saving. Older readers protect unsupported newer
+data. Save completion, revisions, receipts, Undo and portable constructions use
+the existing shared mechanisms. Headset sound quality, comfort, real microphone
+echo interaction and performance still need physical acceptance.

@@ -2,11 +2,17 @@
 
 Status: active implementation. Nothing in this document claims store readiness.
 
-The latest [shared liquid-path query](#shared-liquid-path-observations--2026-10-29)
-exposes the current finite water geometry to the same user/program/agent catalog.
+The latest [authored finite-water audio](#authored-finite-water-audio--2026-10-29)
+uses shared finite-water paths for optional spatial speech/world-sound treatment.
+User controls and agent programs edit the same saved settings. The complete offline
+baseline passes, followed by focused native checks for a discovered pause/resume
+repair. Final unsigned Android compilation passes. Physical sound quality,
+echo interaction and Quest performance remain open.
+
+The preceding [shared liquid-path query](#shared-liquid-path-observations--2026-10-29)
+exposes current finite water geometry to the same user/program/agent catalog.
 It preserves dry gaps and assigns overlapping water once, with explicit missing
-geometry states. This is the geometry foundation for authored sound treatment;
-it does not yet process audio or complete underwater acceptance.
+geometry states; it supplies the geometry used by the new sound treatment.
 
 The preceding [authored underwater view](#authored-underwater-view--2026-10-28)
 adds opt-in finite-distance shading through shared user/agent settings. Its
@@ -18381,3 +18387,93 @@ real acoustic acceptance, full underwater interaction and the existing physical
 Quest/release gates remain open. The prior `1c99ccc3` Release gate and Native echo
 evaluation CI runs completed successfully; that does not close retained audio
 quality failures.
+
+
+## Full-audio headphone requirement — 2026-10-29
+
+The owner's [updated PR direction](https://github.com/RONITERVO/MaestroTutor/pull/248#issuecomment-6350563445)
+requires headphones for the full v1 audio experience. Carry this into onboarding,
+listing/reviewer instructions and physical acceptance: spatial Maestro speech,
+authored sounds, Live interruption and microphone capture must be tested together
+on the supported Quest headphone route. This requirement is not yet an implemented
+onboarding or verified device claim. Keep speaker fallback behaviour explicit and
+retain the existing echo-quality failures; this note neither approves a failing
+echo backend nor silently treats headphones as proof of acoustic acceptance.
+
+## Authored finite-water audio — 2026-10-29
+
+Users and agents now share `object.container.audio.configure`,
+`object.container.audio` and `world.audio.water` through `waterAudio.v1`.
+Each finite cavity owns optional loss/muffling settings, separate from fluid
+identity, surface appearance, optics, collision participation and source gain.
+Defaults are off. Normal spatial Maestro and authored PCM sounds use the same
+live finite-liquid path and production playback filter, before spatialization.
+Disabled inner cavities retain their path intervals. Missing geometry, tracking
+or focus returns to clear audio with an explicit unavailable observation.
+
+The bounded workspace control pass samples up to nine sources at 20 Hz.
+Targets expire after 0.2 seconds; the allocation-free PCM filter ramps changes
+over 20 ms, maintains sample-rate-independent poles and retains the existing
+playback receipts and renderer tail. This is styled muffling and attenuation,
+not a physically accurate acoustic propagation simulation or new echo solution.
+
+Room format 46, the shared portable codec, current-value controls and persisted
+edit owner retain the settings without changing the old typed container fact.
+Version 45 rooms receive disabled defaults and stay retained on save; older
+readers protect the newer format. New native and web tests cover saved completion,
+Undo, stale/replayed requests, failure rollback, ordinary fill edits, overlap
+priority, PCM processing, missing geometry, tracking/focus loss and nonspatial
+exclusion. Headless and visible Book journeys now exercise the same controls.
+
+Verification is retained in `.quest-evidence/water-audio-20261029/`:
+
+- The complete baseline passes **1,804 EditMode and 2,470 PlayMode** checks,
+  with three expected private-asset skips. All 4,277 discovered cases are
+  accounted for. Actual Headless, visible Book and production first-learner
+  journeys pass through native transport. Water-sound controls cover saved
+  completion, current-value readback and Undo/Redo. The book screenshot was
+  visually checked. Providers/media remain scripted or synthetic.
+- The web sweep passes **3,683 tests across 382 files**; app/probe TypeScript,
+  source/catalog provenance and shared production build pass. An earlier full
+  sweep hit the existing aborted-HTTP-response assertion. The unchanged focused
+  follow-up passes 88 cases, and the subsequent complete run passes with two
+  workers. Its cause remains unproven; no deadline or assertion was weakened.
+- The first full native/web runs stopped at the old current-input inventory
+  expectation, 120 instead of 121. Only those two test counts changed before
+  `integration-2`, whose 5,549-input boundary retains the unchanged implementation.
+  Earlier focused checks also caught a new test sampling its synthetic clock
+  before the next 20 Hz pass; it now waits for actual LateUpdate. Production
+  timing and thresholds were unchanged.
+- Final review reproduced a real paused-source defect: when Unity supplies no
+  callbacks during pause, the old filter history can survive. The real PCM lease
+  regression emitted **0.245** at the start of resumed silence before the repair.
+  Pause/resume transitions now request an audio-thread history reset; repeated
+  Resume preserves uninterrupted history. The regression fixture freezes the
+  engine's listener clock while manually driving callbacks; this removes the
+  initial test's competing engine callbacks without weakening its assertions.
+- The final repair passes **141 affected EditMode and 85 affected PlayMode**
+  checks, including both real-lease pause/continuity cases. These counts overlap
+  the full baseline and are not added to it. Native export proves the action/fact
+  definitions unchanged; only catalog source provenance changes. The recorded
+  delta is three runtime files, the provenance update and two regression files.
+  `integration-3-pause-fix` freezes all 5,551 final inputs for a fresh unsigned
+  Android compilation. The complete native/journey sweep predates this small
+  repair; it is not represented as a second full sweep on the final source.
+
+Baseline Android export/compilation, manifest/merge checks and 16 KiB alignment
+pass, with five export warnings and zero errors. Its native browser checks have
+128 passes and two skips (unchanged Java tests reused by Gradle); AAR and lint
+succeed. Final-source Android export/compilation, manifest/merge checks and all
+22 selected ARM64 library alignments also pass, with five export warnings and
+zero errors. Five unselected dependency libraries remain in the intermediate;
+final package filtering is not claimed. No APK/AAB, signing, installation or
+external release operation is part of these checks. The earlier production text-to-Live/native-restart
+checkpoint remains separate; this increment does not claim a fresh real-provider,
+headset or Live-restart run.
+
+CI for the preceding liquid-path commit `0edd2292` passed:
+[Release gate](https://github.com/RONITERVO/MaestroTutor/actions/runs/40801573976)
+and [Native echo evaluation](https://github.com/RONITERVO/MaestroTutor/actions/runs/40801573978).
+This does not close the retained acoustic quality failures. Device, real-provider,
+signing, deployment and Meta holds remain. Physical audibility, echo interaction,
+Quest performance and comfort still need acceptance.

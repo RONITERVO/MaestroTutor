@@ -16,7 +16,7 @@ namespace Maestro.Quest.Book
             readonly SpeechPcmStream stream;
             GameObject view;AudioClip carrier;SpeechPcmFilter filter;
             public AudioSource Source {get;private set;}
-            bool closed;
+            bool closed,paused;
             public bool Available=>!closed&&view&&view.activeInHierarchy&&Source&&Source.enabled
                 &&filter&&filter.isActiveAndEnabled&&carrier&&Source.clip==carrier;
             UnityPcmOutput(SpeechPcmStream stream){this.stream=stream;}
@@ -36,10 +36,14 @@ namespace Maestro.Quest.Book
                 if(request.Spatial)SpeechSpatializer.Configure(Source);
                 carrier=AudioClip.Create(request.Name+" carrier",1024,1,SpeechPcmStream.Rate,false);Source.clip=carrier;
                 filter=view.AddComponent<SpeechPcmFilter>();filter.Bind(stream,rate);
+                if(request.Spatial)filter.BindWater(request.Parent.GetComponentInParent<RoomWaterAudio>(true));
             }
             public void Start()=>Source.Play();
             public void SetPose(Vector3 position,Quaternion rotation)=>view.transform.SetPositionAndRotation(position,rotation);
-            public void SetPaused(bool value){stream.SetPaused(value);if(value)Source.Pause();else Source.UnPause();}
+            public void SetPaused(bool value){
+                if(paused!=value){paused=value;filter.ResetWaterOnNextRender();}
+                stream.SetPaused(value);if(value)Source.Pause();else Source.UnPause();
+            }
             public void SetGain(float value)=>Source.volume=value;
             public bool IsDrained(double now)=>stream.Read(now).SourceDrained;
             public void Dispose()

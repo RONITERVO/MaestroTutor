@@ -18,6 +18,7 @@ namespace Maestro.Quest.Creation
     }
     public sealed partial class RoomJournal
     {
+        internal bool WaterAudioConfigured(){foreach(var item in items.Values)foreach(var c in item.containers??Array.Empty<RoomContainer>())if(WaterAudioSettings.Effective(c.waterAudio).enabled)return true;return false;}
         internal string[] LiquidIds()=>items.Values.Where(x=>(x.containers?.Length??0)==1).Select(x=>x.id).OrderBy(x=>x,StringComparer.Ordinal).ToArray();
         internal bool LiquidMetadata(string id,out RoomContainer contents,out Vector3 position,out Quaternion rotation,out float scale,out ScanSpatialPlacement anchor)
         {
@@ -28,6 +29,7 @@ namespace Maestro.Quest.Creation
     }
     public sealed partial class RoomEditor
     {
+        internal bool WaterAudioConfigured=>journal?.WaterAudioConfigured()==true;
         internal string[] LiquidIds()=>journal?.LiquidIds()??Array.Empty<string>();
         // A cavity can extend beyond the object's artwork and solid colliders.
         // Project its own accepted dimensions, using the same retained idle pose
@@ -71,7 +73,7 @@ namespace Maestro.Quest.Creation
         }
         void CaptureMissingMedia(bool requireReadyGeometry=false)
         {
-            surfaceContactsCaptured=false;missingMedia.Clear();mediumQueryIssue=null;
+            surfaceContactsCaptured=false;liquidPathsCaptured=false;missingMedia.Clear();mediumQueryIssue=null;
             if(!editor||!editor.isActiveAndEnabled||!editor.Frame.Valid){mediumQueryIssue="The liquid workspace is unavailable";return;}
             foreach(var id in editor.LiquidIds()){
                 vessels.TryGetValue(id,out var vessel);

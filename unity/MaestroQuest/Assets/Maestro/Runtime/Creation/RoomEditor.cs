@@ -110,6 +110,7 @@ namespace Maestro.Quest.Creation
             PhysicsWorld?.ConfigureCollisionAdmission(this,RegionCollisionIssue);
             gameObject.AddComponent<Art.WorldLightingView>().Initialize(this);
             gameObject.AddComponent<Art.UnderwaterView>().Initialize(this);
+            gameObject.AddComponent<Book.RoomWaterAudio>().Initialize(this);
             gameObject.AddComponent<Art.WorldRainView>().Initialize(this);
             room.RecoveryEditor=this;
             if (message != null) SetStatus(message);

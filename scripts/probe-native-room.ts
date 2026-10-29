@@ -24,6 +24,7 @@ import {probeAquaticTravel} from './probe-aquatic-travel';
 import {probeShoreTravel} from './probe-shore-travel';
 import {probeLiquidMedium} from './probe-liquid-medium';
 import {probeUnderwaterView} from './probe-underwater-view';
+import {probeWaterAudio} from './probe-water-audio';
 import {probeWaterTraversal} from './probe-water-traversal';
 import {probeTerrainWater} from './probe-terrain-water';
 import {probeChatAudio} from './probe-chat-audio';
@@ -498,6 +499,7 @@ try{
   await probeWorldWeather(execute,directory);
   await probeLiquidMedium(execute,directory);
   await probeUnderwaterView(execute,directory);
+  await probeWaterAudio(execute,directory);
   await probeWaterTraversal(execute,directory);
   await probeTerrainWater(execute,directory);
  await probeChatAudio(transport,execute,directory);

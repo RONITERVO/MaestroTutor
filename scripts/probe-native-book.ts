@@ -460,6 +460,28 @@ try{
  assert.equal(underwaterUndone.settings.enabled,false);
  const underwaterContents=await readResourceFact('object.container','Liquid container and contents',{target:ball.id}) as unknown as BookContainer;assert.equal(underwaterContents.definition.amountMl,100);
  await writeFile(join(directory,'book-native-underwater.json'),JSON.stringify({boundary:'Visible original-book generated controls, native saved completion/current-value readback, and ordinary Undo retaining liquid quantity. Offline scripted transport, no provider or headset appearance claim.',underwater,underwaterUndone,underwaterContents},null,2));
+ // Water audio settings use the same visible forms and native saved action as agents.
+ await openNamedAction('Configure water sound','object.container.audio.configure');
+ await chooseObject('Action inputs target',ball.id);
+ await page.getByRole('button',{name:'Load current values',exact:true}).click();await page.getByText('Current values loaded. Review your changes before running.',{exact:true}).waitFor();
+ assert.equal(await page.getByLabel('Action inputs settings enabled',{exact:true}).inputValue(),'false');
+ await page.getByLabel('Action inputs settings enabled',{exact:true}).selectOption('true');
+ await page.getByLabel('Action inputs settings attenuationDbPerMetre',{exact:true}).fill('3');
+ await page.getByLabel('Action inputs settings mufflingPerMetre',{exact:true}).fill('2');
+ const waterSound=await runNamedAction('object.container.audio.configure');
+ assert.equal((waterSound.call.arguments.settings as {attenuationDbPerMetre:number}).attenuationDbPerMetre,3);
+ await page.getByRole('button',{name:'Load current values',exact:true}).click();await page.getByText('Current values loaded. Review your changes before running.',{exact:true}).waitFor();
+ assert.equal(await page.getByLabel('Action inputs settings enabled',{exact:true}).inputValue(),'true');
+ assert.equal(await page.getByLabel('Action inputs settings attenuationDbPerMetre',{exact:true}).inputValue(),'3');
+ assert.equal(await page.getByLabel('Action inputs settings mufflingPerMetre',{exact:true}).inputValue(),'2');
+ await page.getByRole('heading',{name:'Configure water sound',exact:true}).scrollIntoViewIfNeeded();await page.screenshot({path:join(directory,'book-native-waterSound.png')});
+ await page.getByRole('button',{name:'Back to workshop',exact:true}).click();
+ const waterSoundRevision=await page.evaluate(()=>window.nativeBookEvidence!().state!.sceneRevision);
+ await page.getByRole('button',{name:'Undo',exact:true}).first().click();await page.waitForFunction(revision=>window.nativeBookEvidence!().state!.sceneRevision>revision,waterSoundRevision);
+ const waterSoundUndone=await readResourceFact('object.container.audio','Water sound settings',{target:ball.id}) as unknown as {settings:{enabled:boolean}};
+ assert.equal(waterSoundUndone.settings.enabled,false);
+ const waterSoundContents=await readResourceFact('object.container','Liquid container and contents',{target:ball.id}) as unknown as BookContainer;assert.equal(waterSoundContents.definition.amountMl,100);
+ await writeFile(join(directory,'book-native-waterSound.json'),JSON.stringify({boundary:'Visible original-book generated controls, native saved completion/current-value readback, and ordinary Undo retaining liquid quantity. Offline scripted transport, no provider or headset acoustic claim.',waterSound,waterSoundUndone,waterSoundContents},null,2));
  // The same measured transfer is authored through visible nested object inputs.
  await openNamedAction('Create object','object.create');
  await page.getByLabel('Creation kind',{exact:true}).selectOption({label:'Create starter object'});

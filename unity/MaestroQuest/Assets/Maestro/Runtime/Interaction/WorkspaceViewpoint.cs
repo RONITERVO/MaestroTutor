@@ -17,6 +17,7 @@ namespace Maestro.Quest.Interaction
         bool recording,paused,focused=true;
         string lastError;float sampleAt;
         internal bool Pending=>pending!=null;
+        internal bool AudioReady=>HeadReady&&!Pending;
         internal void Initialize(RoomEditor owner,VirtualRoomView roomView,Func<bool> headTracked)
         {
             editor=owner;view=roomView;tracked=headTracked;view.Moved+=OnMoved;

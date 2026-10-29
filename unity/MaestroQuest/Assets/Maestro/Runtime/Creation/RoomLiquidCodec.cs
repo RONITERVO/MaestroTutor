@@ -13,6 +13,7 @@ namespace Maestro.Quest.Creation {
             // JObject replacement can consider nearby floating values equal. Remove
             // the old tokens first so even a one-ULP difference survives.
             wire["underwater"]=JObject.FromObject(UnderwaterViewSettings.Effective(source.underwater));
+            wire["waterAudio"]=JObject.FromObject(WaterAudioSettings.Effective(source.waterAudio));
             wire.Remove("capacityMl");wire.Add("capacityMl",source.capacityMl);
             wire.Remove("amountMl");wire.Add("amountMl",source.amountMl);
         }
@@ -25,6 +26,8 @@ namespace Maestro.Quest.Creation {
             target.capacityMl=Number("capacityMl");target.amountMl=Number("amountMl");
             if(wire["underwater"]!=null&&wire["underwater"].Type!=JTokenType.Null&&!UnderwaterViewSettings.Wire(wire["underwater"]))throw new ArgumentException("Invalid underwater presentation");
             target.underwater=wire["underwater"] is JObject view?view.ToObject<UnderwaterViewSettings>():new();
+            if(wire["waterAudio"]!=null&&wire["waterAudio"].Type!=JTokenType.Null&&!WaterAudioSettings.Wire(wire["waterAudio"]))throw new ArgumentException("Invalid water audio settings");
+            target.waterAudio=wire["waterAudio"] is JObject audio?audio.ToObject<WaterAudioSettings>():new();
         }
         internal static void Containers(RoomContainer[] values,JToken wire,bool writing){
             if(values==null||values.Length==0)return;

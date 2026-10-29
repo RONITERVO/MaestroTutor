@@ -61,7 +61,7 @@ namespace Maestro.Quest.Creation
     [Serializable]
     public sealed class RoomDocument
     {
-        public const int CurrentVersion=45;
+        public const int CurrentVersion=46;
         public const int MaximumObjects = 256;
         internal const int LegacyMaximumObjects = 64;
         public const int MaximumStrokePoints = 2048;
@@ -88,7 +88,7 @@ namespace Maestro.Quest.Creation
         public bool Validate(out string error)
         {
             error = null;
-            if (version != 1 && version != 2 && version != 3 && version != 4 && version != 5 && version != 7 && version != 8 && version != 9 && version != 10 && version != 11 && version != 12 && version != 13 && version != 14 && version != 15 && version != 16 && version != 17 && version != 18 && version != 19 && version != 20 && version != 21 && version != 22 && version != 23 && version != 24 && version != 25 && version != 26 && version != 27 && version != 28 && version != 29 && version != 30 && version != 33 && version != 34 && version != 35 && version != 36 && version != 37 && version != 38 && version != 39 && version != 40 && version != 41 && version != 42 && version != 43 && version != 44 && version != CurrentVersion || objects == null || objects.Length < 2 || objects.Length > (version>=42?MaximumObjects:LegacyMaximumObjects) + 2)
+            if (version != 1 && version != 2 && version != 3 && version != 4 && version != 5 && version != 7 && version != 8 && version != 9 && version != 10 && version != 11 && version != 12 && version != 13 && version != 14 && version != 15 && version != 16 && version != 17 && version != 18 && version != 19 && version != 20 && version != 21 && version != 22 && version != 23 && version != 24 && version != 25 && version != 26 && version != 27 && version != 28 && version != 29 && version != 30 && version != 33 && version != 34 && version != 35 && version != 36 && version != 37 && version != 38 && version != 39 && version != 40 && version != 41 && version != 42 && version != 43 && version != 44 && version != 45 && version != CurrentVersion || objects == null || objects.Length < 2 || objects.Length > (version>=42?MaximumObjects:LegacyMaximumObjects) + 2)
                 return Fail("This room file has an unsupported version or object count.", out error);
             if(world!=null&&!world.Valid||version>=23&&world==null)return Fail("This room has an invalid world or region identity.",out error);
             if(version>=22&&(viewpoint==null||!viewpoint.Valid))return Fail("This room has an invalid saved viewpoint.",out error);
@@ -119,6 +119,7 @@ namespace Maestro.Quest.Creation
                 if(!RoomSnapPoint.ValidateCollection(item,out error))return false;
                 if(version<9&&(item.containers?.Length??0)>0)return Fail("Liquid containers require the current room format.",out error);
                 if(!RoomContainer.ValidateCollection(item,out error))return false;
+                if(version<46&&item.containers?.Any(c=>WaterAudioSettings.Effective(c.waterAudio).enabled)==true)return Fail("Water audio requires the current room format.",out error);
                 if(version<45&&item.containers?.Any(c=>UnderwaterViewSettings.Effective(c.underwater).enabled)==true)return Fail("Underwater presentation requires the current room format.",out error);
                 if(version<44&&item.containers?.Any(c=>c.SpillAtTerrainEdge)==true)return Fail("Terrain edge spilling requires the current room format.",out error);
                 if(version<37&&item.containers?.Any(c=>c.version>2)==true)return Fail("Terrain liquid reservoirs require the current room format.",out error);

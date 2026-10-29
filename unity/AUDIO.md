@@ -264,6 +264,12 @@ acceptable fallback.
 
 ## Acceptance before release
 
+The owner's [v1 headphone requirement](https://github.com/RONITERVO/MaestroTutor/pull/248#issuecomment-6350563445)
+makes headphones the supported route for the full audio experience. Onboarding,
+listing instructions and real Quest acceptance still need to reflect that choice.
+Speaker fallback and its limits must remain explicit. Existing echo-quality
+failures stay recorded; this requirement alone closes no acoustic test.
+
 - User controls and the agent produce the same persisted emitter definitions,
   action receipts and event traces, with undo for definition edits.
 - Clip, looping ambience and live-stream playback coexist; stopping one leaves
@@ -1490,3 +1496,40 @@ No new full native sweep was needed for this test/documentation change.
 The later configuration event from that historical failure is not attributed to
 a specific device or proven fixed. Evidence: .quest-evidence/audio-reset-lifecycle/.
 No headset, provider, Android, signing, deployment or Meta operation ran.
+
+
+## Finite water treatment
+
+The normal Unity `PcmOutputLease` binds spatial sources to the workspace's
+`RoomWaterAudio`. `SpeechPcmFilter` processes accepted PCM before Meta
+spatialization, retaining the existing source gain, stream receipts and playback
+ownership. Authored tones, imported audio and decoded live sources share this
+path with Maestro. Nonspatial outputs and optional evaluation renderers bypass it.
+
+Settings are cavity-owned and disabled by default. The control pass captures
+finite liquid geometry once, then calculates bounded per-source gain/muffling
+targets. No unavailable path is substituted with assumed dry geometry: treatment
+bypasses to audible clear output while `world.audio.water` reports unavailable.
+Focus/tracking loss and a 0.2-second target lease prevent stale wet treatment.
+The lease is checked at each audio callback boundary; recovery begins on that
+buffer and ramps over 20 ms, so this is not a hard sample-accurate 0.2-second deadline.
+Audio processing allocates no buffers per callback; filter history belongs only
+to that callback. Main-thread publication locks only a small target snapshot.
+
+The low-pass time constant is bounded by a 120 Hz minimum cutoff; the existing
+minimum 20 ms renderer tail exceeds that filter decay. Stop, pause, rate changes
+and invalid render blocks clear filter history. A 20 ms gain/pole ramp handles
+changes, and settled disabled processing preserves samples exactly. This does
+not add acoustic propagation or establish headset quality. Existing AEC quality
+failures and the separate physical acceptance gates remain open.
+
+See [world authoring](../docs/QUEST_WORLD_AUTHORING.md#authored-water-sound)
+for shared settings, limits and source-count semantics.
+
+A paused Unity source may supply no callbacks. The PCM lease therefore requests
+water-filter history reset on actual pause/resume transitions, and the audio
+thread consumes that request before its next block. Repeated Resume does not
+reset uninterrupted audio. The native regression drives the actual bound lease
+with the engine listener clock paused: old code emits a stale 0.245 sample into
+resumed silence; the corrected path emits zero while preserving playback receipts.
+This is deterministic processing evidence, not physical headphone acceptance.
