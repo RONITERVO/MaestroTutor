@@ -40,9 +40,11 @@ namespace Maestro.Quest.Creation
         internal void AcceptPairedPrimary(byte[] before,byte[] after)=>file.AcceptPairedPrimary(before,after);
         public bool RetainsMotion(string id,out bool uncertain,bool force=false) {
             uncertain=true;
-            try {using var owner=RoomSnapshotTransaction.Inspect(directory,wait:false);return file.Retains(x => x.objects.Select(item => item.walkMotionId),id,out uncertain,force);}
+            try {using var owner=RoomSnapshotTransaction.Inspect(directory,wait:false);return file.Retains(x => x.objects.Select(item => item.walkMotionId),id,out uncertain,force,cacheDomain:"motion");}
             catch(Exception){uncertain=true;return false;}
         }
+        internal bool RetainsImageDocument(byte[] bytes,int version,string hash,out bool uncertain)=>file.InspectRetainedReferences(bytes,version,
+            room=>(room.appearances??Array.Empty<RoomAppearance>()).Any(appearance=>appearance.style.imageHash==hash),out uncertain);
         internal static void Normalize(RoomDocument room)
         {
             if(room.version<36)room.regions??=Array.Empty<RoomRegion>();

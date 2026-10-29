@@ -20,6 +20,8 @@
     "src/vite-env.d.ts",
     "scripts/native-probe-contract.test.ts",
     "scripts/probe-asset-inventory.test.ts",
+    "scripts/probe-image-maintenance.test.ts",
+    "scripts/probe-native-image-maintenance.test.ts",
     "scripts/agent-provider-contract.test.ts",
     "scripts/probe-agent-program.test.ts",
     "scripts/probe-agent-animation.test.ts",

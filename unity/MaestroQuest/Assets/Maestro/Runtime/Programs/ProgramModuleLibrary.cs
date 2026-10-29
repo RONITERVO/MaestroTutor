@@ -84,6 +84,11 @@ namespace Maestro.Quest.Programs
    var module=ReadObject(source);Validate(module);if(ProgramModules.Hash(module)!=hash)throw new ProgramFault("Module content does not match its file identity");
    return new Entry {Hash=hash,Name=(string)module["name"],Definition=module,References=module.Descendants().OfType<JValue>().Where(x=>x.Type==JTokenType.String).Select(x=>(string)x).Where(x=>x.Length==32||x.Length==64).ToHashSet(StringComparer.Ordinal)};
   }
+  internal static bool RetainedDefinitionReferences(byte[] bytes,string expectedHash,string identity){
+   if(bytes==null||bytes.Length<1||bytes.Length>MaximumBytes)throw new InvalidDataException("Retained module exceeds its limit.");
+   string source=new UTF8Encoding(false,true).GetString(bytes);
+   string hash=expectedHash??ProgramModules.Hash(ReadObject(source));return Decode(hash,source).References.Contains(identity);
+  }
   static string Read(string path){var file=new FileInfo(path);if(!file.Exists||file.Length>MaximumBytes)throw new IOException("Missing or oversized module file");return File.ReadAllText(path,new UTF8Encoding(false,true));}
   Loaded Load(){
    var result=new Loaded();
@@ -126,6 +131,7 @@ namespace Maestro.Quest.Programs
   public Entry Inspect(string hash){Poll();lock(gate)return entries.TryGetValue(hash,out var entry)?entry:included.TryGetValue(hash,out entry)?entry:null;}
   // Called by the existing off-thread retained-save audit. It never commits owner-thread state.
   public bool Retains(string id,out bool uncertain){var loaded=loading.GetAwaiter().GetResult();lock(gate){var current=(Ready?entries:loaded.Entries).Values.Concat((Ready?included:loaded.Included).Values);uncertain=Pending||(Ready?Error:loaded.Error)!=null||current.Any(e=>e.Error!=null);return current.Any(e=>e.References.Contains(id));}}
+  internal bool RetainsLiveIdentity(string identity,out bool uncertain){lock(gate){var current=entries.Values.Concat(included.Values).ToArray();uncertain=!Ready||Pending||Error!=null||overflow||retired||current.Any(e=>e.Error!=null);return current.Any(e=>e.References.Contains(identity));}}
   public bool CanWrite(out string error){Poll();error=retired?"The previous module library is closing.":workspaceWrites.Frozen?Maestro.Quest.Persistence.WorkspaceWriteGate.FrozenReason:!Ready?"Module library is loading":Pending?"Wait for the dispatched library write":Revision>=1000000?"Reopen the room before changing the library":null;return error==null;}
   public bool CanPublish(JObject module,out string error){lock(gate){
    if(!CanWrite(out error))return false;string hash=ProgramModules.Hash(module);

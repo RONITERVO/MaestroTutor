@@ -24,7 +24,7 @@ import '../../src/app/index.css';
 declare global {interface Window {
  nativeBookCredentials?:()=>Promise<{mode:'byok';apiKey:string}|{mode:'managed';session:ManagedAccessSession;appCheckToken:string}>;
  nativeBookStop?:()=>void;
- nativeBookChatImage?:()=>string;
+ nativeBookChatImage?:(synthetic?:{dataUrl:string;name:string})=>string;
  nativeBookChatAudio?:(dataUrl:string)=>void;
  maestroNativeExchange?:(snapshot:ReturnType<RoomAgentClient['snapshot']>)=>Promise<{state?:unknown;capture?:unknown}>;
  nativeBookEvidence?:()=>{state:RoomAgentState|null;errors:string[];messages:ReturnType<typeof useMaestroStore.getState>['messages'];agentWorking:boolean;inputBlocked:boolean};
@@ -50,7 +50,11 @@ const pair=store.languagePairs.find(p=>p.targetLanguageCode==='es-ES'&&p.nativeL
 if(!pair)throw new Error('Spanish/English pair missing');
 useMaestroStore.setState({settings:{...initialSettings,selectedLanguagePairId:pair.id,sendWithSnapshotEnabled:false,enableGoogleSearch:false,imageFocusedModeEnabled:false},isSettingsLoaded:true,needsLanguageSelection:false,isLoadingHistory:false});
 store.setMessages(await getChatHistoryDB(pair.id));
-window.nativeBookChatImage=()=>{
+window.nativeBookChatImage=(synthetic)=>{
+ if(synthetic){
+  if(!/^data:image\/png;base64,[A-Za-z0-9+/]+={0,2}$/.test(synthetic.dataUrl)||synthetic.dataUrl.length>8192||!/^Maintenance orphan [a-f0-9]{8} book\.png$/.test(synthetic.name))throw new Error('Unsupported synthetic maintenance image fixture');
+  store.addMessage({role:'assistant',text:'Explicit synthetic original image for reimport.',imageUrl:synthetic.dataUrl,imageMimeType:'image/png',imageOrigin:'generated',attachmentName:synthetic.name});return synthetic.dataUrl;
+ }
  const canvas=document.createElement('canvas');canvas.width=64;canvas.height=64;const ctx=canvas.getContext('2d')!;
  ctx.fillStyle='#e74835';ctx.fillRect(0,0,64,64);ctx.fillStyle='#ffffff';ctx.fillRect(0,0,32,32);
  const dataUrl=canvas.toDataURL('image/png');

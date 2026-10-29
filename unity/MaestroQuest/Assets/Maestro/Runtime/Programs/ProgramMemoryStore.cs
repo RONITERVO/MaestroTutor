@@ -175,6 +175,10 @@ namespace Maestro.Quest.Programs
             catch(Exception){uncertain=true;}
             lock(sync)uncertain|=busy||unavailable!=null||document!=before||retentionRevision!=revision;return retained;
         }
+        internal bool RetainsLiveIdentity(string identity,out bool uncertain)
+        {
+            lock(sync){uncertain=!ready||busy||unavailable!=null;return document?.Retains(identity)==true||durable?.Retains(identity)==true||pins.Keys.Any(value=>value.Retains(identity));}
+        }
         internal Task Drain(){lock(sync)return pending??Initialization;}
     }
 }

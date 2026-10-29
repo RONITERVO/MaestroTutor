@@ -12,7 +12,10 @@ namespace Maestro.Quest.Rules
         readonly System.Collections.Generic.HashSet<string> preservedUnavailable=new();
         public bool ReadOnly => file.ReadOnly;
         public RuleStorage(string directory) { this.directory=System.IO.Path.GetFullPath(directory);file = new VersionedRoomFile<RuleDocument>(directory,"behaviours",512*1024,x => x.Validate(out _,true),x => x.Copy(),null,_=>{},2,null,json=>json["sequences"] is Newtonsoft.Json.Linq.JArray sequences && sequences.All(RuleSequence.ValidWire),minimumVersion:2); }
-        public bool RetainsMotion(string id,out bool uncertain,bool force=false) => file.Retains(x => x.sequences.SelectMany(sequence => sequence.MotionIds()),id,out uncertain,force,x=>x.sequences.Any(sequence=>sequence.Compile(out _)==null));
+        public bool RetainsMotion(string id,out bool uncertain,bool force=false) => file.Retains(x => x.sequences.SelectMany(sequence => sequence.MotionIds()),id,out uncertain,force,x=>x.sequences.Any(sequence=>sequence.Compile(out _)==null),cacheDomain:"motion");
+        internal bool RetainsAssetDocument(byte[] bytes,int version,string identity,out bool uncertain)=>file.InspectRetainedReferences(bytes,version,
+            document=>document.sequences.Any(sequence=>sequence.Compile(out _)?.ReferencesAssetIdentity(identity)==true),out uncertain,
+            document=>document.sequences.Any(sequence=>sequence.Compile(out _)==null));
         public RuleDocument Load(out string message)
         {
             var value=file.Load(out message);

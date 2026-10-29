@@ -15,12 +15,14 @@ namespace Maestro.Quest.Imports {
     }
     /// <summary>Immutable imported image payloads in the same private workspace as
     /// models and motions. Definitions reference content hashes, never source URIs.</summary>
-    public sealed class ImageLibrary {
+    public sealed partial class ImageLibrary {
         internal const int MaximumFiles=32;internal const long MaximumTotalBytes=128L*1024*1024;
 
         readonly string directory;readonly WorkspaceWriteGate workspace;readonly SemaphoreSlim writes=new(1,1);
         public ImageLibrary(string directory,WorkspaceWriteGate writeGate=null){this.directory=Path.GetFullPath(directory);workspace=writeGate??new();}
         internal bool Readable=>!workspace.Frozen;
+        internal WorkspaceAssetFence Assets=>workspace.Assets;
+        internal Action<string> ReadCheckpoint;
         internal static string SafeName(string value){var result=new string((value??"Imported image").Where(c=>!char.IsControl(c)&&c!='<'&&c!='>').Take(80).ToArray());return string.IsNullOrWhiteSpace(result)?"Imported image":result;}
         internal static ImageAsset Inspect(string name,byte[] bytes,CancellationToken cancel=default)=>new(name,bytes==null?null:(byte[])bytes.Clone(),cancel);
         internal static ImageAsset ReadSelected(string name,string path,CancellationToken token)=>new(name,ReadBounded(path,token),token);
@@ -46,12 +48,12 @@ namespace Maestro.Quest.Imports {
             using var reader=new StreamReader(path,new UTF8Encoding(false,true),true);return SafeName(reader.ReadLine());
         }
         public async Task<ImageAsset> ReadAsync(string hash,CancellationToken cancel=default){
-            using var use=workspace.Write();await writes.WaitAsync(cancel).ConfigureAwait(false);
-            try{return await Task.Run(()=>ReadCore(hash,cancel),cancel).ConfigureAwait(false);}finally{writes.Release();}
+            _=AssetPath(hash);using var pin=workspace.Assets.Pin(ImportedAssetKind.Image,hash);using var use=workspace.Write();await writes.WaitAsync(cancel).ConfigureAwait(false);
+            try{return await Task.Run(()=>{ReadCheckpoint?.Invoke("reading");return ReadCore(hash,cancel);},cancel).ConfigureAwait(false);}finally{writes.Release();}
         }
         public async Task SaveAsync(ImageAsset asset,CancellationToken cancel=default){
             if(asset==null)throw new ArgumentNullException(nameof(asset));using var use=workspace.Write();await writes.WaitAsync(cancel).ConfigureAwait(false);
-            try{await Task.Run(()=>SaveCore(asset,cancel),cancel).ConfigureAwait(false);}finally{writes.Release();}
+            try{InvalidateReview(asset.Hash);await Task.Run(()=>SaveCore(asset,cancel),cancel).ConfigureAwait(false);}finally{writes.Release();}
         }
         void SaveCore(ImageAsset asset,CancellationToken cancel){
             cancel.ThrowIfCancellationRequested();_=SurfaceImage.Inspect(asset.Content,cancel);
@@ -72,8 +74,8 @@ namespace Maestro.Quest.Imports {
         public async Task<Entry[]> ListAsync(CancellationToken cancel=default)=>(await ScanAsync(cancel).ConfigureAwait(false)).RequireComplete();
         internal async Task<ImportedAssetInventory<Entry>> ScanAsync(CancellationToken cancel=default){
             using var use=workspace.Write();await writes.WaitAsync(cancel).ConfigureAwait(false);
-            try{return await Task.Run(()=>ImportedAssetInventory.Scan(directory,".image",new ImportedAssetReadBudget(MaximumTotalBytes+MaximumFiles,ImportedAssetInventory.MediaMetadataBytes),
-                (path,budget,token)=>{var asset=ReadCore(Path.GetFileNameWithoutExtension(path),token,budget);return new Entry{Hash=asset.Hash,Name=asset.Name,Bytes=asset.Content.Length,Width=asset.Inspection.DisplayWidth,Height=asset.Inspection.DisplayHeight,Format=asset.Inspection.Format};},cancel),cancel).ConfigureAwait(false);}finally{writes.Release();}
+            try{return await Task.Run(()=>{var snapshot=ImportedAssetInventory.Scan(directory,".image",new ImportedAssetReadBudget(MaximumTotalBytes+MaximumFiles,ImportedAssetInventory.MediaMetadataBytes),
+                (path,budget,token)=>{var asset=ReadCore(Path.GetFileNameWithoutExtension(path),token,budget);return new Entry{Hash=asset.Hash,Name=asset.Name,Bytes=asset.Content.Length,Width=asset.Inspection.DisplayWidth,Height=asset.Inspection.DisplayHeight,Format=asset.Inspection.Format};},cancel);snapshot.SourceRevision=InventoryRevision;return snapshot;},cancel).ConfigureAwait(false);}finally{writes.Release();}
         }
         internal bool TryCaptureArchive(out WorkspaceLibraryCapture capture){
             capture=null;if(!writes.Wait(0))return false;

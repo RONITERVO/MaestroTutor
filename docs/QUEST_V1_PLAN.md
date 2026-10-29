@@ -2,7 +2,13 @@
 
 Status: active implementation. Nothing in this document claims store readiness.
 
-The latest [shared partial asset discovery](#shared-partial-imported-asset-discovery--2026-10-29)
+The latest [guarded image payload cleanup](#shared-image-payload-reclamation--2026-10-30)
+adds an explicit shared user/agent inspection and removal path, fresh retained
+reference checks and per-image lifetime protection. Exact reimport restores the
+identity; historical requests cannot remove its restored bytes. Sound and model
+payload cleanup remain separate work.
+
+The preceding [shared partial asset discovery](#shared-partial-imported-asset-discovery--2026-10-29)
 keeps healthy models, pictures and sounds discoverable when a sibling import is
 damaged. Ordinary book/agent actions carry explicit completeness evidence while
 retaining existing saved-receipt and program field contracts. It does not repair,
@@ -18736,3 +18742,97 @@ and an atomic per-workspace/kind/hash admission fence spanning cache hits and
 pending decode work. Model import/preparation and audio resident/stream lifetimes
 need additional pins before their removal can be exposed. Workspace write freezes,
 archive capture and partial inventory alone are never deletion authority.
+
+
+## Shared image payload reclamation — 2026-10-30
+
+`image.library.inspect`, `image.library.edit` and the passive
+`image.library.review` fact now share one native implementation across generated
+Book controls, agent discovery and programs. Inspection fingerprints exact
+payload/metadata bytes and presence. Removal requires that revision, checks it
+again in the deletion worker and preserves the complete name/provenance sidecar
+and source export. The generated control loads the current revision and confirms
+the permanent action. Inspecting alone never authorizes removal.
+
+One-off removal is the validated path. A saved cleanup program containing the
+image hash protects that image like any other authored reference, including
+while the program is stopped.
+
+The reusable workspace asset fence keeps a pin through actual read/decode drain,
+including cancellation and owner destruction. It blocks new image users during
+removal, while ordinary workspace preservation remains compatible with retained
+readers. Loading, cached and failed render users protect their bytes until their
+last owner and worker release them. Image-library generations invalidate old
+cached pages when imports or removal change the files.
+
+Fresh bounded saved-reference inspection includes supported room/rule histories,
+backups, pending/preparation evidence, program modules and memory. Unknown,
+unreadable, linked, unstable or over-budget evidence prevents removal; no recovery
+or repair occurs while inspecting. The current journal, unbound appearances,
+Undo/Redo, saved/temporary candidates, authored programs, runtime scopes and
+branches, queued events and pending/cached image users are also checked. The current maintenance invocation arguments are excluded from their own
+check, but authored literals and live results remain protected. The tested
+one-off path also excludes its invocation wrapper. Legacy retained-file caches now distinguish identity
+domains instead of reusing one predicate's answers for another asset type.
+
+Authored writes, save dispatch and per-image admission stay held through actual
+worker completion. Stop before dispatch prevents deletion; Stop afterwards can
+return while the dispatched deletion finishes. Exact reimport restores the hash,
+and replaying a completed removal request returns its historical receipt without
+removing the restored payload. This is image payload cleanup only, with no Undo;
+it does not complete sound/model reclamation or defend against arbitrary external
+software concurrently rewriting private storage.
+
+Validation in `.quest-evidence/image-reclamation-20261029/`:
+
+- Full EditMode: **1,940 passed, zero failed, four filesystem-link skips** because
+  this host cannot create symlinks (Windows privilege 1314).
+- Affected PlayMode: **40 passed**, including loading/cached/failed image users,
+  actual cancellation drain, removal/reimport, unbound appearance and Undo
+  protection, unknown retained data and historical replay; existing import and
+  avatar-selection cases also pass.
+- Generated Book control tests: **78 passed**; app TypeScript passes after a
+  test-only fact-union annotation correction. New fixture/adapter checks:
+  **31 passed**, including unrelated stale errors and corrupted historical
+  phase/call negative cases. These counts overlap later full CI.
+- Native catalog and drift agree on **145 actions, 246 facts, 19 events and
+  eleven guides**. New files compiled after correcting one malformed meta GUID
+  and the new test's schema-validation API name. The initial full EditMode run
+  exposed two obsolete catalog test assumptions (exact guarded-input count and
+  first-page-only generic search); the final sweep tests the current count and
+  walks the public search pages.
+- The first full Headless attempt completed native inspection/removal and the
+  exact stale-image refusal, then exposed a driver error: it sent `arguments:{}`
+  to a fact with no inputs. The runtime correctly refused it. The adapter now
+  derives request shape from the shared fact definition; four regression cases
+  cover absent/required/invalid arguments. No native repair was needed for this
+  failure. That run is not counted as a completed journey.
+
+Final full offline Headless run `55bef15b213a4d9a8664e68ddd6ed9fa` passes with
+3,081 requests and 3,082 observations. Full Book run
+`eae0da38f99141c884d087ee3761ea5f` passes with 2,684 requests and 8,283
+observations, zero client errors. Both complete six maintenance/import receipts:
+known-unused inspection, payload removal, old-revision refusal, exact chat-image
+selection/preview/acceptance, reference protection and fresh final inspection.
+Headless repeats the original completed request without deleting the reimport;
+Book revisits its historical result through visible controls. Book preserves four
+pre-existing image files; Headless has none. Removed/restored file fact screens
+were visually inspected. This is real desktop Unity and the shared Book UI with
+scripted replies and synthetic media, not provider or physical Quest acceptance.
+
+The next bounded offline follow-through is finite imported-sound lifetime and
+guarded download removal: reuse the asset fence/reference proof, pin resident,
+streamed and cached sound owners through actual close/drain, and preserve the
+existing source and library contracts. Model reclamation needs a separate wider
+admission audit covering avatar, motion, geometry and acoustic uses. Neither
+replaces the held physical audio, comfort and Quest-performance release gates.
+
+Fresh unsigned Android export/compilation and manifest/merge checks pass:
+five export warnings, zero errors, and 22 selected ARM64 libraries with 16 KiB
+ELF LOAD alignment. Five unselected dependency libraries remain in the
+intermediate. Native-browser AAR/lint pass; Gradle reuses 128 passes and two skips.
+All 4,726 frozen source inputs match before and after the run. The project is
+`Android-compile-20261029-230442-d9ce5d99`; no APK/AAB, signature or installation
+was produced. Publication/CI evidence is recorded on the draft PR after push.
+ Device/paid-provider/signing/deployment/Meta holds remain in force;
+no new physical, provider or Store acceptance is claimed.

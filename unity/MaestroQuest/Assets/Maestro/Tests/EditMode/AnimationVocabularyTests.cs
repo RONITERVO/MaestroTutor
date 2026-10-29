@@ -23,8 +23,15 @@ namespace Maestro.Quest.Tests
         [Test] public void SourceNamesAndPrerequisitesStayDiscoverableUnderOneVerb() {
             var catalog=new Maestro.Quest.Creation.RoomCapabilityCatalog(null);
             foreach(string term in new[]{"recording","library","embedded","recipe","upper","rig.compatible"}) {
-                Assert.That(catalog.Execute(new JObject {["operation"]="search",["query"]=term,["offset"]=0},out _),Is.True);
-                Assert.That(catalog.Observe()["entries"].Any(x=>(string)x["id"]=="animation.play"),Is.True,term);
+                // Generic terms can fill more than one page as the shared catalog grows.
+                // Walk the public pages rather than pinning animation to an incidental rank.
+                int offset=0,total;bool found=false;
+                do {
+                    Assert.That(catalog.Execute(new JObject {["operation"]="search",["query"]=term,["offset"]=offset},out _),Is.True);
+                    var page=catalog.Observe();total=(int)page["total"];
+                    found|=page["entries"].Any(x=>(string)x["id"]=="animation.play");offset+=(int)page["pageSize"];
+                }while(offset<total);
+                Assert.That(found,Is.True,term);
             }
         }
         [TestCase("source.kind")] [TestCase("channel")]

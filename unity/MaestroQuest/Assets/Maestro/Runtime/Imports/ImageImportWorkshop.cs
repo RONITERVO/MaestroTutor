@@ -147,12 +147,14 @@ namespace Maestro.Quest.Imports {
             catch(Exception){listError="Image-library inspection failed. Existing files are preserved; repair or reimport the damaged image.";Fail(listError);throw;}
             finally{working=false;End();}
         }
-        internal JObject Receipt()=>new(){["requestId"]=request,["imageHash"]=asset?.Hash??(string)(lastPreview?["imageHash"])??"",["appearanceId"]=source,["revision"]=revision,["temporary"]=editor&&editor.TemporaryRoom,["library"]=Library(0,1),["inventory"]=ImportedInventoryObservation.Summary(inventory,listError)};
+        ImportedAssetInventory<ImageLibrary.Entry> CurrentInventory=>inventory!=null&&inventory.SourceRevision==editor.Images.InventoryRevision?inventory:null;
+        string CurrentListError=>inventory!=null&&CurrentInventory==null?"Library changed; refresh to inspect saved files.":listError;
+        internal JObject Receipt()=>new(){["requestId"]=request,["imageHash"]=asset?.Hash??(string)(lastPreview?["imageHash"])??"",["appearanceId"]=source,["revision"]=revision,["temporary"]=editor&&editor.TemporaryRoom,["library"]=Library(0,1),["inventory"]=ImportedInventoryObservation.Summary(CurrentInventory,CurrentListError)};
         internal JObject Observe()=>new(){["requestId"]=request,["phase"]=phase,["error"]=ImportObservation.Text(error),["preview"]=asset!=null?Preview(asset):lastPreview?.DeepClone()??Preview(null),["appearanceId"]=source,["revision"]=revision};
         internal JObject Library(int offset,int pageSize=2){
-            bool listed=inventory?.Ready==true;var entries=inventory?.Entries??Array.Empty<ImageLibrary.Entry>();
+            var current=CurrentInventory;bool listed=current?.Ready==true;var entries=current?.Entries??Array.Empty<ImageLibrary.Entry>();
             var page=listed?entries.Skip(offset).Take(pageSize).ToArray():Array.Empty<ImageLibrary.Entry>();
-            return new JObject {["ready"]=listed,["error"]=ImportObservation.Text(listError),["total"]=listed?entries.Length:0,["next"]=listed&&offset+page.Length<entries.Length?offset+page.Length:-1,["entries"]=new JArray(page.Select(e=>new JObject {["id"]=e.Hash,["name"]=ImportObservation.Text(e.Name),["width"]=e.Width,["height"]=e.Height,["format"]=e.Format}))};
+            return new JObject {["ready"]=listed,["error"]=ImportObservation.Text(CurrentListError),["total"]=listed?entries.Length:0,["next"]=listed&&offset+page.Length<entries.Length?offset+page.Length:-1,["entries"]=new JArray(page.Select(e=>new JObject {["id"]=e.Hash,["name"]=ImportObservation.Text(e.Name),["width"]=e.Width,["height"]=e.Height,["format"]=e.Format}))};
         }
         void Fail(string value){phase="failed";error=ImportObservation.Text(value);}
         void ReleasePicker(string id){try{picker?.Release(id);}catch(Exception){error="The selected stream is still closing. Resume Maestro before choosing another.";}}

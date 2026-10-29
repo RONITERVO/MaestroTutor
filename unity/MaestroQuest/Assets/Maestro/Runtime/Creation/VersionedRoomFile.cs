@@ -29,7 +29,7 @@ namespace Maestro.Quest.Creation
         string Encode(T candidate)=>encode?.Invoke(candidate)??JsonUtility.ToJson(candidate);
         sealed class Retained { public long Length,Stamp; public bool Uncertain; public HashSet<string> Ids; }
         readonly object retainedGate=new();
-        readonly Dictionary<string,Retained> retained=new();
+        readonly Dictionary<(string Domain,string Path),Retained> retained=new();
         // Save holds retainedGate. Cache only an inspection outcome, never a mutable
         // document; every reuse hashes a fresh bounded read of the primary file.
         byte[] primaryInspectionHash;
@@ -148,7 +148,7 @@ namespace Maestro.Quest.Creation
             }
             return valid;
         }
-        public bool Retains(Func<T,IEnumerable<string>> identities,string id,out bool uncertain,bool force=false,Func<T,bool> unknownReferences=null)
+        public bool Retains(Func<T,IEnumerable<string>> identities,string id,out bool uncertain,bool force=false,Func<T,bool> unknownReferences=null,string cacheDomain=null)
         {
             lock (retainedGate)
             {
@@ -157,15 +157,19 @@ namespace Maestro.Quest.Creation
                     foreach (string suffix in new[] { "", ".backup", ".pending", ".unreadable" })
                     {
                         string path=Path.Combine(directory,stem+".v"+v+".json"+suffix);
+                        var key=(cacheDomain,path);
                         try
                         {
                             var info=new FileInfo(path);
-                            if (!info.Exists) { retained.Remove(path); continue; }
-                            if (force || !retained.TryGetValue(path,out var cached) || cached.Length != info.Length || cached.Stamp != info.LastWriteTimeUtc.Ticks)
+                            if (!info.Exists) { retained.Remove(key); continue; }
+                            // A cached identity set belongs to one declared selector
+                            // domain. Unnamed callers safely re-read instead of sharing
+                            // whichever selector last happened to inspect this file.
+                            if (cacheDomain==null || force || !retained.TryGetValue(key,out var cached) || cached.Length != info.Length || cached.Stamp != info.LastWriteTimeUtc.Ticks)
                             {
                                 cached=new Retained { Length=info.Length,Stamp=info.LastWriteTimeUtc.Ticks };
                                 if (Read(path,v,out var document,out _)) {cached.Ids=identities(document).Where(x => x != null).ToHashSet();cached.Uncertain=unknownReferences?.Invoke(document)==true;} else cached.Uncertain=true;
-                                retained[path]=cached;
+                                if(cacheDomain!=null)retained[key]=cached;
                             }
                             uncertain |= cached.Uncertain; found |= cached.Ids?.Contains(id) == true;
                         }

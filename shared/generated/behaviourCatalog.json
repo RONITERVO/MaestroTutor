@@ -3898,6 +3898,248 @@
       }
     },
     {
+      "id": "image.library.edit",
+      "version": 1,
+      "label": "Remove an unused image download",
+      "input": {
+        "type": "object",
+        "properties": {
+          "imageHash": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "maxLength": 64
+          },
+          "inspectionRevision": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "maxLength": 64
+          }
+        },
+        "required": [
+          "imageHash",
+          "inspectionRevision"
+        ],
+        "additionalProperties": false,
+        "x-current": {
+          "fact": "image.library.review",
+          "version": 1,
+          "arguments": {
+            "imageHash": "imageHash"
+          },
+          "fields": {
+            "inspectionRevision": [
+              "inspectionRevision"
+            ]
+          },
+          "guards": [
+            "inspectionRevision"
+          ]
+        },
+        "x-confirmation": "Remove this unused image's local download? Its identity and name metadata remain. Reimport the original image to restore its bytes. There is no Undo, and Stop cannot reverse a deletion already started.",
+        "x-features": [
+          "imageLibraryMaintenance.v1"
+        ]
+      },
+      "duration": "completion",
+      "ownership": "imageLibraryWrite",
+      "channels": [],
+      "requirements": [],
+      "description": "Remove only an unused image's private payload after image.library.inspect. Pass its exact imageHash and inspectionRevision. Current or unbound appearances, Undo/Redo, saved/recovery data, reusable programs/modules, remembered or live values, and loading/rendering pins protect the bytes; uncertain evidence also refuses deletion. Checks repeat under a workspace edit hold and per-asset admission fence immediately before dispatch. Name/provenance metadata, identity and source export remain; exact reimport restores the hash. No Undo. Request removal only when the user asked for it; inspection never authorizes deletion. Existing library facts become refresh-needed. Stop before dispatch prevents removal; after dispatch the operation drains and may delete after Stop. An uncertain result requires inspecting the file and historical receipt before another explicit request. Historical replay never deletes again.",
+      "example": {
+        "imageHash": "0000000000000000000000000000000000000000000000000000000000000000",
+        "inspectionRevision": "0000000000000000000000000000000000000000000000000000000000000000"
+      },
+      "output": {
+        "type": "object",
+        "properties": {
+          "removed": {
+            "type": "boolean"
+          },
+          "previousRevision": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "maxLength": 64
+          },
+          "entry": {
+            "type": "object",
+            "properties": {
+              "imageHash": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$",
+                "maxLength": 64
+              },
+              "inspectionRevision": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$",
+                "maxLength": 64
+              },
+              "name": {
+                "type": "string",
+                "pattern": "^[^\\u0000-\\u001f]{0,80}$",
+                "maxLength": 80
+              },
+              "payloadPresent": {
+                "type": "boolean"
+              },
+              "metadataPresent": {
+                "type": "boolean"
+              },
+              "contentValid": {
+                "type": "boolean"
+              },
+              "payloadBytes": {
+                "type": "integer",
+                "minimum": 0.0,
+                "maximum": 16777216.0
+              }
+            },
+            "required": [
+              "imageHash",
+              "inspectionRevision",
+              "name",
+              "payloadPresent",
+              "metadataPresent",
+              "contentValid",
+              "payloadBytes"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "removed",
+          "previousRevision",
+          "entry"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "id": "image.library.inspect",
+      "version": 1,
+      "label": "Inspect an image download",
+      "input": {
+        "type": "object",
+        "properties": {
+          "imageHash": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "maxLength": 64
+          }
+        },
+        "required": [
+          "imageHash"
+        ],
+        "additionalProperties": false,
+        "x-features": [
+          "imageLibraryMaintenance.v1"
+        ]
+      },
+      "duration": "completion",
+      "ownership": "none",
+      "channels": [],
+      "requirements": [],
+      "description": "Inspect one exact image content hash, its bounded private payload/name metadata, and current, Undo/Redo, saved/recovery, module, remembered and live-program references. Also reports pending decode/texture users. Reads retained files off-thread without repairing them. inspectionRevision fingerprints exact inspected file content/presence, not deletion permission; removal always checks again. Unavailable evidence protects the download. Read image.library for imported hashes first. The passive image.library.review fact keeps only the last bounded file inspection, never a fresh safety proof.",
+      "example": {
+        "imageHash": "0000000000000000000000000000000000000000000000000000000000000000"
+      },
+      "output": {
+        "type": "object",
+        "properties": {
+          "entry": {
+            "type": "object",
+            "properties": {
+              "imageHash": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$",
+                "maxLength": 64
+              },
+              "inspectionRevision": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$",
+                "maxLength": 64
+              },
+              "name": {
+                "type": "string",
+                "pattern": "^[^\\u0000-\\u001f]{0,80}$",
+                "maxLength": 80
+              },
+              "payloadPresent": {
+                "type": "boolean"
+              },
+              "metadataPresent": {
+                "type": "boolean"
+              },
+              "contentValid": {
+                "type": "boolean"
+              },
+              "payloadBytes": {
+                "type": "integer",
+                "minimum": 0.0,
+                "maximum": 16777216.0
+              }
+            },
+            "required": [
+              "imageHash",
+              "inspectionRevision",
+              "name",
+              "payloadPresent",
+              "metadataPresent",
+              "contentValid",
+              "payloadBytes"
+            ],
+            "additionalProperties": false
+          },
+          "usage": {
+            "type": "object",
+            "properties": {
+              "current": {
+                "type": "boolean"
+              },
+              "history": {
+                "type": "boolean"
+              },
+              "saved": {
+                "type": "boolean"
+              },
+              "runtime": {
+                "type": "boolean"
+              },
+              "inUse": {
+                "type": "boolean"
+              },
+              "uncertain": {
+                "type": "boolean"
+              },
+              "canRemove": {
+                "type": "boolean"
+              },
+              "protection": {
+                "type": "string",
+                "pattern": "^.{0,512}$",
+                "maxLength": 512
+              }
+            },
+            "required": [
+              "current",
+              "history",
+              "saved",
+              "runtime",
+              "inUse",
+              "uncertain",
+              "canRemove",
+              "protection"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "entry",
+          "usage"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
       "id": "audio.import",
       "version": 1,
       "label": "Import a sound together",
@@ -40741,6 +40983,44 @@
       ]
     },
     {
+      "id": "image.library.review",
+      "version": 1,
+      "type": {
+        "record": {
+          "imageHash": "text",
+          "inspectionRevision": "text",
+          "name": "text",
+          "payloadPresent": "boolean",
+          "metadataPresent": "boolean",
+          "contentValid": "boolean",
+          "payloadBytes": "number"
+        }
+      },
+      "label": "Inspected image file",
+      "description": "Last bounded file inspection for this exact imageHash. Run image.library.inspect first. inspectionRevision guards file identity/presence for image.library.edit; it is not proof that deletion is currently safe. Import or removal invalidates older cached inspections. Missing/evicted inspections are unavailable. This passive fact never reads files, repairs data or checks retained references.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "imageHash": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "maxLength": 64
+          }
+        },
+        "required": [
+          "imageHash"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "imageHash": "0000000000000000000000000000000000000000000000000000000000000000"
+      },
+      "features": [
+        "factQueries.v1",
+        "imageLibraryMaintenance.v1"
+      ]
+    },
+    {
       "id": "audio.chat.item",
       "version": 1,
       "type": {
@@ -50971,7 +51251,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Art/AppearanceImages.cs",
-      "sha256": "dd67470b2ceb5dee98182275c7785cc398435ad522c762fee16697fbb4ea88dd"
+      "sha256": "1fafe1ea690876c2918fb6c6cd4673aeb888329e2654b1d27b0b9fe53aa3e034"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Art/AppearanceMaterials.cs",
@@ -51083,7 +51363,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Avatar/AvatarActivityProfiles.cs",
-      "sha256": "a3a6f83d4a7736588dd65447be222a4a57c9e5d66e76817d8b82917cf27ae726"
+      "sha256": "6582931672d64bfa04c9a284c263e8430d4bce9ef56f73e57fd421714c5f6564"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Avatar/AvatarAuthoredTravel.cs",
@@ -51423,7 +51703,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilityModules.cs",
-      "sha256": "891e6a28d42b2c22b1def629b43bb41d145516c84e6ea42fb12bae565c90cc8b"
+      "sha256": "3d1a50ffa9ad7ef9f09120f8b656ba38cde31baba2f66fb2bbec82ef3e840ab9"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilitySchema.cs",
@@ -51588,6 +51868,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ImageImportCapability.cs",
       "sha256": "f481d7bce66bef104655bc47b200c9094ff6a895e735a26a36df545b48857bbf"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ImageMaintenanceCapability.cs",
+      "sha256": "a78b9c718aa6f40e78374878ef004d1558a28da8268d623c0e662c50b7a39c9b"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ImageResourceFacts.cs",
@@ -52523,7 +52807,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomControls.cs",
-      "sha256": "4b6d0ea5a7b0cf845d8be3fd43d1b996db9c2d5fd0ff92dc9358db06e7243b5f"
+      "sha256": "9c0e769e5b934fd241d565f73954a70641aaba70a3a0703b7053f8b62e48ec49"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomCreationBudget.cs",
@@ -52560,6 +52844,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditPreparation.cs",
       "sha256": "066480ef126fb95375ed52d92406a6a4b7b3469ffe853ff1bf4f3ef18c8e2f8a"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditor.ImageRetention.cs",
+      "sha256": "40c03fcc63eaae184f373592c89f91987390d479297b94ff4e3e023a1b8d4372"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditor.Temporary.cs",
@@ -52947,7 +53235,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomStorage.cs",
-      "sha256": "f619debaa9a797c0afa3ee5ff10459a5ff63f4716f1f7583d7e3782c5e0e7a58"
+      "sha256": "e13b1a685b329fe34e7d992e910139da67e60697ff6101c50d15e59c1b6f28db"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomStructure.cs",
@@ -53126,8 +53414,12 @@
       "sha256": "812fff44ef62876c236cdb0a8a37557eb19ff609a65721d0270996d5b379a893"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/VersionedRoomFile.ReferenceProof.cs",
+      "sha256": "8a0f596edf53b8264ebbdd135d1b5b20ef2088336f879c654a5a94f349537ffe"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/VersionedRoomFile.cs",
-      "sha256": "f836d935e29661355c4170ebde3006191fe51e1ae39beda4718c031082d17fc0"
+      "sha256": "b5f985676e808f333c6cbd117c84f22f150e0d454132e84f6531dba984eb3a5f"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/VirtualRoomCapture.cs",
@@ -53215,11 +53507,15 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/ImageImportWorkshop.cs",
-      "sha256": "2fcd2a007d7ee0190e6ab18f3141003ec6646e5b62888265fe17a6f00716560f"
+      "sha256": "dd51bf1c442f5d4952c2f3bce2f8a16d98006e683e15dcfe6e44c23f54df9db7"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/ImageLibrary.Maintenance.cs",
+      "sha256": "5f19f9e5d9cbe98bf641b0e9084558d4d2f767f86c00e855b00b3c6a5c31fe55"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/ImageLibrary.cs",
-      "sha256": "adb3b328d33ecf757271ae568ec4cf83106392d9f147e60ebb673c7971e550f4"
+      "sha256": "caf2928dfd46ea175f25db105e6fbed8e9d2a93cdfd40e74c10ac8e4f3d16652"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/ImportAcceptance.cs",
@@ -53259,7 +53555,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/ImportedAssetInventory.cs",
-      "sha256": "f6738bb1725a38089e8f81131e2b94d011874702b91e6c3e240804475cfe6272"
+      "sha256": "41d17795c9e10e9fce800d3a65f1fa52b0c62322d7adcd95f94556af3a4a3297"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/ImportedAssetSidecar.cs",
@@ -53818,6 +54114,10 @@
       "sha256": "6b499755a832c76e4abfb7fc1b475c5fad563012bdf3d0363fe021701c9fca3c"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/SavedAssetReferences.cs",
+      "sha256": "e42d6b213b3f00d721245b9c205ee6abed0c8399e4b0909f273575fd9e45ecb6"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceAcceptedSave.cs",
       "sha256": "59368e9c09fbb3f812f1d4fd49952c8ab4a13b0ff069dd3818882ae1d295bded"
     },
@@ -53836,6 +54136,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceArchiveSnapshot.cs",
       "sha256": "e69af2d70c2aa39c387c0f14518c9e67e4740821756d395332d556c6892dab01"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceAssetFence.cs",
+      "sha256": "9b155e256fcacad2c018fa470da1f5c39ba8d3b54b6e01869c782f81fa8f2c30"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceContent.cs",
@@ -53931,11 +54235,15 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceWriteGate.cs",
-      "sha256": "7ab656831f29b202e980b6fe5b86349dfb7ed1e0d4f1b4abac6f21b66be243c0"
+      "sha256": "d035ded66afd1c875ea365df93f12fa7bad3f8e193e7a66d8ad2ee43c88558bf"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/AnchorProximitySubscription.cs",
       "sha256": "be52c08ec6bec3bb2083426d91e2abad7a13ec8248281b9fa1686576fbccd411"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/AssetIdentityRetention.cs",
+      "sha256": "482aa4a2897b0c5683ec06b43e1e8f520ce7e38d1afdac52ff19777ef301e217"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/AudioInstanceSubscription.cs",
@@ -53947,11 +54255,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "3116ed1436ee01d1ff6423269d908f7e0a61300dbe53ca72a89d241350f4f2b6"
+      "sha256": "42d2f7e981c47cd877f09e3d7d5e78694c5d005d83c7a81a57e039dd562c4552"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourProgram.cs",
-      "sha256": "7dcbe372d194ca39b8b342f9678a5f724cba277a0b31ada992ff41743a6b1666"
+      "sha256": "392876d8265a6355811d2660bfe85f7eebf6e9ae82372444eea9228df7017797"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/CalendarSubscription.cs",
@@ -53986,8 +54294,12 @@
       "sha256": "4ecaba68cb6393ed1f1605ab8d18c64c5923e7c80ca2b9e03186ff5851318575"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/ProgramMachine.AssetRetention.cs",
+      "sha256": "a85dba54f7885909a31b4e5c5a8295a2f19b4ae413849850e33cc8eb5088229c"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/ProgramMachine.cs",
-      "sha256": "b64101faa34db3a8cb356b28c28ea235ade08c602494a3bdc69b713d46dd021c"
+      "sha256": "f01e80e26b9dadc2e8836cec25b77b7cd84b668af0e30ea31f473a0383e3788b"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/ProgramMemoryDocument.cs",
@@ -53995,7 +54307,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/ProgramMemoryStore.cs",
-      "sha256": "8bfa5f2b02b438264c230e51ad48a4dc961c6aa057059822bdde4c24dc2089de"
+      "sha256": "1e0c554ec1420fbac08feb256487dfb39a64f83afc4271bb44c1d2ef7ec10a6f"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/ProgramMemoryTemporary.cs",
@@ -54003,7 +54315,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/ProgramModuleLibrary.cs",
-      "sha256": "78c2f1dd790e8053bbac285063da13f70a6ab32f01b4d1c730f5f8b2ee6a729e"
+      "sha256": "24004469b3837d6627c326fa7ec2545b1b4fa0c482c0acbdd6a2911bade0f64c"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/ProgramModules.cs",
@@ -54082,16 +54394,24 @@
       "sha256": "b22509f649317645f93797b2bdea088188cf889ef86d7dea9710d71cce6d4f80"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RuleScheduler.AssetRetention.cs",
+      "sha256": "7b3b192275a70448d5ce7fe768761808053780e443eef75f1a0619cfb88c7400"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RuleScheduler.cs",
       "sha256": "1ae0a0f20a41dcdc90ce2ad896dd3e509f5d9bc42075b8cd80a48ea375cdffe2"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RuleStorage.cs",
-      "sha256": "eb5cf86c748ecc9d9087b1022ab4f3199505094999ea1198ca31eeb73f2008e2"
+      "sha256": "c52ddefa657b0d87c92ded8a409902c214d24b6c45768e65f528b4f58310488f"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RuleTools.cs",
       "sha256": "241c15e61ec4ea66dc14a8b1a66e5ce08d1cf50903458caf0be6728c6a5889cc"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RuleWorkshop.AssetRetention.cs",
+      "sha256": "11b56fbf17bafc18f2ec69ae8a883b0d7bfcf39c89ab4f90c525d39934d4e131"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RuleWorkshop.cs",

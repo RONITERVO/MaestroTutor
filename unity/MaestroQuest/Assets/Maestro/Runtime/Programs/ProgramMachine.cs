@@ -14,7 +14,7 @@ namespace Maestro.Quest.Programs
     public interface IProgramFacts {bool TryRead(string name,out ProgramValue value);}
     public interface IProgramFactQueries {bool TryRead(string name,int version,JObject arguments,out ProgramValue value);}
     /// <summary>Cooperatively evaluated statements; native action completion remains the host's responsibility.</summary>
-    public sealed class ProgramMachine
+    public sealed partial class ProgramMachine
     {
         sealed class Scope {public ProgramFunction Function;public Dictionary<string,ProgramValue> Values;}
         sealed class Frame {public JArray Body;public int Index,Remaining=1;public bool Forever;public Scope Scope;public bool Function;public Scope Caller;public string Result;}

@@ -10,6 +10,8 @@ namespace Maestro.Quest.Persistence
     /// Ordinary autosaves of already accepted documents do not need a write lease.</summary>
     public sealed class WorkspaceWriteGate
     {
+        internal WorkspaceAssetFence Assets {get;}
+        public WorkspaceWriteGate(){Assets=new WorkspaceAssetFence(this);}
         sealed class Lease:IDisposable
         {
             WorkspaceWriteGate owner;readonly bool freeze,reader;

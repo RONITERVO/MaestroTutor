@@ -8,6 +8,7 @@ using Newtonsoft.Json.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Maestro.Quest.Imports;
+using Maestro.Quest.Persistence;
 using UnityEngine;
 namespace Maestro.Quest.Art {
     /// <summary>Workspace-owned, main-thread texture leases. Read/hash/inspection runs
@@ -18,7 +19,7 @@ namespace Maestro.Quest.Art {
         // A refresh briefly holds old and replacement bindings together. These
         // limits bound observations without confusing owners with texture copies.
         internal const int MaximumEntries=128,MaximumOwnersPerImage=132;
-        internal sealed class Entry {internal readonly string Id=Guid.NewGuid().ToString("N");internal string Hash,State="loading",Error="";internal readonly List<Lease> Owners=new();internal Texture2D Texture;internal long Bytes;internal CancellationTokenSource Cancel=new();internal Task Work;internal RoomResourceOwner Scope;internal ImageResources.PayloadLease Payload;internal ImageResources.TextureLease Native;internal bool Retired;}
+        internal sealed class Entry {internal readonly string Id=Guid.NewGuid().ToString("N");internal string Hash,State="loading",Error="";internal readonly List<Lease> Owners=new();internal Texture2D Texture;internal long Bytes;internal CancellationTokenSource Cancel=new();internal Task Work;internal RoomResourceOwner Scope;internal ImageResources.PayloadLease Payload;internal ImageResources.TextureLease Native;internal IDisposable Pin;internal bool Retired;}
         internal sealed class Lease:IDisposable {
             AppearanceImages owner;Entry entry;
             internal readonly string Id=Guid.NewGuid().ToString("N");
@@ -41,9 +42,14 @@ namespace Maestro.Quest.Art {
             if(scope.Role is not ("appearance" or "unscoped"))throw new ArgumentException("Invalid appearance image owner");
             if(!entries.TryGetValue(hash,out var entry)){
                 if(entries.Count>=MaximumEntries)throw new InvalidOperationException("The appearance image entry budget is full.");
-                entry=new Entry{Hash=hash,Scope=scope};entries.Add(hash,entry);
+                var pin=library.Assets.Pin(ImportedAssetKind.Image,hash);
+                try{entry=new Entry{Hash=hash,Scope=scope,Pin=pin};entries.Add(hash,entry);}catch{pin.Dispose();throw;}
+            }else{
+                if(entry.Owners.Count>=MaximumOwnersPerImage)throw new InvalidOperationException("The appearance image owner budget is full.");
+                // Cached reuse still passes admission, including workspace retirement.
+                using var admission=library.Assets.Pin(ImportedAssetKind.Image,hash);
+                return new Lease(this,entry,scope);
             }
-            if(entry.Owners.Count>=MaximumOwnersPerImage)throw new InvalidOperationException("The appearance image owner budget is full.");
             return new Lease(this,entry,scope);
         }
         internal JObject ObserveBudget()=>new(){["entries"]=entries.Count,["owners"]=entries.Values.Sum(e=>e.Owners.Count),["textureBytes"]=resident,
@@ -60,9 +66,13 @@ namespace Maestro.Quest.Art {
         }
         void StartRead(Entry e){
             var payload=ImageResources.BeginPayload(e.Scope,SurfaceImage.MaximumBytes,e.Hash);e.Payload=payload;
-            var work=Load(e,payload);e.Work=work;payload.Hold(work);if(work.IsCompleted)e.Work=null;_=Observe(work);
+            var work=Load(e,payload);e.Work=work;payload.Hold(work);_=Observe(e,work);
         }
-        static async Task Observe(Task task){try{await task;}catch(Exception error){Debug.LogException(error);}}
+        static async Task Observe(Entry entry,Task task){try{await task;}catch(Exception error){Debug.LogException(error);}finally{
+            if(ReferenceEquals(entry.Work,task))entry.Work=null;
+            if(entry.Retired)ReleasePin(entry);
+        }}
+        static void ReleasePin(Entry entry){entry.Cancel.Dispose();entry.Pin?.Dispose();entry.Pin=null;}
         async Task Load(Entry e,ImageResources.PayloadLease payload){
             ImageAsset asset=null;ImageResources.TextureLease candidate=null;var token=e.Cancel.Token;
             try{
@@ -73,11 +83,11 @@ namespace Maestro.Quest.Art {
                 if(closed||e.Retired)throw new OperationCanceledException();
                 e.Native=candidate;e.Texture=candidate.Texture;candidate=null;e.Bytes=bytes;resident+=bytes;e.State="ready";
             }catch(Exception ex){if(!closed&&!e.Retired)Failure(e,ex);}
-            finally{candidate?.Dispose();asset=null;payload.Dispose();e.Payload=null;e.Work=null;if(e.Retired)e.Cancel.Dispose();}
+            finally{candidate?.Dispose();asset=null;payload.Dispose();e.Payload=null;}
             if(!closed&&!e.Retired)Changed?.Invoke(e.Hash);
         }
         static void Failure(Entry e,Exception ex){e.State="failed";e.Error=ex is System.IO.InvalidDataException||ex is System.IO.FileNotFoundException||ex is InvalidOperationException?ex.Message:"The image could not be loaded. Import its original file again.";}
-        internal void Retry(string hash){if(closed||!entries.TryGetValue(hash,out var e)||e.State!="failed")return;e.State="loading";e.Error="";e.Work=null;Changed?.Invoke(hash);}
+        internal void Retry(string hash){if(closed||!entries.TryGetValue(hash,out var e)||e.State!="failed")return;e.State="loading";e.Error="";Changed?.Invoke(hash);}
         internal string State(string hash)=>entries.TryGetValue(hash,out var e)?e.State:"unloaded";
         internal string Error(string hash)=>entries.TryGetValue(hash,out var e)?e.Error:"";
         void Update(){
@@ -90,7 +100,10 @@ namespace Maestro.Quest.Art {
         void Release(Entry e){
             if(e.Retired)return;e.Retired=true;entries.Remove(e.Hash);e.Cancel.Cancel();e.Payload?.Dispose();
             resident-=e.Bytes;e.Bytes=0;e.Native?.Dispose();e.Native=null;e.Texture=null;
-            if(e.Work==null||e.Work.IsCompleted)e.Cancel.Dispose();
+            // Requested cancellation does not end the source use. The awaited Load
+            // includes both disk read and queued/native decode; Observe releases
+            // the pin only after that task has actually completed.
+            if(e.Work==null||e.Work.IsCompleted)ReleasePin(e);
         }
         void OnDestroy(){closed=true;foreach(var e in entries.Values.ToArray()){e.Owners.Clear();Release(e);}entries.Clear();resident=0;if(placeholder)ArtResources.Release(placeholder);Changed=null;}
     }

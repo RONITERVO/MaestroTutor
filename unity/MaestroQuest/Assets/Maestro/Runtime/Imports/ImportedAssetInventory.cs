@@ -13,6 +13,8 @@ namespace Maestro.Quest.Imports
     internal sealed class ImportedAssetInventory<TEntry>
     {
         internal TEntry[] Entries {get;}
+        // Library-specific observation generation, stamped while its file lease is held.
+        internal long SourceRevision {get;set;}
         internal bool Ready {get;}
         internal bool Complete {get;}
         internal bool EnumerationComplete {get;}

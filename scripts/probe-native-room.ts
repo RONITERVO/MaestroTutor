@@ -1,4 +1,5 @@
 import {probeAssetInventory} from './probe-asset-inventory';
+import {probeNativeImageMaintenance} from './probe-native-image-maintenance';
 import {validFactValue} from '../shared/behaviourFacts';
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
@@ -514,6 +515,11 @@ try{
   invoke:async(id,args)=>(await completeProbeAction(execute,await execute([{action:'execution',execution:{operation:'start',call:{id,version:1,arguments:args}}}]))).execution!.selected!,
   fact:async(id,args)=>factReply(await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:id,version:1,arguments:args}}])),
  },directory,'headless');
+ await probeNativeImageMaintenance(transport,execute,async commands=>{
+  const prepared=await transport.client.prepare(commands,lease.state());if(!lease.valid())throw new Error('Image maintenance room changed while preparing stale action');
+  readSets.push({commands:structuredClone(commands),session:prepared.state.session,sceneRevision:prepared.state.sceneRevision,objects:structuredClone(prepared.objects)});
+  const result=await lease.execute(commands,prepared.state.sceneRevision,prepared.objects);checkSparse(result);observations.push(structuredClone(result));return result;
+ },directory);
   await probeVisibilityLayers(execute,directory);
   await probeWorldRegions(execute,directory);
   await probeEnvironmentRecovery({

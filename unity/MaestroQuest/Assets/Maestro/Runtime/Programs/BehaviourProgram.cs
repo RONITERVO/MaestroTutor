@@ -31,6 +31,8 @@ namespace Maestro.Quest.Programs
         public string Entry {get;private set;}
         public string[] Resources => resources.ToArray();
         string[] referencedIds=System.Array.Empty<string>();
+        readonly HashSet<string> assetIdentities=new(StringComparer.Ordinal);
+        internal bool IsInvocation {get;private set;}
         public string[] ReferencedIds=>referencedIds.ToArray();
         readonly HashSet<string> resources=new();
         readonly Dictionary<string,ProgramFunction> functions=new();
@@ -97,6 +99,9 @@ namespace Maestro.Quest.Programs
             return source.ToString(Formatting.None);
         }
         public bool ReferencesMotion(string id)=>Source.Contains("\""+id+"\"");
+        // Parsed tokens include escaped literals and imported module definitions;
+        // GUID-only object references and substring matching are not asset proof.
+        public bool ReferencesAssetIdentity(string identity)=>identity!=null&&assetIdentities.Contains(identity);
         internal ProgramFunction Function(string name)=>functions[name];
         internal CapabilityCall Action(string id)=>actions[id].Copy();
         internal bool Allows(string target)=>resources.Contains(target);
@@ -125,6 +130,8 @@ namespace Maestro.Quest.Programs
             if(!invocation)root=ProgramModules.Link(raw,value=>new BehaviourProgram().ReadRoot(value));
             ReadRoot(root,invocation?Maestro.Quest.Creation.RoomCapabilityCatalog.MaximumInvocationResources:MaximumResources);
             referencedIds=raw.Descendants().OfType<JValue>().Where(x=>x.Type==JTokenType.String&&Guid.TryParseExact((string)x,"N",out _)).Select(x=>(string)x).Distinct().ToArray();
+            assetIdentities.UnionWith(raw.Descendants().OfType<JValue>().Where(x=>x.Type==JTokenType.String).Select(x=>(string)x).Where(Maestro.Quest.Imports.ModelLibrary.ValidHash));
+            IsInvocation=invocation;
             Source=raw.ToString(Formatting.None);
         }
         void ReadRoot(JObject root,int resourceLimit=MaximumResources)

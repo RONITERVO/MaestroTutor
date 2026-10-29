@@ -4059,3 +4059,39 @@ Noncanonical asset names and linked or unreadable entries cannot impersonate a
 healthy canonical asset. Cancellation and unexpected faults do not become a
 successful partial scan. Array-only internal callers remain strict and reject
 incomplete inventories; archive/save validation is unchanged.
+
+
+## Remove an unused image download
+
+Image cleanup is an explicit user or agent action, never a side effect of browsing.
+Use `image.library.inspect` with an exact content hash. Its receipt reports file
+presence, validity and references. Then `image.library.edit` accepts that hash and
+its `inspectionRevision`; the generated book control loads the same revision
+from `image.library.review` and asks for permanent-action confirmation. A previous
+inspection is not deletion permission: native checks repeat when the edit runs.
+
+One-off removal is the validated path. A saved cleanup program containing the
+image hash protects that image like any other authored reference, including
+while the program is stopped.
+
+The action removes only the private image payload. It preserves the name and
+provenance sidecar, identity and original export. Reimporting the exact original
+bytes restores the same identity. There is no Undo for removal. After removal,
+cached image-library pages require Refresh; historical receipts remain evidence
+and replaying an old completed request does not repeat deletion after reimport.
+
+Current and unbound appearances, Undo/Redo history, saved and recovery documents,
+construction modules, authored programs, remembered values, running scopes,
+parallel branches, queued events, and pending or cached image users protect the
+download. An unreadable, unsupported or oversized reference set also blocks
+removal. The user can inspect these reasons; the agent uses the same receipt.
+This is deliberately conservative, so an unused-looking texture can remain
+protected until its retained references or history expire.
+
+Authored writes and image admission stay held while removal runs. Stop before
+dispatch prevents deletion. Once file deletion has been dispatched, Stop ends
+waiting but the worker can still finish; inspect current files and the existing
+receipt before issuing another request. This image path establishes reusable
+asset lifetime and reference checks. It does not yet expose sound or model
+payload reclamation, and does not claim to protect against arbitrary external
+software changing private files during the operation.

@@ -2296,3 +2296,41 @@ warning beside the native result. Its three libraries must already contain a
 healthy entry; Headless may have an empty image library and records that boundary.
 No injected native response, real provider, device, quota or reclamation proof
 is implied. An unexpected changed fixture is preserved for inspection.
+
+
+## Shared image payload maintenance journey — 2026-10-30
+
+The full offline Headless and Book journeys include
+`probe-image-maintenance.ts` through client-specific adapters. They exclusively
+create a unique valid PNG and name sidecar in the verified fresh probe room's
+image directory, without a referencing appearance. This is an explicit orphan
+fixture, not evidence of a user import or rendered texture. All existing image
+files are hashed and checked unchanged; fixtures are preserved for diagnosis
+once a native request has started.
+
+Ordinary `image.library.inspect`, `image.library.review` and `image.library.edit`
+perform the actual native inspection and payload removal. The leaf checks exact
+file/name fingerprints, known-unused references, metadata retention, changed
+presence revision and refusal of the old revision. It then offers the original
+synthetic PNG through the usual chat-image bridge, selects it, waits for preview
+and accepts it. The restored file has the same identity and metadata; its new
+unbound appearance protects it from removal.
+
+Headless resends the original completed request ID and requires the unchanged
+historical receipt while the reimported bytes survive. Book uses visible generated
+fields, the current-value loader, permanent-action confirmation and recent-result
+controls. Book's historical revisit is not a duplicate-start transport test. Both
+finish with a fresh native file inspection, rather than accepting a cached fact
+as final file evidence. The Book saves screenshots at inspection, removal,
+refusal, reimport and history readback. These checks use the actual desktop Unity
+runtime; they do not establish Quest filesystem, provider judgment, audibility,
+rendered image pixels or physical headset acceptance.
+
+The completed runs are Headless `55bef15b213a4d9a8664e68ddd6ed9fa`
+(3,081 requests / 3,082 observations) and Book
+`eae0da38f99141c884d087ee3761ea5f` (2,684 requests / 8,283 observations,
+zero client errors). Each completed six maintenance/import receipts. Book
+preserved four pre-existing image files; Headless had none, so its preservation
+check alone is not nonempty-library proof. Removal and restored-file fact screens
+were visually inspected. Evidence is under
+`.quest-evidence/image-reclamation-20261029/` and those native run directories.
