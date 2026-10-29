@@ -507,6 +507,53 @@ energy is not proof of better speech. No app integration, selected dependency,
 original quality gate, recorded voice or device/provider action changes.
 The supported measured32 evaluation still has its original 31 quality failures.
 
+## Combined fixes and full convolution constraints — 2026-10-29
+
+The retained two-canceller adapter was then rebuilt with each dependency fix and
+both together. A second comparison changes only the AUMDF constraint schedule:
+all filter partitions are constrained on every frame instead of partition zero
+plus one rotating partition. This follows the MDF/AUMDF distinction documented
+beside that condition in the pinned source; it is a private algorithm control,
+not a supported library setting.
+
+| Retained-model variant | Aligned failures / 39 | Standalone failures / 40 |
+| --- | ---: | ---: |
+| Reset bounds corrected | 3 | 0 |
+| Partition indexing corrected | 4 | 0 |
+| Both corrections | 4 | 0 |
+| Full MDF constraints, original indexing | 5 | 0 |
+| Full MDF constraints, both corrections | 5 | 0 |
+
+Each variant also passes the 31 clock/duplex contracts and six existing synthetic
+speech excerpts, and completes all 30 four-stream diagnostic windows. Reset
+correction changes some printed metrics but no verdict. The combined correction
+still loses the positive-capture-drift quiet changed-path case. Both full-MDF
+controls additionally lose the positive-capture-drift quiet cold-tone case.
+None rescues a failing case compared with the earlier 36/39 retained prototype.
+
+Full constraints modestly increase no-echo-reference projected gain in the three
+late quiet windows, approximately .67–.69 to .72–.73, but correlations remain
+about .83 and mixed-signal correlations remain poor. Neither higher gain nor more
+frequent constraints establishes better overall speech. No runtime performance
+claim follows from these desktop diagnostics; full constraints require more
+transforms.
+
+These results reject both combined fixes as a sufficient quality solution and
+reject promotion of the full-MDF controls. They do **not** justify retaining
+known dependency bugs to preserve a better case count. The next audio decision
+needs an explanation and correction for adaptation-induced speech distortion,
+not another constraint-rate change. [Valin and Collings' learning-rate study](https://jmvalin.ca/papers/valin_icassp2007.pdf)
+describes the competing demands of double-talk and echo-path recovery; it is
+research context, not validation of any current Maestro implementation.
+
+Full sources, dependency hashes, command lines, outputs and decision receipts
+are retained in `.quest-evidence/echo-speex-combined-20261029/` and
+`.quest-evidence/echo-speex-fullmdf-20261029/`. All five runs are terminal;
+current source and pinned dependency authorities stayed unchanged. The 14
+protected files remain unchanged. No processor was selected, no acceptance
+threshold was relaxed and no device/provider work occurred. The native
+measured32 evaluation still has 31 open aligned failures.
+
 ## Decision
 
 Keep one shared capture/output ownership and timing contract. Keep both the cold
