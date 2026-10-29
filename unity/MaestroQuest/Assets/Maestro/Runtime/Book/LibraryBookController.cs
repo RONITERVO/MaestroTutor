@@ -7,6 +7,8 @@ using Maestro.Quest.Avatar;
 using Maestro.Quest.Creation;
 using Maestro.Quest.Imports;
 using Maestro.Quest.Rules;
+using Maestro.Quest.Programs;
+using Newtonsoft.Json.Linq;
 using UnityEngine;
 
 namespace Maestro.Quest.Book
@@ -15,7 +17,7 @@ namespace Maestro.Quest.Book
     {
         public int version, sequence, offset, stepIndex, sourceIndex, termsPage, role, weight, usagePage, profileRevision;
         public float speed,cooldown;
-        public string session, action, query, motionId, name, ruleId, modelHash;
+        public string session, action, query, motionId, name, ruleId, modelHash,entryRevision;
         public bool compatibleOnly, favouritesOnly, includeShort, favourite, loop, archivedOnly;
         public string[] tags;
         public bool Valid()
@@ -31,6 +33,7 @@ namespace Maestro.Quest.Book
                 return ModelLibrary.ValidHash(modelHash) && role >= 0 && role < 4 && (action == "roleClear" || Guid.TryParseExact(motionId,"N",out _)) &&
                     (action != "roleAssign" || new TutorMotionChoice { motionId=motionId,weight=weight,speed=speed,cooldown=cooldown,loop=loop }.Valid());
             if (!Guid.TryParseExact(motionId,"N",out _)) return false;
+            if(MotionMaintenanceRequest.Maintenance(action)&&!ModelLibrary.ValidHash(entryRevision))return false;
             if (action == "save") return Text(name,100) && !string.IsNullOrWhiteSpace(name) && tags != null && tags.Length <= 16 && tags.All(x => Text(x,32) && !string.IsNullOrWhiteSpace(x));
             if (action == "rule") return Guid.TryParseExact(ruleId,"N",out _);
             return action == "select" || action == "preview" || action == "walk" || action == "archive" || action == "restore" || action == "removeDownload" || action == "forgetMotion";
@@ -38,7 +41,7 @@ namespace Maestro.Quest.Book
     }
     [Serializable] public sealed class LibraryBookEntry
     {
-        public string id,name;
+        public string id,name,entryRevision;
         public string[] tags;
         public float duration;
         public bool favourite,compatible,shortClip,archived,removed,downloaded;
@@ -47,7 +50,7 @@ namespace Maestro.Quest.Book
     [Serializable] public sealed class LibraryBookState
     {
         public int version = 1, revision, ack, offset, total, pageSize = MotionLibrary.SearchPageSize, stepIndex, sourceIndex, sourceCount, termsPage, termsPages;
-        public string session, query, status, ruleId, ruleName, sourceName, attribution;
+        public string session, query, status, ruleId, ruleName, sourceName, attribution,maintenanceRunId;
         public bool visible, busy, readOnly, compatibleOnly, favouritesOnly, includeShort, canPreview, canWalk, canAssign;
         public LibraryBookEntry[] entries = Array.Empty<LibraryBookEntry>();
         public LibraryBookEntry selected;
@@ -70,6 +73,9 @@ namespace Maestro.Quest.Book
         bool checkingRetention;
         string retainedId; MotionRetention retained;
         string acknowledgedSession, trayMotionId; int acknowledgedRevision;
+        string pendingMaintenance,lastMaintenance;
+        bool maintenanceInterrupted;
+        const string MaintenanceInterrupted="Stopped waiting for animation maintenance. Its save or removal may still finish. Inspect current library details before another request.";
         public LibraryBookState State { get; private set; }
         public bool UsagePending => checkingRetention;
         public void Initialize(RoomEditor editor,ImportWorkshop imports,RuleWorkshop rules,NativeBookBrowser browser = null)
@@ -86,10 +92,11 @@ namespace Maestro.Quest.Book
         public void SetVisible(bool value)
         {
             if (visible == value) return;
+            CancelMaintenance();
             if (value && !imports.LibraryMode) imports.ToggleLibrary(); else imports.StopPreview();
             visible = value; avatar?.SetActivityLibraryOpen(value); operation++; busy = false;
             session = Guid.NewGuid().ToString("N"); ack = lastSequence = 0;
-            message = value ? "Choose a saved motion. Preview never starts automatically." : "Returned to conversation";
+            message = maintenanceInterrupted?MaintenanceInterrupted:value ? "Choose a saved motion. Preview never starts automatically." : "Returned to conversation";
             Refresh();
         }
         void Observe(BookSnapshot snapshot)
@@ -104,9 +111,10 @@ namespace Maestro.Quest.Book
             if (!request.Valid()) { ack = request.sequence; message = "The library request is invalid. Review its fields and try again."; Refresh(); return; }
             if (request.action == "stop" || request.action == "close")
             {
+                CancelMaintenance();
                 operation++; busy = false; imports.StopPreview(); ack = request.sequence;
                 if (request.action == "close") { visible = false; avatar?.SetActivityLibraryOpen(false); }
-                message = request.action == "close" ? "Returned to conversation" : "Motion stopped"; Refresh(); return;
+                message = maintenanceInterrupted?MaintenanceInterrupted:request.action == "close" ? "Returned to conversation" : "Motion stopped"; Refresh(); return;
             }
             if (busy) { ack = request.sequence; message = "Please wait for the current library operation"; Refresh(); return; }
             int current = ++operation; string ownerSession = session;
@@ -128,31 +136,30 @@ namespace Maestro.Quest.Book
                 {
                     var entry = editor.Motions.Inspect(request.motionId) ?? throw new ModelImportException("This motion is missing. Import its original file again.");
                     selectedId = entry.id;
-                    if (request.action != "archive" && request.action != "restore" && request.action != "removeDownload" && request.action != "forgetMotion") imports.SelectLibraryMotion(entry.id);
+                    if (!MotionMaintenanceRequest.Maintenance(request.action)) imports.SelectLibraryMotion(entry.id);
                     if (request.action == "select") { sourceIndex = request.sourceIndex; termsPage = request.termsPage; usagePage=request.usagePage; message = "Selected "+entry.name; }
-                    else if (request.action == "archive" || request.action == "restore" || request.action == "removeDownload" || request.action == "forgetMotion")
+                    else if (MotionMaintenanceRequest.Maintenance(request.action))
                     {
                         busy=true; message="Updating local motion storage…"; Refresh();
-                        async Task<string> Protection() {
-                            var saved=await Task.Run(() => MotionUsage.ReadSaved(editor,rules,entry.id,true));
-                            if (!this || disposed || suspended || current != operation || ownerSession != session) return "The library changed. Review this motion before removing its download.";
-                            return MotionUsage.Read(editor,rules,entry.id,retained:saved).protection;
+                        var args=new JObject {["operation"]=request.action,["motionId"]=entry.id,["entryRevision"]=request.entryRevision};
+                        if(request.action=="save"){args["name"]=request.name;args["tags"]=new JArray(request.tags);args["favourite"]=request.favourite;}
+                        if(!MotionMaintenanceCapability.RunManual(editor,args,out var failure,out var run))throw new ModelImportException(failure);
+                        pendingMaintenance=lastMaintenance=run;maintenanceInterrupted=false;Refresh();
+                        while(this&&!disposed&&!suspended&&current==operation&&ownerSession==session){
+                            var receipt=rules.Runtime?.Scheduler.Invocation(run);
+                            if(receipt==null)throw new ModelImportException("This maintenance receipt is unavailable. Inspect the library before another request.");
+                            if((string)receipt["phase"] is not ("preparing" or "running")){
+                                if(pendingMaintenance==run)pendingMaintenance=null;
+                                if((string)receipt["phase"]!="completed")throw new ModelImportException((string)receipt["status"]??"Maintenance did not complete. Inspect its retained receipt.");
+                                break;
+                            }
+                            await Task.Yield();
                         }
-                        if (request.action == "removeDownload") await editor.Motions.RemoveDownloadAsync(entry.id,Protection);
-                        else if (request.action == "forgetMotion") { await editor.Motions.ForgetAsync(entry.id,Protection); selectedId=null; }
-                        else await editor.Motions.ArchiveAsync(entry.id,request.action == "archive");
                         if (!this || disposed || current != operation || ownerSession != session) return;
+                        if(request.action=="forgetMotion")selectedId=null;
                         imports.RefreshLibraryDetails();
-                        message=request.action == "archive" ? "Archived. Existing assignments still work; find it with the Archived filter." :
+                        message=request.action=="save"?"Motion details saved; existing assignments are retained":request.action == "archive" ? "Archived. Existing assignments still work; find it with the Archived filter." :
                             request.action == "restore" ? "Returned to the main library. Playback has not started." : request.action == "forgetMotion" ? "Removed motion details. A later import will create a new library identity." : "Local download removed. Its identity and details are kept; import the original export to restore it.";
-                    }
-                    else if (request.action == "save")
-                    {
-                        busy = true; message = "Saving motion details…"; Refresh();
-                        await editor.Motions.UpdateAsync(entry.id,request.name.Trim(),request.tags.Select(x => x.Trim()).ToArray(),request.favourite);
-                        if (!this || disposed || current != operation || ownerSession != session) return;
-                        imports.RefreshLibraryDetails();
-                        message = "Motion details saved; existing assignments are retained";
                     }
                     else if (request.action == "preview")
                     {
@@ -189,7 +196,7 @@ namespace Maestro.Quest.Book
                 if (this && !disposed && current == operation && ownerSession == session) { busy = false; ack = request.sequence; Refresh(); }
             }
         }
-        LibraryBookEntry View(MotionEntry entry,string rig) => entry == null ? null : new LibraryBookEntry { id = entry.id,name = entry.name,tags = entry.tags,duration = entry.duration,favourite = entry.favourite,shortClip = entry.Short,compatible = rig != null && entry.rigHash == rig,archived=entry.archived,removed=entry.removed,downloaded=editor.Motions.Downloaded(entry.id),bytes=entry.bytes };
+        LibraryBookEntry View(MotionEntry entry,string rig) => entry == null ? null : new LibraryBookEntry { id = entry.id,name = entry.name,entryRevision=MotionLibrary.EntryRevision(entry),tags = entry.tags,duration = entry.duration,favourite = entry.favourite,shortClip = entry.Short,compatible = rig != null && entry.rigHash == rig,archived=entry.archived,removed=entry.removed,downloaded=editor.Motions.Downloaded(entry.id),bytes=entry.bytes };
         public void Refresh()
         {
             if (!editor || disposed) return;
@@ -209,7 +216,7 @@ namespace Maestro.Quest.Book
             var usage=selected == null ? null : MotionUsage.Read(editor,rules,selected.id,usagePage,retainedId == selected.id ? retained : null);
             if (selected != null && !checkingRetention && (retainedId != selected.id || Time.unscaledTime >= nextRetention)) _=CheckRetention(selected.id);
             State = new LibraryBookState {
-                revision = ++revision,ack = ack,session = session,visible = visible,busy = busy,readOnly = editor.Motions.ReadOnly,
+                revision = ++revision,ack = ack,session = session,visible = visible,busy = busy,readOnly = editor.Motions.ReadOnly,maintenanceRunId=lastMaintenance,
                 query = query,offset = offset,total = page.Total,compatibleOnly = compatibleOnly,favouritesOnly = favouritesOnly,includeShort = includeShort,archivedOnly=archivedOnly,usage=usage,
                 canRemoveDownload=selected != null && selected.archived && (!selected.removed || editor.Motions.PayloadPresent(selected.id)) && usage.protection == null && !editor.Motions.ReadOnly,
                 canForgetMotion=selected != null && selected.removed && !editor.Motions.PayloadPresent(selected.id) && usage.protection == null && !editor.Motions.ReadOnly,
@@ -237,9 +244,10 @@ namespace Maestro.Quest.Book
         }
         void Lifecycle()
         {
+            CancelMaintenance();
             suspended = paused || !focused; operation++; busy = false;
             if (suspended) imports?.StopPreview();
-            session = Guid.NewGuid().ToString("N"); ack = lastSequence = 0; message = "Library ready. Interrupted actions are not replayed."; Refresh();
+            session = Guid.NewGuid().ToString("N"); ack = lastSequence = 0; message = maintenanceInterrupted?MaintenanceInterrupted:"Library ready. Interrupted actions are not replayed."; Refresh();
         }
         void OnApplicationPause(bool value) { paused = value; Lifecycle(); }
         void OnApplicationFocus(bool value) { focused = value; Lifecycle(); }
@@ -251,9 +259,11 @@ namespace Maestro.Quest.Book
             // library immediately so a stale editor cannot cover the still-usable conversation.
             if(browser&&State!=null)browser.PublishLibraryState(Newtonsoft.Json.JsonConvert.SerializeObject(State));
         }
-        void OnDisable() { if (imports) { suspended = true; operation++; imports.StopPreview(); } }
+        void CancelMaintenance(){if(pendingMaintenance==null)return;maintenanceInterrupted=true;rules?.Runtime?.Scheduler?.CancelInvocation(pendingMaintenance,out _);pendingMaintenance=null;}
+        void OnDisable() { CancelMaintenance();if (imports) { suspended = true; operation++; imports.StopPreview(); } }
         void OnDestroy()
         {
+            CancelMaintenance();
             disposed = true; operation++;
             if (imports) { imports.BrowseRequested -= Toggle; imports.Changed -= Refresh; }
             if (rules) rules.Changed -= Refresh; if (editor) editor.Changed -= Refresh;

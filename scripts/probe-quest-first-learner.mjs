@@ -280,6 +280,12 @@ try {
   assert.equal(await page.locator('textarea').count(),0);
   const open = page.getByRole('button',{name:'Open my Maestro book',exact:true});
   assert.equal(await open.isDisabled(),true);
+  const audioSetup = page.getByRole('region',{name:'Headphones for sound'});
+  await audioSetup.waitFor();
+  assert.match(await audioSetup.innerText(),/Headphones are required for the full Quest v1 audio experience/);
+  assert.match(await audioSetup.innerText(),/cannot currently check whether headphones are connected/);
+  assert.equal(await page.getByRole('checkbox').count(),1,'Headphone guidance must not add a consent gate');
+  await page.screenshot({path:resolve(out,'welcome-audio.png')});
   await page.getByRole('checkbox',{name:'I am 18 years of age or older.'}).check();
   await open.click();
   checkpoint('access');

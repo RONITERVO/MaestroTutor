@@ -32,3 +32,12 @@ it('loads detailed guides only when native supports discovery, retaining core sa
  for(const guide of ROOM_GUIDES){expect(ROOM_AGENT_INSTRUCTION).toContain(guide.body);expect(compact).not.toContain(guide.body);expect(compact).toContain(guide.id);}
  for(const text of ['Act only on an explicit current user request','Never emit JavaScript','unconfirmed','Only native receipts establish completion','never invent a revision','Read first:','category:"guides"'])expect(compact).toContain(text);
 });
+
+it('keeps the audio setup reference discoverable without granting a device or action capability',()=>{
+ const guide=ROOM_GUIDES.find(g=>g.id==='guide.audio.setup')!;
+ expect(guide.requires).toEqual([]);
+ expect(guide.description).toContain('Read-only setup guidance');
+ expect(guide.body).toContain('Maestro cannot currently check whether headphones are connected.');
+ expect(ROOM_AGENT_INSTRUCTION).toContain(guide.body);
+ expect(roomAgentInstruction(['catalogGuides.v1'])).toContain('For Quest audio setup or headphone questions, inspect guide.audio.setup.');
+});

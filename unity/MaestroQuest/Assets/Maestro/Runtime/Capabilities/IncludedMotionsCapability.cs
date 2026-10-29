@@ -56,7 +56,9 @@ namespace Maestro.Quest.Programs
         {
             var type=ProgramDataType.Read(JObject.Parse("{\"record\":{\"available\":\"boolean\",\"busy\":\"boolean\",\"status\":\"text\",\"package\":{\"record\":{\"manifestHash\":\"text\",\"packId\":\"text\",\"name\":\"text\",\"revision\":\"number\",\"avatarHash\":\"text\",\"rigHash\":\"text\"}},\"counts\":{\"record\":{\"motions\":\"number\",\"kibibytes\":\"number\",\"catalogued\":\"number\",\"removed\":\"number\"}}}}"));
             return new("motion.pack.included",type,"Included animation package","Read-only offline package identity and library metadata counts. catalogued includes archived/removed matches by exact payload hash, even when a user's earlier import has a different ID. removed counts explicit removed-download records; neither count certifies bytes. Use the existing motion search and detail facts for actual saved IDs and playback availability. Adding content preserves matching choices. Names/status are bounded; first-use copying never plays or assigns motions.",null,null,(context,args)=>{
-                var library=context.Editor?context.Editor.Motions:null;var pack=library?.Included;
+                // The scheduler first offers an activity-only context. Defer to
+                // its native fact source when no library is present in this one.
+                var library=context.Editor?context.Editor.Motions:null;if(library==null)return null;var pack=library.Included;
                 var known=library==null?Array.Empty<MotionEntry>():library.List(includeShort:true).Concat(library.List(includeShort:true,archivedOnly:true)).ToArray();var hashes=pack?.Catalogue.entries.Select(x=>x.hash).ToHashSet();
                 return ProgramValue.Literal(new JObject {["available"]=pack!=null,["busy"]=library?.InstallingIncluded??false,["status"]=ImportObservation.Text(library?.IncludedStatus??""),
                     ["package"]=new JObject {["manifestHash"]=pack?.Hash??"",["packId"]=pack?.PackId??"",["name"]=ImportObservation.Text(pack?.Name??""),["revision"]=pack?.Revision??0,["avatarHash"]=pack?.AvatarHash??"",["rigHash"]=pack?.RigHash??""},

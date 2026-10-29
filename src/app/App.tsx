@@ -51,6 +51,8 @@ import { readSpeechRoutingState } from './speechRoutingState';
 import { useLanguageSessionReset } from './hooks/useLanguageSessionReset';
 import { useNativeSessionLifecycle } from './hooks/useNativeSessionLifecycle';
 import { useSessionActive } from '../platform/browser/useSessionActive';
+import { isNativeQuestBook } from '../platform/quest/questIntegrityBridge';
+import { withQuestAudioContext } from '../core/config/prompts';
 
 const App: React.FC = () => {
   const sessionActive = useSessionActive();
@@ -188,7 +190,7 @@ const App: React.FC = () => {
   // Compute derived values in the selector to avoid Zustand getter issues
   const currentSystemPromptText = useMaestroStore(state => {
     const pair = state.languagePairs.find(p => p.id === state.settings.selectedLanguagePairId);
-    return pair?.baseSystemPrompt || '';
+    return withQuestAudioContext(pair?.baseSystemPrompt || '', isNativeQuestBook());
   });
 
   const setTransitioningImageId = useMaestroStore(state => state.setTransitioningImageId);

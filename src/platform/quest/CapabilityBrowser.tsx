@@ -102,7 +102,8 @@ export function CapabilityBrowser({client,onClose,onInsert,initialCall}:{client:
   finally{if(alive.current)setLoading(false);}
  };
  const key=call?JSON.stringify(call):'';
- const confirmation=definition?.input['x-confirmation'];
+ // A branch may add a warning, but cannot replace a mandatory action-wide one.
+ const confirmation=definition?.input['x-confirmation']??selectedSchema?.['x-confirmation'];
  const observation=state?.catalog;
  const check=checked===key&&key&&observation?.operation==='check'&&JSON.stringify(observation.call)===key?observation:null;
  const supported=state?.capabilities?.includes('catalog.v1')===true;

@@ -64,6 +64,32 @@ rejection; they are explicitly simulated transport tests, not native evidence.
 The actual native journey is required by local build verification. Web CI runs
 the shared-client/fixture tests but does not run Unity.
 
+## Shared animation-library maintenance
+
+Both ordinary offline journeys include `probe-motion-maintenance.ts`. The
+headless client uses production catalog/execution calls; the visible book uses
+generated action fields, current-value loading and destructive confirmation.
+Both inspect the actual native included package and wait for its existing
+first-use copy, without synthesizing a library or retrying installation.
+
+The scenario chooses an unused exact packaged motion, reads all metadata pages,
+saves changes, rejects a stale revision, archives/restores it, removes its private
+download and restores it from the included package. It then removes and forgets
+that unused identity, adds precisely that one packaged entry back and restores
+the original metadata. The final entry revision, payload and package counts must
+match exactly. Headless additionally replays an older completed receipt after a
+newer edit and requires no repeated mutation. Failure preserves the current
+workspace and diagnostic evidence; it does not automatically clean up an
+uncertain operation.
+
+`headless-motion-maintenance.json` and `book-motion-maintenance.json` retain
+readiness samples, inspected identities, native receipts and final state. Book
+screenshots retain the rendered controls. This proves packaged-content recovery
+through desktop Unity, not arbitrary user-source reimport, provider judgment,
+Android file picking or physical Quest input. Empty searches/tag pages and absent
+native context are covered through the scheduler so a partial context cannot
+hide a real package and empty lists cannot fault the bridge.
+
 ## Optional original-provider route
 
 Passing `-Prompt` now runs the original conversational path: a real context-setting

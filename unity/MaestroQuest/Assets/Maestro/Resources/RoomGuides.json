@@ -2,6 +2,14 @@
   "version": 1,
   "guides": [
     {
+      "id": "guide.audio.setup",
+      "version": 1,
+      "label": "Headphones for sound",
+      "description": "Quest v1 headphones, audio resume and voice input limits. Read-only setup guidance; connection is not detected.",
+      "requires": [],
+      "body": "Headphones for sound\n\nHeadphones are required for the full Quest v1 audio experience.\n\nConnect headphones to your Quest before starting audio. You can still read and type without them.\n\nMaestro cannot currently check whether headphones are connected.\n\nAfter the app loses focus, use the book’s Resume audio bell when needed, then start speech again. Returning to the book does not automatically restart audio.\n\nDuring a Live conversation, voice input is paused while Maestro’s native voice plays and briefly afterward. Headphones do not change that behavior.\n\nReading this guide does not start audio, open the microphone, grant permissions or change settings."
+    },
+    {
       "id": "guide.program.basic",
       "version": 1,
       "label": "Behaviour programs",

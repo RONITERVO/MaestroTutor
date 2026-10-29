@@ -16,6 +16,22 @@ development and are not installed by `MaestroRoom`. Direct native obstruction
 remains active without a reflection map. These audio changes have not been
 accepted on the headset.
 
+## Quest v1 setup guidance
+
+Headphones are required for the full Quest v1 audio experience. The first-run
+book explains this without adding an acknowledgement or preventing reading,
+typing or room editing. The same wording is available in the shared
+`guide.audio.setup` and in ordinary tutor/Live context only when the actual
+native Quest host is identified. Ordinary desktop/browser and generic headless
+contexts do not claim to be a headset.
+
+There is currently no reliable connected-headphone observation in the production
+app. Guidance must not assert that headphones were detected, switch routes or
+claim that echo cancellation or built-in speaker quality has been accepted.
+The existing explicit audio-resume control and Live input suppression during
+native speech remain in effect. The welcome, persistent Guides browser and
+conditional prompt context share one text source in `shared/prompts/questAudio.ts`.
+
 ## Saved authoring completion
 
 `audio.source.edit` and `object.audioEmitter.edit` use the same bounded FIFO

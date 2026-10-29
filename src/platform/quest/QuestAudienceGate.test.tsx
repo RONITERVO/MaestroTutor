@@ -14,6 +14,8 @@ it('does not mount account/chat/agent effects until a deliberate adult confirmat
   function Session() { useEffect(start, []); return <div>Chat is ready</div>; }
   const ui = render(<QuestAudienceGate><Session /></QuestAudienceGate>);
   const enter = ui.getByRole('button', { name: 'Open my Maestro book' }) as HTMLButtonElement;
+  expect(ui.getByRole('region', { name: 'Headphones for sound' }).textContent).toContain('You can still read and type without them.');
+  expect(ui.getAllByRole('checkbox')).toHaveLength(1); // No new headphone acknowledgement gate.
   expect(start).not.toHaveBeenCalled();
   expect(enter.disabled).toBe(true);
   fireEvent.click(enter);

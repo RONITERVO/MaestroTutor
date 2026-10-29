@@ -7,6 +7,8 @@ using System.Linq;
 using Maestro.Quest.Imports;
 using Maestro.Quest.Avatar;
 using Maestro.Quest.Book;
+using Maestro.Quest.Programs;
+using Maestro.Quest.Rules;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NUnit.Framework;
@@ -16,6 +18,30 @@ namespace Maestro.Quest.Tests
 {
     public sealed partial class BundledAvatarRuntimeTests
     {
+        [UnityTest]public IEnumerator IncludedPackageFactsFallThroughTheSchedulerToItsNativeLibrary()
+        {
+            const string fact="motion.pack.included";
+            Assert.That(BehaviourCatalog.TryRead(fact,new BehaviourCatalog.FactContext(),out _),Is.False,"An activity-only context cannot claim that the native package is absent");
+            Assert.That(BehaviourCatalog.TryRead(fact,1,null,new BehaviourCatalog.FactContext(),out _),Is.False);
+            var model=ModelFixture.Mixamo();var included=BundledAvatarFixture.Write(Path.Combine(directory,"package"),model);var pack=BundledMotionsFixture.Write(Path.Combine(directory,"package"),model);
+            Open(included,pack);yield return Loaded();float until=Time.realtimeSinceStartup+20;while(!editor.Motions.IncludedInitialization.IsCompleted&&Time.realtimeSinceStartup<until)yield return null;
+            Assert.That(editor.Motions.IncludedInitialization.IsCompleted,Is.True);Assert.That(editor.Motions.Notice,Is.Null);
+            // Open constructs the real RuleScheduler with RoomRuleActions. Both
+            // entry points must reach that native source after the partial read.
+            var scheduler=root.GetComponent<RoomRules>().Scheduler;
+            Assert.That(scheduler.TryRead(fact,out var ordinary),Is.True);Assert.That(scheduler.TryRead(fact,1,null,out var query),Is.True);
+            var value=JObject.FromObject(ordinary.Value);Assert.That(JToken.DeepEquals(value,JObject.FromObject(query.Value)),Is.True);
+            Assert.That((bool)value["available"],Is.True);Assert.That((bool)value["busy"],Is.False);Assert.That((string)value["package"]["manifestHash"],Is.EqualTo(pack.Hash));
+            Assert.That((int)value["counts"]["motions"],Is.EqualTo(pack.Count));Assert.That((int)value["counts"]["catalogued"],Is.EqualTo(pack.Count));
+        }
+        [UnityTest]public IEnumerator IncludedPackageFactsReportAbsentOnlyFromARealLibraryWithoutAPackage()
+        {
+            var included=BundledAvatarFixture.Write(Path.Combine(directory,"package"),ModelFixture.Mixamo());Open(included);yield return Loaded();Assert.That(editor.Motions.Included,Is.Null);
+            var scheduler=root.GetComponent<RoomRules>().Scheduler;
+            Assert.That(scheduler.TryRead("motion.pack.included",out var ordinary),Is.True);Assert.That(scheduler.TryRead("motion.pack.included",1,null,out var query),Is.True);
+            var value=JObject.FromObject(ordinary.Value);Assert.That(JToken.DeepEquals(value,JObject.FromObject(query.Value)),Is.True);
+            Assert.That((bool)value["available"],Is.False);Assert.That((bool)value["busy"],Is.False);Assert.That((string)value["package"]["manifestHash"],Is.Empty);Assert.That((int)value["counts"]["motions"],Is.Zero);Assert.That((int)value["counts"]["catalogued"],Is.Zero);
+        }
         IEnumerator StateMotion(string state,string[] choices) {
             avatar.ObserveTutorState(new BookSnapshot {version=1,activity=state});float until=Time.realtimeSinceStartup+20;
             while(!choices.Contains(avatar.ActivityMotionId)&&Time.realtimeSinceStartup<until)yield return null;

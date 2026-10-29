@@ -11,24 +11,34 @@ export function LibraryBookView({ client }: { client: LibraryBookClient }) {
   const [name, setName] = useState('');
   const [tags, setTags] = useState('');
   const [favourite, setFavourite] = useState(false);
+  const [draft, setDraft] = useState<{ id?: string; revision?: string; session?: string; tags?: string[]; tagsText?: string }>({});
   const [loop, setLoop] = useState(false);
   const [error, setError] = useState('');
   const selected = state?.selected;
   useEffect(() => { setQuery(state?.query ?? ''); }, [state?.query, state?.session]);
-  useEffect(() => { setName(selected?.name ?? ''); setTags(selected?.tags.join(', ') ?? ''); setFavourite(selected?.favourite ?? false); setError(''); }, [selected?.id, selected?.name, selected?.tags.join(','), selected?.favourite]);
+  useEffect(() => {
+    setName(selected?.name ?? ''); setTags(selected?.tags.join(', ') ?? ''); setFavourite(selected?.favourite ?? false);
+    setDraft({ id: selected?.id, revision: selected?.entryRevision, session: state?.session, tags: selected?.tags.slice(), tagsText: selected?.tags.join(', ') }); setError('');
+  }, [selected?.id, selected?.entryRevision, selected?.name, JSON.stringify(selected?.tags), selected?.favourite, state?.session]);
   if (!state?.visible) return null;
   const waiting = pending || state.busy;
+  const currentDraft = !!draft.revision && draft.id === selected?.id && draft.revision === selected?.entryRevision && draft.session === state.session;
   const filter = (changes: Partial<Pick<LibraryState, 'compatibleOnly' | 'favouritesOnly' | 'includeShort' | 'archivedOnly' | 'offset'>> = {}) => client.request('query', {
     query, compatibleOnly: state.compatibleOnly, favouritesOnly: state.favouritesOnly, includeShort: state.includeShort, archivedOnly: state.archivedOnly ?? false, offset: 0, ...changes,
   });
   const source = (sourceIndex: number, termsPage: number) => client.request('select', { motionId: selected!.id, sourceIndex, termsPage });
   const save = (event: FormEvent) => {
     event.preventDefault();
-    const values = tags.split(',').map(tag => tag.trim()).filter(Boolean);
-    if (!name.trim() || /[\x00-\x1f\x7f]/.test(name) || values.length > 16 || values.some(tag => tag.length > 32 || /[\x00-\x1f\x7f]/.test(tag))) {
+    if (!currentDraft) { setError('The motion changed. Review its current details before saving.'); return; }
+    // A favourite/name-only edit must preserve imported tags exactly, including
+    // spaces and commas that the simple comma-separated editor cannot encode.
+    const values = tags === draft.tagsText ? draft.tags ?? [] : tags.split(',').map(tag => tag.trim()).filter(Boolean);
+    // Native validation owns case-insensitive uniqueness; JavaScript Unicode
+    // casing is not .NET OrdinalIgnoreCase and must not reject preserved tags.
+    if (!name.trim() || name.length > 100 || /[\x00-\x1f\x7f-\x9f]/.test(name) || values.length > 16 || values.some(tag => !tag.trim() || tag.length > 32 || /[\x00-\x1f\x7f-\x9f]/.test(tag))) {
       setError('Enter a name and up to 16 tags, each no longer than 32 characters.'); return;
     }
-    setError(''); client.request('save', { motionId: selected!.id, name: name.trim(), tags: values, favourite });
+    setError(''); client.request('save', { motionId: draft.id, entryRevision: draft.revision, name, tags: values, favourite });
   };
   return <div className="quest-library-spread" aria-label="Animation library">
     <section className="quest-library-page quest-library-list" aria-label="Find animations">
@@ -67,12 +77,12 @@ export function LibraryBookView({ client }: { client: LibraryBookClient }) {
           <p className="quest-library-hint">{state.ruleName ? `${state.ruleName}, step ${state.stepIndex + 1}. Its target and triggers stay the same.` : 'Create or select an action on the physical rules tray to assign this motion.'} Walking stays within room navigation.</p>
           {state.activityProfile && <ActivityMotionEditor client={client} profile={state.activityProfile} selected={selected} waiting={waiting} />}
           <MotionLibraryManagement client={client} state={state} waiting={waiting} />
-          <form onSubmit={save} className="quest-library-edit"><fieldset disabled={waiting || state.readOnly}><legend>Library details</legend>
+          <form onSubmit={save} className="quest-library-edit"><fieldset disabled={waiting || state.readOnly || !currentDraft}><legend>Library details</legend>
             <label>Name<input value={name} maxLength={100} onChange={event => setName(event.target.value)} /></label>
             <label>Tags, separated by commas<input value={tags} maxLength={542} onChange={event => setTags(event.target.value)} placeholder="Greeting, talking, calm" /></label>
             <label className="quest-library-check"><input type="checkbox" checked={favourite} onChange={event => setFavourite(event.target.checked)} />Favourite</label>
             <button>Save details</button>
-          </fieldset>{error && <p role="alert">{error}</p>}</form>
+          </fieldset>{!selected.entryRevision && <p>Motion details and storage controls need a current native library connection.</p>}{error && <p role="alert">{error}</p>}</form>
           <details className="quest-library-source"><summary>Source and use terms ({state.sourceCount})</summary><p>{state.sourceName}</p><pre>{state.attribution || 'No source terms supplied. Review your original export.'}</pre>
             <div className="quest-library-actions"><button disabled={waiting || state.termsPage === 0} onClick={() => source(state.sourceIndex, state.termsPage - 1)}>Earlier terms</button><span>{state.termsPage + 1}/{state.termsPages}</span><button disabled={waiting || state.termsPage + 1 >= state.termsPages} onClick={() => source(state.sourceIndex, state.termsPage + 1)}>More terms</button></div>
             {state.sourceCount > 1 && <button disabled={waiting} onClick={() => source((state.sourceIndex + 1) % state.sourceCount, 0)}>Next source ({state.sourceIndex + 1}/{state.sourceCount})</button>}

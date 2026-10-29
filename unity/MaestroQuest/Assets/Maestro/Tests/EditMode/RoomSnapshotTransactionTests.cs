@@ -107,6 +107,29 @@ namespace Maestro.Quest.Tests
             finally{release.Set();worker.GetAwaiter().GetResult();}
             Assert.That(RoomSnapshotTransaction.Capture(directory).Identity,Is.EqualTo(after.Identity));
         }
+        [Test]public void CancellableReadAdmissionStopsBeforeAnExistingReaderReleasesItsOwner()
+        {
+            Seed();var before=Evidence();using var owner=RoomSnapshotTransaction.Inspect(directory);using var waiting=new ManualResetEventSlim();using var stop=new CancellationTokenSource();
+            RoomSnapshotTransaction.InspectionWaiting=path=>{if(path==directory)waiting.Set();};
+            var reader=Task.Run(()=>{using var next=RoomSnapshotTransaction.Inspect(directory,stop.Token);});
+            try {
+                Assert.That(waiting.Wait(TimeSpan.FromSeconds(2)),Is.True,"The second read must reach blocked admission");Assert.That(reader.IsCompleted,Is.False);
+                stop.Cancel();Assert.That(SpinWait.SpinUntil(()=>reader.IsCompleted,2000),Is.True,"Cancellation must not wait for the first reader to release");
+                // Task.Run(Action) has no associated scheduler token. Its task
+                // status can be Faulted even though admission threw cancellation.
+                var cancelled=Assert.Catch<OperationCanceledException>(()=>reader.GetAwaiter().GetResult(),"Admission must end through cancellation while the first reader still owns the snapshot");
+                Assert.That(cancelled.CancellationToken,Is.EqualTo(stop.Token));
+                TestContext.WriteLine("Snapshot admission task status="+reader.Status+", exception="+cancelled.GetType().FullName);
+                using var nested=RoomSnapshotTransaction.Inspect(directory,wait:false);SameEvidence(before);
+            }finally{stop.Cancel();RoomSnapshotTransaction.InspectionWaiting=null;owner.Dispose();try{reader.GetAwaiter().GetResult();}catch(OperationCanceledException){}}
+        }
+        [Test]public void CancellableInspectionAllowsNestedReadsAndPreservesUnreadableRetainedIntent()
+        {
+            Seed();var before=Evidence();using var stop=new CancellationTokenSource();
+            using(var outer=RoomSnapshotTransaction.Inspect(directory,stop.Token))using(var nested=RoomSnapshotTransaction.Inspect(directory,wait:false))SameEvidence(before);
+            File.WriteAllText(PathFor(RoomSnapshotTransaction.FileName),"unreadable retained intent");before=Evidence();
+            Assert.Throws<InvalidDataException>(()=>{using var owner=RoomSnapshotTransaction.Inspect(directory,stop.Token);});SameEvidence(before);
+        }
         static string[] UnsupportedSnapshotRoomFiles=>new[]{"room.v"+(RoomDocument.CurrentVersion+1)+".json","room.v"+(RoomDocument.CurrentVersion+1)+".json.backup",RoomStorage.FileName+".pending"};
         [TestCase("room-snapshot.v17.json")][TestCase(RoomSnapshotTransaction.FileName+".snapshot.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")][TestCase("program-memory.v1.json.snapshot.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")]
         [TestCaseSource(nameof(UnsupportedSnapshotRoomFiles))]

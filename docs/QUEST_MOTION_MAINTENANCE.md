@@ -39,6 +39,36 @@ creates a new identity; this action deliberately gives up the previous name,
 tags and identity. It does not remove the user's original source file. This
 step is optional: retaining removed metadata keeps exact reimport recovery easy.
 
+## Shared user and agent maintenance
+
+With `motionLibraryMaintenance.v1`, the dedicated library controls, generated
+book forms and in-app agent use the same `motion.library.edit` action and native
+execution receipts. The action has five explicit operations: `save`, `archive`,
+`restore`, `removeDownload` and `forgetMotion`. Download removal and forgetting
+retain the manual confirmation in both book interfaces. Saving ordinary metadata
+or changing archive visibility does not add that extra confirmation.
+
+`motion.library.search` finds exact IDs, including archived entries when selected.
+Read `motion.library.entry`, then the exact `motion.library.name` and every page
+of `motion.library.tags` before preserving existing metadata. The entry revision
+covers all saved fields and is stable across restart. A stale draft is rejected;
+no request chooses another motion by its name or tag. Valid names and tags retain
+their exact spelling, spaces and punctuation when an unrelated flag changes.
+
+`motion.library.inspect` explicitly audits assignments, history, retained saves,
+modules, remembered values and loading/playback. Passive facts do not perform
+that file audit. Inspection is a current observation, not permission for a later
+removal. Removal checks again, freezes competing authored writes and retains its
+workspace until accepted I/O drains. No Undo is provided for private-library
+maintenance, even inside a temporary room; the world itself is unaffected.
+
+Stopping before storage dispatch cancels the edit. A dispatched save or deletion
+may finish after Stop, so the book keeps its receipt identity and reports that
+uncertainty. Inspect current state and the retained receipt before an explicit
+retry. A historical receipt never repeats an effect. Metadata publication failure
+preserves payloads and makes the library read-only until restart/recovery can
+inspect the saved state.
+
 ## Persistence and ownership
 
 The catalogue now writes `room/motions/motions.v2.json`. Valid v1 catalogues load
@@ -65,7 +95,9 @@ files to make space. Recovery management for such files remains a release gate.
 Retained-file inspection runs off the Unity thread. Its cache keeps small sets
 of motion IDs keyed by file metadata, not copies of whole room recordings.
 Destructive operations force a fresh scan and then check current references on
-the Unity thread. A paused/closed/replaced book session cannot initiate a stale
+the Unity thread. The forced scan waits behind an existing snapshot reader on its
+worker; Stop cancels admission before reading or publishing. It does not recover
+or rewrite saved files. Unreadable evidence still blocks removal. A paused/closed/replaced book session cannot initiate a stale
 removal. An already committed atomic disk mutation may finish; it never starts
 playback. Archive itself does not stop a playing animation.
 
@@ -85,10 +117,20 @@ current/history/save protection, actual book requests, missing payloads and
 restoration without autoplay. Web tests cover bounded dependency data, separate
 confirmations and discarding confirmation when selection/session changes.
 
-The browser fixture uses actual synthetic native response data and simulated
-acknowledgements. Its screenshots check reference explanations, protected
+The separate library browser fixture uses synthetic native response data and
+simulated acknowledgements. Its screenshots check reference explanations, protected
 controls, the confirmation and page bounds; it does not establish Quest WebView
 input or headset readability. See QUEST_DEVICE_QA.md for the final verified APK.
+
+The ordinary offline Headless and visible Book journeys also exercise the actual
+native library through the shared catalog. They preserve exact paged metadata,
+refuse stale edits, remove/restore an unused packaged download, forget/add its
+packaged identity and restore the exact starting revision and package counts.
+The headless path also checks historical-receipt replay without repeating effects.
+Rendered fact readbacks are inspected separately from the synthetic library UI
+fixture. See [native probe](QUEST_NATIVE_ROOM_PROBE.md) for commands and evidence
+boundaries; this packaged-content round trip does not certify arbitrary source
+reimport, provider judgment or physical input.
 
 On Quest, test archive while a rule plays, restore, replace assignments, remove
 an unused download, restart, reimport the original, and forget an unused removed

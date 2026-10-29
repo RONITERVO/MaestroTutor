@@ -4,6 +4,7 @@ export type {ActivityProfile} from '../../../shared/avatarActivities';
 // SPDX-License-Identifier: Apache-2.0
 export interface LibraryEntry {
   id: string; name: string; tags: string[]; duration: number;
+  entryRevision?: string;
   favourite: boolean; compatible: boolean; shortClip: boolean;
   archived?: boolean; removed?: boolean; downloaded?: boolean; bytes?: number;
 }
@@ -28,16 +29,19 @@ export interface LibraryRequest {
   version: 1; session: string; sequence: number; action: LibraryAction;
   archivedOnly?: boolean; usagePage?: number;
   query?: string; offset?: number; compatibleOnly?: boolean; favouritesOnly?: boolean; includeShort?: boolean;
-  motionId?: string; name?: string; tags?: string[]; favourite?: boolean; loop?: boolean;
+  motionId?: string; entryRevision?: string; name?: string; tags?: string[]; favourite?: boolean; loop?: boolean;
   profileRevision?: number; modelHash?: string; role?: number; weight?: number; speed?: number; cooldown?: number;
   ruleId?: string; stepIndex?: number; sourceIndex?: number; termsPage?: number;
 }
 const id = (value: unknown): value is string => typeof value === 'string' && /^[a-f0-9]{32}$/.test(value);
+const revision = (value: unknown): value is string => typeof value === 'string' && /^[a-f0-9]{64}$/.test(value);
+const maintenance = new Set<LibraryAction>(['save', 'archive', 'restore', 'removeDownload', 'forgetMotion']);
 const integer = (value: unknown, min: number, max: number) => typeof value === 'number' && Number.isInteger(value) && value >= min && value <= max;
 const text = (value: unknown, max: number): value is string => typeof value === 'string' && value.length <= max;
 const record = (value: unknown): value is Record<string, unknown> => value !== null && typeof value === 'object' && !Array.isArray(value);
 function entry(value: unknown): value is LibraryEntry {
   return record(value) && id(value.id) && text(value.name, 100) && Array.isArray(value.tags) && value.tags.length <= 16 && value.tags.every(tag => text(tag, 32)) &&
+    (value.entryRevision === undefined || revision(value.entryRevision)) &&
     typeof value.duration === 'number' && Number.isFinite(value.duration) && value.duration > 0 && value.duration <= 3600 &&
     ['favourite', 'compatible', 'shortClip'].every(key => typeof value[key] === 'boolean') &&
     ['archived', 'removed', 'downloaded'].every(key => value[key] === undefined || typeof value[key] === 'boolean') &&
@@ -87,6 +91,10 @@ export class LibraryBookClient {
     if (!state?.visible || this.blocked || this.sequence >= 2147483647) return false;
     const interrupt = action === 'stop' || action === 'close';
     if (!interrupt && (this.queue.length || state.busy)) return false;
+    // A maintenance request carries the entry the learner reviewed. Never fill in
+    // a newer guard here: doing so could overwrite a concurrent agent edit.
+    if (maintenance.has(action) && (state.readOnly || !revision(fields.entryRevision) || !state.selected ||
+        state.selected.id !== fields.motionId || state.selected.entryRevision !== fields.entryRevision)) return false;
     const request: LibraryRequest = { ...fields, version: 1, session: state.session, sequence: ++this.sequence, action };
     if (JSON.stringify(request).length > 3000) return false;
     this.queue = [request]; this.changed(); return true;

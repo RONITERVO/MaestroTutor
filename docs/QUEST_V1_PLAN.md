@@ -2,7 +2,14 @@
 
 Status: active implementation. Nothing in this document claims store readiness.
 
-The latest [authored finite-water audio](#authored-finite-water-audio--2026-10-29)
+The latest [shared animation maintenance and audio guidance](#shared-animation-maintenance-and-quest-audio-guidance--2026-10-29)
+uses the same guarded native edits, facts and receipts from the library, generated
+book forms and agent/program interface. The full offline Headless and Book
+journeys pass, including exact entry restoration. Quest headphone guidance now
+shares one welcome/help/tutor source. Candidate device/provider acceptance is
+still separate from these checks.
+
+The preceding [authored finite-water audio](#authored-finite-water-audio--2026-10-29)
 uses shared finite-water paths for optional spatial speech/world-sound treatment.
 User controls and agent programs edit the same saved settings. The complete offline
 baseline passes, followed by focused native checks for a discovered pause/resume
@@ -18395,10 +18402,11 @@ The owner's [updated PR direction](https://github.com/RONITERVO/MaestroTutor/pul
 requires headphones for the full v1 audio experience. Carry this into onboarding,
 listing/reviewer instructions and physical acceptance: spatial Maestro speech,
 authored sounds, Live interruption and microphone capture must be tested together
-on the supported Quest headphone route. This requirement is not yet an implemented
-onboarding or verified device claim. Keep speaker fallback behaviour explicit and
-retain the existing echo-quality failures; this note neither approves a failing
-echo backend nor silently treats headphones as proof of acoustic acceptance.
+on the supported Quest headphone route. Shared welcome/help/context guidance is
+implemented in the maintenance checkpoint below. Listing/reviewer instructions
+and physical acceptance remain pending. Keep speaker fallback behaviour explicit
+and retain the existing echo-quality failures; guidance neither approves a failing
+echo backend nor treats headphones as proof of acoustic acceptance.
 
 ## Authored finite-water audio — 2026-10-29
 
@@ -18477,3 +18485,125 @@ and [Native echo evaluation](https://github.com/RONITERVO/MaestroTutor/actions/r
 This does not close the retained acoustic quality failures. Device, real-provider,
 signing, deployment and Meta holds remain. Physical audibility, echo interaction,
 Quest performance and comfort still need acceptance.
+
+
+### Long-term immersion and shared authoring follow-through — 2026-10-29
+
+The owner reaffirmed responsibility for an expandable, maintainable immersive
+world. Keep the existing per-entity real-room policy: a world-only Maestro or
+NPC may use virtual ground below the scanned floor while another prop contacts
+the real floor. Physics, support and navigation must resolve the same actor
+policy. Visual real-depth occlusion, passthrough blend and acoustic participation
+remain separately authored; none may silently follow a collision toggle.
+The saved environment-profile checkpoint already implements the first step.
+This is a contract to preserve across streaming, imports and new motion systems,
+not a new global switch or a claim of unrestricted city-scale simulation.
+
+Prefer improvements to common surfaces, motion, material, sound, behaviour and
+asset-lifetime services over special logic for each toy or scene. Human controls,
+agent actions and event-driven programs must share current-state checks, accepted
+results and recovery. Missing geometry or assets must remain inspectable, rather
+than producing invented ground, silent substitutions or claimed completion.
+Offline evidence establishes these contracts; headset acceptance remains a
+separate release gate under the existing testing hold.
+
+The current implementation increment closes motion-library maintenance parity
+and gives Quest audio setup one shared welcome/help/context source. A subsequent
+asset-lifetime increment is needed for model, image and audio reclamation and
+for damaged-entry isolation. Archive portability inventories must not be used as
+proof that deletion is safe: current work, Undo, retained snapshots, program
+source, module/memory references and active native leases all need one complete
+reference audit and an admission fence through publication and deletion.
+
+First close an existing explicit-reimport recovery defect: image/audio saves can
+complete while preserving an oversized or invalid-encoding name sidecar, leaving
+later reads unusable. The next narrow repair must validate that sidecar only on
+explicit Save, preserve healthy metadata byte-for-byte, and atomically replace
+invalid metadata from the accepted import. Link, permission, I/O and cancellation
+failures must remain failures. Passive reads must not silently repair files.
+This finding is source-confirmed; the repair and acceptance regressions remain
+pending after the current frozen checkpoint.
+
+Before reclamation, add one bounded inventory-scan contract shared by model,
+image and audio libraries. It should retain usable siblings while reporting
+per-entry failures and whether enumeration actually completed. An unreadable or
+partially enumerated directory must not appear empty or complete. Preserve each
+asset kind's validation guarantee: model metadata alone does not verify payloads
+or rig compatibility. Keep read-only inspection separate from repair/deletion.
+Use additive or explicitly versioned result contracts: retained execution
+receipts validate exact output shapes, so adding fields to an existing action
+version can invalidate old receipts. Existing strict discovery consumers need a
+deliberate transition rather than silently treating partial results as complete.
+
+### Shared animation maintenance and Quest audio guidance — 2026-10-29
+
+Motion metadata, archive/restore, removal and forgetting now use the same native
+capabilities and receipts from the dedicated library, generated book forms and
+agent/program interface. Destructive operations recheck exact entry revisions,
+retained references and active leases, and freeze competing authored writes
+through publication/deletion. Missing or unreadable retained evidence protects
+the payload. Stop cancels work before dispatch; dispatched I/O may finish and its
+receipt remains inspectable. Valid multilingual names and tags are preserved
+exactly, including when only favourite changes. Generated forms now honor the
+selected schema variant's destructive confirmation as well as root confirmations.
+
+Quest's welcome, audio setup guide and native-host tutor context share one
+headphone requirement. Reading and typing remain available; onboarding adds no
+extra checkbox. The app explicitly says it cannot detect the headphone route.
+Text, Live and observer share the same context adapter; ordinary web/browser
+sessions retain their original prompt. This guidance is not proof of acoustic
+quality or a substitute for current-candidate echo and headset acceptance.
+
+Verification boundaries for this increment:
+
+- The complete web baseline passes 3,715 tests across 384 files. Later UI/pager,
+  generated-form and prompt changes pass focused follow-ups (29, 64 and 16 cases);
+  the shared maintenance probe has eleven metadata/readiness tests. App/probe
+  TypeScript, scoped lint and the production browser first-learner journey pass.
+  These overlapping follow-ups are not added to the full baseline count.
+- The full native EditMode sweep passes 1,813 cases before the two fact repairs
+  described below. Final affected PlayMode passes 42 cases, including all eleven
+  shipped-avatar/package tests. Seventeen catalog checks and forty snapshot
+  checks pass. Snapshot cleanup was strengthened so a failed cancellation check
+  cannot deadlock its own teardown. Cancellation verifies the exact token and
+  OperationCanceledException; Mono reports that unassociated Task.Run as Faulted.
+- Actual native Headless journey `29195372ac9b482f931d7cfd81506897` passes with
+  3,046 requests and 3,047 observations. Visible Book journey
+  `c5a61db9210d41929a0fa97f4c49ad5c` passes with 2,585 requests and 7,923
+  observations, no client errors and clean native/client shutdown. Both exercise
+  surrounding terrain/water/audio, programs, ownership and saved-world recovery.
+  Each maintenance segment records fourteen completed operations, rejects a
+  stale draft, restores the exact original entry revision/metadata and leaves all
+  178 packaged motions catalogued. Headless additionally verifies historical
+  receipt replay after a newer edit without mutating the current entry.
+- The Book uses visible generated fields and destructive confirmations. Its
+  rendered final fact readbacks were visually inspected; those screenshots are
+  not screenshots of the confirmation dialog. Included-package restoration does
+  not establish recovery from an arbitrary user's imported source.
+- Native export and drift checks agree on 143 actions, 245 facts and 19 events;
+  eleven shared guides include headphone setup. The two new maintenance actions
+  and four facts preserve existing capability versions and retained receipts.
+- Fresh unsigned Android export and compilation pass with five export warnings
+  and zero errors. All 22 selected ARM64 libraries meet 16 KiB ELF LOAD alignment;
+  five unselected dependency libraries remain in the intermediate. The native
+  browser AAR/lint pass; Gradle reuses 128 passing tests and two skips. The
+  compile-only task graph produces no APK/AAB and performs no signing or install.
+  The frozen 4,672 source inputs match before and after integration.
+
+The desktop journeys use explicit synthetic fixtures and scripted model replies;
+they do not establish current-provider, Android texture or headset acceptance.
+
+The actual native journey found two defects before passing. The existing included
+package fact returned a valid unavailable record from the scheduler's
+activity-only context, preventing native-library fallback during first-use copy.
+It now defers without a library and still reports unavailable for a real library
+with no pack; both scheduler overloads are covered. The new empty motion search
+and tag facts initially omitted their declared list types. They now share exact
+declared types for empty and nonempty values, with scheduler regressions for
+empty/end/out-of-range pages and archive-filtered searches. The journey also
+waits for bounded first-use copying without inventing package readiness.
+
+The final prompt follow-up preserves an absent tutor/Live base context rather
+than replacing it with headphone-only instructions. No current-provider
+judgment, microphone behavior, headphone connection or acoustic quality is
+claimed by these offline checks.

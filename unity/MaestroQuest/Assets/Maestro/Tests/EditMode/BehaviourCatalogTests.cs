@@ -17,7 +17,7 @@ namespace Maestro.Quest.Tests
         {
             Assert.That(RoomGuideCatalog.Available,Is.True);
             var expected=(JArray)JObject.Parse(Resources.Load<TextAsset>("RoomGuides").text)["guides"];
-            Assert.That(expected.Count,Is.EqualTo(10));
+            Assert.That(expected.Count,Is.EqualTo(11));
             var catalog=new RoomCapabilityCatalog(null);
             JObject Query(string operation,string capability="",int version=1,int offset=0) {
                 var query=operation=="search"?new JObject {["operation"]=operation,["category"]="guides",["query"]="",["offset"]=offset}:new JObject {["operation"]=operation,["category"]="guides",["capability"]=capability,["version"]=version};
@@ -130,7 +130,7 @@ namespace Maestro.Quest.Tests
                 }
                 foreach(var guard in (JArray)mapping["guards"])Assert.That(mapping["fields"][(string)guard],Is.Not.Null);
             }
-            Assert.That(count,Is.EqualTo(121));
+            Assert.That(count,Is.EqualTo(127));
         }
         [Test] public void ResourceChoicesReferencePagedFactsAndWritableIdentityPairs()
         {

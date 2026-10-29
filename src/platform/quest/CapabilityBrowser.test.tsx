@@ -435,6 +435,47 @@ it('exports an inspected retained workspace using shared forms and displays port
 });
 
 import nativeRemoval from '../../../test-fixtures/browser/workspaceRemoval.json';
+it.each(['removeDownload','forgetMotion'])('confirms the exact motion %s variant and invalidates approval when its draft changes',async operation=>{
+ const {client,screen,receive}=setup(true,['motionLibraryMaintenance.v1','execution.v1','actionResults.v1']);
+ const definition=capabilityDefinition('motion.library.edit')!,motionId='a'.repeat(32),entryRevision='b'.repeat(64),runId='c'.repeat(32);
+ const branch=definition.input.oneOf!.find(value=>value.properties?.operation?.enum?.[0]===operation)!;
+ expect(branch['x-confirmation']).toBeTruthy();expect(definition.input['x-confirmation']).toBeUndefined();
+ await receive(undefined,false,{execution:{selected:null,running:[],outcomes:[],nextRunId:runId,storageError:null}});
+ fireEvent.click(screen.getByRole('button',{name:'Action catalog'}));fireEvent.click(screen.getByRole('button',{name:'Search'}));
+ await receive({operation:'search',query:'',offset:0,total:1,pageSize:6,entries:[{id:definition.id,version:definition.version,label:definition.label}],status:'Inspect animation maintenance'});
+ fireEvent.click(screen.getByRole('button',{name:new RegExp(definition.label)}));await receive({operation:'inspect',capability:definition.id,version:definition.version,definition,status:'Review exact animation'});
+ const args={operation,motionId,entryRevision};
+ fireEvent.change(screen.getByLabelText('Action arguments'),{target:{value:JSON.stringify(args)}});fireEvent.click(screen.getByRole('button',{name:'Run action now'}));
+ expect(client.snapshot().request).toBeNull();expect(screen.getByRole('region',{name:'Confirm permanent action'}).textContent).toContain(branch['x-confirmation']);
+ // An ordinary field edit invalidates approval even before a new revision can
+ // be loaded. Returning to an old draft never restores that approval.
+ fireEvent.change(screen.getByLabelText('Action inputs motionId'),{target:{value:'d'.repeat(32)}});
+ expect(screen.queryByRole('button',{name:'Confirm permanent action'})).toBeNull();expect(client.snapshot().request).toBeNull();
+ fireEvent.change(screen.getByLabelText('Action arguments'),{target:{value:JSON.stringify(args)}});fireEvent.click(screen.getByRole('button',{name:'Run action now'}));
+ const changed={...args,entryRevision:'e'.repeat(64)};
+ fireEvent.change(screen.getByLabelText('Action arguments'),{target:{value:JSON.stringify(changed)}});
+ expect(screen.queryByRole('button',{name:'Confirm permanent action'})).toBeNull();
+ fireEvent.change(screen.getByLabelText('Action arguments'),{target:{value:JSON.stringify(args)}});
+ expect(screen.queryByRole('button',{name:'Confirm permanent action'})).toBeNull();expect(client.snapshot().request).toBeNull();
+ fireEvent.click(screen.getByRole('button',{name:'Run action now'}));fireEvent.click(screen.getByRole('button',{name:'Confirm permanent action'}));
+ expect(client.snapshot().request?.commands).toEqual([{action:'execution',execution:{operation:'start',runId,call:{id:definition.id,version:definition.version,arguments:args}}}]);
+ act(()=>client.cancel());
+});
+it.each(['save','archive'])('runs motion %s without borrowing a destructive variant confirmation',async operation=>{
+ const {client,screen,receive}=setup(true,['motionLibraryMaintenance.v1','execution.v1','actionResults.v1']);
+ const definition=capabilityDefinition('motion.library.edit')!,runId='c'.repeat(32);
+ await receive(undefined,false,{execution:{selected:null,running:[],outcomes:[],nextRunId:runId,storageError:null}});
+ fireEvent.click(screen.getByRole('button',{name:'Action catalog'}));fireEvent.click(screen.getByRole('button',{name:'Search'}));
+ await receive({operation:'search',query:'',offset:0,total:1,pageSize:6,entries:[{id:definition.id,version:definition.version,label:definition.label}],status:'Inspect animation maintenance'});
+ fireEvent.click(screen.getByRole('button',{name:new RegExp(definition.label)}));await receive({operation:'inspect',capability:definition.id,version:definition.version,definition,status:'Review exact animation'});
+ const args={operation,motionId:'a'.repeat(32),entryRevision:'b'.repeat(64),...(operation==='save'?{name:'Reviewed animation',tags:['Calm'],favourite:true}:{})};
+ fireEvent.change(screen.getByLabelText('Action arguments'),{target:{value:JSON.stringify({...args,operation:'removeDownload',name:undefined,tags:undefined,favourite:undefined})}});fireEvent.click(screen.getByRole('button',{name:'Run action now'}));
+ expect(client.snapshot().request).toBeNull();expect(screen.getByRole('button',{name:'Confirm permanent action'})).toBeTruthy();
+ fireEvent.change(screen.getByLabelText('Action arguments'),{target:{value:JSON.stringify(args)}});expect(screen.queryByRole('button',{name:'Confirm permanent action'})).toBeNull();
+ fireEvent.click(screen.getByRole('button',{name:'Run action now'}));
+ expect(screen.queryByRole('button',{name:'Confirm permanent action'})).toBeNull();expect(client.snapshot().request?.commands).toEqual([{action:'execution',execution:{operation:'start',runId,call:{id:definition.id,version:definition.version,arguments:args}}}]);
+ act(()=>client.cancel());
+});
 it('requires confirmation of the exact disposal call and clears it on edits or cancellation',async()=>{
  const {client,screen,receive}=setup(true,['workspaceDisposal.v1','execution.v1','actionResults.v1']);
  const receipt=nativeRemoval.removeExecution.workspace.selected;
@@ -1080,4 +1121,21 @@ it('reads saved membership from the generated form and clears stale continuation
  await receive({...inspection,arguments:{...nativeResourceMembers.arguments,cursor:expired},available:false,value:null,status:'Continuation expired'});
  expect(screen.getByLabelText('Current fact value').textContent).not.toContain(nativeResourceMembers.page.members[0]);
  expect(client.snapshot().request).toBeNull();act(()=>client.cancel());
+});
+
+it('keeps headphone setup available as shared read-only help without an acknowledgement or audio action',async()=>{
+ const {client,screen,receive}=setup(true,['catalogGuides.v1']);
+ const guide=ROOM_GUIDES.find(g=>g.id==='guide.audio.setup')!;
+ fireEvent.click(screen.getByRole('button',{name:'Action catalog'}));
+ fireEvent.change(screen.getByLabelText('Catalog category'),{target:{value:'guides'}});
+ fireEvent.click(screen.getByRole('button',{name:/^Search$/}));
+ await receive({operation:'search',category:'guides',query:'',offset:0,pageSize:6,total:1,entries:[{id:guide.id,version:guide.version,label:guide.label}],status:'Found guide'});
+ fireEvent.click(screen.getByRole('button',{name:new RegExp(guide.label)}));
+ expect(client.snapshot().request?.commands).toEqual([{action:'catalog',catalog:{operation:'inspect',category:'guides',capability:guide.id,version:guide.version}}]);
+ await receive({operation:'inspect',category:'guides',capability:guide.id,version:guide.version,definition:guide,status:'Reference only'});
+ expect(screen.getByRole('region',{name:'Guide reference'}).textContent).toContain(guide.body);
+ expect(screen.queryByRole('button',{name:'Run action now'})).toBeNull();
+ expect(screen.queryByRole('button',{name:'Read fact'})).toBeNull();
+ expect(screen.queryByRole('checkbox')).toBeNull();
+ expect(client.snapshot().request).toBeNull();
 });

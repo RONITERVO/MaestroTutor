@@ -131,58 +131,11 @@ namespace Maestro.Quest.Imports
             int page=matches.Length==0 ? 0 : Math.Min(Math.Max(0,offset)/SearchPageSize,(matches.Length-1)/SearchPageSize)*SearchPageSize;
             return new SearchPage {Entries=matches.Skip(page).Take(SearchPageSize).ToArray(),Offset=page,Total=matches.Length};
         }
-        public async Task ArchiveAsync(string id,bool archived)
-        {
-            using var write=workspaceWrites.Write();
-            await writes.WaitAsync().ConfigureAwait(false);
-            try { await Task.Run(() => {
-                if (disposed) throw new ObjectDisposedException(nameof(MotionLibrary));
-                if (readOnly) throw new ModelImportException(Notice);
-                MotionCatalogue candidate; lock (gate) candidate=catalogue.Copy();
-                var entry=candidate.entries.FirstOrDefault(x => x.id == id) ?? throw new ModelImportException("This motion is missing from the catalogue.");
-                if (!archived && entry.removed) throw new ModelImportException("Import its original export again to restore this motion and its existing identity.");
-                entry.archived=archived; Save(candidate); lock (gate) catalogue=candidate;
-            }).ConfigureAwait(false); } finally { writes.Release(); }
-        }
+        public Task ArchiveAsync(string id,bool archived)=>EditAsync(new MotionMaintenanceRequest {operation=archived?"archive":"restore",motionId=id,entryRevision=EntryRevision(id)});
         // Call on the Unity thread. The final guard runs after waiting for other
         // writes; hiding the entry prevents new assignments/leases during IO.
-        public Task RemoveDownloadAsync(string id,Func<Task<string>> protection) => MaintainAsync(id,protection,false);
-        public Task ForgetAsync(string id,Func<Task<string>> protection) => MaintainAsync(id,protection,true);
-        async Task MaintainAsync(string id,Func<Task<string>> protection,bool forget)
-        {
-            if (protection == null) throw new ArgumentNullException(nameof(protection));
-            using var write=workspaceWrites.Write();
-            await writes.WaitAsync();
-            try
-            {
-                if (disposed) throw new ObjectDisposedException(nameof(MotionLibrary));
-                if (readOnly) throw new ModelImportException(Notice);
-                var entry=Inspect(id) ?? throw new ModelImportException("This motion is missing from the catalogue.");
-                if (forget && (!entry.removed || PayloadPresent(id))) throw new ModelImportException("Remove the local download before forgetting its details.");
-                if (!entry.archived) throw new ModelImportException("Archive this motion before removing its download.");
-                if (Pinned(id)) throw new ModelImportException("Stop this motion and wait for loading to finish before removing its download.");
-                lock (gate) removing.Add(id);
-                string reason=await protection(); if (reason != null) throw new ModelImportException(reason);
-                if (cache.TryGetValue(id,out var cached)) Remove(cached);
-                await Task.Run(() => {
-                    if (disposed) throw new ObjectDisposedException(nameof(MotionLibrary));
-                    MotionCatalogue candidate; lock (gate) candidate=catalogue.Copy();
-                    if (forget)
-                    {
-                        candidate.entries=candidate.entries.Where(x => x.id != id).ToArray();
-                        var needed=candidate.entries.SelectMany(x => x.origins).Select(x => x.sourceHash).ToHashSet();
-                        candidate.sources=candidate.sources.Where(x => needed.Contains(x.hash)).ToArray();
-                    }
-                    else candidate.entries.First(x => x.id == id).removed=true;
-                    // Publish the tombstone before removing bytes. An interrupted
-                    // delete can be retried, and a reimport keeps the same GUID.
-                    Save(candidate); lock (gate) catalogue=candidate;
-                    string path=PayloadPath(entry.hash);
-                    if (!forget && File.Exists(path)) File.Delete(path);
-                });
-            }
-            finally { lock (gate) removing.Remove(id); writes.Release(); }
-        }
+        public Task RemoveDownloadAsync(string id,Func<Task<string>> protection)=>EditAsync(new MotionMaintenanceRequest {operation="removeDownload",motionId=id,entryRevision=EntryRevision(id)},protection);
+        public Task ForgetAsync(string id,Func<Task<string>> protection)=>EditAsync(new MotionMaintenanceRequest {operation="forgetMotion",motionId=id,entryRevision=EntryRevision(id)},protection);
         public async Task<MotionEntry[]> ImportAsync(string fileName,byte[] bytes,string category = null)
         {
             if (disposed) throw new ObjectDisposedException(nameof(MotionLibrary));
@@ -236,19 +189,7 @@ namespace Maestro.Quest.Imports
             }
             finally { writes.Release(); }
         }
-        public async Task UpdateAsync(string id,string name,string[] tags,bool favourite)
-        {
-            using var write=workspaceWrites.Write();
-            await writes.WaitAsync().ConfigureAwait(false);
-            try { await Task.Run(() => {
-                if (disposed) throw new ObjectDisposedException(nameof(MotionLibrary));
-                if (readOnly) throw new ModelImportException(Notice);
-                MotionCatalogue candidate; lock (gate) candidate = catalogue.Copy();
-                var entry = candidate.entries.FirstOrDefault(x => x.id == id) ?? throw new ModelImportException("This motion is missing from the library.");
-                entry.name = ModelLibrary.SafeName(name); entry.tags = (tags ?? Array.Empty<string>()).Select(CleanTag).Distinct(StringComparer.OrdinalIgnoreCase).ToArray(); entry.favourite = favourite;
-                Validate(candidate); Save(candidate); lock (gate) catalogue = candidate;
-            }).ConfigureAwait(false); } finally { writes.Release(); }
-        }
+        public Task UpdateAsync(string id,string name,string[] tags,bool favourite)=>EditAsync(new MotionMaintenanceRequest {operation="save",motionId=id,entryRevision=EntryRevision(id),name=name,tags=tags??Array.Empty<string>(),favourite=favourite});
         static string CleanTag(string value) => ModelLibrary.SafeName(value).Trim().Substring(0,Math.Min(32,ModelLibrary.SafeName(value).Trim().Length));
         public async Task<Lease> AcquireAsync(string id,string rigHash)
         {

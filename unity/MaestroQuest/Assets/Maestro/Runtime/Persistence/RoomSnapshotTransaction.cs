@@ -108,6 +108,7 @@ namespace Maestro.Quest.Persistence
                 Need(!Directory.EnumerateFileSystemEntries(root,name+".snapshot.*").Any(),"Unfinished snapshot staging remains; preserve it before recovery.");
         }
         static readonly object gateMapLock=new();
+        internal static Action<string> InspectionWaiting;
         static readonly Dictionary<string,WeakReference<object>> gates=new(Path.DirectorySeparatorChar=='\\'?StringComparer.OrdinalIgnoreCase:StringComparer.Ordinal);
         sealed class Owner:IDisposable
         {
@@ -115,7 +116,7 @@ namespace Maestro.Quest.Persistence
             internal Owner(object gate,FileStream file){this.gate=gate;this.file=file;}
             public void Dispose(){var held=Interlocked.Exchange(ref gate,null);if(held==null)return;try{file?.Dispose();}finally{Monitor.Exit(held);}}
         }
-        static IDisposable Own(string root,bool strictDocuments=true,bool wait=false,bool initialize=true,bool sharedRead=false)
+        static IDisposable Own(string root,bool strictDocuments=true,bool wait=false,bool initialize=true,bool sharedRead=false,CancellationToken cancellation=default)
         {
             object gate;
             lock(gateMapLock){
@@ -124,8 +125,17 @@ namespace Maestro.Quest.Persistence
                     gates[root]=new WeakReference<object>(gate=new object());
                 }
             }
-            if(wait)Monitor.Enter(gate);else if(!Monitor.TryEnter(gate))throw new IOException("The room snapshot writer is busy.");
+            if(wait&&cancellation.CanBeCanceled){
+                // Admission can be stopped before a read starts. Existing owners
+                // still drain normally; cancellation never releases another owner.
+                cancellation.ThrowIfCancellationRequested();bool reported=false;
+                while(!Monitor.TryEnter(gate,50)){
+                    cancellation.ThrowIfCancellationRequested();
+                    if(!reported){reported=true;InspectionWaiting?.Invoke(root);}
+                }
+            }else if(wait)Monitor.Enter(gate);else if(!Monitor.TryEnter(gate))throw new IOException("The room snapshot writer is busy.");
             try {
+                cancellation.ThrowIfCancellationRequested();
                 Paths(root,strictDocuments);if(initialize){Directory.CreateDirectory(root);Paths(root,strictDocuments);}
                 string path=Path.Combine(root,"room-snapshot.writer.lock");
                 Need(WorkspaceFileInventory.Kind(path)!="directory","Snapshot writer path is unavailable.");
@@ -147,9 +157,11 @@ namespace Maestro.Quest.Persistence
         // Existing host path ownership excludes outside writers when no lock exists yet.
         // Read sharing permits inventory hashing and nested read-only checks while the
         // existing file handle still excludes exclusive writers and startup recovery.
-        internal static IDisposable Inspect(string directory,bool wait=true)
+        internal static IDisposable Inspect(string directory,bool wait=true)=>Inspect(directory,wait,default);
+        internal static IDisposable Inspect(string directory,CancellationToken cancellation)=>Inspect(directory,true,cancellation);
+        static IDisposable Inspect(string directory,bool wait,CancellationToken cancellation)
         {
-            string root=Root(directory);var owner=Own(root,strictDocuments:false,wait:wait,initialize:false,sharedRead:true);
+            string root=Root(directory);var owner=Own(root,strictDocuments:false,wait:wait,initialize:false,sharedRead:true,cancellation:cancellation);
             try {
                 Need(WorkspaceFileInventory.Kind(Path.Combine(root,FileName))=="absent","An interrupted room/memory snapshot needs recovery before inspecting saved data.");
                 return owner;

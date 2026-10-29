@@ -40,6 +40,7 @@ import {probeWorldTime} from './probe-world-time';
 import {probeVisibilityLayers} from './probe-visibility-layers';
 import {probeWorldRegions} from './probe-world-regions';
 import {probeEnvironmentRecovery} from './probe-environment-recovery';
+import {probeNativeMotionMaintenance} from './probe-native-motion-maintenance';
 import {probeWorldLocation} from './probe-world-location';
 import {probeControllerCompletion} from './probe-controller-completion';
 import {probeConstructionResources} from './probe-construction-resources';
@@ -295,6 +296,11 @@ try{
   }finally{clearTimeout(timer);await agent.disconnect();await writeFile(join(directory,'agent-journal.json'),JSON.stringify(await agent.store.list(),null,2));await client.save();}
 
  }else{
+   await probeNativeMotionMaintenance(execute,async commands=>{
+    const prepared=await transport.client.prepare(commands,lease.state());if(!lease.valid())throw new Error('Motion maintenance room changed while preparing stale action');
+    readSets.push({commands:structuredClone(commands),session:prepared.state.session,sceneRevision:prepared.state.sceneRevision,objects:structuredClone(prepared.objects)});
+    const result=await lease.execute(commands,prepared.state.sceneRevision,prepared.objects);checkSparse(result);observations.push(structuredClone(result));return result;
+   },directory);
    await probeWorldLocation(execute,directory);
    await probeControllerCompletion(execute,directory);
    await probeNativeSteering(execute,()=>transport.lease(),directory,!!probeOwner.sparseObjectView);

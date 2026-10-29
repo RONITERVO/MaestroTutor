@@ -9,3 +9,5 @@
 .quest-audience-page :is(button, a, input):focus-visible { outline: 3px solid currentColor; outline-offset: 4px; }
 .quest-audience-confirm { display: flex; align-items: flex-start; gap: .6em; }
 .quest-audience-confirm input { flex-shrink: 0; width: 24px; height: 24px; margin-top: .2em; }
+
+.quest-audience-audio { display: flex; flex-direction: column; gap: .5em; }

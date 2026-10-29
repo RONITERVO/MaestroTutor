@@ -19,6 +19,7 @@ Both managed and BYOK must pass the provider scenarios using the shared client.
 | Capability discovery and object creation/editing | Search/inspect/check and native receipts; requested geometry/material/position; subsequent human edit, Undo/Redo and agent readback agree |
 | Composite creations and reusable programs | Editable recipe/program source; branches, conditions, timers/events, state, parallel actions and modules; save/start/finish are distinguished |
 | Animation and avatar work | Exact compatible asset/clip IDs, joint tracks, gestures, follow/look/walk; completion and blocked paths; no silent replacement of saved motion choices |
+| Animation-library maintenance | Same revision-guarded metadata/archive/removal actions as the book; exact multilingual metadata; current/history/save/lease protection; no deletion without requested intent; inspect uncertain completion before any explicit retry |
 | Physics, contacts and room observations | Gravity/throws/collisions, scanned geometry prerequisites, permission/cancel paths; real alignment and comfort remain headset checks |
 | Steering and ownership | Follow-up/revise/continue/stop; exact parent task; concurrent user grip/program ownership; no bypass of a conflict |
 | Failure and recovery | Provider timeout/refusal/malformed plan; lost receipt; missing object; source/account/session change; crash/restart; duplicate request; no replay of uncertain effects |
@@ -30,6 +31,11 @@ scenario in this matrix. Do not invent a separate headless implementation of an
 action. Human controls, programs and the agent must call the same native handlers.
 Use the existing shared catalog, command parser, task lifecycle and chat formatter.
 The legacy web first-lesson and broader provider gates remain mandatory as well.
+
+Native fact coverage must include the scheduler/room-client route, not only a
+direct delegate with a fully populated context. Missing native context must defer
+to the authoritative host; valid empty results need their declared collection
+types. Include zero-result and end-of-page cases alongside populated examples.
 
 ## Implemented in this increment
 

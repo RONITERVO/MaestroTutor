@@ -3,7 +3,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using Maestro.Quest.Creation;
+using Maestro.Quest.Persistence;
 using Maestro.Quest.Rules;
 
 namespace Maestro.Quest.Book
@@ -18,7 +20,20 @@ namespace Maestro.Quest.Book
     public sealed class MotionRetention { public bool Saved,Uncertain; }
     public static class MotionUsage
     {
-        public static MotionRetention ReadSaved(RoomEditor editor,RuleWorkshop rules,string id,bool force=false)
+        public static MotionRetention ReadSaved(RoomEditor editor,RuleWorkshop rules,string id,bool force=false,CancellationToken cancellation=default)
+        {
+            try {
+                // An authoritative scan waits for an existing background reader
+                // instead of mistaking that reader for uncertain saved state.
+                // Nested room/memory inspections are reentrant on this worker;
+                // the owner neither recovers nor publishes any retained file.
+                using var owner=force?RoomSnapshotTransaction.Inspect(editor.SaveDirectory,cancellation):null;
+                cancellation.ThrowIfCancellationRequested();
+                return ReadSavedOwned(editor,rules,id,force);
+            }catch(OperationCanceledException){throw;}
+            catch when(force){return new MotionRetention {Uncertain=true};}
+        }
+        static MotionRetention ReadSavedOwned(RoomEditor editor,RuleWorkshop rules,string id,bool force)
         {
             bool saved=editor.SavedMotion(id,out bool a,force); saved |= rules.SavedMotion(id,out bool b,force); saved |= editor.ActivityProfiles.SavedMotion(id,out bool c,force);
             bool modules=false,unknownModules=true;if(rules.Modules!=null)modules=rules.Modules.Retains(id,out unknownModules);

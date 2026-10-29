@@ -231,7 +231,7 @@ namespace Maestro.Quest.Tests
             var imports=root.AddComponent<ImportWorkshop>(); imports.Initialize(editor,authoring);
             var book=root.AddComponent<LibraryBookController>(); book.Initialize(editor,imports,rules); book.SetVisible(true);
             int sequence=0;
-            LibraryBookRequest Request(string action) => new() { version=1,session=book.State.session,sequence=++sequence,action=action,motionId=greeting.id };
+            LibraryBookRequest Request(string action) => new() { version=1,session=book.State.session,sequence=++sequence,action=action,motionId=greeting.id,entryRevision=editor.Motions.EntryRevision(greeting.id) };
             var work=book.HandleAsync(Request("select")); yield return Until(() => work.IsCompleted);
             Assert.That(book.State.usage.total,Is.EqualTo(1)); Assert.That(book.State.usage.uses.Single(),Does.Contain("Action"));
             Assert.That(runtime.Trigger(rules.Selected.id),Is.True); yield return Until(() => avatar.LibraryMotionId == greeting.id);
@@ -254,7 +254,7 @@ namespace Maestro.Quest.Tests
             var imports=root.AddComponent<ImportWorkshop>(); imports.Initialize(editor,authoring);
             var book=root.AddComponent<LibraryBookController>(); book.Initialize(editor,imports,rules); book.SetVisible(true);
             int sequence=0;
-            LibraryBookRequest Request(string action) => new() { version=1,session=book.State.session,sequence=++sequence,action=action,motionId=entry.id };
+            LibraryBookRequest Request(string action) => new() { version=1,session=book.State.session,sequence=++sequence,action=action,motionId=entry.id,entryRevision=editor.Motions.EntryRevision(entry.id) };
             var work=book.HandleAsync(Request("select")); yield return Until(() => work.IsCompleted);
             work=book.HandleAsync(Request("archive")); yield return Until(() => work.IsCompleted); yield return Until(() => book.State.canRemoveDownload);
             var query=Request("query"); query.query=""; query.archivedOnly=true; query.compatibleOnly=true; work=book.HandleAsync(query); yield return Until(() => work.IsCompleted);
@@ -360,7 +360,7 @@ namespace Maestro.Quest.Tests
             Assert.That(imports.SelectedLibraryMotionId,Is.EqualTo(gait.id));
             imports.NextClip(); Assert.That(book.State.selected.id,Is.EqualTo(imports.SelectedLibraryMotionId));
             select.sequence = ++sequence; work = book.HandleAsync(select); yield return Until(() => work.IsCompleted);
-            var save = Request("save"); save.motionId = gait.id; save.name = "Everyday walk"; save.tags = new[] { "Walk","Calm" }; save.favourite = true;
+            var save = Request("save"); save.motionId = gait.id; save.entryRevision=editor.Motions.EntryRevision(gait.id); save.name = "Everyday walk"; save.tags = new[] { "Walk","Calm" }; save.favourite = true;
             work = book.HandleAsync(save); yield return Until(() => work.IsCompleted);
             Assert.That(editor.Motions.Find(gait.id).name,Is.EqualTo("Everyday walk")); Assert.That(imports.Details,Does.Contain("Everyday walk")); Assert.That(avatar.IsImportedClipPlaying,Is.False);
             query = Request("query"); query.query = "calm"; query.favouritesOnly = true;

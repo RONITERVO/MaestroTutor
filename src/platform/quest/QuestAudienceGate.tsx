@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { sessionActivity } from '../browser/sessionActivity';
 import type { BookSnapshot } from './bookBridge';
+import { QUEST_AUDIO_SETUP } from '../../../shared/prompts/questAudio';
 import './questAudience.css';
 
 /** Session-only self-confirmation. No birth date, saved age or identity check. */
@@ -37,6 +38,11 @@ export function QuestAudienceGate({ children }: React.PropsWithChildren) {
     <section className="quest-audience-page" aria-labelledby="quest-privacy-title">
       <h1 id="quest-privacy-title">Your Maestro book</h1>
       <p>Your familiar conversation and artifacts live on these pages. You can speak or type, and ask Maestro to work with the room.</p>
+      <section className="quest-audience-audio" aria-labelledby="quest-audio-title">
+        <h2 id="quest-audio-title">{QUEST_AUDIO_SETUP.title}</h2>
+        <p>{QUEST_AUDIO_SETUP.requirement} {QUEST_AUDIO_SETUP.setup}</p>
+        <p>{QUEST_AUDIO_SETUP.detection}</p>
+      </section>
       <h2>Before you begin</h2>
       <p>AI requests can include your conversation, attachments and relevant room-object or program details. With managed access, they pass through Maestro to Google Gemini. With your own API key, they go directly to Google.</p>
       <p>A room task handed off from Live can reuse the audio and enabled camera frames already sent during that turn. Task history, including that media, stays with your local chat and can be included in exported backups.</p>

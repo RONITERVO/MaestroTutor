@@ -3,14 +3,15 @@
 // @vitest-environment jsdom
 import { act, cleanup, fireEvent, render } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
-import { LibraryBookClient, parseLibraryState, type LibraryState } from './libraryBookBridge';
+import { LibraryBookClient, parseLibraryState, type LibraryAction, type LibraryState } from './libraryBookBridge';
 import { LibraryBookView } from './LibraryBookView';
 import { QuestBookSurface } from './QuestBookSurface';
 const session = 'a'.repeat(32), motionId = 'b'.repeat(32);
+const entryRevision = 'c'.repeat(64);
 export const state = (): LibraryState => ({
   version: 1, session, revision: 1, ack: 0, visible: true, busy: false, readOnly: false,
   query: '', offset: 0, total: 1, pageSize: 12, compatibleOnly: true, favouritesOnly: false, includeShort: false,
-  entries: [{ id: motionId, name: 'Stage walk', tags: ['Walking'], duration: 2, favourite: false, compatible: true, shortClip: false }],
+  entries: [{ id: motionId, entryRevision, name: 'Stage walk', tags: ['Walking'], duration: 2, favourite: false, compatible: true, shortClip: false }],
   selected: null, canPreview: false, canWalk: false, canAssign: false, ruleId: null, ruleName: null, stepIndex: 0,
   sourceIndex: 0, sourceCount: 0, sourceName: null, attribution: '', termsPage: 0, termsPages: 1, status: 'Choose a motion',
 });
@@ -22,6 +23,40 @@ describe('book library transport and UI', () => {
     expect(parseLibraryState({ ...state(), session: '../save' })).toBeNull();
     expect(parseLibraryState({ ...state(), attribution: 'x'.repeat(1501) })).toBeNull();
     expect(parseLibraryState({ ...state(), entries: [{ ...state().entries[0], duration: NaN }] })).toBeNull();
+    for (const invalid of [null, 1, 'c'.repeat(63), 'G'.repeat(64)]) {
+      expect(parseLibraryState({ ...state(), entries: [{ ...state().entries[0], entryRevision: invalid }] })).toBeNull();
+    }
+  });
+  it.each<LibraryAction>(['save', 'archive', 'restore', 'removeDownload', 'forgetMotion'])('requires the exact reviewed entry revision for %s', action => {
+    const initial = state(), selected = initial.entries[0];
+    const view = { ...initial, selected };
+    const client = new LibraryBookClient(); client.receive(view);
+    expect(client.request(action, { motionId })).toBe(false);
+    expect(client.request(action, { motionId, entryRevision: 'd'.repeat(64) })).toBe(false);
+    expect(client.request(action, { motionId: 'e'.repeat(32), entryRevision })).toBe(false);
+    expect(client.snapshot().libraryRequest).toBeNull();
+    expect(client.request(action, { motionId, entryRevision })).toBe(true);
+    const original = client.snapshot().libraryRequest;
+    expect(original).toMatchObject({ action, motionId, entryRevision, sequence: 1 });
+    client.receive({ ...view, revision: 2, selected: { ...selected, entryRevision: 'd'.repeat(64) } });
+    expect(client.snapshot().libraryRequest).toBe(original);
+    client.receive({ ...view, revision: 3, ack: 1, readOnly: true });
+    expect(client.request(action, { motionId, entryRevision })).toBe(false);
+    client.receive({ ...view, revision: 4, ack: 1, selected: null });
+    expect(client.request(action, { entryRevision })).toBe(false);
+  });
+  it('keeps older native states readable while refusing unguarded maintenance', () => {
+    const initial = state(), selected = { ...initial.entries[0], entryRevision: undefined, archived: true, removed: false };
+    const view = { ...initial, entries: [selected], selected, canPreview: true, canRemoveDownload: true,
+      usage: { total: 0, page: 0, pages: 1, uses: [], history: false, saved: false, uncertain: false, playing: false, protection: null } };
+    expect(parseLibraryState(view)).not.toBeNull();
+    const client = new LibraryBookClient(); client.receive(view); const ui = render(<LibraryBookView client={client} />);
+    expect((ui.getByLabelText('Name') as HTMLInputElement).closest('fieldset')?.disabled).toBe(true);
+    expect((ui.getByText('Restore to library') as HTMLButtonElement).disabled).toBe(true);
+    expect((ui.getByText('Remove local download') as HTMLButtonElement).disabled).toBe(true);
+    expect(client.request('archive', { motionId, entryRevision })).toBe(false);
+    fireEvent.click(ui.getByText('Preview on Maestro'));
+    expect(client.snapshot().libraryRequest).toMatchObject({ action: 'preview', motionId });
   });
   it('retains a request until ack, prioritises Stop and drops old-session requests on resume', () => {
     const client = new LibraryBookClient(); client.receive(state());
@@ -47,7 +82,7 @@ describe('book library transport and UI', () => {
     const selected = { ...initial, selected: initial.entries[0], canPreview: true, canWalk: true, canAssign: true, ruleId: 'd'.repeat(32), ruleName: 'Action 1' };
     act(() => { client.receive({ ...selected, revision: 3, ack: 2 }); });
     fireEvent.change(ui.getByLabelText('Name'), { target: { value: 'My walk' } }); fireEvent.click(ui.getByText('Save details'));
-    expect(client.snapshot().libraryRequest).toMatchObject({ action: 'save', motionId, name: 'My walk', tags: ['Walking'] });
+    expect(client.snapshot().libraryRequest).toMatchObject({ action: 'save', motionId, entryRevision, name: 'My walk', tags: ['Walking'] });
     act(() => { client.receive({ ...selected, revision: 4, ack: 3 }); });
     fireEvent.click(ui.getByText('Use for walking')); expect(client.snapshot().libraryRequest).toMatchObject({ action: 'walk', motionId });
     act(() => { client.receive({ ...selected, revision: 5, ack: 4 }); });
@@ -99,7 +134,7 @@ describe('book library transport and UI', () => {
     expect(client.snapshot().libraryRequest).toBeNull(); expect(ui.getByLabelText('Confirm download removal')).toBeTruthy();
     fireEvent.click(ui.getByText('Keep download')); expect(ui.queryByLabelText('Confirm download removal')).toBeNull();
     fireEvent.click(ui.getByText('Remove local download')); fireEvent.click(ui.getByText('Confirm remove download'));
-    expect(client.snapshot().libraryRequest).toMatchObject({ action: 'removeDownload', motionId });
+    expect(client.snapshot().libraryRequest).toMatchObject({ action: 'removeDownload', motionId, entryRevision });
     act(() => { client.receive({ ...view, revision: 2, ack: 1, canRemoveDownload: false, usage: { ...usage, history: true, protection: 'Undo needs this motion' } }); });
     expect((ui.getByText('Remove local download') as HTMLButtonElement).disabled).toBe(true);
     expect(ui.getByText('Undo needs this motion')).toBeTruthy();
@@ -124,7 +159,67 @@ describe('book library transport and UI', () => {
     expect(client.snapshot().libraryRequest).toBeNull(); expect(ui.getByLabelText('Confirm forgetting motion')).toBeTruthy();
     fireEvent.click(ui.getByText('Keep details')); expect(ui.queryByLabelText('Confirm forgetting motion')).toBeNull();
     fireEvent.click(ui.getByText('Forget motion details')); fireEvent.click(ui.getByText('Confirm forget details'));
-    expect(client.snapshot().libraryRequest).toMatchObject({ action: 'forgetMotion', motionId });
+    expect(client.snapshot().libraryRequest).toMatchObject({ action: 'forgetMotion', motionId, entryRevision });
+  });
+  it('retains an edit draft on status refresh but reloads it when the same motion revision changes', () => {
+    const initial = state(), selected = initial.entries[0], view = { ...initial, selected };
+    const client = new LibraryBookClient(); client.receive(view); const ui = render(<LibraryBookView client={client} />);
+    fireEvent.change(ui.getByLabelText('Name'), { target: { value: 'Unsaved name' } });
+    act(() => { client.receive({ ...view, revision: 2, status: 'Fresh status' }); });
+    expect((ui.getByLabelText('Name') as HTMLInputElement).value).toBe('Unsaved name');
+    const updated = { ...selected, entryRevision: 'd'.repeat(64), name: 'Agent name', tags: ['Calm'], favourite: true };
+    act(() => { client.receive({ ...view, revision: 3, selected: updated, entries: [updated] }); });
+    expect((ui.getByLabelText('Name') as HTMLInputElement).value).toBe('Agent name');
+    expect((ui.getByLabelText('Tags, separated by commas') as HTMLInputElement).value).toBe('Calm');
+    expect((ui.getByLabelText('Favourite') as HTMLInputElement).checked).toBe(true);
+    expect(client.snapshot().libraryRequest).toBeNull();
+    fireEvent.change(ui.getByLabelText('Name'), { target: { value: 'Reviewed new name' } }); fireEvent.click(ui.getByText('Save details'));
+    expect(client.snapshot().libraryRequest).toMatchObject({ action: 'save', motionId, entryRevision: updated.entryRevision, name: 'Reviewed new name', tags: ['Calm'], favourite: true });
+  });
+  it('preserves exact names and spaced, comma-containing and Unicode-distinct tags on a favourite-only edit', () => {
+    const initial = state(), selected = { ...initial.entries[0], name: '  <Imported walk>  ', tags: ['  Calm  ', 'walk, slowly', 'ß', 'SS'] };
+    const client = new LibraryBookClient(); client.receive({ ...initial, selected, entries: [selected] }); const ui = render(<LibraryBookView client={client} />);
+    fireEvent.click(ui.getByLabelText('Favourite')); fireEvent.click(ui.getByText('Save details'));
+    expect(client.snapshot().libraryRequest).toMatchObject({ action: 'save', motionId, entryRevision, name: selected.name, tags: selected.tags, favourite: true });
+  });
+  it('bounds edited tags and leaves duplicate-case decisions to authoritative native validation', () => {
+    const initial = state(), client = new LibraryBookClient(); client.receive({ ...initial, selected: initial.entries[0] }); const ui = render(<LibraryBookView client={client} />);
+    fireEvent.change(ui.getByLabelText('Tags, separated by commas'), { target: { value: 'x'.repeat(33) } }); fireEvent.click(ui.getByText('Save details'));
+    expect(client.snapshot().libraryRequest).toBeNull(); expect(ui.getByRole('alert').textContent).toContain('32 characters');
+    fireEvent.change(ui.getByLabelText('Tags, separated by commas'), { target: { value: 'Calm, calm' } }); fireEvent.click(ui.getByText('Save details'));
+    expect(client.snapshot().libraryRequest).toMatchObject({ action: 'save', tags: ['Calm', 'calm'] });
+  });
+  it('reloads a same-motion draft after a native session change', () => {
+    const initial = state(), view = { ...initial, selected: initial.entries[0] };
+    const client = new LibraryBookClient(); client.receive(view); const ui = render(<LibraryBookView client={client} />);
+    fireEvent.change(ui.getByLabelText('Name'), { target: { value: 'Before suspension' } });
+    act(() => { client.receive({ ...view, session: 'd'.repeat(32) }); });
+    expect((ui.getByLabelText('Name') as HTMLInputElement).value).toBe('Stage walk');
+    expect(client.snapshot().libraryRequest).toBeNull();
+  });
+  it.each(['download', 'forget'] as const)('invalidates %s confirmation when the same motion revision changes', action => {
+    const initial = state(), selected = { ...initial.entries[0], archived: true, removed: action === 'forget', downloaded: action !== 'forget' };
+    const view = { ...initial, selected, canRemoveDownload: action === 'download', canForgetMotion: action === 'forget',
+      usage: { total: 0, page: 0, pages: 1, uses: [], history: false, saved: false, uncertain: false, playing: false, protection: null } };
+    const client = new LibraryBookClient(); client.receive(view); const ui = render(<LibraryBookView client={client} />);
+    const button = action === 'download' ? 'Remove local download' : 'Forget motion details';
+    const label = action === 'download' ? 'Confirm download removal' : 'Confirm forgetting motion';
+    fireEvent.click(ui.getByText('Usage and local storage')); fireEvent.click(ui.getByText(button));
+    expect(ui.getByLabelText(label)).toBeTruthy();
+    act(() => { client.receive({ ...view, revision: 2, selected: { ...selected, entryRevision: 'd'.repeat(64) } }); });
+    expect(ui.queryByLabelText(label)).toBeNull(); expect(client.snapshot().libraryRequest).toBeNull();
+    fireEvent.click(ui.getByText(button)); fireEvent.click(ui.getByText(action === 'download' ? 'Confirm remove download' : 'Confirm forget details'));
+    expect(client.snapshot().libraryRequest).toMatchObject({ action: action === 'download' ? 'removeDownload' : 'forgetMotion', motionId, entryRevision: 'd'.repeat(64) });
+  });
+  it('sends the displayed revision when archiving and restoring an entry', () => {
+    const initial = state(), selected = { ...initial.entries[0], archived: false, removed: false };
+    const view = { ...initial, selected, usage: { total: 0, page: 0, pages: 1, uses: [], history: false, saved: false, uncertain: false, playing: false, protection: null } };
+    const client = new LibraryBookClient(); client.receive(view); const ui = render(<LibraryBookView client={client} />);
+    fireEvent.click(ui.getByText('Archive motion'));
+    expect(client.snapshot().libraryRequest).toMatchObject({ action: 'archive', motionId, entryRevision });
+    act(() => { client.receive({ ...view, revision: 2, ack: 1, selected: { ...selected, archived: true, entryRevision: 'd'.repeat(64) } }); });
+    fireEvent.click(ui.getByText('Restore to library'));
+    expect(client.snapshot().libraryRequest).toMatchObject({ action: 'restore', motionId, entryRevision: 'd'.repeat(64) });
   });
 
 });
