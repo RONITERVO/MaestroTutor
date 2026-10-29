@@ -18808,6 +18808,10 @@ Validation in `.quest-evidence/image-reclamation-20261029/`:
   cover absent/required/invalid arguments. No native repair was needed for this
   failure. That run is not counted as a completed journey.
 
+The first PR gate then found the matching web catalog test still expecting
+127 current-input annotations instead of 128; its fifteen focused cases pass
+after updating that expectation. The native implementation is unchanged.
+
 Final full offline Headless run `55bef15b213a4d9a8664e68ddd6ed9fa` passes with
 3,081 requests and 3,082 observations. Full Book run
 `eae0da38f99141c884d087ee3761ea5f` passes with 2,684 requests and 8,283
