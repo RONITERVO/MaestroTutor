@@ -141,7 +141,7 @@ export function CapabilityBrowser({client,onClose,onInsert,initialCall}:{client:
    </section>}
    {inspection?.category==='facts'&&inspection.definition&&<section aria-label="Fact definition">
     <p>{inspection.definition.id} · version {inspection.definition.version}</p><p>{inspection.definition.description}</p><p>Value type: {dataTypeLabel(inspection.definition.type)}</p>
-    <div className="room-message" aria-label="Current fact value">{factDirty?<><strong>Not read yet</strong><p>Read this fact with the chosen inputs.</p></>:currentFact?.available?<><strong>Current value</strong><p>{JSON.stringify(currentFact.value)}</p></>:<><strong>Unavailable</strong><p>{currentFact?'The runtime has no reliable value now.':'Refresh this fact to read it again.'}</p></>}</div>
+    <div className="room-message" aria-label="Current fact value">{factDirty?<><strong>Not read yet</strong><p>Read this fact with the chosen inputs.</p></>:currentFact?.available?<><strong>Current value</strong><LibraryInventoryNotice capability={inspection.capability} value={currentFact.value} fact/><p>{JSON.stringify(currentFact.value)}</p></>:<><strong>Unavailable</strong><p>{currentFact?'The runtime has no reliable value now.':'Refresh this fact to read it again.'}</p></>}</div>
     {inspection.definition.input&&<><CapabilityFields schema={inspection.definition.input} value={factArgs} label="Fact inputs" objects={state?.objects??[]} onChange={value=>setArgs(JSON.stringify(value,null,2))}/>{factError&&<p className="room-message room-message-warning">{factError}</p>}</>}
     <button disabled={busy||Boolean(factError)||Boolean(inspection.definition.input)&&!state?.capabilities?.includes('factQueries.v1')} onClick={()=>void inspect(inspection.capability,inspection.version,factArgs)}>{inspection.definition.input?'Read fact':'Refresh fact'}</button>
     <p className="room-workspace-intro">Choose this fact as a condition or calculation input in a program. This reading is a snapshot; it does not subscribe to changes or run a behaviour.</p>
@@ -193,7 +193,33 @@ function ExecutionHistory({view,pending,execute,recoverable,workspace=false}:{vi
   {view.storageError&&<p className="room-message room-message-warning">{view.storageError}</p>}
   {view.running.map(run=><div key={run.id} className="room-message"><strong>{capabilityDefinition(run.capability)?.label??run.capability}</strong><p>{run.status}</p><div className="room-workspace-actions"><button disabled={pending} onClick={()=>void execute({operation:'inspect',runId:run.id})}>Inspect action {run.id.slice(0,6)}</button><button disabled={pending} onClick={()=>void execute({operation:'cancel',runId:run.id})}>Stop action {run.id.slice(0,6)}</button></div></div>)}
   {!view.running.length&&<p>{workspace?'No workspace action is running.':'No one-off action is running.'}</p>}
-  {view.selected&&<div aria-label={workspace?'Selected workspace action':'Selected action'} className="room-message"><strong>{view.selected.phase}</strong><p>{view.selected.status}</p>{view.selected.output&&<><h3>Action result</h3><pre aria-label="Action result">{JSON.stringify(view.selected.output,null,2)}</pre></>}<details><summary>Exact action</summary><pre>{JSON.stringify(view.selected.call,null,2)}</pre></details></div>}
+  {view.selected&&<div aria-label={workspace?'Selected workspace action':'Selected action'} className="room-message"><strong>{view.selected.phase}</strong><p>{view.selected.status}</p>{view.selected.output&&<><h3>Action result</h3><LibraryInventoryNotice capability={view.selected.capability} value={view.selected.output}/><pre aria-label="Action result">{JSON.stringify(view.selected.output,null,2)}</pre></>}<details><summary>Exact action</summary><pre>{JSON.stringify(view.selected.call,null,2)}</pre></details></div>}
   {view.outcomes.length>0&&<details><summary>{workspace?'Recent workspace results':'Recent action results'}</summary><div className="room-object-list">{[...view.outcomes].reverse().map(run=><button key={run.id} disabled={pending} onClick={()=>void execute({operation:'inspect',runId:run.id})}><span>{capabilityDefinition(run.capability)?.label??run.capability} · {run.phase}</span><small>{run.id.slice(0,6)} · {run.status}</small></button>)}</div></details>}
+ </section>;
+}
+
+/** Inventory warnings travel with each page/result; an absent historical summary is unknown. */
+function LibraryInventoryNotice({capability,value,fact=false}:{capability:string;value:unknown;fact?:boolean}) {
+ const record=(v:unknown):v is Record<string,unknown>=>v!==null&&typeof v==='object'&&!Array.isArray(v);
+ if(!record(value))return null;
+ const isImport=capability==='image.import'||capability==='audio.import';
+ const isLibraryFact=fact&&(capability==='image.library'||capability==='audio.library');
+ if(!isImport&&!isLibraryFact&&capability!=='model.library.inspect')return null;
+ const inventory=!fact&&record(value.inventory)?value.inventory:null;
+ const library=isLibraryFact?value:isImport&&record(value.library)?value.library:null;
+ const ready=inventory?.ready??library?.ready;
+ const error=typeof inventory?.error==='string'&&inventory.error?inventory.error:typeof library?.error==='string'?library.error:'';
+ const incomplete=ready===true&&(inventory?.complete===false||Boolean(error));
+ const unavailable=ready===false;
+ const unknown=!fact&&!inventory;
+ if(fact&&!incomplete&&!unavailable)return null;
+ const title=unavailable?'Library inventory unavailable':incomplete?'Library inventory incomplete':unknown?'Inventory completeness not reported':'Inventory scan complete';
+ const total=typeof library?.total==='number'?library.total:value.total;
+ return <section aria-label="Library inventory status" className={incomplete||unavailable?'room-message room-message-warning':'room-message'}>
+  <strong>{title}</strong>
+  {error&&<p>{error}</p>}
+  {unavailable?<p>Refresh the library to read its saved files. This result does not establish an empty library.</p>:incomplete?<p>{total===0?'No entries were returned; this does not mean the library is empty.':'The listed entries are still shown. Other saved files may be missing from this result.'}</p>:null}
+  {inventory?.enumerationComplete===false&&ready===true&&<p>The scan stopped before checking every saved file.</p>}
+  {unknown&&<p>This saved result does not report whether all saved files were checked. Refresh the library for a current inventory.</p>}
  </section>;
 }

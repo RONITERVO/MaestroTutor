@@ -18,23 +18,25 @@ namespace Maestro.Quest.Programs
         public override string Id=>"model.library.inspect";
         public override string Label=>"Browse imported models";
         public override string Duration=>"completion";
-        public override string Description=>"Read a page of metadata from this workspace's private imported-model library (32 models/256 MB maximum). Results contain exact content hashes, safe display names and byte sizes, never external paths. Entries are sorted by hash and offsets are session snapshots, not stable indexes: inspect again after an import. Metadata is not proof of valid content, humanoid compatibility or permitted use; avatar.model.select verifies the chosen bytes and rig before saving. Empty modelHash on avatar.model.select chooses the current included Maestro; inspect avatar.included for its exact identity. The included avatar is copied into this same bounded library on first use and is portable in backups. This does not open a file picker, download or import a file.";
+        public override string Description=>"Read a page of metadata from this workspace's private imported-model library (32 models/256 MB maximum). Results contain exact content hashes, safe display names and byte sizes, never external paths. Entries are sorted by hash and offsets are session snapshots, not stable indexes: inspect again after an import. total counts readable metadata entries in this bounded snapshot. Every new receipt includes inventory; ready permits partial results, complete requires complete enumeration without observed scan issues, enumerationComplete describes directory traversal only, and issueCount counts observed failures or limits rather than all damaged files. Incomplete results retain healthy entries with an error warning; zero entries with incomplete inventory is not an empty-library claim. Historical receipts without inventory have unknown completeness. Inventory describes observed matching payload files, not missing references, orphan sidecars or import quota readiness. Stop cancels pending inspection and never publishes a partial cancellation result. Metadata is not proof of valid content, humanoid compatibility or permitted use; avatar.model.select verifies the chosen bytes and rig before saving. Empty modelHash on avatar.model.select chooses the current included Maestro; inspect avatar.included for its exact identity. The included avatar is copied into this same bounded library on first use and is portable in backups. This does not open a file picker, download or import a file.";
         public override JObject InputSchema {get {var schema=Object(new JObject {["offset"]=Number(0,32,true)});schema["x-features"]=new JArray("avatarModels.v1");return schema;}}
-        public override JObject OutputSchema=>Object(new JObject {["total"]=Number(0,32,true),["offset"]=Number(0,32,true),["entries"]=List(Object(new JObject {["modelHash"]=Text("^[a-f0-9]{64}$",64),["name"]=Text("^[^\\u0000-\\u001f]{0,100}$",100),["bytes"]=Number(28,ModelInspection.MaximumBytes,true)}),0,8)});
+        public override JObject OutputSchema=>Object(new JObject {["total"]=Number(0,32,true),["offset"]=Number(0,32,true),["entries"]=List(Object(new JObject {["modelHash"]=Text("^[a-f0-9]{64}$",64),["name"]=Text("^[^\\u0000-\\u001f]{0,100}$",100),["bytes"]=Number(28,ModelInspection.MaximumBytes,true)}),0,8),["inventory"]=ImportedInventoryObservation.Schema()},"inventory");
         public override JObject Example=>new() {["offset"]=0};
         public override bool CanRun(CapabilityContext context,JObject args,out string error){error=context.Editor?null:"The model library is unavailable";return context.Editor;}
-        public override bool Start(CapabilityContext context,string runId,JObject args,out CapabilityOperation operation,out string error){operation=null;if(!CanRun(context,args,out error))return false;operation=new ListOperation(context.Editor.Models.ListAsync(),(int)args["offset"]);return true;}
+        public override bool Start(CapabilityContext context,string runId,JObject args,out CapabilityOperation operation,out string error){operation=null;if(!CanRun(context,args,out error))return false;operation=new ListOperation(context.Editor.Models,(int)args["offset"]);return true;}
         sealed class ListOperation:CapabilityOperation
         {
-            readonly Task<ModelLibrary.Entry[]> task;readonly int offset;JObject result;
-            internal ListOperation(Task<ModelLibrary.Entry[]> task,int offset){this.task=task;this.offset=offset;}
+            readonly CancellationTokenSource stop=new();readonly Task<ImportedAssetInventory<ModelLibrary.Entry>> task;readonly int offset;JObject result;bool closed;
+            internal ListOperation(ModelLibrary library,int offset){this.offset=offset;task=library.ScanAsync(stop.Token);_=Drain();}
+            async Task Drain(){try{await task;}catch(Exception){}finally{closed=true;stop.Dispose();}}
             public override float Seconds=>0;
             public override RuleActionState State(out string error){
                 error=null;if(!task.IsCompleted)return RuleActionState.Preparing;
                 if(task.IsFaulted||task.IsCanceled){error="The model library could not be inspected; check its local files and retry.";return RuleActionState.Failed;}
-                result??=new JObject {["total"]=task.Result.Length,["offset"]=offset,["entries"]=new JArray(task.Result.Skip(offset).Take(8).Select(e=>new JObject {["modelHash"]=e.Hash,["name"]=e.Name,["bytes"]=e.Bytes}))};return RuleActionState.Ready;
+                result??=new JObject {["total"]=task.Result.Entries.Length,["offset"]=offset,["entries"]=new JArray(task.Result.Entries.Skip(offset).Take(8).Select(e=>new JObject {["modelHash"]=e.Hash,["name"]=e.Name,["bytes"]=e.Bytes})),["inventory"]=ImportedInventoryObservation.Summary(task.Result)};return RuleActionState.Ready;
             }
             public override JObject Result=>result??new JObject();
+            public override void Stop(bool preservePlacement){if(!closed)stop.Cancel();}
         }
     }
     internal sealed class AvatarModelCapability:NativeTargetCapability

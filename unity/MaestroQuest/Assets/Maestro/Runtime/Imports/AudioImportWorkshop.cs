@@ -15,7 +15,7 @@ namespace Maestro.Quest.Imports {
         internal readonly ChatAudioTransfer Chat=new();
         bool fromChat;string chatHash="";
         string request="",phase="idle",error="",source="";int revision;bool paused,focused=true,disposed,working;float began,nextPoll;
-        AudioLibrary.Entry[] entries=Array.Empty<AudioLibrary.Entry>();bool listed;string listError="";
+        ImportedAssetInventory<AudioLibrary.Entry> inventory;string listError="Refresh the library to inspect saved files.";
         internal void Initialize(RoomEditor value){editor=value;
 #if UNITY_ANDROID && !UNITY_EDITOR
             try{picker=new AndroidAudioPicker();}catch(Exception){error="Resume Maestro before choosing a sound.";}
@@ -121,28 +121,29 @@ namespace Maestro.Quest.Imports {
         internal async Task<JObject> Accept(string id,string hash,CancellationToken stop){
             if(!CanAccept(id,hash,out var issue))throw new InvalidOperationException(issue);
             working=true;phase="accepting";using var linked=CancellationTokenSource.CreateLinkedTokenSource(stop,cancel.Token);
-            var chosen=asset;
+            var chosen=asset;inventory=null;listError="Library changed; refresh to inspect saved files.";
             try {
                 await editor.Sounds.SaveAsync(chosen,linked.Token);linked.Token.ThrowIfCancellationRequested();
                 if(!Ready(out issue))throw new InvalidOperationException(issue);
                 var definition=new RoomAudioDefinition {id=Guid.NewGuid().ToString("N"),name=chosen.Name,kind="clip",assetHash=chosen.Hash,seconds=(float)chosen.Inspection.Seconds};
                 if(!editor.EditAudio(definition.id,0,definition,out issue))throw new InvalidOperationException(issue);
-                source=definition.id;revision=editor.AudioRevision(source);phase="completed";listed=false;return Receipt();
+                source=definition.id;revision=editor.AudioRevision(source);phase="completed";return Receipt();
             }catch(OperationCanceledException){phase="cancelled";error="Sound acceptance stopped. Its private file may remain; inspect the library. No playback started.";throw;}
             catch(Exception){Fail("Sound acceptance did not finish. Its private file may remain; refresh the library before retrying. No playback started.");throw;}
             finally{working=false;End();}
         }
         internal async Task<JObject> Refresh(CancellationToken stop){
-            if(!CanStart(false,out var issue))throw new InvalidOperationException(issue);Begin();phase="checking";working=true;listed=false;
+            if(!CanStart(false,out var issue))throw new InvalidOperationException(issue);Begin();phase="checking";working=true;inventory=null;listError="Library refresh is in progress.";
             using var linked=CancellationTokenSource.CreateLinkedTokenSource(stop,cancel.Token);
-            try{var fresh=await editor.Sounds.ListAsync(linked.Token);linked.Token.ThrowIfCancellationRequested();if(disposed)throw new OperationCanceledException();entries=fresh;listed=true;listError="";phase="completed";return Receipt();}
+            try{var fresh=await editor.Sounds.ScanAsync(linked.Token);linked.Token.ThrowIfCancellationRequested();if(disposed)throw new OperationCanceledException();inventory=fresh;listError=fresh.Error;phase="completed";return Receipt();}
             catch(OperationCanceledException){phase="cancelled";listError="Sound-library refresh was cancelled.";throw;}
             catch(Exception){listError="Sound-library inspection failed. Existing files are preserved; repair or reimport the damaged sound.";Fail(listError);throw;}
             finally{working=false;End();}
         }
-        internal JObject Receipt()=>new(){["requestId"]=request,["assetHash"]=asset?.Hash??"",["sourceId"]=source,["revision"]=revision,["temporary"]=editor&&editor.TemporaryRoom,["library"]=Library(0,1)};
+        internal JObject Receipt()=>new(){["requestId"]=request,["assetHash"]=asset?.Hash??"",["sourceId"]=source,["revision"]=revision,["temporary"]=editor&&editor.TemporaryRoom,["library"]=Library(0,1),["inventory"]=ImportedInventoryObservation.Summary(inventory,listError)};
         internal JObject Observe()=>new(){["requestId"]=request,["phase"]=phase,["error"]=ImportObservation.Text(error),["preview"]=new JObject {["assetHash"]=asset?.Hash??"",["name"]=ImportObservation.Text(asset?.Name??""),["seconds"]=asset?.Inspection.Seconds??0,["sampleRate"]=asset?.Inspection.Rate??0,["channels"]=asset?.Inspection.Channels??0,["kibibytes"]=(asset?.Content.Length??0)/1024d},["sourceId"]=source,["revision"]=revision};
         internal JObject Library(int offset,int pageSize=2){
+            bool listed=inventory?.Ready==true;var entries=inventory?.Entries??Array.Empty<AudioLibrary.Entry>();
             var page=listed?entries.Skip(offset).Take(pageSize).ToArray():Array.Empty<AudioLibrary.Entry>();
             return new JObject {["ready"]=listed,["error"]=ImportObservation.Text(listError),["total"]=listed?entries.Length:0,["next"]=listed&&offset+page.Length<entries.Length?offset+page.Length:-1,["entries"]=new JArray(page.Select(e=>new JObject {["id"]=e.Hash,["name"]=ImportObservation.Text(e.Name),["seconds"]=e.Seconds,["sampleRate"]=e.Rate,["channels"]=e.Channels}))};
         }

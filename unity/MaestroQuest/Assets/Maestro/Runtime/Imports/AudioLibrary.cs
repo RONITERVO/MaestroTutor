@@ -37,21 +37,24 @@ namespace Maestro.Quest.Imports {
                 return new AudioAsset(name,CompressedAudio.Normalize(owned,token),token);
             },token).ConfigureAwait(false);}finally{decoders.Release();}
         }
-        static byte[] ReadBounded(string path,CancellationToken cancel){
+        static byte[] ReadBounded(string path,CancellationToken cancel,ImportedAssetReadBudget budget=null){
             WorkspaceArchive.NoLink(path);using var input=new FileStream(path,FileMode.Open,FileAccess.Read,FileShare.Read);
-            if(input.Length<44||input.Length>WaveAudio.MaximumBytes)throw new InvalidDataException("The sound copy is incomplete or exceeds 32 MB.");
-            var bytes=new byte[(int)input.Length];int at=0;
+            long length=input.Length;if(length<44||length>WaveAudio.MaximumBytes)throw new InvalidDataException("The sound copy is incomplete or exceeds 32 MB.");
+            budget?.Payload(length+1);
+            var bytes=new byte[(int)length];int at=0;
             while(at<bytes.Length){cancel.ThrowIfCancellationRequested();int read=input.Read(bytes,at,Math.Min(65536,bytes.Length-at));if(read==0)throw new EndOfStreamException("The sound copy changed.");at+=read;}
             if(input.ReadByte()!=-1)throw new IOException("The sound copy changed.");return bytes;
         }
         string AssetPath(string hash){if(!ModelLibrary.ValidHash(hash))throw new InvalidDataException("Choose an exact imported sound identity.");return Path.Combine(directory,hash+".wav");}
-        AudioAsset ReadCore(string hash,CancellationToken cancel){
+        AudioAsset ReadCore(string hash,CancellationToken cancel,ImportedAssetReadBudget budget=null){
             string path=AssetPath(hash);if(!Directory.Exists(directory)||!File.Exists(path))throw new FileNotFoundException("This sound's private copy is missing. Import the original sound again.");
-            WorkspaceArchive.NoLink(directory);var asset=new AudioAsset(ReadName(hash),ReadBounded(path,cancel),cancel);
+            WorkspaceArchive.NoLink(directory);var asset=new AudioAsset(ReadName(hash,budget,cancel),ReadBounded(path,cancel,budget),cancel);
             if(asset.Hash!=hash)throw new InvalidDataException("This sound's private copy is damaged. Import the original sound again.");return asset;
         }
-        string ReadName(string hash){
-            string path=Path.Combine(directory,hash+".txt");if(!File.Exists(path))return hash;
+        string ReadName(string hash,ImportedAssetReadBudget budget=null,CancellationToken cancel=default){
+            string path=Path.Combine(directory,hash+".txt");
+            if(budget!=null){var bytes=budget.ReadMetadata(path,1024,cancel);if(bytes==null)return hash;using var checkedReader=new StreamReader(new MemoryStream(bytes,false),new UTF8Encoding(false,true),true);return SafeName(checkedReader.ReadLine());}
+            if(!File.Exists(path))return hash;
             WorkspaceArchive.NoLink(path);if(new FileInfo(path).Length>1024)throw new InvalidDataException("The sound information file exceeds its limit.");
             using var reader=new StreamReader(path,new UTF8Encoding(false,true),true);return SafeName(reader.ReadLine());
         }
@@ -114,14 +117,11 @@ namespace Maestro.Quest.Imports {
             finally{if(File.Exists(temp))File.Delete(temp);}
         }
         public sealed class Entry {public string Hash,Name;public long Bytes;public double Seconds;public int Rate,Channels;}
-        public async Task<Entry[]> ListAsync(CancellationToken cancel=default){
+        public async Task<Entry[]> ListAsync(CancellationToken cancel=default)=>(await ScanAsync(cancel).ConfigureAwait(false)).RequireComplete();
+        internal async Task<ImportedAssetInventory<Entry>> ScanAsync(CancellationToken cancel=default){
             using var use=workspace.Write();await writes.WaitAsync(cancel).ConfigureAwait(false);
-            try{return await Task.Run(()=>{
-                if(!Directory.Exists(directory))return Array.Empty<Entry>();WorkspaceArchive.NoLink(directory);
-                var files=new DirectoryInfo(directory).GetFiles("*.wav").OrderBy(f=>f.Name,StringComparer.Ordinal).ToArray();
-                if(files.Length>MaximumFiles||files.Sum(f=>f.Length)>MaximumTotalBytes)throw new InvalidDataException("The sound library exceeds its bounds.");
-                return files.Select(file=>{var asset=ReadCore(Path.GetFileNameWithoutExtension(file.Name),cancel);return new Entry{Hash=asset.Hash,Name=asset.Name,Bytes=asset.Content.Length,Seconds=asset.Inspection.Seconds,Rate=asset.Inspection.Rate,Channels=asset.Inspection.Channels};}).ToArray();
-            },cancel).ConfigureAwait(false);}finally{writes.Release();}
+            try{return await Task.Run(()=>ImportedAssetInventory.Scan(directory,".wav",new ImportedAssetReadBudget(MaximumTotalBytes+MaximumFiles,ImportedAssetInventory.MediaMetadataBytes),
+                (path,budget,token)=>{var asset=ReadCore(Path.GetFileNameWithoutExtension(path),token,budget);return new Entry{Hash=asset.Hash,Name=asset.Name,Bytes=asset.Content.Length,Seconds=asset.Inspection.Seconds,Rate=asset.Inspection.Rate,Channels=asset.Inspection.Channels};},cancel),cancel).ConfigureAwait(false);}finally{writes.Release();}
         }
         internal bool TryCaptureArchive(out WorkspaceLibraryCapture capture){
             capture=null;if(!writes.Wait(0))return false;

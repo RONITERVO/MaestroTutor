@@ -49,6 +49,7 @@ namespace Maestro.Quest.Tests {
             var asset=ImageLibrary.Inspect("Original image",ImageFiles.Png());library.SaveAsync(asset).GetAwaiter().GetResult();string info=Path.Combine(directory,asset.Hash+".txt");
             Encoding encoding=utf16?Encoding.Unicode:new UTF8Encoding(true);byte[] metadata=encoding.GetPreamble().Concat(encoding.GetBytes("Saved label\r\nOrigin: original source\r\nAttribution: keep this complete line\r\n")).ToArray();File.WriteAllBytes(info,metadata);
             Assert.That(library.ReadAsync(asset.Hash).GetAwaiter().GetResult().Name,Is.EqualTo("Saved label"));library.SaveAsync(ImageLibrary.Inspect("Replacement label",asset.Content)).GetAwaiter().GetResult();
+            var inventory=library.ScanAsync().GetAwaiter().GetResult();Assert.That(inventory.Complete,Is.True);Assert.That(inventory.Entries.Single().Name,Is.EqualTo("Saved label"));
             Assert.That(File.ReadAllBytes(info),Is.EqualTo(metadata));Assert.That(library.ReadAsync(asset.Hash).GetAwaiter().GetResult().Name,Is.EqualTo("Saved label"));
         }
         [Test] public void AcceptedSidecarCancellationAfterStagingPreservesOriginalBytes(){
@@ -90,6 +91,27 @@ namespace Maestro.Quest.Tests {
             for(int i=0;i<ImageLibrary.MaximumFiles;i++){int n=i;library.SaveAsync(ImageLibrary.Inspect("Image "+i,ImageFiles.Png(shade:n))).GetAwaiter().GetResult();}
             var extra=ImageLibrary.Inspect("Extra",ImageFiles.Png(shade:80));Assert.Throws<IOException>(()=>library.SaveAsync(extra).GetAwaiter().GetResult());
             Assert.AreEqual(ImageLibrary.MaximumFiles,library.ListAsync().GetAwaiter().GetResult().Length);Assert.IsFalse(File.Exists(Path.Combine(directory,extra.Hash+".image")));
+        }
+        [TestCase("metadata")][TestCase("format")][TestCase("hash")][TestCase("locked")] public void PartialInventoryKeepsVerifiedImagesWithoutRepairingFailedEntries(string fault){
+            var healthy=ImageLibrary.Inspect("Healthy",ImageFiles.Png());var damaged=ImageLibrary.Inspect("Damaged",ImageFiles.Png(shade:1));library.SaveAsync(healthy).GetAwaiter().GetResult();library.SaveAsync(damaged).GetAwaiter().GetResult();
+            string payload=Path.Combine(directory,damaged.Hash+".image"),info=Path.Combine(directory,damaged.Hash+".txt");
+            if(fault=="metadata")File.WriteAllBytes(info,new byte[]{0xc3,0x28});if(fault=="format")File.WriteAllBytes(payload,new byte[30]);if(fault=="hash")File.WriteAllBytes(payload,healthy.Content);
+            var before=Directory.GetFiles(directory).ToDictionary(Path.GetFileName,File.ReadAllBytes);FileStream held=null;
+            try{if(fault=="locked")held=new FileStream(info,FileMode.Open,FileAccess.Read,FileShare.None);var result=library.ScanAsync().GetAwaiter().GetResult();Assert.That(result.Ready&&result.EnumerationComplete,Is.True);Assert.That(result.Complete,Is.False);Assert.That(result.IssueCount,Is.EqualTo(1));Assert.That(result.Entries.Select(e=>e.Hash),Is.EqualTo(new[]{healthy.Hash}));Assert.That(result.Entries[0].Width,Is.EqualTo(3));Assert.That(result.Error,Is.Not.Empty);Assert.Catch(()=>library.ListAsync().GetAwaiter().GetResult());}
+            finally{held?.Dispose();}
+            foreach(var file in before)Assert.That(File.ReadAllBytes(Path.Combine(directory,file.Key)),Is.EqualTo(file.Value));Assert.That(Directory.GetFiles(directory).Length,Is.EqualTo(before.Count));Assert.That(library.ReadAsync(healthy.Hash).GetAwaiter().GetResult().Content,Is.EqualTo(healthy.Content));Assert.That(gate.CanFreeze(out _),Is.True);
+        }
+        [Test] public void AllDamagedImagesAreAUsableIncompleteInventoryNotAHealthyEmptyLibrary(){
+            var asset=ImageLibrary.Inspect("Damaged",ImageFiles.Png());library.SaveAsync(asset).GetAwaiter().GetResult();File.WriteAllBytes(Path.Combine(directory,asset.Hash+".txt"),new byte[1025]);var result=library.ScanAsync().GetAwaiter().GetResult();Assert.That(result.Ready&&result.EnumerationComplete,Is.True);Assert.That(result.Complete,Is.False);Assert.That(result.Entries,Is.Empty);Assert.That(result.Error,Is.Not.Empty);
+        }
+        [Test] public void InventoryDoesNotFollowALinkedPayloadOrHideTheHealthyImage(){
+            var asset=ImageLibrary.Inspect("Healthy",ImageFiles.Png());library.SaveAsync(asset).GetAwaiter().GetResult();string linked=Path.Combine(directory,new string('f',64)+".image");AssetSidecarTestLinks.Create(linked,Path.Combine(directory,asset.Hash+".image"));
+            var result=library.ScanAsync().GetAwaiter().GetResult();Assert.That(result.Entries.Select(e=>e.Hash),Is.EqualTo(new[]{asset.Hash}));Assert.That(result.Complete,Is.False);Assert.That(result.IssueCount,Is.EqualTo(1));Assert.That((File.GetAttributes(linked)&FileAttributes.ReparsePoint)!=0,Is.True);Assert.That(gate.CanFreeze(out _),Is.True);
+        }
+        [Test] public void CancelledInventoryWaitingForArchiveReleasesItsWorkspaceLease(){
+            Assert.That(library.TryCaptureArchive(out var capture),Is.True);using var stop=new CancellationTokenSource();var pending=library.ScanAsync(stop.Token);
+            try{Assert.That(pending.IsCompleted,Is.False);stop.Cancel();Assert.That(SpinWait.SpinUntil(()=>pending.IsCompleted,3000),Is.True,"Cancellation must finish while archive ownership remains held");Assert.Catch<OperationCanceledException>(()=>pending.GetAwaiter().GetResult());Assert.That(gate.CanFreeze(out _),Is.True);}
+            finally{capture.Dispose();}Assert.That(Directory.Exists(directory),Is.False);
         }
     }
     internal static class AssetSidecarTestLinks

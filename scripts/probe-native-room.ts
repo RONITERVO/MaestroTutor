@@ -1,3 +1,4 @@
+import {probeAssetInventory} from './probe-asset-inventory';
 import {validFactValue} from '../shared/behaviourFacts';
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
@@ -509,6 +510,10 @@ try{
   await probeWaterTraversal(execute,directory);
   await probeTerrainWater(execute,directory);
  await probeChatAudio(transport,execute,directory);
+ await probeAssetInventory({
+  invoke:async(id,args)=>(await completeProbeAction(execute,await execute([{action:'execution',execution:{operation:'start',call:{id,version:1,arguments:args}}}]))).execution!.selected!,
+  fact:async(id,args)=>factReply(await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:id,version:1,arguments:args}}])),
+ },directory,'headless');
   await probeVisibilityLayers(execute,directory);
   await probeWorldRegions(execute,directory);
   await probeEnvironmentRecovery({

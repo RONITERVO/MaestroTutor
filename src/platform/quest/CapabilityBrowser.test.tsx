@@ -1139,3 +1139,97 @@ it('keeps headphone setup available as shared read-only help without an acknowle
  expect(screen.queryByRole('checkbox')).toBeNull();
  expect(client.snapshot().request).toBeNull();
 });
+
+
+const imageLibraryEntry={id:'a'.repeat(64),name:'Healthy drawing',width:32,height:32,format:'png'};
+const audioLibraryEntry={id:'b'.repeat(64),name:'Healthy sound',seconds:1,sampleRate:24000,channels:1};
+const modelLibraryEntry={modelHash:'c'.repeat(64),name:'Healthy model',bytes:1024};
+function libraryActionOutput(capability:string,total=1,error='',ready=true):Record<string,unknown> {
+ if(capability==='model.library.inspect')return {total,offset:0,entries:total?[modelLibraryEntry]:[]};
+ const common={requestId:'d'.repeat(32),revision:0,temporary:false,library:{ready,error,total,next:total>1?1:-1,entries:total?[capability==='image.import'?imageLibraryEntry:audioLibraryEntry]:[]}};
+ return capability==='image.import'?{...common,imageHash:'',appearanceId:''}:{...common,assetHash:'',sourceId:''};
+}
+function renderLibraryAction(capability:string,output:Record<string,unknown>) {
+ const client=new RoomAgentClient();
+ const summary={id:'e'.repeat(32),capability,version:1,resources:[],phase:'completed',status:'Library scan finished.',output};
+ const state={...JSON.parse(JSON.stringify(nativeExecutions.running)),revision:1,ack:0,catalog:null,
+  execution:{selected:{...summary,call:{id:capability,version:1,arguments:capability==='model.library.inspect'?{offset:0}:{operation:'refresh'}}},running:[],outcomes:[summary]}};
+ expect(client.receive(state)).toBe(true);
+ const screen=render(<CapabilityBrowser client={client} onClose={()=>{}}/>);
+ return {client,screen,state};
+}
+it.each(['image.import','audio.import','model.library.inspect'])('retains legacy %s entries without claiming a complete inventory',capability=>{
+ const output=libraryActionOutput(capability);
+ const {client,screen}=renderLibraryAction(capability,output);
+ const notice=screen.getByRole('region',{name:'Library inventory status'});
+ expect(notice.textContent).toContain('Inventory completeness not reported');
+ expect(notice.textContent).toContain('does not report whether all saved files were checked');
+ expect(notice.textContent).not.toContain('Inventory scan complete');
+ expect(screen.getByLabelText('Action result').textContent).toBe(JSON.stringify(output,null,2));
+ expect(client.snapshot().request).toBeNull();act(()=>client.cancel());
+});
+it.each(['image.import','audio.import','model.library.inspect'])('shows healthy %s entries alongside partial scan evidence',capability=>{
+ const warning='Some saved files could not be inspected.';
+ const output={...libraryActionOutput(capability,2,warning),inventory:{ready:true,complete:false,enumerationComplete:true,issueCount:1,error:warning}};
+ const {client,screen}=renderLibraryAction(capability,output);
+ const notice=screen.getByRole('region',{name:'Library inventory status'});
+ expect(notice.textContent).toContain('Library inventory incomplete');expect(notice.textContent).toContain(warning);
+ expect(notice.textContent).toContain('Other saved files may be missing');
+ expect(notice.textContent).not.toContain('No entries were returned');
+ expect(screen.getByLabelText('Action result').textContent).toBe(JSON.stringify(output,null,2));
+ expect(client.snapshot().request).toBeNull();act(()=>client.cancel());
+});
+it.each(['image.import','audio.import','model.library.inspect'])('does not present an all-damaged %s inventory as empty',capability=>{
+ const warning='No readable entries were found during this scan.';
+ const output={...libraryActionOutput(capability,0,warning),inventory:{ready:true,complete:false,enumerationComplete:true,issueCount:2,error:warning}};
+ const {client,screen}=renderLibraryAction(capability,output);
+ const notice=screen.getByRole('region',{name:'Library inventory status'});
+ expect(notice.textContent).toContain('Library inventory incomplete');
+ expect(notice.textContent).toContain('No entries were returned; this does not mean the library is empty.');
+ expect(screen.getByLabelText('Action result').textContent).toContain('"entries": []');
+ expect(client.snapshot().request).toBeNull();act(()=>client.cancel());
+});
+it('distinguishes a bounded scan from a complete empty inventory and an unavailable library',()=>{
+ const capability='model.library.inspect';
+ const output={...libraryActionOutput(capability,0),inventory:{ready:true,complete:false,enumerationComplete:false,issueCount:1,error:'Inventory scan reached its visit limit.'}};
+ const {client,screen,state}=renderLibraryAction(capability,output);
+ expect(screen.getByRole('region',{name:'Library inventory status'}).textContent).toContain('The scan stopped before checking every saved file.');
+ const update=(inventory:typeof output.inventory,revision:number)=>{
+  const next={...output,inventory};
+  act(()=>{expect(client.receive({...state,revision,execution:{...state.execution,selected:{...state.execution.selected,output:next},outcomes:[{...state.execution.outcomes[0],output:next}]}})).toBe(true);});
+ };
+ update({ready:true,complete:true,enumerationComplete:true,issueCount:0,error:''},2);
+ expect(screen.getByRole('region',{name:'Library inventory status'}).textContent).toBe('Inventory scan complete');
+ update({ready:false,complete:false,enumerationComplete:false,issueCount:1,error:'Library directory is unavailable.'},3);
+ expect(screen.getByRole('region',{name:'Library inventory status'}).textContent).toContain('Library inventory unavailable');
+ expect(screen.getByRole('region',{name:'Library inventory status'}).textContent).toContain('This result does not establish an empty library.');
+ expect(client.snapshot().request).toBeNull();act(()=>client.cancel());
+});
+it.each(['image.library','audio.library'])('keeps %s warnings on later pages and removes them when a fresh reading is healthy',async capability=>{
+ const {client,screen,receive}=setup(true,['appearanceImages.v1','audioClips.v1']);
+ fireEvent.click(screen.getByRole('button',{name:'Action catalog'}));fireEvent.change(screen.getByLabelText('Catalog category'),{target:{value:'facts'}});fireEvent.click(screen.getByRole('button',{name:'Search'}));
+ const definition=behaviourFact(capability)!;
+ await receive({operation:'search',category:'facts',query:'',offset:0,total:1,pageSize:6,entries:[{id:definition.id,version:1,label:definition.label}],status:'Library facts'});
+ fireEvent.click(screen.getByRole('button',{name:new RegExp(definition.label)}));
+ const entry=capability==='image.library'?imageLibraryEntry:audioLibraryEntry;
+ const warning='Some saved files could not be inspected.';
+ const value={ready:true,error:warning,total:3,next:2,entries:[entry,{...entry,id:'f'.repeat(64),name:'Another healthy item'}]};
+ const reading:Extract<CatalogView,{operation:'inspect';category:'facts'}>={operation:'inspect',category:'facts',capability,version:1,definition,arguments:{offset:0},available:true,value,status:'Cached library page'};
+ await receive(reading);
+ expect(screen.getByRole('region',{name:'Library inventory status'}).textContent).toContain(warning);
+ expect(screen.getByLabelText('Current fact value').textContent).toContain(entry.name);
+ fireEvent.change(screen.getByLabelText('Fact inputs offset'),{target:{value:'2'}});
+ expect(screen.queryByRole('region',{name:'Library inventory status'})).toBeNull();
+ fireEvent.click(screen.getByRole('button',{name:'Read fact'}));
+ const later={...reading,arguments:{offset:2},value:{...value,next:-1,entries:[{...entry,name:'Last healthy item'}]}};
+ await receive(later);
+ expect(screen.getByRole('region',{name:'Library inventory status'}).textContent).toContain(warning);
+ expect(screen.getByLabelText('Current fact value').textContent).toContain('Last healthy item');
+ await receive({...later,value:{...value,total:0,next:-1,entries:[]}});
+ expect(screen.getByRole('region',{name:'Library inventory status'}).textContent).toContain('this does not mean the library is empty');
+ await receive({...later,value:{...value,ready:false,total:0,next:-1,entries:[],error:'Library is unavailable.'}});
+ expect(screen.getByRole('region',{name:'Library inventory status'}).textContent).toContain('Library inventory unavailable');
+ await receive({...later,value:{...value,total:0,next:-1,entries:[],error:''}});
+ expect(screen.queryByRole('region',{name:'Library inventory status'})).toBeNull();
+ expect(client.snapshot().request).toBeNull();act(()=>client.cancel());
+});

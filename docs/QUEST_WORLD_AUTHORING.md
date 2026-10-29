@@ -4010,3 +4010,52 @@ defaults and remain retained on saving. Older readers protect unsupported newer
 data. Save completion, revisions, receipts, Undo and portable constructions use
 the existing shared mechanisms. Headset sound quality, comfort, real microphone
 echo interaction and performance still need physical acceptance.
+
+
+### Partial imported-asset inventories — 2026-10-29
+
+Ordinary `model.library.inspect`, `image.import refresh` and `audio.import
+refresh` retain healthy entries when another imported file is damaged or
+unreadable. They share a bounded native scanner; the book, agent and programs
+receive the same result. Refresh never repairs, removes or reclaims a file.
+Explicit reimport/Accept remains the recovery path described above.
+
+New action outcomes add an optional top-level `inventory` record without changing
+existing action versions, fields or image/audio `library` record types:
+
+- `ready` means the snapshot is usable, including a partial snapshot.
+- `complete` means directory enumeration finished and no inspection issue or
+  limit was observed. It does not establish available capacity, valid model
+  geometry/rigging, a deletion candidate or continuing validity after an edit.
+- `enumerationComplete` describes traversal only. A fully enumerated directory
+  can still have unreadable entries or exceed the retained-result/byte bounds.
+- `issueCount` counts observed failures or limits, not every damaged file in the
+  library. `error` supplies a bounded warning without exposing local paths.
+
+`total` counts healthy returned entries. Image/audio receipts and their passive
+`image.library` / `audio.library` facts preserve the same dense paging fields and
+carry the incomplete warning on every page, including empty end pages. A zero
+result with an error is not proof of an empty library. Facts read the cached
+snapshot without disk I/O. Model pages remain metadata-only; loading/selection
+still verifies the exact content and rig independently. Images and sounds retain
+content-hash and format checks. Saved references never silently switch identity.
+
+Historical receipts without `inventory` remain valid and have unknown
+completeness. Existing program result bindings retain their original field types.
+The generated book controls display incomplete/unavailable warnings alongside
+healthy entries and distinguish old outcomes that lack completeness evidence.
+This is compatibility for stored data read by the updated app, not a promise that
+an independently deployed older live client accepts new output fields. The
+supported Book/native pair ships together in the APK; development headless tools
+use the matching shared catalog. Strict output validation remains in place.
+
+Scanning visits at most 256 directory entries of every kind plus one end probe,
+retains at most 32 results, and uses cumulative payload/metadata budgets. It
+never recurses. Media payload inspection uses the existing 128 MiB library bound
+plus bounded EOF probes; model discovery charges file sizes against its existing
+256 MiB bound without reading model payloads. Metadata reads are separately
+bounded (4 MiB plus 32 probes for models; 64 KiB plus 64 probes for media).
+Noncanonical asset names and linked or unreadable entries cannot impersonate a
+healthy canonical asset. Cancellation and unexpected faults do not become a
+successful partial scan. Array-only internal callers remain strict and reject
+incomplete inventories; archive/save validation is unchanged.

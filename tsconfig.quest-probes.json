@@ -19,6 +19,7 @@
     "test-fixtures/browser/questNativeBookFixture.tsx",
     "src/vite-env.d.ts",
     "scripts/native-probe-contract.test.ts",
+    "scripts/probe-asset-inventory.test.ts",
     "scripts/agent-provider-contract.test.ts",
     "scripts/probe-agent-program.test.ts",
     "scripts/probe-agent-animation.test.ts",

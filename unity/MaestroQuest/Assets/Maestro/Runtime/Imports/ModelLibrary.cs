@@ -90,24 +90,19 @@ namespace Maestro.Quest.Imports
         public sealed class Entry { public string Hash,Name;public long Bytes; }
         // Metadata discovery only. Selection re-reads, hashes and loads the chosen
         // GLB before committing; a listed file is not a claim of humanoid compatibility.
-        public async Task<Entry[]> ListAsync()
+        public async Task<Entry[]> ListAsync()=>(await ScanAsync().ConfigureAwait(false)).RequireComplete();
+        internal async Task<ImportedAssetInventory<Entry>> ScanAsync(CancellationToken cancel=default)
         {
-            using var use=workspaceWrites.Write();await writes.WaitAsync().ConfigureAwait(false);
-            try {return await Task.Run(()=>{
-                if(!Directory.Exists(directory))return Array.Empty<Entry>();WorkspaceArchive.NoLink(directory);
-                var files=new DirectoryInfo(directory).GetFiles("*.glb").OrderBy(f=>f.Name,StringComparer.Ordinal).ToArray();
-                if(files.Length>32||files.Sum(f=>f.Length)>256L*1024*1024)throw new ModelImportException("The model library exceeds its discovery budget.");
-                return files.Select(file=>{
-                    WorkspaceArchive.NoLink(file.FullName);string hash=Path.GetFileNameWithoutExtension(file.Name);
-                    if(!ValidHash(hash)||file.Length<28||file.Length>ModelInspection.MaximumBytes)throw new ModelImportException("The model library contains an invalid entry. Inspect the imported files.");
-                    string name=hash,info=Path.Combine(directory,hash+".txt");
-                    if(File.Exists(info)){
-                        WorkspaceArchive.NoLink(info);if(new FileInfo(info).Length>128*1024)throw new ModelImportException("The model's information file is too large.");
-                        using var reader=new StreamReader(info,Encoding.UTF8,true);name=SafeName(reader.ReadLine());
-                    }
-                    return new Entry {Hash=hash,Name=name,Bytes=file.Length};
-                }).ToArray();
-            }).ConfigureAwait(false);} finally {writes.Release();}
+            using var use=workspaceWrites.Write();await writes.WaitAsync(cancel).ConfigureAwait(false);
+            try {return await Task.Run(()=>ImportedAssetInventory.Scan(directory,".glb",new ImportedAssetReadBudget(256L*1024*1024,ImportedAssetInventory.ModelMetadataBytes),
+                (path,budget,token)=>{
+                    WorkspaceArchive.NoLink(path);string hash=Path.GetFileNameWithoutExtension(path);long length=new FileInfo(path).Length;
+                    if(!ValidHash(hash)||length<28||length>ModelInspection.MaximumBytes)throw new ModelImportException("The model library contains an invalid entry. Inspect the imported files.");
+                    budget.Payload(length);string name=hash;
+                    var metadata=budget.ReadMetadata(Path.Combine(directory,hash+".txt"),128*1024,token,()=>new ModelImportException("The model's information file is too large."));
+                    if(metadata!=null){using var reader=new StreamReader(new MemoryStream(metadata,false),Encoding.UTF8,true);name=SafeName(reader.ReadLine());}
+                    return new Entry {Hash=hash,Name=name,Bytes=length};
+                },cancel),cancel).ConfigureAwait(false);} finally {writes.Release();}
         }
         internal bool TryCaptureArchive(out WorkspaceLibraryCapture capture)
         {

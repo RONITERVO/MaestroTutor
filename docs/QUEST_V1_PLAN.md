@@ -2,7 +2,13 @@
 
 Status: active implementation. Nothing in this document claims store readiness.
 
-The latest [explicit image and sound recovery](#explicit-image-and-sound-metadata-recovery--2026-10-29)
+The latest [shared partial asset discovery](#shared-partial-imported-asset-discovery--2026-10-29)
+keeps healthy models, pictures and sounds discoverable when a sibling import is
+damaged. Ordinary book/agent actions carry explicit completeness evidence while
+retaining existing saved-receipt and program field contracts. It does not repair,
+reclaim or infer free capacity from incomplete results.
+
+The preceding [explicit image and sound recovery](#explicit-image-and-sound-metadata-recovery--2026-10-29)
 repairs unusable private metadata through the existing verified import/Accept
 path. Healthy metadata, payload identities and existing bindings remain intact;
 passive reads never repair files. Native regressions and unsigned Android integration pass, with two unsupported
@@ -18655,3 +18661,78 @@ APK/AAB, signature or installation. Evidence is retained under
 The full Headless/Book and web checkpoint at `0c885c2f` precedes this narrow repair
 and is not represented as rerun here. Its Release gate and Native echo evaluation
 pass. No new provider, headset or Store acceptance is claimed.
+
+
+### Shared partial imported-asset discovery — 2026-10-29
+
+The existing `model.library.inspect`, `image.import` and `audio.import` actions
+now use one bounded scanner for ordinary discovery. A damaged sibling no longer
+hides healthy assets. A top-level optional `inventory` record distinguishes
+complete, incomplete and unavailable evidence. Existing versions, required
+output fields, nested media-library records and fact types remain unchanged.
+Old receipts reload with unknown completeness and do not replay their effects;
+old field bindings still execute. The generated book controls show the warning
+beside the same healthy result the agent receives. Passive media facts keep that
+warning on every page and perform no disk I/O.
+
+Directory traversal, retained results and cumulative bytes are bounded. Model
+inspection stays metadata-only; images and sounds still validate payload hashes
+and formats. Noncanonical extension aliases are reported, preventing duplicate
+canonical identities on case-sensitive Quest storage. Reads reserve one checked
+file size and reject short/growing data. Stop cancels model inspection and releases
+its waiting workspace ownership. Save, archive and array-only callers remain
+strict. The scanner never repairs or deletes files. Details and limits are in
+[the shared authoring contract](QUEST_WORLD_AUTHORING.md#partial-imported-asset-inventories--2026-10-29).
+
+Native catalog export/legacy-field comparison and drift verification pass.
+The full EditMode sweep has **1,867 passes, zero failures, three declared Windows
+symlink-privilege skips**. All **33 PlayMode cases**, **94 web cases** and **six
+probe-fixture regressions** pass, together with app/probe TypeScript and scoped
+lint. The four new runtime scenarios cover real shared dispatch,
+partial/all-damaged/unavailable/empty libraries, paging, cached facts, historical
+replay and cancellation while the library is held. Actual symlink filesystem
+acceptance remains unverified on this host.
+
+Both complete offline journeys pass against actual desktop Unity with clean
+client/editor exits: Headless `ef8b7d4721e64cc181a8cd11551466af` (**3,069 requests /
+3,070 observations**) and visible Book `0f19f393649e4ba98be4611b384746df`
+(**2,665 requests / 8,105 observations**, zero client errors). The new cases retain
+exact healthy identities across every bounded page before, during and after one
+owned malformed file per library. Book preserves three models, two pictures and
+four sounds; Headless covers three models, three sounds and a damaged-only image
+inventory. Partial/result/restored screenshots were visually inspected. The first
+Headless attempt placed its malformed file at the app storage root rather than
+the active room; native discovery correctly stayed complete. The fixture now
+requires the active room, refuses an unexpected generation selector, and has six
+ownership, paging and cleanup regressions before the full successful rerun.
+
+Fresh unsigned Android export, native compilation and manifest/merge checks pass:
+five export warnings, zero errors, and 22 selected ARM64 libraries with 16 KiB
+ELF LOAD alignment. Five unselected dependency libraries remain in the
+intermediate. Native-browser AAR/lint pass; Gradle reuses its 128 passes and two
+skips. All 4,687 frozen source inputs match before and after the run. The exported
+project is `Android-compile-20261029-213233-a186c8b4`; no APK/AAB, signature or
+installation was produced.
+
+Evidence is retained under `.quest-evidence/asset-inventory-20261029/` and the two
+native journey directories. Scripted provider replies and synthetic media are
+explicit test inputs; these checks do not establish real-provider judgment,
+physical Quest behaviour, Android texture rendering or acoustic acceptance.
+
+The supported live Book/native pair is bundled together. This change preserves
+stored data when read by the updated app; it does not promise that an independently
+released older client accepts new fields. Before offering independently released
+clients or a stable external API, add an explicit catalog revision/fingerprint
+preflight and clear update-required state, and test any supported version pairs.
+Keep strict result validation rather than treating mismatches as storage damage.
+
+Separately guarded asset reclamation remains unfinished. A source audit found
+that `VersionedRoomFile.Retains` caches by file path without identifying its
+reference selector; adding image/audio/model selectors needs distinct cache
+domains or a shared complete identity cache first, with both query orders tested.
+Then begin with bounded image payload removal using complete retained references
+(current/saved/temporary/in-flight documents, Undo/Redo, behaviours/modules/memory)
+and an atomic per-workspace/kind/hash admission fence spanning cache hits and
+pending decode work. Model import/preparation and audio resident/stream lifetimes
+need additional pins before their removal can be exposed. Workspace write freezes,
+archive capture and partial inventory alone are never deletion authority.

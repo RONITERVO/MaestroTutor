@@ -23,6 +23,23 @@ namespace Maestro.Quest.Tests {
             var entry=library.ListAsync().GetAwaiter().GetResult().Single();Assert.AreEqual(hash,entry.Hash);Assert.AreEqual(1,entry.Channels);Assert.AreEqual(24000,entry.Rate);Assert.That(entry.Seconds,Is.EqualTo(.1).Within(1e-9));
             Assert.That(Directory.GetFiles(directory,"*.part"),Is.Empty);
         }
+        [TestCase("metadata")][TestCase("format")][TestCase("hash")][TestCase("locked")] public void PartialInventoryKeepsVerifiedSoundsWithoutRepairingFailedEntries(string fault){
+            var healthy=AudioLibrary.Inspect("Healthy",WaveAudioTests.File());var changed=WaveAudioTests.File();changed[44]=1;var damaged=AudioLibrary.Inspect("Damaged",changed);library.SaveAsync(healthy).GetAwaiter().GetResult();library.SaveAsync(damaged).GetAwaiter().GetResult();
+            string payload=Path.Combine(directory,damaged.Hash+".wav"),info=Path.Combine(directory,damaged.Hash+".txt");
+            if(fault=="metadata")File.WriteAllBytes(info,new byte[]{0xc3,0x28});if(fault=="format")File.WriteAllBytes(payload,new byte[44]);if(fault=="hash")File.WriteAllBytes(payload,healthy.Content);
+            var before=Directory.GetFiles(directory).ToDictionary(Path.GetFileName,File.ReadAllBytes);FileStream held=null;
+            try{if(fault=="locked")held=new FileStream(info,FileMode.Open,FileAccess.Read,FileShare.None);var result=library.ScanAsync().GetAwaiter().GetResult();Assert.That(result.Ready&&result.EnumerationComplete,Is.True);Assert.That(result.Complete,Is.False);Assert.That(result.IssueCount,Is.EqualTo(1));Assert.That(result.Entries.Select(e=>e.Hash),Is.EqualTo(new[]{healthy.Hash}));Assert.That(result.Entries[0].Seconds,Is.EqualTo(.1).Within(1e-9));Assert.That(result.Error,Is.Not.Empty);Assert.Catch(()=>library.ListAsync().GetAwaiter().GetResult());}
+            finally{held?.Dispose();}
+            foreach(var file in before)Assert.That(File.ReadAllBytes(Path.Combine(directory,file.Key)),Is.EqualTo(file.Value));Assert.That(Directory.GetFiles(directory).Length,Is.EqualTo(before.Count));Assert.That(library.DecodeAsync(healthy.Hash).GetAwaiter().GetResult(),Has.Length.EqualTo(2400));Assert.That(gate.CanFreeze(out _),Is.True);
+        }
+        [Test] public void AllDamagedSoundsAreAUsableIncompleteInventoryNotAHealthyEmptyLibrary(){
+            var asset=AudioLibrary.Inspect("Damaged",WaveAudioTests.File());library.SaveAsync(asset).GetAwaiter().GetResult();File.WriteAllBytes(Path.Combine(directory,asset.Hash+".txt"),new byte[1025]);var result=library.ScanAsync().GetAwaiter().GetResult();Assert.That(result.Ready&&result.EnumerationComplete,Is.True);Assert.That(result.Complete,Is.False);Assert.That(result.Entries,Is.Empty);Assert.That(result.Error,Is.Not.Empty);
+        }
+        [Test] public void CancelledInventoryWaitingForArchiveReleasesItsWorkspaceLease(){
+            Assert.That(library.TryCaptureArchive(out var capture),Is.True);using var stop=new CancellationTokenSource();var pending=library.ScanAsync(stop.Token);
+            try{Assert.That(pending.IsCompleted,Is.False);stop.Cancel();Assert.That(SpinWait.SpinUntil(()=>pending.IsCompleted,3000),Is.True,"Cancellation must finish while archive ownership remains held");Assert.Catch<OperationCanceledException>(()=>pending.GetAwaiter().GetResult());Assert.That(gate.CanFreeze(out _),Is.True);}
+            finally{capture.Dispose();}Assert.That(Directory.Exists(directory),Is.False);
+        }
         [Test] public void ExactHashRejectsDamageAndReimportRepairsOnlyThatAsset(){
             var asset=AudioLibrary.Inspect("Bark",WaveAudioTests.File());library.SaveAsync(asset).GetAwaiter().GetResult();string path=Path.Combine(directory,asset.Hash+".wav");
             var changed=File.ReadAllBytes(path);changed[44]=123;File.WriteAllBytes(path,changed);
@@ -50,6 +67,7 @@ namespace Maestro.Quest.Tests {
             var asset=AudioLibrary.Inspect("Original sound",WaveAudioTests.File());library.SaveAsync(asset).GetAwaiter().GetResult();string info=Path.Combine(directory,asset.Hash+".txt");
             Encoding encoding=utf16?Encoding.Unicode:new UTF8Encoding(true);byte[] metadata=encoding.GetPreamble().Concat(encoding.GetBytes("Saved label\r\nOrigin: original source\r\nAttribution: keep this complete line\r\n")).ToArray();File.WriteAllBytes(info,metadata);
             Assert.That(library.ReadAsync(asset.Hash).GetAwaiter().GetResult().Name,Is.EqualTo("Saved label"));library.SaveAsync(AudioLibrary.Inspect("Replacement label",asset.Content)).GetAwaiter().GetResult();
+            var inventory=library.ScanAsync().GetAwaiter().GetResult();Assert.That(inventory.Complete,Is.True);Assert.That(inventory.Entries.Single().Name,Is.EqualTo("Saved label"));
             Assert.That(File.ReadAllBytes(info),Is.EqualTo(metadata));Assert.That(library.ReadAsync(asset.Hash).GetAwaiter().GetResult().Name,Is.EqualTo("Saved label"));
         }
         [Test] public void SameHashSaveDoesNotTreatAnUnreadableSidecarAsCorruption(){

@@ -24,21 +24,24 @@ namespace Maestro.Quest.Imports {
         internal static string SafeName(string value){var result=new string((value??"Imported image").Where(c=>!char.IsControl(c)&&c!='<'&&c!='>').Take(80).ToArray());return string.IsNullOrWhiteSpace(result)?"Imported image":result;}
         internal static ImageAsset Inspect(string name,byte[] bytes,CancellationToken cancel=default)=>new(name,bytes==null?null:(byte[])bytes.Clone(),cancel);
         internal static ImageAsset ReadSelected(string name,string path,CancellationToken token)=>new(name,ReadBounded(path,token),token);
-        static byte[] ReadBounded(string path,CancellationToken cancel){
+        static byte[] ReadBounded(string path,CancellationToken cancel,ImportedAssetReadBudget budget=null){
             WorkspaceArchive.NoLink(path);using var input=new FileStream(path,FileMode.Open,FileAccess.Read,FileShare.Read);
-            if(input.Length<24||input.Length>SurfaceImage.MaximumBytes)throw new InvalidDataException("The image copy is incomplete or exceeds 16 MB.");
-            var bytes=new byte[(int)input.Length];int at=0;
+            long length=input.Length;if(length<24||length>SurfaceImage.MaximumBytes)throw new InvalidDataException("The image copy is incomplete or exceeds 16 MB.");
+            budget?.Payload(length+1);
+            var bytes=new byte[(int)length];int at=0;
             while(at<bytes.Length){cancel.ThrowIfCancellationRequested();int read=input.Read(bytes,at,Math.Min(65536,bytes.Length-at));if(read==0)throw new EndOfStreamException("The image copy changed.");at+=read;}
             if(input.ReadByte()!=-1)throw new IOException("The image copy changed.");return bytes;
         }
         string AssetPath(string hash){if(!ModelLibrary.ValidHash(hash))throw new InvalidDataException("Choose an exact imported image identity.");return Path.Combine(directory,hash+".image");}
-        ImageAsset ReadCore(string hash,CancellationToken cancel){
+        ImageAsset ReadCore(string hash,CancellationToken cancel,ImportedAssetReadBudget budget=null){
             string path=AssetPath(hash);if(!Directory.Exists(directory)||!File.Exists(path))throw new FileNotFoundException("This image's private copy is missing. Import the original PNG/JPEG again.");
-            WorkspaceArchive.NoLink(directory);var asset=new ImageAsset(ReadName(hash),ReadBounded(path,cancel),cancel);
+            WorkspaceArchive.NoLink(directory);var asset=new ImageAsset(ReadName(hash,budget,cancel),ReadBounded(path,cancel,budget),cancel);
             if(asset.Hash!=hash)throw new InvalidDataException("This image's private copy is damaged. Import the original PNG/JPEG again.");return asset;
         }
-        string ReadName(string hash){
-            string path=Path.Combine(directory,hash+".txt");if(!File.Exists(path))return hash;
+        string ReadName(string hash,ImportedAssetReadBudget budget=null,CancellationToken cancel=default){
+            string path=Path.Combine(directory,hash+".txt");
+            if(budget!=null){var bytes=budget.ReadMetadata(path,1024,cancel);if(bytes==null)return hash;using var checkedReader=new StreamReader(new MemoryStream(bytes,false),new UTF8Encoding(false,true),true);return SafeName(checkedReader.ReadLine());}
+            if(!File.Exists(path))return hash;
             WorkspaceArchive.NoLink(path);if(new FileInfo(path).Length>1024)throw new InvalidDataException("The image information file exceeds its limit.");
             using var reader=new StreamReader(path,new UTF8Encoding(false,true),true);return SafeName(reader.ReadLine());
         }
@@ -66,14 +69,11 @@ namespace Maestro.Quest.Imports {
             finally{if(File.Exists(temp))File.Delete(temp);}
         }
         public sealed class Entry {public string Hash,Name;public long Bytes;public int Width,Height;public string Format;}
-        public async Task<Entry[]> ListAsync(CancellationToken cancel=default){
+        public async Task<Entry[]> ListAsync(CancellationToken cancel=default)=>(await ScanAsync(cancel).ConfigureAwait(false)).RequireComplete();
+        internal async Task<ImportedAssetInventory<Entry>> ScanAsync(CancellationToken cancel=default){
             using var use=workspace.Write();await writes.WaitAsync(cancel).ConfigureAwait(false);
-            try{return await Task.Run(()=>{
-                if(!Directory.Exists(directory))return Array.Empty<Entry>();WorkspaceArchive.NoLink(directory);
-                var files=new DirectoryInfo(directory).GetFiles("*.image").OrderBy(f=>f.Name,StringComparer.Ordinal).ToArray();
-                if(files.Length>MaximumFiles||files.Sum(f=>f.Length)>MaximumTotalBytes)throw new InvalidDataException("The image library exceeds its bounds.");
-                return files.Select(file=>{var asset=ReadCore(Path.GetFileNameWithoutExtension(file.Name),cancel);return new Entry{Hash=asset.Hash,Name=asset.Name,Bytes=asset.Content.Length,Width=asset.Inspection.DisplayWidth,Height=asset.Inspection.DisplayHeight,Format=asset.Inspection.Format};}).ToArray();
-            },cancel).ConfigureAwait(false);}finally{writes.Release();}
+            try{return await Task.Run(()=>ImportedAssetInventory.Scan(directory,".image",new ImportedAssetReadBudget(MaximumTotalBytes+MaximumFiles,ImportedAssetInventory.MediaMetadataBytes),
+                (path,budget,token)=>{var asset=ReadCore(Path.GetFileNameWithoutExtension(path),token,budget);return new Entry{Hash=asset.Hash,Name=asset.Name,Bytes=asset.Content.Length,Width=asset.Inspection.DisplayWidth,Height=asset.Inspection.DisplayHeight,Format=asset.Inspection.Format};},cancel),cancel).ConfigureAwait(false);}finally{writes.Release();}
         }
         internal bool TryCaptureArchive(out WorkspaceLibraryCapture capture){
             capture=null;if(!writes.Wait(0))return false;

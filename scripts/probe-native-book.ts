@@ -1,3 +1,4 @@
+import {probeBookAssetInventory} from './probe-book-asset-inventory';
 import {validFactValue} from '../shared/behaviourFacts';
 import {nativeBookObjects,readNativeBookObjects} from './native-book-objects';
 import {probeBookEnvironmentRecovery} from './probe-book-environment-recovery';
@@ -1321,7 +1322,8 @@ try{
  await page.screenshot({path:join(directory,'book-native-physics.png')});
  await writeFile(join(directory,'book-native-physics.json'),JSON.stringify({boundary:'Original generated book Start/Pause controls, current state guard, completion receipts and actual native simulation state. Synthetic aligned floor; no real scan, provider or headset proof. Dormant loading is covered separately by native regressions.',physicsBefore,physicsStarted,physicsPaused,physicsInputs,physicsAfter},null,2));
 
- await page.getByRole('button',{name:'Back to workshop',exact:true}).click();await page.getByRole('button',{name:'Back to chat',exact:true}).first().click();
+ await probeBookAssetInventory(page,directory);
+ await page.getByRole('button',{name:'Back to chat',exact:true}).first().click();
  await page.waitForFunction(()=>window.nativeBookEvidence!().state!.visible===false);
  const commandCount=requests.size;
  await page.reload();await page.waitForFunction(()=>!!window.nativeBookEvidence?.().state);

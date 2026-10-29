@@ -17,7 +17,7 @@ namespace Maestro.Quest.Imports {
         bool fromChat;
         string chatHash="";
         string request="",phase="idle",error="",source="";int revision;bool paused,focused=true,disposed,working;float began,nextPoll;
-        ImageLibrary.Entry[] entries=Array.Empty<ImageLibrary.Entry>();bool listed;string listError="";
+        ImportedAssetInventory<ImageLibrary.Entry> inventory;string listError="Refresh the library to inspect saved files.";
         internal void Initialize(RoomEditor value){editor=value;
 #if UNITY_ANDROID && !UNITY_EDITOR
             try{picker=new AndroidImagePicker();}catch(Exception){error="Resume Maestro before choosing an image.";}
@@ -128,28 +128,29 @@ namespace Maestro.Quest.Imports {
         internal async Task<JObject> Accept(string id,string hash,CancellationToken stop){
             if(!CanAccept(id,hash,out var issue))throw new InvalidOperationException(issue);
             working=true;phase="accepting";using var linked=CancellationTokenSource.CreateLinkedTokenSource(stop,cancel.Token);
-            var chosen=asset;
+            var chosen=asset;inventory=null;listError="Library changed; refresh to inspect saved files.";
             try {
                 await editor.Images.SaveAsync(chosen,linked.Token);linked.Token.ThrowIfCancellationRequested();
                 if(!Ready(out issue))throw new InvalidOperationException(issue);
                 var definition=new RoomAppearance {id=Guid.NewGuid().ToString("N"),name=chosen.Name,style=new AppearanceStyle{patternMode="image",imageHash=chosen.Hash}};
                 if(!editor.EditAppearance(definition,definition.id,0,Array.Empty<string>(),out issue))throw new InvalidOperationException(issue);
-                source=definition.id;revision=editor.AppearanceRevision(source);phase="completed";listed=false;editor.ImageTextures.Retry(chosen.Hash);return Receipt();
+                source=definition.id;revision=editor.AppearanceRevision(source);phase="completed";editor.ImageTextures.Retry(chosen.Hash);return Receipt();
             }catch(OperationCanceledException){phase="cancelled";error="Image acceptance stopped. Its private file may remain; inspect the library. No object was bound.";throw;}
             catch(Exception){Fail("Image acceptance did not finish. Its private file may remain; refresh the library before retrying. No object was bound.");throw;}
             finally{working=false;End();}
         }
         internal async Task<JObject> Refresh(CancellationToken stop){
-            if(!CanStart(false,out var issue))throw new InvalidOperationException(issue);Begin(SurfaceImage.MaximumBytes);phase="checking";working=true;listed=false;
+            if(!CanStart(false,out var issue))throw new InvalidOperationException(issue);Begin(SurfaceImage.MaximumBytes);phase="checking";working=true;inventory=null;listError="Library refresh is in progress.";
             using var linked=CancellationTokenSource.CreateLinkedTokenSource(stop,cancel.Token);
-            try{var fresh=await editor.Images.ListAsync(linked.Token);linked.Token.ThrowIfCancellationRequested();if(disposed)throw new OperationCanceledException();entries=fresh;foreach(var entry in fresh)editor.ImageTextures.Retry(entry.Hash);listed=true;listError="";phase="completed";return Receipt();}
+            try{var fresh=await editor.Images.ScanAsync(linked.Token);linked.Token.ThrowIfCancellationRequested();if(disposed)throw new OperationCanceledException();inventory=fresh;foreach(var entry in fresh.Entries)editor.ImageTextures.Retry(entry.Hash);listError=fresh.Error;phase="completed";return Receipt();}
             catch(OperationCanceledException){phase="cancelled";listError="Image-library refresh was cancelled.";throw;}
             catch(Exception){listError="Image-library inspection failed. Existing files are preserved; repair or reimport the damaged image.";Fail(listError);throw;}
             finally{working=false;End();}
         }
-        internal JObject Receipt()=>new(){["requestId"]=request,["imageHash"]=asset?.Hash??(string)(lastPreview?["imageHash"])??"",["appearanceId"]=source,["revision"]=revision,["temporary"]=editor&&editor.TemporaryRoom,["library"]=Library(0,1)};
+        internal JObject Receipt()=>new(){["requestId"]=request,["imageHash"]=asset?.Hash??(string)(lastPreview?["imageHash"])??"",["appearanceId"]=source,["revision"]=revision,["temporary"]=editor&&editor.TemporaryRoom,["library"]=Library(0,1),["inventory"]=ImportedInventoryObservation.Summary(inventory,listError)};
         internal JObject Observe()=>new(){["requestId"]=request,["phase"]=phase,["error"]=ImportObservation.Text(error),["preview"]=asset!=null?Preview(asset):lastPreview?.DeepClone()??Preview(null),["appearanceId"]=source,["revision"]=revision};
         internal JObject Library(int offset,int pageSize=2){
+            bool listed=inventory?.Ready==true;var entries=inventory?.Entries??Array.Empty<ImageLibrary.Entry>();
             var page=listed?entries.Skip(offset).Take(pageSize).ToArray():Array.Empty<ImageLibrary.Entry>();
             return new JObject {["ready"]=listed,["error"]=ImportObservation.Text(listError),["total"]=listed?entries.Length:0,["next"]=listed&&offset+page.Length<entries.Length?offset+page.Length:-1,["entries"]=new JArray(page.Select(e=>new JObject {["id"]=e.Hash,["name"]=ImportObservation.Text(e.Name),["width"]=e.Width,["height"]=e.Height,["format"]=e.Format}))};
         }

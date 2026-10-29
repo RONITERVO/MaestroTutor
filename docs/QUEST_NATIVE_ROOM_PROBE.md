@@ -2281,3 +2281,18 @@ publication, native program continuation, browser/WebView task restoration,
 Android process death, actual provider judgment or physical headset behavior.
 The completed-save production Book/Live restart and lost-acknowledgement tests
 remain separate scenarios.
+
+
+## Partial asset inventory journey — 2026-10-29
+
+The ordinary offline Headless and Book journeys also exercise partial discovery
+through the existing model inspection and image/audio refresh actions. A shared
+leaf creates one deliberately invalid, exclusively named file at a time in the
+fresh probe's owned workspace; it verifies exact healthy entries across every
+bounded page before, during and after removing that unchanged fixture. It never
+modifies existing asset files. Image/audio end pages must retain their warning.
+The Book adapter uses visible generated action/fact forms and captures the
+warning beside the native result. Its three libraries must already contain a
+healthy entry; Headless may have an empty image library and records that boundary.
+No injected native response, real provider, device, quota or reclamation proof
+is implied. An unexpected changed fixture is preserved for inspection.
