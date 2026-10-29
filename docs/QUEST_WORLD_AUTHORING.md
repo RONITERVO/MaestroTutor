@@ -6,7 +6,7 @@ listed new components or assets are already shipped. Existing contracts linked
 below remain authoritative until an increment implements and verifies a change.
 Current saved/native admission is documented in the
 [creation contract](QUEST_CREATION_VOCABULARY.md#saved-existence-and-native-loading):
-format 42 allows 256 saved creations independently of the 128-root native budget.
+current storage allows 256 saved creations independently of the 128-root native budget.
 Older dated checkpoints below describe their limits at that time.
 
 ## Product decision
@@ -35,11 +35,39 @@ require putting chat, assets, physics and all history in one enormous JSON file.
 
 Saved existence is also distinct from native loading. The current creation
 contract supports immediate loading or loading when observation/actions need it,
-with the same exact IDs, history and receipts. Format 42 admits 256 saved creations;
+with the same exact IDs, history and receipts. Storage admits 256 saved creations;
 native roots remain independently bounded at 128, with other resource limits
 unchanged. See [typed creation](QUEST_CREATION_VOCABULARY.md#saved-existence-and-native-loading).
 This provides bounded authoring capacity, not a promise to simulate a whole town
 or establish Quest performance.
+
+## Shared immersion contract
+
+Keep one saved world and one set of capabilities as the app grows. User gestures,
+book controls, programs and delegated agents must use the same validation,
+ownership, save receipts and undo rules. New object types should compose existing
+components; a default toy should remain an editable example of those components.
+
+The scanned room is an optional physical participant for each virtual entity.
+For example, Maestro can use a virtual hillside while a ball still lands on the
+real table. Disabling the real floor must select valid virtual support; it must
+not silently disable gravity or invent a successful move. Collision participation,
+visual occlusion, passthrough opacity and acoustic obstruction remain independent.
+Changing one must not implicitly change the others or camera-sharing permission.
+
+Immersion means consistent consequences: the geometry used to draw a water body,
+support an actor, report contact and respond to an action must agree. Observed,
+audible or actively interacting entities need appropriate live updates. Saved
+entities outside that work set retain their identity and accepted state. The
+system must report unavailable simulation or capacity explicitly; current bounds
+are not a promise that a whole city runs at full detail on Quest.
+
+For every new capability, require the shared user/agent contract and an observed
+outcome, then the relevant native, book and device acceptance. A generated reply
+or successful command receipt alone cannot establish that an object moved,
+a learner heard speech, or a saved change survived process loss. The current
+[release checklist](QUEST_V1_PLAN.md#release-evidence-still-required) separates
+these evidence levels and keeps unfinished work visible.
 
 ## What already exists
 

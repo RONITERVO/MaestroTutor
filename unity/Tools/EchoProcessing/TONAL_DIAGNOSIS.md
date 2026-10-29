@@ -365,6 +365,63 @@ in `.quest-evidence/echo-mobile-timing-20261029/` and
 source/archive/probe authority unchanged. The app, supported evaluation profiles
 and thresholds remain unchanged; the 31 aligned quality failures remain open.
 
+## Recovery-state and reset-bounds controls — 2026-10-29
+
+A freshly compiled copy of the earlier full-rate, fixed-history Speex adapter
+reproduces both retained changing-path metric logs. A passive private trace
+preserves those printed metrics and records foreground/background error, learning
+state and partition weights every 100 ms. It shows slow adaptation after the
+eight-second path change; it does not by itself identify one defective estimator.
+
+Two known-time interventions isolate retained canceller state. Calling the reset
+API at eight seconds raises the minimum recovered reduction from 4.40/4.82 dB
+to 37.80/20.27 dB in the mono linear/stereo nonlinear cases. Recreating only the
+canceller, while keeping external reference and resampler history, yields
+39.09/18.71 dB. Both exceed the unchanged 15 dB requirement in these echo-only
+cases. These are **oracle controls**, not a usable change detector: no runtime
+knows the fixture's change time, and an arbitrary reset during learner speech
+has not been qualified.
+
+A supported 240-sample processing frame, called twice per unchanged 10 ms ABI
+frame, keeps the same effective 6,240-sample filter span. It improves those
+recovery values to 8.53/6.53 dB but still fails both cases. No full quality pass
+or supported-profile promotion is claimed for that rejected control.
+
+Source inspection also found that upstream 1.2.1's reset loop omits channel
+multipliers for the learned weights, foreground coefficients, reference history
+and playback buffer. A separate four-layout sentinel probe confirms the mismatch:
+with one microphone and two render channels, reset retains half of each tested
+allocation (12,480 weights and foreground values, 13,440 reference values and
+1,440 playback values). Mono/mono clears those allocations. The same loop bounds
+were present in the [upstream master source inspected that day](https://raw.githubusercontent.com/xiph/speexdsp/master/libspeexdsp/mdf.c).
+This is not a claim that every internal state field has been audited.
+
+A minimal private patch corrects only those four loop bounds. All four sentinel
+layouts then clear their tested allocations, but the complete quality comparison
+does **not** qualify a backend:
+
+| Completed group | Unmodified adapter failures | Reset-bounds patch failures |
+| --- | ---: | ---: |
+| Aligned quality / 39 | 4 | 4 |
+| Standalone core + noise + onsets / 14 | 0 | 0 |
+| Path recovery / 2 | 2 | 2 |
+| Delay/reflection recovery / 24 | 15 | 15 |
+| Existing English/Spanish speech excerpts / 6 | 0 | 0 |
+
+The current alignment executable is reused only after checking its retained app
+source against current inputs; standalone probes are freshly compiled. Current
+onset maxima and exact 39-case identities are validated by `QualityResults.py`.
+The private bounds fix changes some metrics after automatic resets but rescues
+no failing case. It is a separate dependency defect, not the explanation for
+all remaining quiet-speech and recovery failures.
+
+All 148 archive files match the pinned release. Sources, command lines, complete
+outputs, passive trace, reset probes and final decision are retained under
+`.quest-evidence/echo-speex-recovery-20261029/`. Original source/archive authorities
+and the 14 protected files remain unchanged. There is no device/provider work,
+new shipped dependency, selected backend change or relaxed acceptance gate.
+The supported AEC3 evaluation's 31 failures remain open.
+
 ## Decision
 
 Keep one shared capture/output ownership and timing contract. Keep both the cold

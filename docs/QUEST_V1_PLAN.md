@@ -18300,3 +18300,31 @@ general volume renderer. Quest stereo/thermal/frame cost, physical comfort
 and broader underwater interaction remain acceptance work.
 No new device, paid provider, signing, deployment or Meta action is authorized
 by these desktop results. See [world authoring](QUEST_WORLD_AUTHORING.md#authored-underwater-view).
+
+## Echo recovery attribution and dependency reset audit — 2026-10-29
+
+The offline continuation at `8cb2cec2` reproduced the retained Speex changing-path
+failures, then separated retained canceller state from external reference and
+resampling history using known-time reset/recreation controls. Those controls
+improve recovery but cannot serve as runtime detectors. A smaller supported frame
+still misses the unchanged recovery requirement.
+
+A four-layout sentinel probe also reproduces missing multichannel reset bounds
+in the alternative dependency. A minimal private correction fixes the tested
+clearing behavior but leaves four of 39 aligned cases, both standalone path
+cases and 15 of 24 delay cases failing. All 14 remaining standalone cases and
+six existing speech excerpts pass for both controls. These are generated/local
+offline evaluations, not app or physical audio acceptance.
+
+See the [full controls and causal limits](../unity/Tools/EchoProcessing/TONAL_DIAGNOSIS.md#recovery-state-and-reset-bounds-controls--2026-10-29)
+and `.quest-evidence/echo-speex-recovery-20261029/decision.json`. All 148 pinned
+archive files and the original source authorities were verified, and the 14
+protected files remain unchanged. No dependency, selected audio path, threshold,
+device/provider hold, deployment or release state changed. The original native
+AEC3 evaluation still has 31 open quality failures.
+
+The [world authoring guide](QUEST_WORLD_AUTHORING.md#shared-immersion-contract)
+now places the shared immersion contract near its product decision: per-entity
+physical-room participation, independent visibility/audio, shared human/agent
+execution and explicit outcome, persistence and capacity evidence. This records
+the accepted direction; it does not close any release acceptance row.
