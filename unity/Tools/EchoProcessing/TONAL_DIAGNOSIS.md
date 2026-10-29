@@ -422,6 +422,91 @@ and the 14 protected files remain unchanged. There is no device/provider work,
 new shipped dependency, selected backend change or relaxed acceptance gate.
 The supported AEC3 evaluation's 31 failures remain open.
 
+## Partition indexing and retained recovery models — 2026-10-29
+
+A second independent SpeexDSP 1.2.1 defect affects proportional adaptation weights
+for multiple render channels. The learned coefficient layout is
+`microphone*N*K*M + partition*N*K + speaker*N + bin`. The
+`mdf_adjust_prop` scan instead treats all microphone/speaker combinations as
+contiguous partition arrays. A sentinel in partition 3 therefore gives the
+largest adaptation weight to partition 6 or 7 in stereo. Six of nine channel
+positions across mono/stereo input/output layouts fail this identity check.
+
+A private patch passes the render-channel count into that scan and matches the
+actual coefficient layout. All nine sentinel checks then pass. It still leaves
+four aligned and 17 standalone quality failures: it rescues one burst case but
+loses a quiet changed-path case. The mono path-recovery result is unchanged;
+stereo improves from 4.82 to 5.49 dB and remains below 15 dB. The two reproduced
+indexing defects warrant separate dependency work; neither is a complete audio
+solution. The pinned source remains unchanged.
+
+A separate private adapter uses the **unmodified** pinned Speex source. It
+retains at most two independent cancellers sharing the same external reference
+history and resamplers. All decisions use observed microphone/reference/output
+energy, never the known fixture change time or isolated expected sources.
+Ten-millisecond energy estimates use a .9/.1 moving average. After 50 frames
+with output/input energy below .1, a rise above .2 for five frames can start a
+fresh secondary model. Following 20 warm-up frames, five frames below half the
+selected model's output energy and .2 of microphone energy begin an 80 ms
+crossfade. A one-second cooldown limits retriggering. These are experimental
+settings, **not a validated speech detector**.
+
+Discarding the earlier model at replacement solves the standalone recovery
+cases but introduces three aligned speech regressions. Keeping both models
+learning, and allowing selection back, removes those regressions:
+
+| Private comparison | Aligned failures / 39 | Standalone failures / 40 |
+| --- | ---: | ---: |
+| Unmodified single model | 4 | 17 |
+| Partition-index correction alone | 4 | 17 |
+| Energy-driven replacement, discard earlier model | 6 | 0 |
+| Energy-driven replacement, retain earlier model | 3 | 0 |
+
+The retained-model control passes all 35 previously passing aligned cases and
+rescues the cold burst/negative-capture-drift case. Minimum recovered reduction
+is 38.37/18.82 dB in the two changing-path cases and at least 16.97 dB in the
+24 delay variants. All 31 clock/duplex contracts and six existing English/Spanish
+synthetic speech excerpts pass. The three remaining failures are quiet
+overlapping speech: cold tones with -900/+900 ppm capture/render drift, and
+trained tones with a path change at nominal or -900/+900 ppm drift. Their
+original quality-window correlations are .388486, .567772 and .599183 against
+the unchanged .65 requirement. This does not qualify a backend.
+
+The maintained history diagnostic now includes both previously missing exact
+quiet cases, giving eight original cases plus two prefix interventions and
+**30 source-time windows**. A fresh Windows executable runs against measured32,
+baseline Speex and the retained-model control. Each produces all 30 validated
+windows plus eight metric contracts. The changed translation unit also compiles
+for Android ARM64 with warnings treated as errors; this is not an app build or
+Android execution.
+
+The retained-model outputs show why recovery alone is insufficient. In the
+11–17-second source window:
+
+| Quiet case | No-echo-reference gain / correlation | Mixed gain / correlation |
+| --- | ---: | ---: |
+| Cold tone, negative capture drift | .673 / .818 | .588 / .573 |
+| Changed path, nominal clock | .692 / .832 | .564 / .568 |
+| Changed path, negative capture drift | .690 / .831 | .580 / .599 |
+
+Even the independent stream with no acoustic echo changes learner-like input.
+The separate echo-only stream still contains residual energy. These controls
+establish both observations without subtracting independent adaptive outputs;
+they do not assign every mixed-signal error to one cause. These source-time
+windows differ from the quality suite's fixed output-index windows, so their
+correlations must not be substituted for the acceptance values above.
+
+Reproduction sources, compiler arguments, binaries, complete logs and hash
+receipts are local in `.quest-evidence/echo-speex-partitions-20261029/`. The
+`history-expanded` receipt explicitly records the diagnostic-only source changes
+after the earlier comparison. Forty-six Python evidence-contract tests pass.
+The two-canceller adapter remains private: speech preservation, steady-state
+CPU/latency, bounded long-session counters, allocation/failure behavior, complete
+delay/route handling and physical Quest acceptance are unqualified. Lower output
+energy is not proof of better speech. No app integration, selected dependency,
+original quality gate, recorded voice or device/provider action changes.
+The supported measured32 evaluation still has its original 31 quality failures.
+
 ## Decision
 
 Keep one shared capture/output ownership and timing contract. Keep both the cold

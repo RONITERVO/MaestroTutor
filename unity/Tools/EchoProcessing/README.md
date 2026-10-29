@@ -281,8 +281,11 @@ without mistaking leftover echo for lost speech. The original generated sources
 are shared in `AlignedAudioFixture.h`; their formulas and original acceptance
 windows are unchanged.
 
-The eight diagnostic cases comprise six original broadband/cold-tone/trained-tone/
+The ten diagnostic cases comprise eight original broadband/cold-tone/trained-tone/
 changed-path normal/quiet/burst examples and two explicit causal interventions.
+They include all three quiet-speech cases still failing the private two-canceller
+recovery control: cold tone with negative capture drift, and changed path with
+nominal or negative capture drift.
 The interventions set only pre-six-second near input to zero in two quiet cases.
 They change aggregate history and introduce an onset; they do not isolate one
 coefficient and are never an app microphone policy. Each run processes 1,800
@@ -298,7 +301,7 @@ suite's fixed output-index windows. Simulated continuation is not a Close/drain
 claim.
 
 `Build.py` runs this diagnostic and its eight native metric contracts on Windows;
-Android only cross-compiles it. `HistoryResults.py` requires all 24 unique windows,
+Android only cross-compiles it. `HistoryResults.py` requires all 30 unique windows,
 unchanged fixtures/clocks, coherent lifetime metadata, finite measurements and
 consistent energy identities. It explicitly retains adverse observations and
 rejects a speech-acceptance claim. CI publishes these separately: a successful

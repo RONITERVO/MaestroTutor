@@ -7,6 +7,7 @@
 #include <cstring>
 #include <memory>
 #include <limits>
+#include <iterator>
 using namespace maestro;
 using namespace maestro_aligned_fixture;
 namespace {
@@ -22,8 +23,11 @@ constexpr Selection selections[]={
     {Pattern::WarmTonal,NearSignal::QuietOverlapping,0,0,0},
     {Pattern::WarmTonalPathChange,NearSignal::QuietOverlapping,-900,900,20},
     {Pattern::WarmTonal,NearSignal::BurstyOverlapping,900,-900,20},
-    {Pattern::WarmTonalPathChange,NearSignal::BurstyOverlapping,0,0,0}
+    {Pattern::WarmTonalPathChange,NearSignal::BurstyOverlapping,0,0,0},
+    {Pattern::Tonal,NearSignal::QuietOverlapping,-900,900,20},
+    {Pattern::WarmTonalPathChange,NearSignal::QuietOverlapping,0,0,0}
 };
+constexpr int quiet_prefix_cases[]={2,3};
 constexpr double windows[][2]={{6.02,8},{8,11},{11,17}};
 float Source(double t,NearSignal signal,bool quiet_prefix){
     // Causal diagnostic ONLY: never apply this intervention to microphone input.
@@ -64,7 +68,7 @@ struct Window {
     }
 };
 void Run(int index,bool quiet_prefix){
-    Require(index>=0&&index<6,"Known history case");
+    Require(index>=0&&static_cast<size_t>(index)<std::size(selections),"Known history case");
     Require(!quiet_prefix||index==2||index==3,"Only two defined history interventions");
     const auto c=selections[index];
     Broadband broadband;
@@ -174,9 +178,10 @@ int Metrics(){
 int main(int argc,char** argv){try{
     if(argc==2&&std::strcmp(argv[1],"--metric-contracts")==0)return Metrics();
     Require(argc==1,"Known history command");
-    for(int i=0;i<6;++i)Run(i,false);
-    for(int i:{2,3})Run(i,true);
-    std::printf("{\"status\":\"recorded\",\"scope\":\"clock-aligned-history-controls\",\"caseCount\":8,"
-        "\"windowCount\":24,\"framesPerCase\":1800,\"independentStreams\":4,"
-        "\"speechQualityAccepted\":false,\"physicalAudio\":false,\"deviceOpened\":false}\n");return 0;
+    for(size_t i=0;i<std::size(selections);++i)Run(static_cast<int>(i),false);
+    for(int i:quiet_prefix_cases)Run(i,true);
+    constexpr auto cases=std::size(selections)+std::size(quiet_prefix_cases);
+    std::printf("{\"status\":\"recorded\",\"scope\":\"clock-aligned-history-controls\",\"caseCount\":%zu,"
+        "\"windowCount\":%zu,\"framesPerCase\":1800,\"independentStreams\":4,"
+        "\"speechQualityAccepted\":false,\"physicalAudio\":false,\"deviceOpened\":false}\n",cases,cases*std::size(windows));return 0;
 }catch(const std::exception& e){std::fprintf(stderr,"FAILED: %s\n",e.what());return 1;}}

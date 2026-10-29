@@ -11,10 +11,13 @@ CASES = (
     ("tone-after-broadband-path-change", "quiet-overlapping-voiced", -900, 900, 20),
     ("tone-after-broadband", "bursty-overlapping-voiced", 900, -900, 20),
     ("tone-after-broadband-path-change", "bursty-overlapping-voiced", 0, 0, 0),
+    ("cold-tone", "quiet-overlapping-voiced", -900, 900, 20),
+    ("tone-after-broadband-path-change", "quiet-overlapping-voiced", 0, 0, 0),
 )
+QUIET_PREFIX_CASES = (2, 3)
 WINDOWS = ((6.02, 8), (8, 11), (11, 17))
-SUMMARY = dict(status="recorded", scope="clock-aligned-history-controls", caseCount=8,
-               windowCount=24, framesPerCase=1800, independentStreams=4,
+SUMMARY = dict(status="recorded", scope="clock-aligned-history-controls", caseCount=len(CASES)+len(QUIET_PREFIX_CASES),
+               windowCount=(len(CASES)+len(QUIET_PREFIX_CASES))*len(WINDOWS), framesPerCase=1800, independentStreams=4,
                speechQualityAccepted=False, physicalAudio=False, deviceOpened=False)
 METRICS = dict(status="passed", scope="history-metric-contracts", metricCases=8,
                physicalAudio=False, deviceOpened=False)
@@ -51,10 +54,10 @@ def _score(row):
 
 def validate_history(text, exit_code):
     rows = [_json(line) for line in text.splitlines() if line.strip()]
-    _require(exit_code == 0 and len(rows) == 25 and _exact(rows[-1], SUMMARY),
+    _require(exit_code == 0 and len(rows) == SUMMARY["windowCount"]+1 and _exact(rows[-1], SUMMARY),
              "Incomplete history diagnostic")
-    expected = {(i, "original", w) for i in range(6) for w in WINDOWS}
-    expected |= {(i, "quiet-before-six", w) for i in (2, 3) for w in WINDOWS}
+    expected = {(i, "original", w) for i in range(len(CASES)) for w in WINDOWS}
+    expected |= {(i, "quiet-before-six", w) for i in QUIET_PREFIX_CASES for w in WINDOWS}
     seen, case_metadata = set(), {}
     for row in rows[:-1]:
         _require(type(row) is dict, "Invalid history row")

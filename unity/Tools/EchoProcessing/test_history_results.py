@@ -5,12 +5,12 @@ import copy
 import json
 import math
 import unittest
-from HistoryResults import CASES, WINDOWS, SUMMARY, METRICS, validate_history, validate_metric_contracts
+from HistoryResults import CASES, QUIET_PREFIX_CASES, WINDOWS, SUMMARY, METRICS, validate_history, validate_metric_contracts
 
 
 def fixture():
     rows = []
-    for schedule, indexes in (("original", range(6)), ("quiet-before-six", (2, 3))):
+    for schedule, indexes in (("original", range(len(CASES))), ("quiet-before-six", QUIET_PREFIX_CASES)):
         for i in indexes:
             pattern, near, capture, render, jitter = CASES[i]
             for start, end in WINDOWS:
@@ -38,9 +38,18 @@ class HistoryResultsTests(unittest.TestCase):
 
     def test_complete_diagnostic_is_never_quality_acceptance(self):
         result = validate_history(encode(fixture()), 0)
-        self.assertEqual(result["validatedWindows"], 24)
+        self.assertEqual(result["validatedWindows"], 30)
         self.assertIs(result["speechQualityAccepted"], False)
         self.assertNotIn("passingCaseIds", result)
+
+    def test_remaining_quiet_failures_have_exact_source_and_clock_controls(self):
+        self.assertEqual(CASES[6], ("cold-tone", "quiet-overlapping-voiced", -900, 900, 20))
+        self.assertEqual(CASES[7], ("tone-after-broadband-path-change", "quiet-overlapping-voiced", 0, 0, 0))
+        self.assertEqual(SUMMARY["caseCount"], 10)
+        for index in (3, 6, 7):
+            with self.subTest(index=index):
+                self.reject(lambda rows: rows.pop(next(
+                    i for i, row in enumerate(rows) if row.get("caseIndex") == index)))
 
     def test_adverse_metrics_are_retained_as_observations(self):
         rows = fixture()
@@ -58,7 +67,7 @@ class HistoryResultsTests(unittest.TestCase):
         self.reject(lambda rows: rows.__setitem__(2, copy.deepcopy(rows[1])))
 
     def test_missing_intervention_disguised_as_original(self):
-        self.reject(lambda rows: rows[18].update(schedule="original"))
+        self.reject(lambda rows: next(row for row in rows if row.get("schedule") == "quiet-before-six").update(schedule="original"))
 
     def test_changed_source(self):
         self.reject(lambda rows: rows[2].update(nearSignal="quiet-overlapping-voiced"))
