@@ -106,7 +106,7 @@ namespace Maestro.Quest.Imports {
             if(files.Length+(exists?0:1)>MaximumFiles||files.Sum(f=>f.Length)-(exists?new FileInfo(path).Length:0)+asset.Content.Length>MaximumTotalBytes)throw new IOException("The sound library is full (32 files or 128 MB). Existing sounds remain available.");
             bool intact=exists&&new FileInfo(path).Length==asset.Content.Length&&ModelLibrary.Hash(ReadBounded(path,cancel))==asset.Hash;
             if(!intact)Publish(path,asset.Content,cancel);
-            string info=Path.Combine(directory,asset.Hash+".txt");if(!File.Exists(info))Publish(info,Encoding.UTF8.GetBytes(asset.Name+"\n"),cancel);
+            ImportedAssetSidecar.SaveAccepted(Path.Combine(directory,asset.Hash+".txt"),asset.Name,cancel);
         }
         static void Publish(string path,byte[] bytes,CancellationToken cancel){
             if(File.Exists(path))WorkspaceArchive.NoLink(path);string temp=path+"."+Guid.NewGuid().ToString("N")+".part";

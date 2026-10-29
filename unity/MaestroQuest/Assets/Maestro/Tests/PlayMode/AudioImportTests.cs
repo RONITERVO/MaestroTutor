@@ -20,12 +20,26 @@ namespace Maestro.Quest.Tests {
             public void Start(string id){Id=id;Current=new JObject {["id"]=id,["phase"]="selecting"};}
             public JObject Read(string id)=>Current?.DeepClone() as JObject;
             public void Release(string id){if(Id==id){Released++;Current=null;}}
-            internal void Pick(byte[] bytes){string parent=Path.Combine(CacheRoot,Guid.NewGuid().ToString("D"));Directory.CreateDirectory(parent);string path=Path.Combine(parent,Guid.NewGuid().ToString("D"));File.WriteAllBytes(path,bytes);Current=new JObject {["id"]=Id,["phase"]="selected",["path"]=path,["name"]="My water sound.wav"};}
+            internal void Pick(byte[] bytes,string name="My water sound.wav"){string parent=Path.Combine(CacheRoot,Guid.NewGuid().ToString("D"));Directory.CreateDirectory(parent);string path=Path.Combine(parent,Guid.NewGuid().ToString("D"));File.WriteAllBytes(path,bytes);Current=new JObject {["id"]=Id,["phase"]="selected",["path"]=path,["name"]=name};}
             public void Dispose(){if(Directory.Exists(CacheRoot))Directory.Delete(CacheRoot,true);}
         }
         static byte[] SoundFile(){using var memory=new MemoryStream();using var writer=new BinaryWriter(memory);int frames=24000;
             writer.Write(System.Text.Encoding.ASCII.GetBytes("RIFF"));writer.Write(36+frames*2);writer.Write(System.Text.Encoding.ASCII.GetBytes("WAVEfmt "));writer.Write(16);writer.Write((short)1);writer.Write((short)1);writer.Write(24000);writer.Write(48000);writer.Write((short)2);writer.Write((short)16);writer.Write(System.Text.Encoding.ASCII.GetBytes("data"));writer.Write(frames*2);
             for(int i=0;i<frames;i++)writer.Write((short)(Math.Sin(i*2*Math.PI*440/24000)*5000));return memory.ToArray();
+        }
+        [UnityTest] public IEnumerator ExplicitSoundAcceptRepairsMetadataAndKeepsTheExistingSourcePlayable(){
+            var asset=AudioLibrary.Inspect("Original bell",SoundFile());var save=editor.Sounds.SaveAsync(asset);yield return PhysicalCreationTestWait.Until(()=>save.IsCompleted,"Initial sound save did not drain");Assert.That(save.Exception,Is.Null);
+            string info=Path.Combine(editor.SaveDirectory,"audio",asset.Hash+".txt");File.WriteAllBytes(info,new byte[1025]);var original=new RoomAudioDefinition {id=Guid.NewGuid().ToString("N"),name="Existing bell source",kind="clip",assetHash=asset.Hash,seconds=1};
+            Assert.That(editor.EditAudio(original.id,0,original,out var error),Is.True,error);WorldEmitter("book",original.id);var audio=WorldAudio.For(editor);Assert.That(audio.Begin("book","sound",out var failed,out error),Is.True,error);
+            yield return PhysicalCreationTestWait.Until(()=>failed.Closed,"The corrupt metadata must fail existing sound preparation");Assert.That(failed.Complete,Is.False);Assert.That(failed.Error,Is.Not.Empty);Assert.That(failed.Output,Is.Null);
+            yield return PhysicalCreationTestWait.Until(()=>(int)AudioReservations.ObserveBudget()["sources"]==0,"Failed sound preparation did not release its reservation");
+            using var picker=new SoundPicker();var importer=editor.GetComponent<AudioImportWorkshop>();importer.SetPickerForTests(picker);string request=importer.Select();picker.Pick(asset.Content,"Recovered bell.wav");
+            yield return PhysicalCreationTestWait.Until(()=>(string)importer.Observe()["phase"]=="preview","Reimported sound preview did not finish");Assert.That((string)importer.Observe()["preview"]["assetHash"],Is.EqualTo(asset.Hash));JObject receipt=null;
+            yield return AcceptReimportThroughSharedCatalog("audio.import",request,asset.Hash,value=>receipt=value);Assert.That((string)importer.Observe()["phase"],Is.EqualTo("completed"));Assert.That((string)receipt["sourceId"],Is.Not.EqualTo(original.id));Assert.That((int)AudioReservations.ObserveBudget()["owners"],Is.Zero,"Acceptance must not start playback");
+            Assert.That(editor.ReadAudio(original.id).assetHash,Is.EqualTo(asset.Hash));Assert.That(editor.ReadAudio(original.id).name,Is.EqualTo(original.name));Assert.That(editor.ReadAudioEmitter("book","sound").source,Is.EqualTo(original.id));
+            Assert.That(audio.Begin("book","sound",out var played,out error),Is.True,error);yield return PhysicalCreationTestWait.Until(()=>played.Output!=null||played.Closed,"The repaired original sound did not prepare");Assert.That(played.Output,Is.Not.Null,played.Error);Assert.That(played.Samples,Has.Length.EqualTo(24000));Assert.That(played.Samples.Max(),Is.GreaterThan(4000));audio.Cancel(played);
+            var read=editor.Sounds.ReadAsync(asset.Hash);yield return PhysicalCreationTestWait.Until(()=>read.IsCompleted,"Repaired sound read did not drain");Assert.That(read.Exception,Is.Null);Assert.That(read.Result.Name,Is.EqualTo("Recovered bell.wav"));Assert.That(read.Result.Content,Is.EqualTo(asset.Content));
+            var refresh=importer.Refresh(CancellationToken.None);yield return PhysicalCreationTestWait.Until(()=>refresh.IsCompleted,"Repaired sound refresh did not drain");Assert.That(refresh.Exception,Is.Null);Assert.That((bool)refresh.Result["library"]["ready"],Is.True);Assert.That((string)refresh.Result["library"]["entries"][0]["id"],Is.EqualTo(asset.Hash));
         }
         [UnityTest] public IEnumerator CompressedAudioFilePickerUsesCanonicalPreviewAndReleasesSelection(){
             foreach(string file in new[]{"stereo-vbr.mp3","stereo.ogg"}){

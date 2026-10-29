@@ -750,6 +750,22 @@ change opacity, remove the binding and retain the exact saved content. Quest
 latency, readability and sustained memory/performance remain separate gates.
 
 
+## Recover an imported image or sound
+
+Reimport the original image or sound through the usual preview and Accept flow.
+When its accepted content matches the saved asset identity, the private copy can
+be repaired without changing the appearances, sound sources or object bindings
+that already reference it. A changed export is a different asset; it does not
+silently replace an existing choice.
+
+Explicit acceptance also repairs oversized or invalid-encoding private name
+metadata using the chosen import name. Healthy metadata stays unchanged. Merely
+reading or refreshing the library never repairs files, and inaccessible or linked
+paths remain errors. After successful acceptance, an existing image binding can
+load again and an existing sound source can play when requested. Importing sound
+does not start playback. User controls and agent/program calls use the same
+`image.import` and `audio.import` handlers and completion receipts.
+
 ## Passthrough openings on shared surfaces
 
 A passthrough opening is a saved `RoomWindow` component on an existing plane surface of a created object. `object.window.edit` and `object.windows` use the same revision-guarded source through the original book forms, delegated agent and programs. Configure a plane using `object.surface.edit`, then select its exact surface ID. The plane owns position, rotation and dimensions; the window owns its stable ID, rectangular/elliptical shape and reveal amount. This keeps placement, editing and source inspection shared with surface ink. Drawing enabled/disabled controls new ink, while reveal and the object's visibility-layer opacity control the opening. Ordinary texture opacity, real-world collision profiles and real-depth settings remain separate.

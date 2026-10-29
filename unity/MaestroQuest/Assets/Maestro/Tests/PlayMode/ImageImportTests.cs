@@ -15,6 +15,28 @@ using UnityEngine;
 using UnityEngine.TestTools;
 namespace Maestro.Quest.Tests {
     public sealed partial class RoomRulesTests {
+        IEnumerator AcceptReimportThroughSharedCatalog(string capability,string request,string hash,Action<JObject> accepted){
+            var actions=new RoomExecutions(editor);string run=(string)actions.Observe()["nextRunId"];
+            var arguments=new JObject {["operation"]="accept",["requestId"]=request,[capability=="image.import"?"imageHash":"assetHash"]=hash};
+            Assert.That(actions.Execute(new JObject {["operation"]="start",["runId"]=run,["call"]=new JObject {["id"]=capability,["version"]=1,["arguments"]=arguments}},out var error),Is.True,error);
+            double until=Time.realtimeSinceStartupAsDouble+10;while(((string)runtime.Scheduler.Invocation(run)?["phase"] is "preparing" or "running")&&Time.realtimeSinceStartupAsDouble<until)yield return null;
+            var receipt=runtime.Scheduler.Invocation(run);Assert.That((string)receipt["phase"],Is.EqualTo("completed"),receipt.ToString());accepted((JObject)receipt["output"]);
+        }
+        [UnityTest] public IEnumerator ExplicitImageAcceptRepairsMetadataAndRecoversTheExistingAppearance(){
+            var asset=ImageLibrary.Inspect("Original image",ImageFiles.Png());var save=editor.Images.SaveAsync(asset);yield return PhysicalCreationTestWait.Until(()=>save.IsCompleted,"Initial image save did not drain");Assert.That(save.Exception,Is.Null);
+            string info=Path.Combine(editor.SaveDirectory,"images",asset.Hash+".txt");File.WriteAllBytes(info,new byte[]{0xc3,0x28});
+            var original=new RoomAppearance {id=Guid.NewGuid().ToString("N"),name="Existing image appearance",style=new(){patternMode="image",imageHash=asset.Hash}};
+            Assert.That(editor.EditAppearance(original,original.id,0,Array.Empty<string>(),out var error),Is.True,error);string target=editor.Snapshot().objects.First(o=>o.kind==RoomObjectKind.Block).id;var binding=new AppearanceBinding {appearanceId=original.id};
+            Assert.That(editor.BindAppearance(target,editor.ObjectRevision(target),binding,editor.AppearanceRevision(original.id),false,false,out error),Is.True,error);
+            using var existing=editor.ImageTextures.Acquire(asset.Hash);yield return PhysicalCreationTestWait.Until(()=>existing.State=="failed","The corrupt metadata must fail the existing image load");
+            using var picker=new SoundPicker();var importer=editor.GetComponent<ImageImportWorkshop>();importer.SetPickerForTests(picker);string request=importer.Select();picker.Pick(asset.Content,"Recovered image.png");
+            yield return PhysicalCreationTestWait.Until(()=>(string)importer.Observe()["phase"]=="preview","Reimported image preview did not finish");Assert.That((string)importer.Observe()["preview"]["imageHash"],Is.EqualTo(asset.Hash));JObject receipt=null;
+            yield return AcceptReimportThroughSharedCatalog("image.import",request,asset.Hash,value=>receipt=value);Assert.That((string)importer.Observe()["phase"],Is.EqualTo("completed"));Assert.That((string)receipt["appearanceId"],Is.Not.EqualTo(original.id));
+            yield return PhysicalCreationTestWait.Until(()=>existing.State=="ready"&&editor.AppearanceRenderState(target,binding)=="active","The existing image binding did not recover after explicit acceptance");
+            Assert.That(existing.Texture.width,Is.EqualTo(3));Assert.That(editor.ReadAppearance(original.id).style.imageHash,Is.EqualTo(asset.Hash));Assert.That(editor.ReadAppearance(original.id).name,Is.EqualTo(original.name));Assert.That(editor.Read(target).appearanceBindings.Single().appearanceId,Is.EqualTo(original.id));
+            var read=editor.Images.ReadAsync(asset.Hash);yield return PhysicalCreationTestWait.Until(()=>read.IsCompleted,"Repaired image read did not drain");Assert.That(read.Exception,Is.Null);Assert.That(read.Result.Name,Is.EqualTo("Recovered image.png"));Assert.That(read.Result.Content,Is.EqualTo(asset.Content));
+            var refresh=importer.Refresh(CancellationToken.None);yield return PhysicalCreationTestWait.Until(()=>refresh.IsCompleted,"Repaired image refresh did not drain");Assert.That(refresh.Exception,Is.Null);Assert.That((bool)refresh.Result["library"]["ready"],Is.True);Assert.That((string)refresh.Result["library"]["entries"][0]["id"],Is.EqualTo(asset.Hash));
+        }
         [UnityTest] public IEnumerator ImagePickerCreatesExactAppearanceWithoutBindingAndUndoKeepsFile(){
             Assert.That(RoomControls.Capabilities(editor),Does.Contain(ImageImportCapability.Feature));
             using var picker=new SoundPicker();var workshop=editor.GetComponent<ImageImportWorkshop>();workshop.SetPickerForTests(picker);string id=workshop.Select();picker.Pick(ImageFiles.Png());

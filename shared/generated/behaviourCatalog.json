@@ -53079,7 +53079,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/AudioLibrary.cs",
-      "sha256": "f511dd7a90272cc0be77fc12eb1379ac2d9ef46aa5ad835bc3098d1ba5525cca"
+      "sha256": "dc1832d9834143eb530f5346bff627d5024ccd91e307b44e524b061abe4571f2"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/AudioPcmAsset.cs",
@@ -53123,7 +53123,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/ImageLibrary.cs",
-      "sha256": "66dc103cec0fc8fa81f11d59823246a0b386a7863090fa288410dd8f33918e1f"
+      "sha256": "73dfe2388a93bcdebc0d4cd1ad19336aec482c27707e2bacea1193928193b384"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/ImportAcceptance.cs",
@@ -53160,6 +53160,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/ImportWorkshopPreview.cs",
       "sha256": "0c7de73c1f5e13af6c94aaffcf66957a38af265fcb21c841c011dc735c8246e9"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/ImportedAssetSidecar.cs",
+      "sha256": "b26269040a7cb0c20b5f59130793fa10eaf8cc8013b4197e12de844b4ac159cd"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/ImportedCollisionGeometry.cs",

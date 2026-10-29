@@ -2,7 +2,13 @@
 
 Status: active implementation. Nothing in this document claims store readiness.
 
-The latest [shared animation maintenance and audio guidance](#shared-animation-maintenance-and-quest-audio-guidance--2026-10-29)
+The latest [explicit image and sound recovery](#explicit-image-and-sound-metadata-recovery--2026-10-29)
+repairs unusable private metadata through the existing verified import/Accept
+path. Healthy metadata, payload identities and existing bindings remain intact;
+passive reads never repair files. Native regressions and unsigned Android integration pass, with two unsupported
+symlink fixtures explicitly skipped.
+
+The preceding [shared animation maintenance and audio guidance](#shared-animation-maintenance-and-quest-audio-guidance--2026-10-29)
 uses the same guarded native edits, facts and receipts from the library, generated
 book forms and agent/program interface. The full offline Headless and Book
 journeys pass, including exact entry restoration. Quest headphone guidance now
@@ -18515,14 +18521,10 @@ proof that deletion is safe: current work, Undo, retained snapshots, program
 source, module/memory references and active native leases all need one complete
 reference audit and an admission fence through publication and deletion.
 
-First close an existing explicit-reimport recovery defect: image/audio saves can
-complete while preserving an oversized or invalid-encoding name sidecar, leaving
-later reads unusable. The next narrow repair must validate that sidecar only on
-explicit Save, preserve healthy metadata byte-for-byte, and atomically replace
-invalid metadata from the accepted import. Link, permission, I/O and cancellation
-failures must remain failures. Passive reads must not silently repair files.
-This finding is source-confirmed; the repair and acceptance regressions remain
-pending after the current frozen checkpoint.
+The explicit image/sound recovery checkpoint below closes the confirmed defect
+where reimport completed but kept unusable metadata. It preserves healthy bytes
+and treats link, permission, I/O and cancellation failures as failures. This is
+a repair during explicit acceptance; passive discovery remains non-mutating.
 
 Before reclamation, add one bounded inventory-scan contract shared by model,
 image and audio libraries. It should retain usable siblings while reporting
@@ -18607,3 +18609,49 @@ The final prompt follow-up preserves an absent tutor/Live base context rather
 than replacing it with headphone-only instructions. No current-provider
 judgment, microphone behavior, headphone connection or acoustic quality is
 claimed by these offline checks.
+
+### Explicit image and sound metadata recovery — 2026-10-29
+
+An exact image/sound reimport previously completed while retaining an oversized
+or invalid-encoding name sidecar. The next read, inventory refresh or native
+texture/audio load could still fail. A shared accepted-import helper now
+validates bounded metadata under each library's existing write lease and
+serialization. It preserves complete healthy bytes, including extra lines and
+supported BOM encodings. Missing or unusable regular metadata is staged, flushed,
+rechecked and atomically published from the accepted import's sanitized name.
+A healthy file that appears during staging wins. Links, wrong path types,
+permission/I/O failures and cancellation are not classified as corrupt text.
+
+Only explicit acceptance can invoke this repair. Passive reads/listing retain
+their strict behavior; asset IDs, payload hashes, existing source definitions and bindings
+remain unchanged. The image cache's existing retry recovers a bound texture;
+an existing sound source can prepare and play again after an explicit request.
+Accepting a sound does not start playback. There are no new capability schemas,
+storage versions, capacity changes or automatic substitutions.
+
+Four regressions first reproduced the original failure (image/audio, oversized
+and invalid UTF-8) while fourteen other checks passed. With the repair, 26
+EditMode cases pass and two actual file-symlink fixtures skip because this
+Windows account cannot create them (Win32 1314). Directory-path refusal, locked
+reads, cancellation before publication, staged cleanup, concurrent healthy
+metadata, exact preserved payloads and complete healthy UTF-8/UTF-16 sidecars are
+covered. Actual symlink filesystem acceptance remains unverified on this host.
+
+All 22 focused native PlayMode cases pass. The two new cases use ordinary
+preview and shared-catalog Accept receipts, then verify the original image
+binding recovers and the existing sound emitter decodes its original clip.
+Surrounding file/chat import, cancellation, Undo and texture/audio checks pass.
+Native catalog export changes source provenance only; every action, fact, event,
+limit and adapter definition is unchanged, and source drift verification passes.
+
+Fresh unsigned Android export and compilation pass for these final sources:
+five export warnings, zero errors, and 22 selected ARM64 libraries with 16 KiB
+ELF LOAD alignment. Five unselected dependency libraries remain in the
+intermediate. Native-browser AAR/lint pass; its 128 passes and two skips are reused
+by Gradle. All 4,674 frozen source inputs match before/after the run. There is no
+APK/AAB, signature or installation. Evidence is retained under
+`.quest-evidence/asset-label-repair-20261029/`.
+
+The full Headless/Book and web checkpoint at `0c885c2f` precedes this narrow repair
+and is not represented as rerun here. Its Release gate and Native echo evaluation
+pass. No new provider, headset or Store acceptance is claimed.

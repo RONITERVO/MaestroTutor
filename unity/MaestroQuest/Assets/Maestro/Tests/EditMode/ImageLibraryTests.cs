@@ -4,6 +4,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
+using System.Text;
 using System.Threading;
 using Maestro.Quest.Imports;
 using Maestro.Quest.Persistence;
@@ -34,6 +36,48 @@ namespace Maestro.Quest.Tests {
             using var cancel=new CancellationTokenSource();cancel.Cancel();Assert.Catch<OperationCanceledException>(()=>library.SaveAsync(asset,cancel.Token).GetAwaiter().GetResult());
             Assert.IsFalse(Directory.Exists(directory));Assert.IsTrue(gate.CanFreeze(out _));
         }
+        [TestCase(true)][TestCase(false)] public void ExplicitSameHashSaveRepairsUnusableSidecarWithoutPassiveRepair(bool oversized){
+            var asset=ImageLibrary.Inspect("Original image",ImageFiles.Png());library.SaveAsync(asset).GetAwaiter().GetResult();library.SaveAsync(ImageLibrary.Inspect("Other image",ImageFiles.Png(shade:1))).GetAwaiter().GetResult();
+            string info=Path.Combine(directory,asset.Hash+".txt");byte[] damaged=oversized?new byte[1025]:new byte[]{0xc3,0x28};File.WriteAllBytes(info,damaged);
+            var before=Directory.GetFiles(directory).ToDictionary(Path.GetFileName,File.ReadAllBytes);var expected=oversized?typeof(InvalidDataException):typeof(DecoderFallbackException);
+            Assert.Throws(expected,()=>library.ReadAsync(asset.Hash).GetAwaiter().GetResult());Assert.Throws(expected,()=>library.ListAsync().GetAwaiter().GetResult());Assert.That(File.ReadAllBytes(info),Is.EqualTo(damaged),"Passive reads must preserve damaged metadata");
+            var accepted=ImageLibrary.Inspect("Explicitly reimported image",asset.Content);Assert.That(accepted.Hash,Is.EqualTo(asset.Hash));library.SaveAsync(accepted).GetAwaiter().GetResult();
+            var read=library.ReadAsync(asset.Hash).GetAwaiter().GetResult();Assert.That(read.Hash,Is.EqualTo(asset.Hash));Assert.That(read.Name,Is.EqualTo(accepted.Name));Assert.That(read.Content,Is.EqualTo(asset.Content));Assert.That(library.ListAsync().GetAwaiter().GetResult().Any(e=>e.Hash==asset.Hash),Is.True);
+            Assert.That(Directory.GetFiles(directory).Select(Path.GetFileName),Is.EquivalentTo(before.Keys));foreach(var file in before)if(file.Key!=asset.Hash+".txt")Assert.That(File.ReadAllBytes(Path.Combine(directory,file.Key)),Is.EqualTo(file.Value),file.Key);
+        }
+        [TestCase(false)][TestCase(true)] public void SameHashSavePreservesTheEntireValidSidecar(bool utf16){
+            var asset=ImageLibrary.Inspect("Original image",ImageFiles.Png());library.SaveAsync(asset).GetAwaiter().GetResult();string info=Path.Combine(directory,asset.Hash+".txt");
+            Encoding encoding=utf16?Encoding.Unicode:new UTF8Encoding(true);byte[] metadata=encoding.GetPreamble().Concat(encoding.GetBytes("Saved label\r\nOrigin: original source\r\nAttribution: keep this complete line\r\n")).ToArray();File.WriteAllBytes(info,metadata);
+            Assert.That(library.ReadAsync(asset.Hash).GetAwaiter().GetResult().Name,Is.EqualTo("Saved label"));library.SaveAsync(ImageLibrary.Inspect("Replacement label",asset.Content)).GetAwaiter().GetResult();
+            Assert.That(File.ReadAllBytes(info),Is.EqualTo(metadata));Assert.That(library.ReadAsync(asset.Hash).GetAwaiter().GetResult().Name,Is.EqualTo("Saved label"));
+        }
+        [Test] public void AcceptedSidecarCancellationAfterStagingPreservesOriginalBytes(){
+            var asset=ImageLibrary.Inspect("Image",ImageFiles.Png());library.SaveAsync(asset).GetAwaiter().GetResult();string info=Path.Combine(directory,asset.Hash+".txt");byte[] damaged={0xc3,0x28};File.WriteAllBytes(info,damaged);
+            using var stop=new CancellationTokenSource();
+            var cancelled=Assert.Catch<OperationCanceledException>(()=>ImportedAssetSidecar.SaveAccepted(info,"Explicit repair",stop.Token,()=>{Assert.That(Directory.GetFiles(directory,"*.part"),Has.Length.EqualTo(1));stop.Cancel();}));
+            Assert.That(cancelled.CancellationToken,Is.EqualTo(stop.Token));Assert.That(File.ReadAllBytes(info),Is.EqualTo(damaged));Assert.That(File.ReadAllBytes(Path.Combine(directory,asset.Hash+".image")),Is.EqualTo(asset.Content));Assert.That(Directory.GetFiles(directory,"*.part"),Is.Empty);
+        }
+        [Test] public void AcceptedSidecarReadFailureAfterStagingDoesNotPublish(){
+            var asset=ImageLibrary.Inspect("Image",ImageFiles.Png());library.SaveAsync(asset).GetAwaiter().GetResult();string info=Path.Combine(directory,asset.Hash+".txt");byte[] damaged={0xc3,0x28};File.WriteAllBytes(info,damaged);FileStream held=null;
+            try{Assert.Throws<IOException>(()=>ImportedAssetSidecar.SaveAccepted(info,"Explicit repair",CancellationToken.None,()=>held=new FileStream(info,FileMode.Open,FileAccess.Read,FileShare.None)));}
+            finally{held?.Dispose();}
+            Assert.That(File.ReadAllBytes(info),Is.EqualTo(damaged));Assert.That(File.ReadAllBytes(Path.Combine(directory,asset.Hash+".image")),Is.EqualTo(asset.Content));Assert.That(Directory.GetFiles(directory,"*.part"),Is.Empty);
+        }
+        [Test] public void AcceptedSidecarPreservesAValidReplacementMadeDuringPreparation(){
+            var asset=ImageLibrary.Inspect("Image",ImageFiles.Png());library.SaveAsync(asset).GetAwaiter().GetResult();string info=Path.Combine(directory,asset.Hash+".txt");File.WriteAllBytes(info,new byte[]{0xc3,0x28});byte[] repaired=Encoding.UTF8.GetBytes("Other accepted label\nOriginal attribution remains\n");
+            ImportedAssetSidecar.SaveAccepted(info,"Explicit repair",CancellationToken.None,()=>File.WriteAllBytes(info,repaired));Assert.That(File.ReadAllBytes(info),Is.EqualTo(repaired));Assert.That(Directory.GetFiles(directory,"*.part"),Is.Empty);
+        }
+        [Test] public void CancelledSameHashSaveKeepsUnusableMetadataAndReleasesItsWriteGate(){
+            var asset=ImageLibrary.Inspect("Image",ImageFiles.Png());library.SaveAsync(asset).GetAwaiter().GetResult();string info=Path.Combine(directory,asset.Hash+".txt");byte[] damaged={0xc3,0x28};File.WriteAllBytes(info,damaged);using var stop=new CancellationTokenSource();stop.Cancel();
+            Assert.Catch<OperationCanceledException>(()=>library.SaveAsync(asset,stop.Token).GetAwaiter().GetResult());Assert.That(File.ReadAllBytes(info),Is.EqualTo(damaged));Assert.That(gate.CanFreeze(out _),Is.True);Assert.That(Directory.GetFiles(directory,"*.part"),Is.Empty);
+        }
+        [TestCase(false)][TestCase(true)] public void SidecarDirectoriesAndLinksAreNotCorruptText(bool link){
+            var asset=ImageLibrary.Inspect("Image",ImageFiles.Png());library.SaveAsync(asset).GetAwaiter().GetResult();string info=Path.Combine(directory,asset.Hash+".txt"),target=Path.Combine(directory,"unrelated-source.txt");byte[] original=new byte[1025];File.WriteAllBytes(target,original);File.Delete(info);
+            if(link)AssetSidecarTestLinks.Create(info,target);else Directory.CreateDirectory(info);
+            if(link){Assert.That((File.GetAttributes(info)&FileAttributes.ReparsePoint)!=0,Is.True);Assert.Throws<InvalidDataException>(()=>library.SaveAsync(asset).GetAwaiter().GetResult());}
+            else{Assert.Throws<IOException>(()=>library.SaveAsync(asset).GetAwaiter().GetResult());Assert.That(Directory.Exists(info),Is.True);}
+            Assert.That(File.ReadAllBytes(target),Is.EqualTo(original));Assert.That(File.ReadAllBytes(Path.Combine(directory,asset.Hash+".image")),Is.EqualTo(asset.Content));Assert.That(Directory.GetFiles(directory,"*.part"),Is.Empty);Assert.That(gate.CanFreeze(out _),Is.True);
+        }
         [Test] public void CaptureBlocksWritesAndKeepsExactPayloadPaths(){
             var first=ImageLibrary.Inspect("First",ImageFiles.Png());var second=ImageLibrary.Inspect("Second",ImageFiles.Png(shade:1));library.SaveAsync(first).GetAwaiter().GetResult();
             Assert.IsTrue(library.TryCaptureArchive(out var capture));
@@ -46,6 +90,25 @@ namespace Maestro.Quest.Tests {
             for(int i=0;i<ImageLibrary.MaximumFiles;i++){int n=i;library.SaveAsync(ImageLibrary.Inspect("Image "+i,ImageFiles.Png(shade:n))).GetAwaiter().GetResult();}
             var extra=ImageLibrary.Inspect("Extra",ImageFiles.Png(shade:80));Assert.Throws<IOException>(()=>library.SaveAsync(extra).GetAwaiter().GetResult());
             Assert.AreEqual(ImageLibrary.MaximumFiles,library.ListAsync().GetAwaiter().GetResult().Length);Assert.IsFalse(File.Exists(Path.Combine(directory,extra.Hash+".image")));
+        }
+    }
+    internal static class AssetSidecarTestLinks
+    {
+#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
+        [DllImport("kernel32.dll",EntryPoint="CreateSymbolicLinkW",CharSet=CharSet.Unicode,SetLastError=true)]
+        [return:MarshalAs(UnmanagedType.I1)]static extern bool Link(string path,string target,uint flags);
+#elif UNITY_EDITOR_OSX || UNITY_STANDALONE_OSX || UNITY_EDITOR_LINUX || UNITY_STANDALONE_LINUX
+        [DllImport("libc",EntryPoint="symlink",SetLastError=true)]static extern int Link(string target,string path);
+#endif
+        internal static void Create(string path,string target)
+        {
+#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
+            if(!Link(path,target,2))Assert.Ignore("This host cannot create the test symlink: "+Marshal.GetLastWin32Error());
+#elif UNITY_EDITOR_OSX || UNITY_STANDALONE_OSX || UNITY_EDITOR_LINUX || UNITY_STANDALONE_LINUX
+            if(Link(target,path)!=0)Assert.Ignore("This host cannot create the test symlink: "+Marshal.GetLastWin32Error());
+#else
+            Assert.Ignore("This test host has no symbolic-link fixture adapter.");
+#endif
         }
     }
 }

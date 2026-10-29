@@ -20,6 +20,7 @@ Both managed and BYOK must pass the provider scenarios using the shared client.
 | Composite creations and reusable programs | Editable recipe/program source; branches, conditions, timers/events, state, parallel actions and modules; save/start/finish are distinguished |
 | Animation and avatar work | Exact compatible asset/clip IDs, joint tracks, gestures, follow/look/walk; completion and blocked paths; no silent replacement of saved motion choices |
 | Animation-library maintenance | Same revision-guarded metadata/archive/removal actions as the book; exact multilingual metadata; current/history/save/lease protection; no deletion without requested intent; inspect uncertain completion before any explicit retry |
+| Asset import and recovery | Exact accepted image/audio identity; shared Accept completion followed by actual texture/audio usability; preserve existing bindings and healthy metadata; read/refresh never repairs, cancellation and inaccessible paths do not claim completion |
 | Physics, contacts and room observations | Gravity/throws/collisions, scanned geometry prerequisites, permission/cancel paths; real alignment and comfort remain headset checks |
 | Steering and ownership | Follow-up/revise/continue/stop; exact parent task; concurrent user grip/program ownership; no bypass of a conflict |
 | Failure and recovery | Provider timeout/refusal/malformed plan; lost receipt; missing object; source/account/session change; crash/restart; duplicate request; no replay of uncertain effects |
