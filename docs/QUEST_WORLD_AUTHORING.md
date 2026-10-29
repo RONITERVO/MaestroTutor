@@ -50,8 +50,9 @@ components; a default toy should remain an editable example of those components.
 
 The scanned room is an optional physical participant for each virtual entity.
 For example, Maestro can use a virtual hillside while a ball still lands on the
-real table. Disabling the real floor must select valid virtual support; it must
-not silently disable gravity or invent a successful move. Collision participation,
+real table. A grounded actor that ignores the real floor still needs valid virtual
+support. Changing collision participation must not silently disable gravity or
+invent a successful move. Collision participation,
 visual occlusion, passthrough opacity and acoustic obstruction remain independent.
 Changing one must not implicitly change the others or camera-sharing permission.
 
