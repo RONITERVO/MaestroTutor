@@ -4130,3 +4130,20 @@ Refresh supplies current inventory. Completed requests remain historical and
 cannot delete a later exact reimport. Stop before dispatch cancels removal;
 after dispatch it can stop waiting while the worker finishes. Inspect the file
 and retained receipt before making another explicit request after uncertainty.
+
+
+## Imported model ownership
+
+A visible model, hidden preview, accepted import or background model inspection
+keeps its exact source protected until that work actually finishes. Closing a
+preview or stopping an import releases work that has not entered the importer;
+an importer already running drains before releasing its source. Switching
+workspaces refuses new admission into the closing workspace, even when the new
+workspace uses the same model hash.
+
+Saved and temporary rooms, dormant objects, Undo/Redo, inactive Maestro profiles
+and model-specific calibration/material settings retain model references. Missing
+or unreadable retained evidence stays uncertain. This foundation does not yet
+expose model download removal; image and finite sound cleanup remain the
+separately guarded actions described above. Users and agents continue to use the
+same model import and acceptance actions.

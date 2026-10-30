@@ -72,16 +72,19 @@ namespace Maestro.Quest.Imports
         {
             if (!this || disposed) return;
             var root = new GameObject("Model import preview"); root.transform.SetParent(transform, false); root.transform.localPosition = new Vector3(.55f, 1.35f, .65f);
-            preview = root.AddComponent<ImportedModel>();preview.ConfigureResourceOwner(editor.WorldIdentity,"","preview");
-            try { await preview.LoadAsync(asset); }
-            catch { if (preview) Destroy(preview.gameObject); preview = null; throw; }
-            if (!this || disposed) return;
-            pending = asset; libraryMode = false; clip = 0; page = 0; ShowDetails(); Say("Preview ready — choose Add model" + (preview.IsHumanoid ? " or Use Maestro" : ""));
+            var candidate=preview=root.AddComponent<ImportedModel>();
+            try { candidate.ConfigureResourceOwner(editor.WorldIdentity,"","preview");candidate.ConfigureAssetSource(editor.Models);await candidate.LoadAsync(asset); }
+            catch { candidate.Dispose();if(root)Destroy(root);if(ReferenceEquals(preview,candidate))preview=null;throw; }
         }
         public async void Accept() => await AcceptAsync();
         public Task<bool> AcceptAsync()=>AcceptPreviewManually("object");
         public void Cancel() { if(!CanCancelSelection(selectionId,out var error)){Say(error);return;} CancelSelection(selectionId); }
-        void ClearPreview(bool finishSelection=true) { if (preview) { preview.gameObject.SetActive(false); Destroy(preview.gameObject); } preview = null; pending = null; if(finishSelection)FinishSelectionPreview(); Details = "Select Maestro or an imported object to play its clips.\nUse Maestro selects a compatible GLB or VRM humanoid."; Changed?.Invoke(); }
+        void ClearPreview(bool finishSelection=true) {
+            var retiring=preview;var asset=pending;preview=null;pending=null;
+            try {if(retiring){retiring.gameObject.SetActive(false);Destroy(retiring.gameObject);}retiring?.Dispose();}
+            finally {asset?.Dispose();}
+            if(finishSelection)FinishSelectionPreview();Details="Select Maestro or an imported object to play its clips.\nUse Maestro selects a compatible GLB or VRM humanoid.";Changed?.Invoke();
+        }
         public async void UseMaestro() => await UseMaestroAsync();
         public async Task<bool> UseMaestroAsync()
         {
@@ -199,7 +202,7 @@ namespace Maestro.Quest.Imports
             if(HasArchive&&!HasPreview){Say("Preview a ZIP model before saving its motions");return false;}
             if(HasPreview)return await AcceptPreviewManually("motions");
             using var write=editor.WriteGate.TryWrite(out var blocked);if(write==null){Say(blocked);return false;}
-            if (Busy) return false; busy = true; StopSelectedPreview(); Say("Extracting motions without saving another model…");
+            if (Busy) return false; busy = true; StopSelectedPreview(); Say("Extracting motions without saving another model…");ModelAsset owned=null;
             try
             {
                 var asset = pending;
@@ -207,7 +210,7 @@ namespace Maestro.Quest.Imports
                 {
                     string hash = editor.Read(editor.SelectedId)?.modelHash;
                     if (!ModelLibrary.ValidHash(hash)) { Say("Import an animated GLB, or select your custom Maestro first"); return false; }
-                    asset = await editor.Models.ReadAsync(hash);
+                    asset = owned = await editor.Models.ReadAsync(hash);
                 }
                 if (!this || disposed) return false;
                 var entries = await editor.Motions.ImportAsync(asset.Name,asset.Bytes);
@@ -216,7 +219,7 @@ namespace Maestro.Quest.Imports
                 Say("Motions saved locally — Next clip chooses one; Play previews on Maestro."); return true;
             }
             catch (Exception error) { Report(error); return false; }
-            finally { busy = false; }
+            finally { owned?.Dispose();busy = false; }
         }
         public async Task<bool> PlayLibraryAsync(string motionId = null,bool? repeat = null)
         {

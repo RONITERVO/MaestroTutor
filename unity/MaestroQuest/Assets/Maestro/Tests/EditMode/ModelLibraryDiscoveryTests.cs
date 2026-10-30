@@ -20,7 +20,7 @@ namespace Maestro.Quest.Tests
             var assets=Enumerable.Range(0,9).Select(i=>ModelLibrary.Inspect("<Chosen>\n"+i+new string('x',110),ModelFixture.Mixamo(json=>json["animations"][0]["name"]="Clip "+i))).ToArray();
             foreach(var asset in assets)library.SaveAsync(asset).GetAwaiter().GetResult();
             var entries=library.ListAsync().GetAwaiter().GetResult();Assert.That(entries.Select(e=>e.Hash),Is.EqualTo(assets.Select(a=>a.Hash).OrderBy(h=>h,StringComparer.Ordinal)));Assert.That(entries.All(e=>e.Name.Length==100&&!e.Name.Contains('<')&&!e.Name.Contains('\n')),Is.True);
-            foreach(var entry in entries){Assert.That((library.ReadAsync(entry.Hash).GetAwaiter().GetResult()).Hash,Is.EqualTo(entry.Hash));Assert.That(entry.Bytes,Is.EqualTo(assets.Single(a=>a.Hash==entry.Hash).Bytes.Length));}
+            foreach(var entry in entries){using var read=library.ReadAsync(entry.Hash).GetAwaiter().GetResult();Assert.That(read.Hash,Is.EqualTo(entry.Hash));Assert.That(entry.Bytes,Is.EqualTo(assets.Single(a=>a.Hash==entry.Hash).Bytes.Length));}
         }
         [Test]public void InvalidInventoryFailsInsteadOfInventingAnEmptyLibrary()
         {

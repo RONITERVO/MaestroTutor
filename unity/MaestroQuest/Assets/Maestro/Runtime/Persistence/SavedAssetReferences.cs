@@ -8,6 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using Maestro.Quest.Creation;
+using Maestro.Quest.Avatar;
 using Maestro.Quest.Imports;
 using Maestro.Quest.Programs;
 using Maestro.Quest.Rules;
@@ -99,10 +100,17 @@ namespace Maestro.Quest.Persistence
             return Read(saveDirectory,assetHash,static (RoomStorage storage,byte[] bytes,int version,string identity,out bool uncertain)=>
                 storage.RetainsAudioDocument(bytes,version,identity,out uncertain),token);
         }
-        // Only the validated room selector differs by kind. Stored programs,
+        internal static SavedAssetReferenceProof ReadModels(string saveDirectory,string modelHash,CancellationToken token=default)
+        {
+            if(!ModelLibrary.ValidHash(modelHash))throw new ArgumentException("Choose an exact model identity.",nameof(modelHash));
+            return Read(saveDirectory,modelHash,static (RoomStorage storage,byte[] bytes,int version,string identity,out bool uncertain)=>
+                storage.RetainsModelDocument(bytes,version,identity,out uncertain),token,avatarProfiles:true);
+        }
+        // The validated room selector differs by kind; models also have saved
+        // avatar-profile roots. Stored programs,
         // modules and remembered values conservatively retain exact identities
         // regardless of the eventual action that may consume them.
-        static SavedAssetReferenceProof Read(string saveDirectory,string identity,RoomReferences roomReferences,CancellationToken token)
+        static SavedAssetReferenceProof Read(string saveDirectory,string identity,RoomReferences roomReferences,CancellationToken token,bool avatarProfiles=false)
         {
             string directory=Path.GetFullPath(saveDirectory);var audit=new Audit();
             try{
@@ -120,6 +128,12 @@ namespace Maestro.Quest.Persistence
                             continue;
                         }
                         if(Family(name,"room-snapshot")){audit.Unknown();continue;}
+                        if(avatarProfiles&&Family(name,AvatarActivityProfiles.FileStem)){
+                            if(!Versioned(name,AvatarActivityProfiles.FileStem,out int version,out string suffix)||!DocumentSuffix(suffix)){audit.Unknown();continue;}
+                            var bytes=audit.Read(path,AvatarActivityProfiles.MaximumBytes,token);
+                            if(AvatarActivityProfiles.RetainsModelDocument(directory,bytes,version,identity,out bool uncertain))audit.Found("Saved avatar activity profile or retained profile history");
+                            if(uncertain)audit.Unknown();continue;
+                        }
                         if(Family(name,"room")||Family(name,"behaviours")||Family(name,"rules")){
                             bool room=Family(name,"room");string stem=room?"room":"behaviours";
                             if(!Versioned(name,stem,out int version,out string suffix)||!DocumentSuffix(suffix)){audit.Unknown();continue;}

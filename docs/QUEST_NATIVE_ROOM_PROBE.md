@@ -2371,3 +2371,28 @@ separately: it proved the protection refusal but its driver rejected the native
 interruption suffix. Fourteen exact-response regressions fix that assertion,
 without changing the runtime or accepting unrelated errors. Evidence is under
 `.quest-evidence/audio-reclamation-20261030/` and the named run directories.
+
+## Model ownership regression checkpoint — 2026-10-30
+
+Fresh full offline runs are Headless `5d582a8e7f9f487cbb02db432bb46ed5`
+and Book `9f05e84439b04c9bbf2f333308b87360`. Both clients, Editors and terminal
+wrappers close successfully. Headless records 3,348 acknowledged requests,
+3,124 observations and 3,123 prepared read sets. Book records 2,731 unique
+acknowledged requests, 8,343 observations and zero browser errors; reload starts
+a new observation session without replaying commands.
+
+Independent receipt/file reviews confirm exact model payload identities,
+geometry choices and persisted object IDs, partial inventory recovery, and
+image/audio removal followed by exact reimport and historical receipt readback.
+All four prior Book image files, eight prior Book sound files and six prior
+Headless sound files remain unchanged. These maintenance leaves start no audio.
+
+Native tests separately cover source-pin lifetime, preview/Accept consumers and
+imported-model batch retention. The journeys' early ready-reservation snapshot
+and template-piece batch do not establish those properties. Book's walking leaf
+records completed movement and a saved exact gait choice, then reports native
+gait unavailable/inactive, as in the preceding run. It does not establish the
+cause or prove sustained rendered gait. Evidence and independent reviews are in
+`.quest-evidence/model-ownership-20261030/` and the named native-run directories.
+These are scripted desktop Unity checks, not real-provider, OS-picker, Quest
+texture, physical-device, microphone, audibility or performance acceptance.

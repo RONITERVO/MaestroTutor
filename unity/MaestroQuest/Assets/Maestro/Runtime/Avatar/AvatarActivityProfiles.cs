@@ -42,6 +42,10 @@ namespace Maestro.Quest.Avatar
     /// <summary>Bounded per-avatar preferences. Assignment changes are independent of room placement Undo.</summary>
     public sealed class AvatarActivityProfiles
     {
+        internal const string FileStem="avatar-activities";
+        internal const int MaximumBytes=256*1024;
+        static VersionedRoomFile<AvatarActivityDocument> CreateFile(string directory)=>
+            new(directory,FileStem,MaximumBytes,x=>x.Valid(),x=>x.Copy(),null,x=>x.version=2);
         readonly VersionedRoomFile<AvatarActivityDocument> file;
         sealed class Change { public string Model; public AvatarActivityProfile Before,After; }
         readonly List<Change> undo=new(),redo=new();
@@ -56,7 +60,7 @@ namespace Maestro.Quest.Avatar
         public AvatarActivityProfiles(string directory,Maestro.Quest.Persistence.WorkspaceWriteGate writeGate=null,AvatarActivityDocument initial=null)
         {
             writes=writeGate??new();
-            file=new(directory,"avatar-activities",256*1024,x => x.Valid(),x => x.Copy(),null,x => x.version=2);
+            file=CreateFile(directory);
             document=file.Load(out var message); Notice=message;
             // Only the fresh-room caller supplies a seed. Never replace even an empty saved
             // profile or treat pending/unreadable evidence as a new collection.
@@ -69,6 +73,14 @@ namespace Maestro.Quest.Avatar
         }
         public AvatarActivityProfile Find(string model) => document.avatars.FirstOrDefault(x => x.modelHash == model)?.Copy();
         public AvatarActivityDocument Snapshot() => document.Copy();
+        // Inactive profiles still name exact model payload identities. A rig hash
+        // describes compatibility and is not itself a model payload reference.
+        internal bool UsesModel(string hash)=>document.avatars.Any(profile=>profile.modelHash==hash);
+        internal bool HistoricalModel(string hash)=>undo.Concat(redo).Any(change=>change.Before?.modelHash==hash||change.After?.modelHash==hash);
+        // Shared validated decoder only: constructing the file adapter does not
+        // Load, recover, initialize or rewrite any retained profile document.
+        internal static bool RetainsModelDocument(string directory,byte[] bytes,int version,string hash,out bool uncertain)=>
+            CreateFile(directory).InspectRetainedReferences(bytes,version,document=>document.avatars.Any(profile=>profile.modelHash==hash),out uncertain);
         public bool HistoricalMotion(string id) => undo.Concat(redo).SelectMany(x => new[] { x.Before,x.After }).Where(x => x != null).Any(x => x.roles.Any(role => role.choices.Any(choice => choice.motionId == id)));
         public bool SavedMotion(string id,out bool uncertain,bool force=false) => file.Retains(x => x.avatars.SelectMany(avatar => avatar.roles).SelectMany(role => role.choices).Select(choice => choice.motionId),id,out uncertain,force,cacheDomain:"motion");
         // Keep current and undo/redo references available to library maintenance.

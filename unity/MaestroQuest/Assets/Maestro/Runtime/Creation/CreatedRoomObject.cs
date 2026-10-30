@@ -169,10 +169,10 @@ namespace Maestro.Quest.Creation
             modelLoading=true;ModelStatus = "Loading local model…";
             try
             {
-                var asset = await library.ReadAsync(hash); if (!this) return;
+                using var asset = await library.ReadAsync(hash); if (!this) return;
                 var root = new GameObject("Imported geometry"); root.transform.SetParent(transform, false);
                 Model = root.AddComponent<ImportedModel>();
-                Model.ConfigureResourceOwner(modelOwner);
+                Model.ConfigureResourceOwner(modelOwner);Model.ConfigureAssetSource(library);
                 await Model.LoadAsync(asset); if (!this) return;
                 Model.AttachObjectAcoustics();
                 ApplyModelGeometry(requestedModelGeometry);

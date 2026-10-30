@@ -17,19 +17,19 @@ using NUnit.Framework;
 using UnityEngine;
 namespace Maestro.Quest.Tests
 {
-    [TestFixture("image")][TestFixture("audio")]
+    [TestFixture("image")][TestFixture("audio")][TestFixture("model")]
     public sealed class SavedAssetReferencesTests
     {
         const string Hash="aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",Other="bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
         const string Id="cccccccccccccccccccccccccccccccc",Cell="dddddddddddddddddddddddddddddddd";
-        readonly bool audio;
-        public SavedAssetReferencesTests(string kind){audio=kind=="audio";}
+        readonly bool audio,model;
+        public SavedAssetReferencesTests(string kind){audio=kind=="audio";model=kind=="model";}
         string directory;
         string PathFor(string name)=>Path.Combine(directory,name);
         [SetUp]public void Before(){directory=Path.Combine(Path.GetTempPath(),"MaestroSavedReferences-"+Guid.NewGuid().ToString("N"));_=BehaviourCatalog.Actions.Count;}
         [TearDown]public void After(){RoomSnapshotTransaction.InspectionWaiting=null;if(Directory.Exists(directory))Directory.Delete(directory,true);}
-        RoomDocument Room(string hash=null)=>new(){version=RoomDocument.CurrentVersion,objects=new[]{new RoomObjectData{id="book",kind=RoomObjectKind.Book},new RoomObjectData{id="maestro",kind=RoomObjectKind.Maestro}},
-            appearances=hash==null||audio?Array.Empty<RoomAppearance>():new[]{new RoomAppearance{id=Id,name="Saved appearance",style=new(){patternMode="image",imageHash=hash}}},
+        RoomDocument Room(string hash=null)=>new(){version=RoomDocument.CurrentVersion,objects=new[]{new RoomObjectData{id="book",kind=RoomObjectKind.Book},new RoomObjectData{id="maestro",kind=RoomObjectKind.Maestro,modelHash=model?hash:null}},
+            appearances=hash==null||audio||model?Array.Empty<RoomAppearance>():new[]{new RoomAppearance{id=Id,name="Saved appearance",style=new(){patternMode="image",imageHash=hash}}},
             audioSources=hash==null||!audio?Array.Empty<RoomAudioDefinition>():new[]{new RoomAudioDefinition{id=Id,name="Saved clip",kind="clip",assetHash=hash,seconds=.5f}}};
         byte[] RoomBytes(string hash=null,int version=RoomDocument.CurrentVersion){var room=Room(hash);room.version=version;Assert.That(room.Validate(out var error),Is.True,error);return Encoding.UTF8.GetBytes(RoomLiquidCodec.Encode(room));}
         static string Source(string identity)=>new JObject{["version"]=3,["entry"]="main",["resources"]=new JArray(),["state"]=new JArray(new JObject{["name"]="image",["initial"]=identity}),["events"]=new JArray(),
@@ -38,7 +38,7 @@ namespace Maestro.Quest.Tests
         void Write(string name,byte[] bytes){Directory.CreateDirectory(Path.GetDirectoryName(PathFor(name)));File.WriteAllBytes(PathFor(name),bytes);}
         void Write(string name,string source)=>Write(name,Encoding.UTF8.GetBytes(source));
         Dictionary<string,string> Evidence()=>Directory.Exists(directory)?Directory.GetFiles(directory,"*",SearchOption.AllDirectories).ToDictionary(p=>p.Substring(directory.Length),p=>Convert.ToBase64String(File.ReadAllBytes(p))):new();
-        SavedAssetReferenceProof Proof(CancellationToken token=default)=>audio?SavedAssetReferences.ReadAudio(directory,Hash,token):SavedAssetReferences.ReadImages(directory,Hash,token);
+        SavedAssetReferenceProof Proof(CancellationToken token=default)=>model?SavedAssetReferences.ReadModels(directory,Hash,token):audio?SavedAssetReferences.ReadAudio(directory,Hash,token):SavedAssetReferences.ReadImages(directory,Hash,token);
         static void Clear(SavedAssetReferenceProof proof){Assert.That(proof.Ready,Is.True);Assert.That(proof.Uncertain,Is.False);Assert.That(proof.Retained,Is.False);Assert.That(proof.Reasons,Is.Empty);}
         void Retained(){var before=Evidence();var proof=Proof();Assert.That(proof.Ready,Is.True);Assert.That(proof.Retained,Is.True);Assert.That(proof.Uncertain,Is.False,string.Join("; ",proof.Reasons));Assert.That(Evidence(),Is.EquivalentTo(before));}
         void Uncertain(){var before=Evidence();var proof=Proof();Assert.That(proof.Uncertain,Is.True);Assert.That(proof.Reasons,Is.Not.Empty);Assert.That(Evidence(),Is.EquivalentTo(before));}
@@ -49,14 +49,14 @@ namespace Maestro.Quest.Tests
         // Clip fields require >=32, but RoomDocument supports 33 as its first
         // readable clip-bearing version; the intermediate 31/32 formats are rejected.
         [Test]public void SupportedOlderRoomStillProtectsItsAsset(){int version=audio?33:25;Write("room.v"+version+".json",RoomBytes(Hash,version));Retained();}
-        [Test]public void TheRoomSelectorDoesNotConfuseImageAndAudioIdentities(){
-            var room=Room();room.appearances=new[]{new RoomAppearance{id=Id,name="Other domain",style=new(){patternMode="image",imageHash=audio?Hash:Other}}};
+        [Test]public void TheRoomSelectorDoesNotConfuseAssetDomains(){
+            var room=Room();room.appearances=new[]{new RoomAppearance{id=Id,name="Other domain",style=new(){patternMode="image",imageHash=audio||model?Hash:Other}}};
             room.audioSources=new[]{new RoomAudioDefinition{id=Cell,name="Other domain",kind="clip",assetHash=audio?Other:Hash,seconds=.5f}};
             Assert.That(room.Validate(out var error),Is.True,error);Write(RoomStorage.FileName,RoomLiquidCodec.Encode(room));Clear(Proof());
-            var other=audio?SavedAssetReferences.ReadImages(directory,Hash):SavedAssetReferences.ReadAudio(directory,Hash);Assert.That(other.Retained,Is.True);Assert.That(other.Uncertain,Is.False);Clear(Proof());
+            var other=audio||model?SavedAssetReferences.ReadImages(directory,Hash):SavedAssetReferences.ReadAudio(directory,Hash);Assert.That(other.Retained,Is.True);Assert.That(other.Uncertain,Is.False);Clear(Proof());
         }
         [Test]public void FutureDefinitionDataIsUncertainWithoutRecoveryOrNormalization(){
-            var room=Room(Hash);if(audio)room.audioSources[0].version=2;else room.appearances[0].version=2;
+            var room=Room(Hash);if(model)room.objects[1].footPlacement.version=2;else if(audio)room.audioSources[0].version=2;else room.appearances[0].version=2;
             Write(RoomStorage.FileName,RoomLiquidCodec.Encode(room));Uncertain();
         }
         [Test]public void FreshProofDoesNotTrustSameLengthAndTimestampFromAnEarlierInspection(){Write(RoomStorage.FileName,RoomBytes(Other));Clear(Proof());var stamp=File.GetLastWriteTimeUtc(PathFor(RoomStorage.FileName));Write(RoomStorage.FileName,RoomBytes(Hash));File.SetLastWriteTimeUtc(PathFor(RoomStorage.FileName),stamp);Retained();}

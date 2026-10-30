@@ -36,7 +36,7 @@ namespace Maestro.Quest.Tests
                 Assert.That(models.TryCaptureArchive(out var capture),Is.True);Task saving;
                 try {saving=models.SaveAsync(asset);Assert.That(saving.IsCompleted,Is.False);Assert.That(gate.TryFreeze(out _),Is.Null);}
                 finally {capture.Dispose();}
-                await saving;Assert.That((await models.ReadAsync(asset.Hash)).Hash,Is.EqualTo(asset.Hash));using(gate.TryFreeze(out var error)){Assert.That(error,Is.Null);Assert.That(gate.Frozen,Is.True);}
+                await saving;using var read=await models.ReadAsync(asset.Hash);Assert.That(read.Hash,Is.EqualTo(asset.Hash));using(gate.TryFreeze(out var error)){Assert.That(error,Is.Null);Assert.That(gate.Frozen,Is.True);}
                 var modules=new ProgramModuleLibrary(directory,gate);modules.Flush();
                 var definition=ProgramModuleLibrary.Definition(BehaviourProgram.FromSteps(new RuleStep {action=RuleActionKind.Wait,seconds=1}),"One pause",new[]{"main"});
                 var publication=modules.Publish(definition);await publication.Task;

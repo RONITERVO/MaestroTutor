@@ -21,6 +21,12 @@ namespace Maestro.Quest.Imports
         // Reservations include previews and in-flight loads; these are source budgets, not measured RAM/VRAM.
         public static (int Models,int Vertices,int TexturePixels,int MorphVertices) LiveBudget=>ModelReservations.Budget;
         ModelReservations.Lease reservation;
+        Persistence.WorkspaceAssetFence assetSource;
+        internal void ConfigureAssetSource(ModelLibrary library)
+        {
+            if(loading||reservation!=null||destroyed)throw new InvalidOperationException("Model source ownership is fixed before loading");
+            assetSource=(library??throw new ArgumentNullException(nameof(library))).Assets;
+        }
         Creation.RoomResourceOwner resourceOwner=new(null,null,"unscoped");
         bool loading;
         CancellationTokenSource waitingForImporter;
@@ -93,7 +99,7 @@ namespace Maestro.Quest.Imports
             {
                 // Waiting is retained work too. Refuse over-capacity requests
                 // before queueing, and keep one lease through import and readiness.
-                reservation=ModelReservations.Reserve(asset,resourceOwner);
+                reservation=ModelReservations.Reserve(asset,resourceOwner,assetSource);
                 waitingForImporter=new CancellationTokenSource();
                 await loadQueue.WaitAsync(waitingForImporter.Token);
                 enteredImporter=true;
@@ -243,9 +249,10 @@ namespace Maestro.Quest.Imports
                 // waiter independently; it must not retain admission behind a
                 // different object's slow native import.
                 waitingForImporter.Cancel();ReleaseBudget();
-            } else if(loading)reservation?.Mark("retiring");else ReleaseBudget();
+            } else if(loading)reservation?.Mark("retiring");
             if(instance)DisposeInstance(instance);instance=null;animationPlayer=null;initialWeights.Clear();clipTimelines=Array.Empty<ImportedMotionTimeline>();
             ArtResources.Release(generatedAvatar);generatedAvatar=null;
+            if(!loading)ReleaseBudget();
         }
         void Maestro.Quest.Art.INativeResourceOwner.ReleaseNativeResources()=>Dispose();
         void OnDestroy()=>Dispose();

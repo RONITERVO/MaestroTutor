@@ -179,10 +179,10 @@ namespace Maestro.Quest.Avatar
             {
                 HumanoidRetargeter retargeter=null;
                 if(hash.Length!=0){
-                    var asset=await library.ReadAsync(hash);
+                    using var asset=await library.ReadAsync(hash,cancellation);
                     cancellation.ThrowIfCancellationRequested();if(!this||disposed||generation!=modelGeneration)return false;
                     candidateRoot=new GameObject("Custom Maestro");candidateRoot.SetActive(false);candidateRoot.transform.SetParent(transform,false);
-                    candidate=candidateRoot.AddComponent<ImportedModel>();candidate.ConfigureResourceOwner(modelWorld,"maestro","avatar");await candidate.LoadAsync(asset);
+                    candidate=candidateRoot.AddComponent<ImportedModel>();candidate.ConfigureResourceOwner(modelWorld,"maestro","avatar");candidate.ConfigureAssetSource(library);await candidate.LoadAsync(asset);
                     cancellation.ThrowIfCancellationRequested();if(!this||disposed||generation!=modelGeneration)return false;
                     candidate.FitAsMaestro();retargeter=candidateRoot.AddComponent<HumanoidRetargeter>();retargeter.Initialize(PoseRig,candidate.Humanoid);
                 }
@@ -223,7 +223,7 @@ namespace Maestro.Quest.Avatar
         {
             StopImportedClip();
             if (PoseRig) PoseRig.SetDisplayRig(null);
-            if (custom) { custom.gameObject.SetActive(false); Destroy(custom.gameObject); custom = null; }
+            if (custom) { custom.gameObject.SetActive(false); custom.Dispose();Destroy(custom.gameObject); custom = null; }
             if (included) foreach (var renderer in included.GetComponentsInChildren<Renderer>()) renderer.enabled = true;
             ModelHash = "";
         }

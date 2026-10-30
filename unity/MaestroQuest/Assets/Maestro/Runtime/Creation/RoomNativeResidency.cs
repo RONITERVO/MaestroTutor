@@ -159,8 +159,8 @@ namespace Maestro.Quest.Creation
                 while(entries.Values.Any(entry=>entry.RetiringRoot)){Check();await Task.Yield();}
                 Check();var budget=new RoomPreparationBudget(Check,nativePreparationWindow);prepared=await RoomEditPreparation.PrepareNativeAsync(this,values,budget);
                 foreach(var data in values.Where(data=>data.kind==RoomObjectKind.ImportedModel)){
-                    var asset=await Models.ReadAsync(data.modelHash);Check();
-                    var model=await PreparedImportedModel.Load(asset,data,WorldIdentity,cancel.Token,Current);
+                    using var asset=await Models.ReadAsync(data.modelHash,cancel.Token);Check();
+                    var model=await PreparedImportedModel.Load(asset,data,WorldIdentity,cancel.Token,Current,Models);
                     try{Check();prepared.EnlistModel(model,data);}catch{model.Dispose();throw;}
                 }
                 Check();document=journal.Snapshot();SynchronizeVisibility(document);

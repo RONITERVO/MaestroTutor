@@ -89,16 +89,22 @@ namespace Maestro.Quest.Imports
         }
         async Task PrepareSelectionAsync(Func<Task<ModelAsset>> read,string id,bool releasePicker)
         {
-            picking=false;busy=true;preparingSelection=true;selectionPhase="checking";var token=selectionCancel.Token;Say("Checking selected model…");
+            picking=false;busy=true;preparingSelection=true;selectionPhase="checking";var token=selectionCancel.Token;ModelAsset admitted=null;Say("Checking selected model…");
             try{
-                var asset=await read();token.ThrowIfCancellationRequested();if(!this||disposed||id!=selectionId)return;
+                using var raw=await read();token.ThrowIfCancellationRequested();if(!this||disposed||id!=selectionId)return;
+                var asset=admitted=editor.Models.Admit(raw);
                 selectionInfo=new JObject {["modelHash"]=asset.Hash,["name"]=asset.Name,["kibibytes"]=Math.Ceiling(asset.Bytes.Length/1024d),["vertices"]=asset.Inspection.Vertices,["triangles"]=asset.Inspection.Triangles,["clips"]=asset.Inspection.Clips,["humanoid"]=false};
                 await PreviewAsync(asset);token.ThrowIfCancellationRequested();if(!this||disposed||id!=selectionId)return;
+                // Transfer only after loading and selection identity are both current.
+                // The native model holds a separate owner of the same source.
+                pending=admitted;admitted=null;
                 if(!HasPreview)throw new ModelImportException("The model preview did not finish loading");
-                selectionInfo["humanoid"]=preview.IsHumanoid;selectionPhase="preview";
+                selectionInfo["humanoid"]=preview.IsHumanoid;selectionPhase="preview";libraryMode=false;clip=0;page=0;ShowDetails();
+                Say("Preview ready — choose Add model"+(preview.IsHumanoid?" or Use Maestro":""));
             }catch(OperationCanceledException){selectionPhase="cancelled";ClearPreview();Say("Import cancelled — no model was added");}
             catch(Exception ex){SelectionFailed(ex is ModelImportException?ex.Message:"The model could not be imported. Try a self-contained GLB or VRM.");ClearPreview(!archivePickerOwned);}
             finally{
+                if(admitted!=null){try{ClearPreview();}finally{admitted.Dispose();}}
                 // The selected bytes belong to the worker until reading/loading drains.
                 if(releasePicker&&!archivePickerOwned)ReleaseSelectionPicker(id);
                 preparingSelection=false;busy=false;

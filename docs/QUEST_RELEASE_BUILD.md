@@ -1016,3 +1016,32 @@ records the successful wrapper completion. No APK/AAB, signing, installation,
 provider call, deployment or Meta action occurred. Installed **D85F3CB7 / f58dab48**
 and packaged **5899972E / 5100f612** remain unchanged; physical and release
 acceptance remain open.
+
+## Model ownership compile checkpoint — 2026-10-30
+
+The model source-ownership/reference change passed 2,093 full EditMode cases
+(seven explicit Windows symlink-privilege skips) and 173 selected PlayMode cases
+(two optional external-model skips), with no failures. All 175 selected PlayMode
+methods are accounted for. Fresh full offline Headless and Book runs also pass;
+see the [journey boundary](QUEST_NATIVE_ROOM_PROBE.md#model-ownership-regression-checkpoint--2026-10-30).
+
+The unsigned development export is
+`D:/Projects/Builds/MaestroQuestVerify/Builds/Android-compile-20261030-015429-ed1e322b`.
+Unity 6000.3.24f1 reports success, five warnings and zero errors. The selected
+Gradle compilation/manifest-merge run executes all 41 tasks successfully.
+Independent verification rehashes all 4,766 frozen inputs unchanged and checks
+all 22 selected ARM64 library hashes and ELF64/AArch64 LOAD headers for at least
+16 KiB alignment and congruent offsets. Five unselected dependency libraries
+remain in the intermediate; final APK/AAB filtering is not established.
+
+The native-browser AAR/lint build succeeds. Its unchanged test task is up-to-date:
+128 passes and two skips are reused from October 24, not newly executed. Lint
+also reuses its report with six warnings and zero errors. Web chunk-size,
+Gradle deprecation and manifest-merge warnings remain in the captured logs.
+
+Evidence: `.quest-evidence/model-ownership-20261030/android/run.json`,
+`android/source-inputs.json` and the independent `android-review.json` beside
+that directory. No APK/AAB, signing, installation, provider call, deployment,
+device or Meta operation occurred. This is source/compile evidence; installed
+**D85F3CB7 / f58dab48**, packaged **5899972E / 5100f612** and broader physical and
+release acceptance remain unchanged.

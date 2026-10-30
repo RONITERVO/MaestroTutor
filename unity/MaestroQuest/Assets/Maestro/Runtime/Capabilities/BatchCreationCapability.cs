@@ -2,8 +2,10 @@
 // SPDX-License-Identifier: Apache-2.0
 using System;
 using System.Threading.Tasks;
+using System.Threading;
 using System.Collections.Generic;
 using Maestro.Quest.Imports;
+using Maestro.Quest.Persistence;
 using Maestro.Quest.Rules;
 using System.Linq;
 using Maestro.Quest.Creation;
@@ -48,20 +50,34 @@ namespace Maestro.Quest.Programs
         public override bool Start(CapabilityContext context,string runId,JObject args,out CapabilityOperation operation,out string error) {
             operation=null;bool deferCreations=CreationLoading.Deferred(args);var batch=Batch(args);if(!context.Editor.CanCreateBatch(batch,out error))return false;
             var hashes=batch.blueprint.pieces.Where(p=>p.source.kind=="prototype"&&p.source.prototype.kind=="model").Select(p=>p.source.prototype.modelHash).Distinct().ToArray();
-            if(hashes.Length>0){operation=new ModelBatch(context.Editor,batch,VerifyModels(context.Editor.Models,hashes),deferCreations);return true;}
+            if(hashes.Length>0){
+                try{operation=new ModelBatch(context.Editor,batch,hashes,deferCreations);return true;}
+                catch(InvalidOperationException failure){error=failure.Message;return false;}
+            }
             if(!context.Editor.CreateBatch(batch,out var ids,out error,deferCreations))return false;
             operation=new CompletedCapability(Result(context.Editor,batch,ids));return true;
         }
-        static async Task VerifyModels(ModelLibrary library,string[] hashes) {
+        static async Task VerifyModels(ModelLibrary library,string[] hashes,CancellationToken cancellation) {
             // Verify one bounded file at a time and retain no GLB byte arrays in the operation.
-            foreach(var hash in hashes)await library.ReadAsync(hash).ConfigureAwait(false);
+            foreach(var hash in hashes){using var asset=await library.ReadAsync(hash,cancellation).ConfigureAwait(false);}
         }
         static JObject Result(RoomEditor editor,CreationBatch batch,string[] ids)=>new() {["objectIds"]=new JArray(ids),["slots"]=new JArray(batch.blueprint.pieces.Select(p=>p.slot)),["temporary"]=editor.TemporaryRoom};
         sealed class ModelBatch:CapabilityOperation
         {
             readonly RoomEditor editor;readonly CreationBatch batch;readonly Task load;readonly bool temporary,deferCreations;
+            readonly List<IDisposable> sources=new();readonly CancellationTokenSource cancellation=new();
             bool stopped,finished;string failure;JObject result;
-            internal ModelBatch(RoomEditor editor,CreationBatch batch,Task load,bool deferCreations){this.deferCreations=deferCreations;this.editor=editor;this.batch=batch;this.load=load;temporary=editor.TemporaryRoom;_ = load.ContinueWith(t=>{_ = t.Exception;},System.Threading.CancellationToken.None,TaskContinuationOptions.OnlyOnFaulted,TaskScheduler.Default);}
+            internal ModelBatch(RoomEditor editor,CreationBatch batch,string[] hashes,bool deferCreations){
+                this.deferCreations=deferCreations;this.editor=editor;this.batch=batch;temporary=editor.TemporaryRoom;
+                try {
+                    // Keep only lightweight exact-source owners between verification
+                    // and commit. Verified GLB arrays are released one at a time.
+                    foreach(var hash in hashes)sources.Add(editor.Models.Assets.Pin(ImportedAssetKind.Model,hash));
+                    load=VerifyModels(editor.Models,hashes,cancellation.Token);
+                } catch {ReleaseSources();cancellation.Dispose();throw;}
+                _=load.ContinueWith(t=>{_ = t.Exception;},CancellationToken.None,TaskContinuationOptions.OnlyOnFaulted,TaskScheduler.Default);
+            }
+            void ReleaseSources(){foreach(var source in sources)source.Dispose();sources.Clear();}
             public override float Seconds=>0;
             public override RuleActionState State(out string error) {
                 error=null;
@@ -69,13 +85,22 @@ namespace Maestro.Quest.Programs
                 if(!load.IsCompleted)return RuleActionState.Preparing;
                 if(!finished){
                     finished=true;
-                    if(load.IsFaulted||load.IsCanceled){_ = load.Exception;failure="A required local model is missing or damaged; import the exact original model before creating this construction";}
-                    else if(!editor||editor.TemporaryRoom!=temporary)failure="The room changed while checking construction dependencies";
-                    else if(editor.CreateBatch(batch,out var ids,out failure,deferCreations))result=BatchCreationCapability.Result(editor,batch,ids);
+                    try {
+                        if(load.IsFaulted||load.IsCanceled){_ = load.Exception;failure="A required local model is missing or damaged; import the exact original model before creating this construction";}
+                        else if(!editor||editor.TemporaryRoom!=temporary)failure="The room changed while checking construction dependencies";
+                        else if(editor.CreateBatch(batch,out var ids,out failure,deferCreations))result=BatchCreationCapability.Result(editor,batch,ids);
+                    } finally {ReleaseSources();cancellation.Dispose();}
                 }
                 error=failure;return failure==null?RuleActionState.Ready:RuleActionState.Failed;
             }
-            public override void Stop(bool preservePlacement){stopped=true;}
+            public override void Stop(bool preservePlacement){
+                if(stopped)return;stopped=true;
+                try {if(!finished)cancellation.Cancel();}
+                finally {
+                    ReleaseSources();
+                    if(!finished){if(load.IsCompleted)cancellation.Dispose();else _=load.ContinueWith(_=>cancellation.Dispose(),CancellationToken.None,TaskContinuationOptions.None,TaskScheduler.Default);}
+                }
+            }
             public override JObject Result=>result??new JObject();
         }
     }

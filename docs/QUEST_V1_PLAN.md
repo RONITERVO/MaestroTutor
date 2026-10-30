@@ -2,7 +2,13 @@
 
 Status: active implementation. Nothing in this document claims store readiness.
 
-The latest [guarded finite sound cleanup](#shared-finite-sound-reclamation--2026-10-30)
+The latest [model source ownership and retained-reference increment](#model-source-ownership-and-retained-references--2026-10-30)
+protects source files through reads, previews, native imports, background geometry
+checks and workspace closure. Saved avatar preferences and dormant/temporary
+room history retain exact model identities. It establishes prerequisites for
+future model cleanup; no model-removal action is exposed.
+
+The preceding [guarded finite sound cleanup](#shared-finite-sound-reclamation--2026-10-30)
 extends the shared inspection/removal path to imported audio, including exact
 workspace admission and actual decoder/stream closure. Canonical sound identity,
 retained references and historical receipts are preserved. Native, full offline
@@ -18931,3 +18937,89 @@ Model payload cleanup still needs its own complete avatar/motion/geometry/acoust
 admission audit. Physical audio quality, comfort, Quest performance, provider and
 Store acceptance remain incomplete and are not established by these offline
 maintenance checks.
+
+## Model source ownership and retained references — 2026-10-30
+
+`ModelAsset` is now a disposable read owner. `ModelLibrary.ReadAsync` admits an
+exact workspace/hash pin before dispatch, serializes actual payload access, and
+keeps admission until the real read/inspection drains. Included first-use copies
+also retain their accepted write. A cancellation cannot release a worker still
+reading. Model saves retain their own source owner through their actual write.
+
+Native loading takes a separate pin before queueing and verifies the same
+workspace fence. Read owners can then close without invalidating a queued or
+active importer. A cancelled queued candidate releases immediately; an active
+importer retains its pin until native cleanup drains. Ready instances keep their
+pin through disposal. Preview selection, acceptance, avatar replacement, object
+creation and region activation now transfer ownership explicitly. Batch creation
+keeps lightweight source pins between verification and commit, without retaining
+all of its GLB byte arrays. Stop cancels verification; each pending read still
+owns its actual drain.
+
+Explicit cold bounds/rest-bounds/acoustic preparation also admits the exact
+workspace/hash before consulting its cache or waiting on a worker. Passive cached
+metadata remains detached and does not prove that the payload exists. Bundled
+cold reads do not materialize private files. The native byte view remains an
+internal validated-data convention; this is not a new arbitrary scripting API.
+
+Model reference selectors cover current/saved/temporary and in-flight snapshots,
+dormant entities, Undo/Redo, the selected avatar, inactive avatar activity profiles,
+and exact saved foot-calibration/material-binding identities. The bounded saved
+proof also inspects retained avatar profile documents through their normal
+validator without loading, repairing or saving them. Unknown/newer/malformed,
+linked, unreadable or over-budget evidence remains uncertain. Motion rig hashes
+and source provenance alone are not dependencies on the original model payload.
+
+No model payload removal, quota reclamation or new catalog action is exposed.
+Future removal must still combine fresh file inspection, current runtime program
+references, complete saved-reference proof, coordinated write exclusion and the
+asset-retirement fence in one reviewed transaction. These selectors or an ordinary
+workspace freeze alone do not authorize deletion. Device/provider/signing,
+deployment and Meta holds remain unchanged.
+
+The full EditMode run passes 2,093 tests with no failures; seven filesystem-link
+cases explicitly skip because this Windows account lacks symlink privileges.
+All 175 selected PlayMode methods are accounted for: 173 pass, zero fail and two
+optional external-model cases skip because no private test model was selected.
+These include actual importer barriers and native instances, exact-workspace
+rejection, queued versus active cancellation, preview/library/object/motion
+acceptance, batch source retention, dormant/temporary histories and workspace
+replacement. The bundled shipped model still loads, poses and walks through its
+normal native path. Evidence: `.quest-evidence/model-ownership-20261030/`.
+
+The next removal increment must preserve the existing `model.library.inspect`
+v1 browsing contract and add distinct file/revision evidence. Its first policy
+should protect the included-avatar hash, whose missing private copy can be
+materialized on use. Model sidecars retain full provenance within a 128 KiB
+bound; current SaveCore overwrites them, so exact reimport must preserve healthy
+sidecars atomically before cleanup is offered. Removal/import must invalidate
+inventory, review, bounds and clip observations while keeping completed receipts
+historical. These are recorded follow-up requirements, not present capabilities.
+
+Fresh full offline Headless `5d582a8e7f9f487cbb02db432bb46ed5` and Book
+`9f05e84439b04c9bbf2f333308b87360` both pass and close cleanly. Independent
+reviews confirm Headless's 3,348 acknowledged requests, 3,124 observations and
+3,123 prepared read sets, and Book's 2,731 requests, 8,343 observations and zero
+browser errors. Book reload starts a new observation session at ack 0 without
+replaying commands. Exact model payloads, geometry choices and persisted object
+identities are retained; image/audio cleanup, exact reimport and historical
+receipts remain coherent. Book preserves all four prior image and eight prior
+audio files; Headless preserves all six prior audio files. Neither maintenance
+journey starts audio playback.
+
+The Book walk leaf records completed movement and a saved exact gait choice,
+then reports native gait unavailable/inactive. This matches the preceding run;
+the leaf does not establish why it is inactive or prove sustained visible gait.
+The new per-asset ownership and imported-batch pins are exercised by the native
+tests, not inferred from these journeys' early reservation samples. These are
+desktop journeys with scripted provider replies, not OS-picker, real-provider, Android texture,
+physical device, microphone, audibility or performance acceptance.
+
+Fresh unsigned Android export and compilation also pass: five Unity warnings,
+zero errors and all 41 selected Gradle tasks executed. Independent verification
+checks 22 selected ARM64 library hashes and 16 KiB ELF LOAD alignment, plus all
+4,766 frozen inputs unchanged. Native-browser test/lint outputs are reused
+(128 passes, two skips; six lint warnings, zero errors), not newly executed.
+The [compile checkpoint](QUEST_RELEASE_BUILD.md#model-ownership-compile-checkpoint--2026-10-30)
+records the exact export and evidence. No APK/AAB or physical/provider/release
+operation was performed. Model removal remains unexposed.

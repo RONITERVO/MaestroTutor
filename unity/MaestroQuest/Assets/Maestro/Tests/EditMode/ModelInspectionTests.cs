@@ -53,13 +53,13 @@ namespace Maestro.Quest.Tests
             try
             {
                 var library = new ModelLibrary(directory); var bytes = ModelFixture.Create(); var asset = ModelLibrary.Inspect("triangle.glb", bytes);
-                library.SaveAsync(asset).GetAwaiter().GetResult(); var loaded = library.ReadAsync(asset.Hash).GetAwaiter().GetResult();
+                library.SaveAsync(asset).GetAwaiter().GetResult(); using var loaded = library.ReadAsync(asset.Hash).GetAwaiter().GetResult();
                 Assert.That(loaded.Bytes, Is.EqualTo(bytes)); Assert.That(File.ReadAllText(Path.Combine(directory, asset.Hash + ".txt")), Does.Contain("Apache-2.0"));
                 Assert.Throws<ModelImportException>(() => library.ReadAsync("../../secret").GetAwaiter().GetResult());
                 bytes[bytes.Length-1] ^= 1; File.WriteAllBytes(Path.Combine(directory, asset.Hash + ".glb"), bytes);
                 Assert.Throws<ModelImportException>(() => library.ReadAsync(asset.Hash).GetAwaiter().GetResult());
                 library.SaveAsync(ModelLibrary.Inspect("triangle.glb", ModelFixture.Create())).GetAwaiter().GetResult();
-                Assert.That(library.ReadAsync(asset.Hash).GetAwaiter().GetResult().Bytes, Is.EqualTo(ModelFixture.Create()));
+                using var repaired=library.ReadAsync(asset.Hash).GetAwaiter().GetResult();Assert.That(repaired.Bytes, Is.EqualTo(ModelFixture.Create()));
             }
             finally { if (Directory.Exists(directory)) Directory.Delete(directory, true); }
         }

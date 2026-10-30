@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Maestro.Quest.Creation;
+using Maestro.Quest.Persistence;
 using Newtonsoft.Json.Linq;
 namespace Maestro.Quest.Imports
 {
@@ -18,14 +19,14 @@ namespace Maestro.Quest.Imports
             internal readonly RoomResourceOwner Owner;
             internal readonly int Vertices,Pixels,Morphs;
             internal string State="queued";
-            bool disposed;
-            internal Lease(ModelAsset asset,RoomResourceOwner owner)
+            bool disposed;readonly IDisposable source;
+            internal Lease(ModelAsset asset,RoomResourceOwner owner,IDisposable source)
             {
-                Hash=asset.Hash;Owner=owner;Vertices=asset.Inspection.Vertices;
+                this.source=source;Hash=asset.Hash;Owner=owner;Vertices=asset.Inspection.Vertices;
                 Pixels=asset.Inspection.TexturePixels;Morphs=asset.Inspection.MorphVertices;
             }
             internal void Mark(string state){lock(gate){if(!disposed)State=state;}}
-            public void Dispose(){lock(gate){if(disposed)return;disposed=true;leases.Remove(this);}}
+            public void Dispose(){lock(gate){if(disposed)return;disposed=true;leases.Remove(this);}source?.Dispose();}
         }
         static readonly object gate=new();
         static readonly List<Lease> leases=new();
@@ -33,16 +34,17 @@ namespace Maestro.Quest.Imports
         {
             get{lock(gate)return(leases.Count,leases.Sum(x=>x.Vertices),leases.Sum(x=>x.Pixels),leases.Sum(x=>x.Morphs));}
         }
-        internal static Lease Reserve(ModelAsset asset,RoomResourceOwner owner)
+        internal static Lease Reserve(ModelAsset asset,RoomResourceOwner owner,WorkspaceAssetFence expected=null)
         {
             if(owner==null||owner.Role is ("appearance" or "audio"))throw new ArgumentException("Invalid model resource owner");
-            lock(gate){
+            var source=asset.RetainForLoad(expected);
+            try {lock(gate){
                 var used=Budget;var info=asset.Inspection;
                 if(used.Models>=ImportedModel.MaximumLiveModels||used.Vertices+(long)info.Vertices>ImportedModel.MaximumLiveVertices||
                     used.TexturePixels+(long)info.TexturePixels>ImportedModel.MaximumLiveTexturePixels||used.MorphVertices+(long)info.MorphVertices>ImportedModel.MaximumLiveMorphVertices)
                     throw new ModelImportException("The live model budget is full. Close an unused preview or remove an unneeded model, then retry after pending imports finish.");
-                var lease=new Lease(asset,owner);leases.Add(lease);return lease;
-            }
+                var lease=new Lease(asset,owner,source);leases.Add(lease);return lease;
+            }} catch {source?.Dispose();throw;}
         }
         internal static JObject Observe(int index)
         {

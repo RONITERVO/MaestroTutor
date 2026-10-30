@@ -107,7 +107,7 @@ namespace Maestro.Quest.Tests
                 var library=new ModelLibrary(directory);string first=null,last=null;
                 for(int i=0;i<33;i++){
                     var asset=ModelLibrary.Inspect("Static.glb",StaticModelFixture.Create(root=>root["asset"]["copyright"]="Fixture "+i));
-                    first??=asset.Hash;last=asset.Hash;File.WriteAllBytes(Path.Combine(directory,asset.Hash+".glb"),asset.Bytes);library.ReadAsync(asset.Hash).GetAwaiter().GetResult();
+                    first??=asset.Hash;last=asset.Hash;File.WriteAllBytes(Path.Combine(directory,asset.Hash+".glb"),asset.Bytes);library.ReadAsync(asset.Hash).GetAwaiter().GetResult().Dispose();
                 }
                 Assert.That(library.TryReadBounds(first,out _),Is.False);Assert.That(library.TryReadBounds(last,out _),Is.True);
                 Assert.That(library.TryReadClips(first,out _),Is.False);Assert.That(library.TryReadClips(last,out _),Is.True);Assert.That(library.TryReadBounds("../file",out _),Is.False);

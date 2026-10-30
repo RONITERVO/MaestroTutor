@@ -11,13 +11,6 @@ using Maestro.Quest.Persistence;
 
 namespace Maestro.Quest.Imports
 {
-    public sealed class ModelAsset
-    {
-        public string Hash, Name;
-        public byte[] Bytes;
-        public ModelInspection Inspection;
-    }
-
     /// <summary>Content-addressed private copies; room/undo records never hold external paths.</summary>
     public sealed partial class ModelLibrary
     {
@@ -29,46 +22,59 @@ namespace Maestro.Quest.Imports
         public static bool ValidHash(string hash) => hash != null && hash.Length == 64 && hash.All(c => c >= '0' && c <= '9' || c >= 'a' && c <= 'f');
         public static string Hash(byte[] bytes) { using var sha = SHA256.Create(); return BitConverter.ToString(sha.ComputeHash(bytes)).Replace("-", "").ToLowerInvariant(); }
         public static ModelAsset Inspect(string name, byte[] bytes) => new() { Hash = Hash(bytes), Name = SafeName(name), Bytes = bytes, Inspection = ModelInspection.Inspect(bytes) };
-        public Task<ModelAsset> ReadAsync(string hash)
+        internal WorkspaceAssetFence Assets=>workspaceWrites.Assets;
+        internal ModelAsset Admit(ModelAsset asset)=>(asset??throw new ArgumentNullException(nameof(asset))).Admit(Assets);
+        internal Action<string> ReadCheckpoint;
+        public Task<ModelAsset> ReadAsync(string hash,CancellationToken cancellation=default)
         {
-            if(included==null||hash!=included.Hash)return Task.Run(()=>ReadLocal(hash));
-            // Acquire before dispatch so export/replacement/retirement cannot miss an
-            // accepted first-use copy. Never repair a damaged local file implicitly.
-            var write=workspaceWrites.Write();
+            if(!ValidHash(hash))throw new ModelImportException("This room has an invalid model reference.");
+            cancellation.ThrowIfCancellationRequested();
+            // Admission precedes dispatch. A caller cancellation cannot release the
+            // source while its actual read/inspection is still draining.
+            IDisposable pin=Assets.Pin(ImportedAssetKind.Model,hash),write=null;
+            try {if(included?.Hash==hash)write=workspaceWrites.Write();}
+            catch {pin.Dispose();throw;}
             return Task.Run(async()=>{
                 try {
-                    await writes.WaitAsync().ConfigureAwait(false);
+                    await writes.WaitAsync(cancellation).ConfigureAwait(false);
                     try {
-                        if(File.Exists(Path.Combine(directory,hash+".glb")))return ReadLocal(hash);
-                        var asset=included.Read();SaveCore(asset);return asset;
+                        cancellation.ThrowIfCancellationRequested();ReadCheckpoint?.Invoke("reading");cancellation.ThrowIfCancellationRequested();
+                        using var raw=ReadOrCopyIncluded(hash,cancellation);
+                        ReadCheckpoint?.Invoke("inspected");cancellation.ThrowIfCancellationRequested();
+                        RememberBounds(raw);var result=ModelAsset.Owned(raw,Assets,pin);pin=null;return result;
                     } finally {writes.Release();}
-                } finally {write.Dispose();}
+                } catch(OperationCanceledException){throw;}
+                catch {ForgetBounds(hash);throw;}
+                finally {pin?.Dispose();write?.Dispose();}
             });
         }
-        ModelAsset ReadLocal(string hash)
+        ModelAsset ReadOrCopyIncluded(string hash,CancellationToken cancellation)
         {
-            try {var value=ReadLocalCore(hash);RememberBounds(value);return value;}
-            catch {ForgetBounds(hash);throw;}
+            if(included?.Hash!=hash||File.Exists(Path.Combine(directory,hash+".glb")))return ReadLocalCore(hash,cancellation);
+            var asset=included.Read();
+            try {cancellation.ThrowIfCancellationRequested();SaveCore(asset);return asset;}
+            catch {asset.Dispose();throw;}
         }
         ModelAsset ReadLocalCore(string hash,CancellationToken cancellation=default,bool acoustic=false)
         {
             if (!ValidHash(hash)) throw new ModelImportException("This room has an invalid model reference.");
             string path = Path.Combine(directory, hash + ".glb");
             if (!File.Exists(path)) throw new ModelImportException("This model's local copy is missing. Import the original file again.");
+            WorkspaceArchive.NoLink(directory);WorkspaceArchive.NoLink(path);
             byte[] bytes = ReadBounded(path,cancellation);cancellation.ThrowIfCancellationRequested();var asset = acoustic ? new ModelAsset{Hash=Hash(bytes),Name=hash,Bytes=bytes,Inspection=ModelInspection.InspectAcoustics(bytes)} : Inspect(hash, bytes);
             if (asset.Hash != hash) throw new ModelImportException("The saved model copy is damaged. Import the original file again.");
             return asset;
         }
         public async Task SaveAsync(ModelAsset asset)
         {
-            using var write=workspaceWrites.Write();
+            using var write=workspaceWrites.Write();using var admitted=Admit(asset);
             await writes.WaitAsync().ConfigureAwait(false);
-            try {await Task.Run(()=>SaveCore(asset)).ConfigureAwait(false);} finally {writes.Release();}
+            try {await Task.Run(()=>SaveCore(admitted)).ConfigureAwait(false);} finally {writes.Release();}
         }
         void SaveCore(ModelAsset asset)
         {
             // Revalidate at the persistence boundary; the caller cannot substitute a hash/path.
-            var check = Inspect(asset.Name, asset.Bytes); if (check.Hash != asset.Hash) throw new ModelImportException("The selected model changed during import.");
+            using var check = Inspect(asset.Name, asset.Bytes); if (check.Hash != asset.Hash) throw new ModelImportException("The selected model changed during import.");
             Directory.CreateDirectory(directory);
             string path = Path.Combine(directory, check.Hash + ".glb");
             bool exists = File.Exists(path);

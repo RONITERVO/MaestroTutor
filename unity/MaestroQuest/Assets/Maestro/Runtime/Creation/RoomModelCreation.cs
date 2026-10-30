@@ -33,9 +33,9 @@ namespace Maestro.Quest.Creation
                 var authoring=GetComponent<AnimationWorkshop>();return !authoring||!(authoring.ControlsTarget(SelectedId)||authoring.HasUnsavedPose||authoring.HasUnsavedRecording||authoring.HasUnsavedFrameEdit);
             }
             cancellation.ThrowIfCancellationRequested();if(!Current())throw new OperationCanceledException();
-            var asset=await Models.ReadAsync(hash);
+            using var asset=await Models.ReadAsync(hash,cancellation);
             cancellation.ThrowIfCancellationRequested();if(!Current())throw new OperationCanceledException();
-            using var prepared=await PreparedImportedModel.Load(asset,data,WorldIdentity,cancellation,Current);
+            using var prepared=await PreparedImportedModel.Load(asset,data,WorldIdentity,cancellation,Current,Models);
             cancellation.ThrowIfCancellationRequested();if(!Current())throw new OperationCanceledException();
             if(!CanCreatePrimitive(out error))throw new ModelImportException(error);
             // Capture the current journal only after asynchronous preparation.

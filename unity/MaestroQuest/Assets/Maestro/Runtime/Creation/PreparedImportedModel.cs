@@ -22,12 +22,12 @@ namespace Maestro.Quest.Creation
             root=new GameObject("Prepared imported object");root.SetActive(false);
             model=root.AddComponent<ImportedModel>();model.ConfigureResourceOwner(world,Target,"object");
         }
-        internal static async Task<PreparedImportedModel> Load(ModelAsset asset,RoomObjectData data,RoomWorldIdentity world,CancellationToken cancellation,Func<bool> current)
+        internal static async Task<PreparedImportedModel> Load(ModelAsset asset,RoomObjectData data,RoomWorldIdentity world,CancellationToken cancellation,Func<bool> current,ModelLibrary library=null)
         {
             if(asset.Hash!=data.modelHash)throw new ModelImportException("The prepared model does not match the saved reference");
             var candidate=new PreparedImportedModel(data,world);Task load=null;
             try {
-                Check();load=candidate.model.LoadAsync(asset);
+                Check();if(library!=null)candidate.model.ConfigureAssetSource(library);load=candidate.model.LoadAsync(asset);
                 // Observe cancellation on Unity's context. A queued loader can
                 // finish immediately; an active native importer drains separately
                 // under its retiring lease, without holding this authored edit.
