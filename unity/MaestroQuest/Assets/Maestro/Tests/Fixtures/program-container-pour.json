@@ -1,0 +1,64 @@
+{
+  "version": 3,
+  "entry": "main",
+  "resources": [],
+  "state": [
+    {
+      "name": "amount",
+      "initial": 0
+    }
+  ],
+  "events": [],
+  "functions": [
+    {
+      "name": "main",
+      "returns": "void",
+      "parameters": [],
+      "locals": [
+        {
+          "name": "received",
+          "initial": false
+        },
+        {
+          "name": "value",
+          "initial": ""
+        },
+        {
+          "name": "ml",
+          "initial": 0
+        }
+      ],
+      "body": [
+        {
+          "id": "wait",
+          "op": "awaitEvent",
+          "event": "object.container.poured",
+          "source": "",
+          "timeout": {
+            "value": 0
+          },
+          "received": "received",
+          "value": "value",
+          "fields": {
+            "transferredMl": "ml"
+          }
+        },
+        {
+          "id": "remember",
+          "op": "setState",
+          "variable": "amount",
+          "value": {
+            "var": "ml"
+          }
+        },
+        {
+          "id": "hold",
+          "op": "sleep",
+          "seconds": {
+            "value": 20
+          }
+        }
+      ]
+    }
+  ]
+}

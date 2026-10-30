@@ -1,0 +1,140 @@
+{
+  "unavailable": {
+    "available": false,
+    "stateId": "",
+    "roomId": "",
+    "count": 0,
+    "omitted": 0,
+    "reason": "Load a tracked room with floor and wall colliders first"
+  },
+  "status": {
+    "available": true,
+    "stateId": "7b817a4e68734cd38733bdeb1b65f069",
+    "roomId": "f0152f268f194b8ab99566fd3a0a4930",
+    "count": 5,
+    "omitted": 1,
+    "reason": "Loaded scan bounds; physical alignment is not verified"
+  },
+  "page": [
+    {
+      "id": "00000000000000000000000000000001",
+      "label": "WALL_FACE",
+      "plane": true,
+      "volume": false
+    },
+    {
+      "id": "00000000000000000000000000000002",
+      "label": "FLOOR",
+      "plane": true,
+      "volume": true
+    },
+    {
+      "id": "00000000000000000000000000000003",
+      "label": "WALL_FACE",
+      "plane": true,
+      "volume": false
+    },
+    {
+      "id": "00000000000000000000000000000004",
+      "label": "FLOOR",
+      "plane": true,
+      "volume": true
+    }
+  ],
+  "last": [
+    {
+      "id": "00000000000000000000000000000005",
+      "label": "WALL_FACE",
+      "plane": true,
+      "volume": false
+    }
+  ],
+  "empty": [],
+  "detail": {
+    "id": "00000000000000000000000000000002",
+    "label": "FLOOR",
+    "pose": {
+      "position": {
+        "x": 0.25,
+        "y": 1.234567,
+        "z": -0.1234567
+      },
+      "rotation": {
+        "x": 0.1468477,
+        "y": 0.133391351,
+        "z": 0.2105961,
+        "w": 0.957231343
+      }
+    },
+    "plane": {
+      "present": true,
+      "center": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "size": {
+        "x": 2.0,
+        "y": 1.0,
+        "z": 0.0
+      }
+    },
+    "volume": {
+      "present": true,
+      "center": {
+        "x": 0.1,
+        "y": 0.2,
+        "z": -0.3
+      },
+      "size": {
+        "x": 2.0,
+        "y": 1.0,
+        "z": 0.2
+      }
+    }
+  },
+  "planeOnly": {
+    "id": "00000000000000000000000000000001",
+    "label": "WALL_FACE",
+    "pose": {
+      "position": {
+        "x": 0.125,
+        "y": 1.234567,
+        "z": -0.1234567
+      },
+      "rotation": {
+        "x": 0.1468477,
+        "y": 0.133391351,
+        "z": 0.2105961,
+        "w": 0.957231343
+      }
+    },
+    "plane": {
+      "present": true,
+      "center": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "size": {
+        "x": 2.0,
+        "y": 1.0,
+        "z": 0.0
+      }
+    },
+    "volume": {
+      "present": false,
+      "center": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "size": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      }
+    }
+  },
+  "boundary": "Synthetic SDK source; real native scan coordinator and catalog. No headset or provider."
+}

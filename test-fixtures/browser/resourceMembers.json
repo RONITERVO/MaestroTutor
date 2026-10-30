@@ -1,0 +1,19 @@
+{
+  "arguments": {
+    "kind": "environment",
+    "id": "d8afbcd8d26e4489942f5f8b3b10613c",
+    "cursor": ""
+  },
+  "page": {
+    "kind": "environment",
+    "id": "d8afbcd8d26e4489942f5f8b3b10613c",
+    "revision": 10,
+    "membership": "772a7552a1c64de78c6320862833425b",
+    "offset": 0,
+    "total": 1,
+    "next": "",
+    "members": [
+      "3496379baced4923abf11db4e7d8aa69"
+    ]
+  }
+}

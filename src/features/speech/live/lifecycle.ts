@@ -1,6 +1,5 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
-import { type flushCaptureWorkletNode } from '../utils/captureWorkletMessaging';
 import type { createLiveActivity } from './activity';
 import type { createBrowserLiveVideo } from './browserVideo';
 import type { createLiveModelAudio } from './modelAudio';
@@ -9,9 +8,9 @@ import type { createLiveTelemetry } from './telemetry';
 import type { createLiveTranscripts } from './transcripts';
 
 export function createLiveLifecycle(state: Pick<LiveSessionData,
-  'sessionRef' | 'inputAudioContextRef' | 'outputAudioContextRef'
-  | 'microphoneStreamRef' | 'canvasRef' | 'workletNodeRef'
-  | 'playbackNodeRef' | 'logRef' | 'logFinalizedRef'
+  'liveInputContextRef' | 'sessionRef' | 'captureRef' | 'outputAudioContextRef'
+  | 'canvasRef'
+  | 'speechOutputRef' | 'logRef' | 'logFinalizedRef'
   | 'pendingUserTurnRef' | 'videoUpdateVersionRef' | 'videoFrameInFlightRef'
   | 'pendingTranscriptUpdateRef' | 'serverMessageQueueRef' | 'inputCodecWorkerRef'
   | 'outputCodecWorkerRef' | 'inputPacketizerRef' | 'pcmCaptureRouterRef'
@@ -21,15 +20,15 @@ export function createLiveLifecycle(state: Pick<LiveSessionData,
   | 'currentUserTranscriptAudioLengthRef' | 'currentModelThinkingTraceRef' | 'currentModelThinkingPhaseRef'
   | 'currentModelThinkingStatusLineRef' | 'currentTurnWaitingForInputRef' | 'currentModelAudioTotalLengthRef'
   | 'modelAudioSplitPointsRef' | 'lastNewlineCountRef' | 'lastTranscriptUpdateRef'
-  | 'playbackDrainCoordinatorRef' | 'playbackPendingRef' | 'speechGateRef'
+  | 'playbackPendingRef' | 'speechGateRef'
   | 'speechTurnBoundaryRef' | 'semanticSpeechCaptureRef' | 'loadingFallbackOnsetAtRef'
   | 'speechGateEpochRef' | 'playbackUntilRef' | 'playbackActiveRef'
   | 'awaitingModelTurnRef' | 'boundaryClosePromiseRef'
->, ports: ReturnType<typeof createLiveActivity> & ReturnType<typeof createLiveModelAudio> & ReturnType<typeof createLiveTranscripts> & ReturnType<typeof createBrowserLiveVideo> & ReturnType<typeof createLiveTelemetry> & { flushCaptureWorkletNode: typeof flushCaptureWorkletNode }) {
+>, ports: ReturnType<typeof createLiveActivity> & ReturnType<typeof createLiveModelAudio> & ReturnType<typeof createLiveTranscripts> & ReturnType<typeof createBrowserLiveVideo> & ReturnType<typeof createLiveTelemetry>) {
   const {
-    sessionRef, inputAudioContextRef, outputAudioContextRef,
-    microphoneStreamRef, canvasRef, workletNodeRef,
-    playbackNodeRef, logRef, logFinalizedRef,
+    liveInputContextRef, sessionRef, captureRef, outputAudioContextRef,
+    canvasRef,
+    speechOutputRef, logRef, logFinalizedRef,
     pendingUserTurnRef, videoUpdateVersionRef, videoFrameInFlightRef,
     pendingTranscriptUpdateRef, serverMessageQueueRef, inputCodecWorkerRef,
     outputCodecWorkerRef, inputPacketizerRef, pcmCaptureRouterRef,
@@ -39,7 +38,7 @@ export function createLiveLifecycle(state: Pick<LiveSessionData,
     currentUserTranscriptAudioLengthRef, currentModelThinkingTraceRef, currentModelThinkingPhaseRef,
     currentModelThinkingStatusLineRef, currentTurnWaitingForInputRef, currentModelAudioTotalLengthRef,
     modelAudioSplitPointsRef, lastNewlineCountRef, lastTranscriptUpdateRef,
-    playbackDrainCoordinatorRef, playbackPendingRef, speechGateRef,
+    playbackPendingRef, speechGateRef,
     speechTurnBoundaryRef, semanticSpeechCaptureRef, loadingFallbackOnsetAtRef,
     speechGateEpochRef, playbackUntilRef, playbackActiveRef,
     awaitingModelTurnRef, boundaryClosePromiseRef,
@@ -48,7 +47,7 @@ export function createLiveLifecycle(state: Pick<LiveSessionData,
     cancelModelAudioDecodeJobs, clearTranscriptUpdateTimer, detachCaptureVideo,
     emitTurnTranscriptReset, setLocalSpeechTriggerPhase, setVadActivity,
     startNextModelAudioTurn, stopAllAudio, stopVideoFrameLoop,
-    updateState, getAudioTelemetrySnapshot, flushCaptureWorkletNode,
+    updateState, getAudioTelemetrySnapshot,
   } = ports;
   const release = async () => {
     speechTriggerAbortRef.current?.abort();
@@ -62,11 +61,16 @@ export function createLiveLifecycle(state: Pick<LiveSessionData,
       // inference. Epoch invalidation makes any in-flight result harmless.
       speechGateEpochRef.current += 1;
     }
-    const activeCaptureNode = workletNodeRef.current;
-    if (activeCaptureNode && !wasSpeechGated) {
-      try { await flushCaptureWorkletNode(activeCaptureNode); }
+    const activeCapture = captureRef.current;
+    if (activeCapture && !wasSpeechGated) {
+      try { await activeCapture.flush(); }
       catch (error) { console.warn('Live capture flush during cleanup failed:', error); }
     }
+    // Flush only accepted input, then stop delivery before awaiting packet work.
+    // No session or UI code reaches into a browser/native capture graph.
+    captureRef.current = null;
+    try { await activeCapture?.close(); }
+    catch (error) { console.warn('Live capture close failed:', error); }
     if (inputPacketizerRef.current) {
       if (!wasSpeechGated) {
         try { await inputPacketizerRef.current.flushPending(); }
@@ -83,6 +87,8 @@ export function createLiveLifecycle(state: Pick<LiveSessionData,
 
     // Invalidate current session to prevent stale callbacks from processing
     currentSessionIdRef.current = 0;
+    liveInputContextRef.current?.discard();
+    liveInputContextRef.current = null;
     cancelModelAudioDecodeJobs();
     startNextModelAudioTurn(0);
 
@@ -92,17 +98,10 @@ export function createLiveLifecycle(state: Pick<LiveSessionData,
     pendingTranscriptUpdateRef.current = null;
     videoFrameInFlightRef.current = false;
 
-    // Clear worklet message handler FIRST to stop new audio from accumulating
-    if (activeCaptureNode) {
-      try { activeCaptureNode.port.onmessage = null; activeCaptureNode.disconnect(); } catch { }
-      workletNodeRef.current = null;
-    }
-    if (playbackNodeRef.current) {
-      playbackDrainCoordinatorRef.current.cancelAll();
+    if (speechOutputRef.current) {
       playbackPendingRef.current = false;
-      try { playbackNodeRef.current.port.postMessage({ type: 'reset' }); } catch { }
-      try { playbackNodeRef.current.disconnect(); } catch { }
-      playbackNodeRef.current = null;
+      try { speechOutputRef.current.dispose(); } catch { }
+      speechOutputRef.current = null;
     }
     playbackUntilRef.current = 0;
     playbackActiveRef.current = false;
@@ -116,22 +115,6 @@ export function createLiveLifecycle(state: Pick<LiveSessionData,
     if (!wasSpeechGated) {
       speechGateEpochRef.current += 1;
     }
-    if (microphoneStreamRef.current) {
-      microphoneStreamRef.current.getTracks().forEach(t => {
-        try { t.stop(); } catch { }
-      });
-      microphoneStreamRef.current = null;
-    }
-
-    // Safely close input context
-    if (inputAudioContextRef.current) {
-      const ctx = inputAudioContextRef.current;
-      inputAudioContextRef.current = null;
-      if (ctx.state !== 'closed') {
-        try { await ctx.close(); } catch { }
-      }
-    }
-
     // Safely close output context
     if (outputAudioContextRef.current) {
       stopAllAudio();
@@ -188,6 +171,9 @@ export function createLiveLifecycle(state: Pick<LiveSessionData,
   const cleanup = (): Promise<void> => {
     if (cleanupPromise) return cleanupPromise;
     isCleaningUpRef.current = true;
+    // Stop output before waiting for microphone flush/transport cleanup. The
+    // cleaning flag also prevents late decode/provider callbacks adding speech.
+    cancelModelAudioDecodeJobs(); stopAllAudio();
     // Publish the promise before invoking any callback, including synchronous ones.
     cleanupPromise = Promise.resolve().then(release).finally(() => {
       isCleaningUpRef.current = false;
@@ -198,10 +184,8 @@ export function createLiveLifecycle(state: Pick<LiveSessionData,
 
   const stop = async () => {
     updateState('idle');
-    if (inputPacketizerRef.current && !speechGateRef.current) {
-      try { await inputPacketizerRef.current.flushPending(); }
-      catch (error) { console.warn('Live packet flush during stop failed:', error); }
-    }
+    // release() flushes capture and its packetizer in order; it owns that work
+    // for every concurrent caller, without delaying immediate output reset.
     if (logRef.current && !logFinalizedRef.current) {
       logFinalizedRef.current = true;
       logRef.current.complete({

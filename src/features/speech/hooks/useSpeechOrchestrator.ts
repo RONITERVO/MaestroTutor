@@ -42,7 +42,7 @@ export interface UseSpeechOrchestratorReturn {
   // TTS State
   isSpeaking: boolean;
   speak: (textOrParts: string | SpeechPart[], defaultLang: string) => void;
-  stopSpeaking: () => void;
+  stopSpeaking: () => void | Promise<void>;
   isSpeechSynthesisSupported: boolean;
   speakingUtteranceText: string | null;
   hasPendingQueueItems: () => boolean;

@@ -1,0 +1,1799 @@
+{
+  "trace": [
+    {
+      "step": 1626,
+      "rooms": [
+        {
+          "worldId": "975b6c1cc3154ff685af399395493b92",
+          "vessels": 16,
+          "nativeVessels": 4,
+          "dormantVessels": 12,
+          "pending": false,
+          "ready": true,
+          "sources": [
+            {
+              "sessionId": "a6b832edc8e248f8ba5757ecb6010909",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 383.9616933816729,
+                "savedAmountMl": 400.0,
+                "capacityMl": 500.0,
+                "transferredMl": 16.038306618327088,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            },
+            {
+              "sessionId": "a6b832edc8e248f8ba5757ecb6010909",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 383.9616933816729,
+                "savedAmountMl": 400.0,
+                "capacityMl": 500.0,
+                "transferredMl": 16.038306618327088,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "receivers": [
+            {
+              "sessionId": "a6b832edc8e248f8ba5757ecb6010909",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 16.038306618327088,
+                "savedAmountMl": 0.0,
+                "capacityMl": 500.0,
+                "transferredMl": 0.0,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            },
+            {
+              "sessionId": "a6b832edc8e248f8ba5757ecb6010909",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 16.038306618327088,
+                "savedAmountMl": 0.0,
+                "capacityMl": 500.0,
+                "transferredMl": 0.0,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "executedGroups": 2,
+          "executedMembers": 4,
+          "pourOriginQueries": 2,
+          "pourOriginCandidates": 0,
+          "pourRayQueries": 32,
+          "pourHitCandidates": 4,
+          "scoopPathQueries": 0,
+          "scoopPathCandidates": 0,
+          "pourSegments": 32,
+          "pourCandidates": 56,
+          "pourSearchSegments": 28,
+          "pourDepositionQueries": 6,
+          "pourSurfaceQueries": 6,
+          "pourPresentationPoints": 34,
+          "pourSurfaceCaptures": 4,
+          "pourPresentations": 2,
+          "scoopCandidates": 8,
+          "discoveryCaptures": 1,
+          "collisionReads": 18,
+          "cavityReads": 16
+        },
+        {
+          "worldId": "d6a6eceb1bd04cb99d7c02456c79388c",
+          "vessels": 16,
+          "nativeVessels": 2,
+          "dormantVessels": 14,
+          "pending": false,
+          "ready": true,
+          "sources": [
+            {
+              "sessionId": "3b666538fb8940faa60c6c74842a8c31",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 383.9616933816729,
+                "savedAmountMl": 400.0,
+                "capacityMl": 500.0,
+                "transferredMl": 16.038306618327088,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "receivers": [
+            {
+              "sessionId": "3b666538fb8940faa60c6c74842a8c31",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 16.038306618327088,
+                "savedAmountMl": 0.0,
+                "capacityMl": 500.0,
+                "transferredMl": 0.0,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "executedGroups": 1,
+          "executedMembers": 2,
+          "pourOriginQueries": 1,
+          "pourOriginCandidates": 0,
+          "pourRayQueries": 16,
+          "pourHitCandidates": 2,
+          "scoopPathQueries": 0,
+          "scoopPathCandidates": 0,
+          "pourSegments": 16,
+          "pourCandidates": 28,
+          "pourSearchSegments": 14,
+          "pourDepositionQueries": 3,
+          "pourSurfaceQueries": 3,
+          "pourPresentationPoints": 17,
+          "pourSurfaceCaptures": 2,
+          "pourPresentations": 1,
+          "scoopCandidates": 4,
+          "discoveryCaptures": 1,
+          "collisionReads": 18,
+          "cavityReads": 16
+        },
+        {
+          "worldId": "7eec76ba71a24cc2be825d7ebcc8a3c4",
+          "vessels": 16,
+          "nativeVessels": 2,
+          "dormantVessels": 14,
+          "pending": false,
+          "ready": true,
+          "sources": [
+            {
+              "sessionId": "5e9a9d33af314edf90b99c09cb9e3ffe",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 383.9616933816729,
+                "savedAmountMl": 400.0,
+                "capacityMl": 500.0,
+                "transferredMl": 16.038306618327088,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "receivers": [
+            {
+              "sessionId": "5e9a9d33af314edf90b99c09cb9e3ffe",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 16.038306618327088,
+                "savedAmountMl": 0.0,
+                "capacityMl": 500.0,
+                "transferredMl": 0.0,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "executedGroups": 1,
+          "executedMembers": 2,
+          "pourOriginQueries": 1,
+          "pourOriginCandidates": 0,
+          "pourRayQueries": 16,
+          "pourHitCandidates": 2,
+          "scoopPathQueries": 0,
+          "scoopPathCandidates": 0,
+          "pourSegments": 16,
+          "pourCandidates": 28,
+          "pourSearchSegments": 14,
+          "pourDepositionQueries": 3,
+          "pourSurfaceQueries": 3,
+          "pourPresentationPoints": 17,
+          "pourSurfaceCaptures": 2,
+          "pourPresentations": 1,
+          "scoopCandidates": 4,
+          "discoveryCaptures": 1,
+          "collisionReads": 18,
+          "cavityReads": 16
+        },
+        {
+          "worldId": "a88c7516fd3742e1a3beeadf6eadc865",
+          "vessels": 16,
+          "nativeVessels": 2,
+          "dormantVessels": 14,
+          "pending": false,
+          "ready": true,
+          "sources": [
+            {
+              "sessionId": "b79006d1f7ab476ba0a11864c3ce85c5",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 383.9616933816729,
+                "savedAmountMl": 400.0,
+                "capacityMl": 500.0,
+                "transferredMl": 16.038306618327088,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "receivers": [
+            {
+              "sessionId": "b79006d1f7ab476ba0a11864c3ce85c5",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 16.038306618327088,
+                "savedAmountMl": 0.0,
+                "capacityMl": 500.0,
+                "transferredMl": 0.0,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "executedGroups": 1,
+          "executedMembers": 2,
+          "pourOriginQueries": 1,
+          "pourOriginCandidates": 0,
+          "pourRayQueries": 16,
+          "pourHitCandidates": 2,
+          "scoopPathQueries": 0,
+          "scoopPathCandidates": 0,
+          "pourSegments": 16,
+          "pourCandidates": 28,
+          "pourSearchSegments": 14,
+          "pourDepositionQueries": 3,
+          "pourSurfaceQueries": 3,
+          "pourPresentationPoints": 17,
+          "pourSurfaceCaptures": 2,
+          "pourPresentations": 1,
+          "scoopCandidates": 4,
+          "discoveryCaptures": 1,
+          "collisionReads": 18,
+          "cavityReads": 16
+        },
+        {
+          "worldId": "94e62ec6aeba4dca9b4a99505bc5f32a",
+          "vessels": 16,
+          "nativeVessels": 2,
+          "dormantVessels": 14,
+          "pending": false,
+          "ready": true,
+          "sources": [
+            {
+              "sessionId": "d87046f27ec348d6a386b293b256f604",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 383.9616933816729,
+                "savedAmountMl": 400.0,
+                "capacityMl": 500.0,
+                "transferredMl": 16.038306618327088,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "receivers": [
+            {
+              "sessionId": "d87046f27ec348d6a386b293b256f604",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 16.038306618327088,
+                "savedAmountMl": 0.0,
+                "capacityMl": 500.0,
+                "transferredMl": 0.0,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "executedGroups": 1,
+          "executedMembers": 2,
+          "pourOriginQueries": 1,
+          "pourOriginCandidates": 0,
+          "pourRayQueries": 16,
+          "pourHitCandidates": 2,
+          "scoopPathQueries": 0,
+          "scoopPathCandidates": 0,
+          "pourSegments": 16,
+          "pourCandidates": 28,
+          "pourSearchSegments": 14,
+          "pourDepositionQueries": 3,
+          "pourSurfaceQueries": 3,
+          "pourPresentationPoints": 17,
+          "pourSurfaceCaptures": 2,
+          "pourPresentations": 1,
+          "scoopCandidates": 4,
+          "discoveryCaptures": 1,
+          "collisionReads": 18,
+          "cavityReads": 16
+        },
+        {
+          "worldId": "c72037b3248942d6ab2750f549ca87d3",
+          "vessels": 16,
+          "nativeVessels": 2,
+          "dormantVessels": 14,
+          "pending": false,
+          "ready": true,
+          "sources": [
+            {
+              "sessionId": "a3ae6205473542f79f316935eeea2ee6",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 383.9616933816729,
+                "savedAmountMl": 400.0,
+                "capacityMl": 500.0,
+                "transferredMl": 16.038306618327088,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "receivers": [
+            {
+              "sessionId": "a3ae6205473542f79f316935eeea2ee6",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 16.038306618327088,
+                "savedAmountMl": 0.0,
+                "capacityMl": 500.0,
+                "transferredMl": 0.0,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "executedGroups": 1,
+          "executedMembers": 2,
+          "pourOriginQueries": 1,
+          "pourOriginCandidates": 0,
+          "pourRayQueries": 16,
+          "pourHitCandidates": 2,
+          "scoopPathQueries": 0,
+          "scoopPathCandidates": 0,
+          "pourSegments": 16,
+          "pourCandidates": 28,
+          "pourSearchSegments": 14,
+          "pourDepositionQueries": 3,
+          "pourSurfaceQueries": 3,
+          "pourPresentationPoints": 17,
+          "pourSurfaceCaptures": 2,
+          "pourPresentations": 1,
+          "scoopCandidates": 4,
+          "discoveryCaptures": 1,
+          "collisionReads": 18,
+          "cavityReads": 16
+        },
+        {
+          "worldId": "fa43c82f82ea4d82ac0f1eaf245728dc",
+          "vessels": 16,
+          "nativeVessels": 2,
+          "dormantVessels": 14,
+          "pending": false,
+          "ready": true,
+          "sources": [
+            {
+              "sessionId": "c00df722f69a4ce88cc2e810c0fc1009",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 383.9616933816729,
+                "savedAmountMl": 400.0,
+                "capacityMl": 500.0,
+                "transferredMl": 16.038306618327088,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "receivers": [
+            {
+              "sessionId": "c00df722f69a4ce88cc2e810c0fc1009",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 16.038306618327088,
+                "savedAmountMl": 0.0,
+                "capacityMl": 500.0,
+                "transferredMl": 0.0,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "executedGroups": 1,
+          "executedMembers": 2,
+          "pourOriginQueries": 1,
+          "pourOriginCandidates": 0,
+          "pourRayQueries": 16,
+          "pourHitCandidates": 2,
+          "scoopPathQueries": 0,
+          "scoopPathCandidates": 0,
+          "pourSegments": 16,
+          "pourCandidates": 28,
+          "pourSearchSegments": 14,
+          "pourDepositionQueries": 3,
+          "pourSurfaceQueries": 3,
+          "pourPresentationPoints": 17,
+          "pourSurfaceCaptures": 2,
+          "pourPresentations": 1,
+          "scoopCandidates": 4,
+          "discoveryCaptures": 1,
+          "collisionReads": 18,
+          "cavityReads": 16
+        },
+        {
+          "worldId": "76bcbade0c104d6f907bb2288e2cad24",
+          "vessels": 16,
+          "nativeVessels": 2,
+          "dormantVessels": 14,
+          "pending": false,
+          "ready": true,
+          "sources": [
+            {
+              "sessionId": "d34ad67c1feb4a69b2530861140932bc",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 383.9616933816729,
+                "savedAmountMl": 400.0,
+                "capacityMl": 500.0,
+                "transferredMl": 16.038306618327088,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "receivers": [
+            {
+              "sessionId": "d34ad67c1feb4a69b2530861140932bc",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 16.038306618327088,
+                "savedAmountMl": 0.0,
+                "capacityMl": 500.0,
+                "transferredMl": 0.0,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "executedGroups": 1,
+          "executedMembers": 2,
+          "pourOriginQueries": 1,
+          "pourOriginCandidates": 0,
+          "pourRayQueries": 16,
+          "pourHitCandidates": 2,
+          "scoopPathQueries": 0,
+          "scoopPathCandidates": 0,
+          "pourSegments": 16,
+          "pourCandidates": 28,
+          "pourSearchSegments": 14,
+          "pourDepositionQueries": 3,
+          "pourSurfaceQueries": 3,
+          "pourPresentationPoints": 17,
+          "pourSurfaceCaptures": 2,
+          "pourPresentations": 1,
+          "scoopCandidates": 4,
+          "discoveryCaptures": 1,
+          "collisionReads": 18,
+          "cavityReads": 16
+        },
+        {
+          "worldId": "1dd0983c3c0f4c308f6eeb3471fbec3e",
+          "vessels": 16,
+          "nativeVessels": 2,
+          "dormantVessels": 14,
+          "pending": false,
+          "ready": true,
+          "sources": [
+            {
+              "sessionId": "5ea617e7d53c4f02b7cd0149325f8501",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 383.9616933816729,
+                "savedAmountMl": 400.0,
+                "capacityMl": 500.0,
+                "transferredMl": 16.038306618327088,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "receivers": [
+            {
+              "sessionId": "5ea617e7d53c4f02b7cd0149325f8501",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 16.038306618327088,
+                "savedAmountMl": 0.0,
+                "capacityMl": 500.0,
+                "transferredMl": 0.0,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "executedGroups": 1,
+          "executedMembers": 2,
+          "pourOriginQueries": 1,
+          "pourOriginCandidates": 0,
+          "pourRayQueries": 16,
+          "pourHitCandidates": 2,
+          "scoopPathQueries": 0,
+          "scoopPathCandidates": 0,
+          "pourSegments": 16,
+          "pourCandidates": 28,
+          "pourSearchSegments": 14,
+          "pourDepositionQueries": 3,
+          "pourSurfaceQueries": 3,
+          "pourPresentationPoints": 17,
+          "pourSurfaceCaptures": 2,
+          "pourPresentations": 1,
+          "scoopCandidates": 4,
+          "discoveryCaptures": 1,
+          "collisionReads": 18,
+          "cavityReads": 16
+        }
+      ],
+      "flowBudget": {
+        "reservations": 9,
+        "units": 93720,
+        "reservationLimit": 64,
+        "unitLimit": 524288,
+        "streamSegments": 32,
+        "queryHits": 64,
+        "scoopSamples": 5,
+        "rainSamples": 5
+      },
+      "discoveryBudget": {
+        "step": 1626,
+        "reservations": 9,
+        "executions": 9,
+        "units": 65124,
+        "unitLimit": 524288,
+        "objectLimit": 4096
+      },
+      "nativeBudget": {
+        "instances": 20,
+        "preparing": 0,
+        "ready": 20,
+        "retiring": 0,
+        "instanceLimit": 32,
+        "streamPointLimit": 33
+      }
+    },
+    {
+      "step": 1627,
+      "rooms": [
+        {
+          "worldId": "975b6c1cc3154ff685af399395493b92",
+          "vessels": 16,
+          "nativeVessels": 4,
+          "dormantVessels": 12,
+          "pending": false,
+          "ready": true,
+          "sources": [
+            {
+              "sessionId": "a6b832edc8e248f8ba5757ecb6010909",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 368.2788892795238,
+                "savedAmountMl": 400.0,
+                "capacityMl": 500.0,
+                "transferredMl": 16.038306618327088,
+                "spilledMl": 15.68280410214909
+              },
+              "temporary": false,
+              "error": ""
+            },
+            {
+              "sessionId": "a6b832edc8e248f8ba5757ecb6010909",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 368.2788892795238,
+                "savedAmountMl": 400.0,
+                "capacityMl": 500.0,
+                "transferredMl": 31.721110720476176,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "receivers": [
+            {
+              "sessionId": "a6b832edc8e248f8ba5757ecb6010909",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 16.038306618327088,
+                "savedAmountMl": 0.0,
+                "capacityMl": 500.0,
+                "transferredMl": 0.0,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            },
+            {
+              "sessionId": "a6b832edc8e248f8ba5757ecb6010909",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 31.721110720476176,
+                "savedAmountMl": 0.0,
+                "capacityMl": 500.0,
+                "transferredMl": 0.0,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "executedGroups": 2,
+          "executedMembers": 4,
+          "pourOriginQueries": 2,
+          "pourOriginCandidates": 0,
+          "pourRayQueries": 48,
+          "pourHitCandidates": 4,
+          "scoopPathQueries": 0,
+          "scoopPathCandidates": 0,
+          "pourSegments": 48,
+          "pourCandidates": 74,
+          "pourSearchSegments": 46,
+          "pourDepositionQueries": 3,
+          "pourSurfaceQueries": 3,
+          "pourPresentationPoints": 50,
+          "pourSurfaceCaptures": 2,
+          "pourPresentations": 2,
+          "scoopCandidates": 10,
+          "discoveryCaptures": 1,
+          "collisionReads": 6,
+          "cavityReads": 16
+        },
+        {
+          "worldId": "d6a6eceb1bd04cb99d7c02456c79388c",
+          "vessels": 16,
+          "nativeVessels": 2,
+          "dormantVessels": 14,
+          "pending": false,
+          "ready": true,
+          "sources": [
+            {
+              "sessionId": "3b666538fb8940faa60c6c74842a8c31",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 368.2788892795238,
+                "savedAmountMl": 400.0,
+                "capacityMl": 500.0,
+                "transferredMl": 31.721110720476176,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "receivers": [
+            {
+              "sessionId": "3b666538fb8940faa60c6c74842a8c31",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 31.721110720476176,
+                "savedAmountMl": 0.0,
+                "capacityMl": 500.0,
+                "transferredMl": 0.0,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "executedGroups": 1,
+          "executedMembers": 2,
+          "pourOriginQueries": 1,
+          "pourOriginCandidates": 0,
+          "pourRayQueries": 16,
+          "pourHitCandidates": 2,
+          "scoopPathQueries": 0,
+          "scoopPathCandidates": 0,
+          "pourSegments": 16,
+          "pourCandidates": 28,
+          "pourSearchSegments": 14,
+          "pourDepositionQueries": 3,
+          "pourSurfaceQueries": 3,
+          "pourPresentationPoints": 17,
+          "pourSurfaceCaptures": 2,
+          "pourPresentations": 1,
+          "scoopCandidates": 4,
+          "discoveryCaptures": 1,
+          "collisionReads": 4,
+          "cavityReads": 16
+        },
+        {
+          "worldId": "7eec76ba71a24cc2be825d7ebcc8a3c4",
+          "vessels": 16,
+          "nativeVessels": 2,
+          "dormantVessels": 14,
+          "pending": false,
+          "ready": true,
+          "sources": [
+            {
+              "sessionId": "5e9a9d33af314edf90b99c09cb9e3ffe",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 368.2788892795238,
+                "savedAmountMl": 400.0,
+                "capacityMl": 500.0,
+                "transferredMl": 31.721110720476176,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "receivers": [
+            {
+              "sessionId": "5e9a9d33af314edf90b99c09cb9e3ffe",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 31.721110720476176,
+                "savedAmountMl": 0.0,
+                "capacityMl": 500.0,
+                "transferredMl": 0.0,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "executedGroups": 1,
+          "executedMembers": 2,
+          "pourOriginQueries": 1,
+          "pourOriginCandidates": 0,
+          "pourRayQueries": 16,
+          "pourHitCandidates": 2,
+          "scoopPathQueries": 0,
+          "scoopPathCandidates": 0,
+          "pourSegments": 16,
+          "pourCandidates": 28,
+          "pourSearchSegments": 14,
+          "pourDepositionQueries": 3,
+          "pourSurfaceQueries": 3,
+          "pourPresentationPoints": 17,
+          "pourSurfaceCaptures": 2,
+          "pourPresentations": 1,
+          "scoopCandidates": 4,
+          "discoveryCaptures": 1,
+          "collisionReads": 4,
+          "cavityReads": 16
+        },
+        {
+          "worldId": "a88c7516fd3742e1a3beeadf6eadc865",
+          "vessels": 16,
+          "nativeVessels": 2,
+          "dormantVessels": 14,
+          "pending": false,
+          "ready": true,
+          "sources": [
+            {
+              "sessionId": "b79006d1f7ab476ba0a11864c3ce85c5",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 368.2788892795238,
+                "savedAmountMl": 400.0,
+                "capacityMl": 500.0,
+                "transferredMl": 31.721110720476176,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "receivers": [
+            {
+              "sessionId": "b79006d1f7ab476ba0a11864c3ce85c5",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 31.721110720476176,
+                "savedAmountMl": 0.0,
+                "capacityMl": 500.0,
+                "transferredMl": 0.0,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "executedGroups": 1,
+          "executedMembers": 2,
+          "pourOriginQueries": 1,
+          "pourOriginCandidates": 0,
+          "pourRayQueries": 16,
+          "pourHitCandidates": 2,
+          "scoopPathQueries": 0,
+          "scoopPathCandidates": 0,
+          "pourSegments": 16,
+          "pourCandidates": 28,
+          "pourSearchSegments": 14,
+          "pourDepositionQueries": 3,
+          "pourSurfaceQueries": 3,
+          "pourPresentationPoints": 17,
+          "pourSurfaceCaptures": 2,
+          "pourPresentations": 1,
+          "scoopCandidates": 4,
+          "discoveryCaptures": 1,
+          "collisionReads": 4,
+          "cavityReads": 16
+        },
+        {
+          "worldId": "94e62ec6aeba4dca9b4a99505bc5f32a",
+          "vessels": 16,
+          "nativeVessels": 2,
+          "dormantVessels": 14,
+          "pending": false,
+          "ready": true,
+          "sources": [
+            {
+              "sessionId": "d87046f27ec348d6a386b293b256f604",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 368.2788892795238,
+                "savedAmountMl": 400.0,
+                "capacityMl": 500.0,
+                "transferredMl": 31.721110720476176,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "receivers": [
+            {
+              "sessionId": "d87046f27ec348d6a386b293b256f604",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 31.721110720476176,
+                "savedAmountMl": 0.0,
+                "capacityMl": 500.0,
+                "transferredMl": 0.0,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "executedGroups": 1,
+          "executedMembers": 2,
+          "pourOriginQueries": 1,
+          "pourOriginCandidates": 0,
+          "pourRayQueries": 16,
+          "pourHitCandidates": 2,
+          "scoopPathQueries": 0,
+          "scoopPathCandidates": 0,
+          "pourSegments": 16,
+          "pourCandidates": 28,
+          "pourSearchSegments": 14,
+          "pourDepositionQueries": 3,
+          "pourSurfaceQueries": 3,
+          "pourPresentationPoints": 17,
+          "pourSurfaceCaptures": 2,
+          "pourPresentations": 1,
+          "scoopCandidates": 4,
+          "discoveryCaptures": 1,
+          "collisionReads": 4,
+          "cavityReads": 16
+        },
+        {
+          "worldId": "c72037b3248942d6ab2750f549ca87d3",
+          "vessels": 16,
+          "nativeVessels": 2,
+          "dormantVessels": 14,
+          "pending": false,
+          "ready": true,
+          "sources": [
+            {
+              "sessionId": "a3ae6205473542f79f316935eeea2ee6",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 368.2788892795238,
+                "savedAmountMl": 400.0,
+                "capacityMl": 500.0,
+                "transferredMl": 31.721110720476176,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "receivers": [
+            {
+              "sessionId": "a3ae6205473542f79f316935eeea2ee6",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 31.721110720476176,
+                "savedAmountMl": 0.0,
+                "capacityMl": 500.0,
+                "transferredMl": 0.0,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "executedGroups": 1,
+          "executedMembers": 2,
+          "pourOriginQueries": 1,
+          "pourOriginCandidates": 0,
+          "pourRayQueries": 16,
+          "pourHitCandidates": 2,
+          "scoopPathQueries": 0,
+          "scoopPathCandidates": 0,
+          "pourSegments": 16,
+          "pourCandidates": 28,
+          "pourSearchSegments": 14,
+          "pourDepositionQueries": 3,
+          "pourSurfaceQueries": 3,
+          "pourPresentationPoints": 17,
+          "pourSurfaceCaptures": 2,
+          "pourPresentations": 1,
+          "scoopCandidates": 4,
+          "discoveryCaptures": 1,
+          "collisionReads": 4,
+          "cavityReads": 16
+        },
+        {
+          "worldId": "fa43c82f82ea4d82ac0f1eaf245728dc",
+          "vessels": 16,
+          "nativeVessels": 2,
+          "dormantVessels": 14,
+          "pending": false,
+          "ready": true,
+          "sources": [
+            {
+              "sessionId": "c00df722f69a4ce88cc2e810c0fc1009",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 368.2788892795238,
+                "savedAmountMl": 400.0,
+                "capacityMl": 500.0,
+                "transferredMl": 31.721110720476176,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "receivers": [
+            {
+              "sessionId": "c00df722f69a4ce88cc2e810c0fc1009",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 31.721110720476176,
+                "savedAmountMl": 0.0,
+                "capacityMl": 500.0,
+                "transferredMl": 0.0,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "executedGroups": 1,
+          "executedMembers": 2,
+          "pourOriginQueries": 1,
+          "pourOriginCandidates": 0,
+          "pourRayQueries": 16,
+          "pourHitCandidates": 2,
+          "scoopPathQueries": 0,
+          "scoopPathCandidates": 0,
+          "pourSegments": 16,
+          "pourCandidates": 28,
+          "pourSearchSegments": 14,
+          "pourDepositionQueries": 3,
+          "pourSurfaceQueries": 3,
+          "pourPresentationPoints": 17,
+          "pourSurfaceCaptures": 2,
+          "pourPresentations": 1,
+          "scoopCandidates": 4,
+          "discoveryCaptures": 1,
+          "collisionReads": 4,
+          "cavityReads": 16
+        },
+        {
+          "worldId": "76bcbade0c104d6f907bb2288e2cad24",
+          "vessels": 16,
+          "nativeVessels": 2,
+          "dormantVessels": 14,
+          "pending": false,
+          "ready": true,
+          "sources": [
+            {
+              "sessionId": "d34ad67c1feb4a69b2530861140932bc",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 368.2788892795238,
+                "savedAmountMl": 400.0,
+                "capacityMl": 500.0,
+                "transferredMl": 31.721110720476176,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "receivers": [
+            {
+              "sessionId": "d34ad67c1feb4a69b2530861140932bc",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 31.721110720476176,
+                "savedAmountMl": 0.0,
+                "capacityMl": 500.0,
+                "transferredMl": 0.0,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "executedGroups": 1,
+          "executedMembers": 2,
+          "pourOriginQueries": 1,
+          "pourOriginCandidates": 0,
+          "pourRayQueries": 16,
+          "pourHitCandidates": 2,
+          "scoopPathQueries": 0,
+          "scoopPathCandidates": 0,
+          "pourSegments": 16,
+          "pourCandidates": 28,
+          "pourSearchSegments": 14,
+          "pourDepositionQueries": 3,
+          "pourSurfaceQueries": 3,
+          "pourPresentationPoints": 17,
+          "pourSurfaceCaptures": 2,
+          "pourPresentations": 1,
+          "scoopCandidates": 4,
+          "discoveryCaptures": 1,
+          "collisionReads": 4,
+          "cavityReads": 16
+        },
+        {
+          "worldId": "1dd0983c3c0f4c308f6eeb3471fbec3e",
+          "vessels": 16,
+          "nativeVessels": 2,
+          "dormantVessels": 14,
+          "pending": false,
+          "ready": true,
+          "sources": [
+            {
+              "sessionId": "5ea617e7d53c4f02b7cd0149325f8501",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 368.2788892795238,
+                "savedAmountMl": 400.0,
+                "capacityMl": 500.0,
+                "transferredMl": 31.721110720476176,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "receivers": [
+            {
+              "sessionId": "5ea617e7d53c4f02b7cd0149325f8501",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 31.721110720476176,
+                "savedAmountMl": 0.0,
+                "capacityMl": 500.0,
+                "transferredMl": 0.0,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "executedGroups": 1,
+          "executedMembers": 2,
+          "pourOriginQueries": 1,
+          "pourOriginCandidates": 0,
+          "pourRayQueries": 16,
+          "pourHitCandidates": 2,
+          "scoopPathQueries": 0,
+          "scoopPathCandidates": 0,
+          "pourSegments": 16,
+          "pourCandidates": 28,
+          "pourSearchSegments": 14,
+          "pourDepositionQueries": 3,
+          "pourSurfaceQueries": 3,
+          "pourPresentationPoints": 17,
+          "pourSurfaceCaptures": 2,
+          "pourPresentations": 1,
+          "scoopCandidates": 4,
+          "discoveryCaptures": 1,
+          "collisionReads": 4,
+          "cavityReads": 16
+        }
+      ],
+      "flowBudget": {
+        "reservations": 9,
+        "units": 97728,
+        "reservationLimit": 64,
+        "unitLimit": 524288,
+        "streamSegments": 32,
+        "queryHits": 64,
+        "scoopSamples": 5,
+        "rainSamples": 5
+      },
+      "discoveryBudget": {
+        "step": 1627,
+        "reservations": 9,
+        "executions": 9,
+        "units": 65124,
+        "unitLimit": 524288,
+        "objectLimit": 4096
+      },
+      "nativeBudget": {
+        "instances": 20,
+        "preparing": 0,
+        "ready": 20,
+        "retiring": 0,
+        "instanceLimit": 32,
+        "streamPointLimit": 33
+      },
+      "topology": "merged"
+    },
+    {
+      "step": 1628,
+      "rooms": [
+        {
+          "worldId": "975b6c1cc3154ff685af399395493b92",
+          "vessels": 16,
+          "nativeVessels": 4,
+          "dormantVessels": 12,
+          "pending": false,
+          "ready": true,
+          "sources": [
+            {
+              "sessionId": "a6b832edc8e248f8ba5757ecb6010909",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 352.9516790785958,
+                "savedAmountMl": 400.0,
+                "capacityMl": 500.0,
+                "transferredMl": 31.36551681925509,
+                "spilledMl": 15.68280410214909
+              },
+              "temporary": false,
+              "error": ""
+            },
+            {
+              "sessionId": "a6b832edc8e248f8ba5757ecb6010909",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 352.9516790785958,
+                "savedAmountMl": 400.0,
+                "capacityMl": 500.0,
+                "transferredMl": 47.048320921404176,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "receivers": [
+            {
+              "sessionId": "a6b832edc8e248f8ba5757ecb6010909",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 31.36551681925509,
+                "savedAmountMl": 0.0,
+                "capacityMl": 500.0,
+                "transferredMl": 0.0,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            },
+            {
+              "sessionId": "a6b832edc8e248f8ba5757ecb6010909",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 47.048320921404176,
+                "savedAmountMl": 0.0,
+                "capacityMl": 500.0,
+                "transferredMl": 0.0,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "executedGroups": 2,
+          "executedMembers": 4,
+          "pourOriginQueries": 2,
+          "pourOriginCandidates": 0,
+          "pourRayQueries": 32,
+          "pourHitCandidates": 4,
+          "scoopPathQueries": 0,
+          "scoopPathCandidates": 0,
+          "pourSegments": 32,
+          "pourCandidates": 56,
+          "pourSearchSegments": 28,
+          "pourDepositionQueries": 6,
+          "pourSurfaceQueries": 6,
+          "pourPresentationPoints": 34,
+          "pourSurfaceCaptures": 4,
+          "pourPresentations": 2,
+          "scoopCandidates": 8,
+          "discoveryCaptures": 1,
+          "collisionReads": 6,
+          "cavityReads": 16
+        },
+        {
+          "worldId": "d6a6eceb1bd04cb99d7c02456c79388c",
+          "vessels": 16,
+          "nativeVessels": 2,
+          "dormantVessels": 14,
+          "pending": false,
+          "ready": true,
+          "sources": [
+            {
+              "sessionId": "3b666538fb8940faa60c6c74842a8c31",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 352.9516790785958,
+                "savedAmountMl": 400.0,
+                "capacityMl": 500.0,
+                "transferredMl": 47.048320921404176,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "receivers": [
+            {
+              "sessionId": "3b666538fb8940faa60c6c74842a8c31",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 47.048320921404176,
+                "savedAmountMl": 0.0,
+                "capacityMl": 500.0,
+                "transferredMl": 0.0,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "executedGroups": 1,
+          "executedMembers": 2,
+          "pourOriginQueries": 1,
+          "pourOriginCandidates": 0,
+          "pourRayQueries": 16,
+          "pourHitCandidates": 2,
+          "scoopPathQueries": 0,
+          "scoopPathCandidates": 0,
+          "pourSegments": 16,
+          "pourCandidates": 28,
+          "pourSearchSegments": 14,
+          "pourDepositionQueries": 3,
+          "pourSurfaceQueries": 3,
+          "pourPresentationPoints": 17,
+          "pourSurfaceCaptures": 2,
+          "pourPresentations": 1,
+          "scoopCandidates": 4,
+          "discoveryCaptures": 1,
+          "collisionReads": 4,
+          "cavityReads": 16
+        },
+        {
+          "worldId": "7eec76ba71a24cc2be825d7ebcc8a3c4",
+          "vessels": 16,
+          "nativeVessels": 2,
+          "dormantVessels": 14,
+          "pending": false,
+          "ready": true,
+          "sources": [
+            {
+              "sessionId": "5e9a9d33af314edf90b99c09cb9e3ffe",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 352.9516790785958,
+                "savedAmountMl": 400.0,
+                "capacityMl": 500.0,
+                "transferredMl": 47.048320921404176,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "receivers": [
+            {
+              "sessionId": "5e9a9d33af314edf90b99c09cb9e3ffe",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 47.048320921404176,
+                "savedAmountMl": 0.0,
+                "capacityMl": 500.0,
+                "transferredMl": 0.0,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "executedGroups": 1,
+          "executedMembers": 2,
+          "pourOriginQueries": 1,
+          "pourOriginCandidates": 0,
+          "pourRayQueries": 16,
+          "pourHitCandidates": 2,
+          "scoopPathQueries": 0,
+          "scoopPathCandidates": 0,
+          "pourSegments": 16,
+          "pourCandidates": 28,
+          "pourSearchSegments": 14,
+          "pourDepositionQueries": 3,
+          "pourSurfaceQueries": 3,
+          "pourPresentationPoints": 17,
+          "pourSurfaceCaptures": 2,
+          "pourPresentations": 1,
+          "scoopCandidates": 4,
+          "discoveryCaptures": 1,
+          "collisionReads": 4,
+          "cavityReads": 16
+        },
+        {
+          "worldId": "a88c7516fd3742e1a3beeadf6eadc865",
+          "vessels": 16,
+          "nativeVessels": 2,
+          "dormantVessels": 14,
+          "pending": false,
+          "ready": true,
+          "sources": [
+            {
+              "sessionId": "b79006d1f7ab476ba0a11864c3ce85c5",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 352.9516790785958,
+                "savedAmountMl": 400.0,
+                "capacityMl": 500.0,
+                "transferredMl": 47.048320921404176,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "receivers": [
+            {
+              "sessionId": "b79006d1f7ab476ba0a11864c3ce85c5",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 47.048320921404176,
+                "savedAmountMl": 0.0,
+                "capacityMl": 500.0,
+                "transferredMl": 0.0,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "executedGroups": 1,
+          "executedMembers": 2,
+          "pourOriginQueries": 1,
+          "pourOriginCandidates": 0,
+          "pourRayQueries": 16,
+          "pourHitCandidates": 2,
+          "scoopPathQueries": 0,
+          "scoopPathCandidates": 0,
+          "pourSegments": 16,
+          "pourCandidates": 28,
+          "pourSearchSegments": 14,
+          "pourDepositionQueries": 3,
+          "pourSurfaceQueries": 3,
+          "pourPresentationPoints": 17,
+          "pourSurfaceCaptures": 2,
+          "pourPresentations": 1,
+          "scoopCandidates": 4,
+          "discoveryCaptures": 1,
+          "collisionReads": 4,
+          "cavityReads": 16
+        },
+        {
+          "worldId": "94e62ec6aeba4dca9b4a99505bc5f32a",
+          "vessels": 16,
+          "nativeVessels": 2,
+          "dormantVessels": 14,
+          "pending": false,
+          "ready": true,
+          "sources": [
+            {
+              "sessionId": "d87046f27ec348d6a386b293b256f604",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 352.9516790785958,
+                "savedAmountMl": 400.0,
+                "capacityMl": 500.0,
+                "transferredMl": 47.048320921404176,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "receivers": [
+            {
+              "sessionId": "d87046f27ec348d6a386b293b256f604",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 47.048320921404176,
+                "savedAmountMl": 0.0,
+                "capacityMl": 500.0,
+                "transferredMl": 0.0,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "executedGroups": 1,
+          "executedMembers": 2,
+          "pourOriginQueries": 1,
+          "pourOriginCandidates": 0,
+          "pourRayQueries": 16,
+          "pourHitCandidates": 2,
+          "scoopPathQueries": 0,
+          "scoopPathCandidates": 0,
+          "pourSegments": 16,
+          "pourCandidates": 28,
+          "pourSearchSegments": 14,
+          "pourDepositionQueries": 3,
+          "pourSurfaceQueries": 3,
+          "pourPresentationPoints": 17,
+          "pourSurfaceCaptures": 2,
+          "pourPresentations": 1,
+          "scoopCandidates": 4,
+          "discoveryCaptures": 1,
+          "collisionReads": 4,
+          "cavityReads": 16
+        },
+        {
+          "worldId": "c72037b3248942d6ab2750f549ca87d3",
+          "vessels": 16,
+          "nativeVessels": 2,
+          "dormantVessels": 14,
+          "pending": false,
+          "ready": true,
+          "sources": [
+            {
+              "sessionId": "a3ae6205473542f79f316935eeea2ee6",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 352.9516790785958,
+                "savedAmountMl": 400.0,
+                "capacityMl": 500.0,
+                "transferredMl": 47.048320921404176,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "receivers": [
+            {
+              "sessionId": "a3ae6205473542f79f316935eeea2ee6",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 47.048320921404176,
+                "savedAmountMl": 0.0,
+                "capacityMl": 500.0,
+                "transferredMl": 0.0,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "executedGroups": 1,
+          "executedMembers": 2,
+          "pourOriginQueries": 1,
+          "pourOriginCandidates": 0,
+          "pourRayQueries": 16,
+          "pourHitCandidates": 2,
+          "scoopPathQueries": 0,
+          "scoopPathCandidates": 0,
+          "pourSegments": 16,
+          "pourCandidates": 28,
+          "pourSearchSegments": 14,
+          "pourDepositionQueries": 3,
+          "pourSurfaceQueries": 3,
+          "pourPresentationPoints": 17,
+          "pourSurfaceCaptures": 2,
+          "pourPresentations": 1,
+          "scoopCandidates": 4,
+          "discoveryCaptures": 1,
+          "collisionReads": 4,
+          "cavityReads": 16
+        },
+        {
+          "worldId": "fa43c82f82ea4d82ac0f1eaf245728dc",
+          "vessels": 16,
+          "nativeVessels": 2,
+          "dormantVessels": 14,
+          "pending": false,
+          "ready": true,
+          "sources": [
+            {
+              "sessionId": "c00df722f69a4ce88cc2e810c0fc1009",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 352.9516790785958,
+                "savedAmountMl": 400.0,
+                "capacityMl": 500.0,
+                "transferredMl": 47.048320921404176,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "receivers": [
+            {
+              "sessionId": "c00df722f69a4ce88cc2e810c0fc1009",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 47.048320921404176,
+                "savedAmountMl": 0.0,
+                "capacityMl": 500.0,
+                "transferredMl": 0.0,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "executedGroups": 1,
+          "executedMembers": 2,
+          "pourOriginQueries": 1,
+          "pourOriginCandidates": 0,
+          "pourRayQueries": 16,
+          "pourHitCandidates": 2,
+          "scoopPathQueries": 0,
+          "scoopPathCandidates": 0,
+          "pourSegments": 16,
+          "pourCandidates": 28,
+          "pourSearchSegments": 14,
+          "pourDepositionQueries": 3,
+          "pourSurfaceQueries": 3,
+          "pourPresentationPoints": 17,
+          "pourSurfaceCaptures": 2,
+          "pourPresentations": 1,
+          "scoopCandidates": 4,
+          "discoveryCaptures": 1,
+          "collisionReads": 4,
+          "cavityReads": 16
+        },
+        {
+          "worldId": "76bcbade0c104d6f907bb2288e2cad24",
+          "vessels": 16,
+          "nativeVessels": 2,
+          "dormantVessels": 14,
+          "pending": false,
+          "ready": true,
+          "sources": [
+            {
+              "sessionId": "d34ad67c1feb4a69b2530861140932bc",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 352.9516790785958,
+                "savedAmountMl": 400.0,
+                "capacityMl": 500.0,
+                "transferredMl": 47.048320921404176,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "receivers": [
+            {
+              "sessionId": "d34ad67c1feb4a69b2530861140932bc",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 47.048320921404176,
+                "savedAmountMl": 0.0,
+                "capacityMl": 500.0,
+                "transferredMl": 0.0,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "executedGroups": 1,
+          "executedMembers": 2,
+          "pourOriginQueries": 1,
+          "pourOriginCandidates": 0,
+          "pourRayQueries": 16,
+          "pourHitCandidates": 2,
+          "scoopPathQueries": 0,
+          "scoopPathCandidates": 0,
+          "pourSegments": 16,
+          "pourCandidates": 28,
+          "pourSearchSegments": 14,
+          "pourDepositionQueries": 3,
+          "pourSurfaceQueries": 3,
+          "pourPresentationPoints": 17,
+          "pourSurfaceCaptures": 2,
+          "pourPresentations": 1,
+          "scoopCandidates": 4,
+          "discoveryCaptures": 1,
+          "collisionReads": 4,
+          "cavityReads": 16
+        },
+        {
+          "worldId": "1dd0983c3c0f4c308f6eeb3471fbec3e",
+          "vessels": 16,
+          "nativeVessels": 2,
+          "dormantVessels": 14,
+          "pending": false,
+          "ready": true,
+          "sources": [
+            {
+              "sessionId": "5ea617e7d53c4f02b7cd0149325f8501",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 352.9516790785958,
+                "savedAmountMl": 400.0,
+                "capacityMl": 500.0,
+                "transferredMl": 47.048320921404176,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "receivers": [
+            {
+              "sessionId": "5ea617e7d53c4f02b7cd0149325f8501",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 47.048320921404176,
+                "savedAmountMl": 0.0,
+                "capacityMl": 500.0,
+                "transferredMl": 0.0,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "executedGroups": 1,
+          "executedMembers": 2,
+          "pourOriginQueries": 1,
+          "pourOriginCandidates": 0,
+          "pourRayQueries": 16,
+          "pourHitCandidates": 2,
+          "scoopPathQueries": 0,
+          "scoopPathCandidates": 0,
+          "pourSegments": 16,
+          "pourCandidates": 28,
+          "pourSearchSegments": 14,
+          "pourDepositionQueries": 3,
+          "pourSurfaceQueries": 3,
+          "pourPresentationPoints": 17,
+          "pourSurfaceCaptures": 2,
+          "pourPresentations": 1,
+          "scoopCandidates": 4,
+          "discoveryCaptures": 1,
+          "collisionReads": 4,
+          "cavityReads": 16
+        }
+      ],
+      "flowBudget": {
+        "reservations": 9,
+        "units": 93720,
+        "reservationLimit": 64,
+        "unitLimit": 524288,
+        "streamSegments": 32,
+        "queryHits": 64,
+        "scoopSamples": 5,
+        "rainSamples": 5
+      },
+      "discoveryBudget": {
+        "step": 1628,
+        "reservations": 9,
+        "executions": 9,
+        "units": 65124,
+        "unitLimit": 524288,
+        "objectLimit": 4096
+      },
+      "nativeBudget": {
+        "instances": 20,
+        "preparing": 0,
+        "ready": 20,
+        "retiring": 0,
+        "instanceLimit": 32,
+        "streamPointLimit": 33
+      },
+      "topology": "split"
+    }
+  ],
+  "rooms": 9,
+  "savedContainers": 144,
+  "nativeContainers": 20,
+  "dormantContainers": 124,
+  "hostUnits": 4714848,
+  "flowUnitLimit": 524288,
+  "groupUnits": 93720,
+  "resourceBudgets": {
+    "objects": {
+      "instances": 20,
+      "preparing": 0,
+      "ready": 20,
+      "retiring": 0,
+      "instanceLimit": 128
+    },
+    "physics": {
+      "bodies": 20,
+      "joints": 0,
+      "preparing": 0,
+      "ready": 20,
+      "retiring": 0,
+      "bodyLimit": 128,
+      "jointLimit": 32
+    },
+    "recipes": {
+      "instances": 20,
+      "preparing": 0,
+      "ready": 20,
+      "retiring": 0,
+      "parts": 40,
+      "customVertices": 10000,
+      "instanceLimit": 128,
+      "partLimit": 512,
+      "customVertexLimit": 524288
+    },
+    "collision": {
+      "entries": 20,
+      "colliders": 420,
+      "meshColliders": 420,
+      "sourceTriangles": 5680,
+      "entryLimit": 256,
+      "colliderLimit": 2048,
+      "triangleLimit": 1048576
+    },
+    "liquids": {
+      "instances": 20,
+      "preparing": 0,
+      "ready": 20,
+      "retiring": 0,
+      "instanceLimit": 32,
+      "streamPointLimit": 33
+    }
+  },
+  "discoveryUnits": 65124,
+  "discoveryUnitLimit": 524288,
+  "conservationAndUndo": true
+}

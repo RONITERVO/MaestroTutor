@@ -1,0 +1,162 @@
+{
+  "format": "maestro-creation-template",
+  "version": 1,
+  "id": "brush",
+  "name": "Paint brush",
+  "description": "A broad blue drawing brush. Touch its bristle end to a configured patch and lift to save. Editable ink, width and parts.",
+  "tags": [
+    "drawing",
+    "tool",
+    "brush"
+  ],
+  "author": "Roni Tervo / Maestro",
+  "license": "Apache-2.0",
+  "definition": {
+    "version": 1,
+    "recipe": {
+      "version": 1,
+      "parts": [
+        {
+          "id": "Handle",
+          "shape": "cylinder",
+          "parent": "",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": -0.03
+          },
+          "size": {
+            "x": 0.015,
+            "y": 0.15,
+            "z": 0.015
+          },
+          "rotation": {
+            "x": 0.70710677,
+            "y": 0,
+            "z": 0,
+            "w": 0.70710677
+          },
+          "color": {
+            "r": 0.44,
+            "g": 0.27,
+            "b": 0.57,
+            "a": 1
+          }
+        },
+        {
+          "id": "Ferrule",
+          "shape": "box",
+          "parent": "",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0.0575
+          },
+          "size": {
+            "x": 0.034,
+            "y": 0.014,
+            "z": 0.025
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "color": {
+            "r": 0.65,
+            "g": 0.68,
+            "b": 0.7,
+            "a": 1
+          }
+        },
+        {
+          "id": "Bristles",
+          "shape": "box",
+          "parent": "",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0.09
+          },
+          "size": {
+            "x": 0.035,
+            "y": 0.012,
+            "z": 0.04
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "color": {
+            "r": 0.12,
+            "g": 0.36,
+            "b": 0.76,
+            "a": 1
+          }
+        }
+      ],
+      "tracks": [],
+      "duration": 1,
+      "loop": false,
+      "playing": false
+    },
+    "collision": {
+      "version": 1,
+      "shapes": [
+        {
+          "id": "Body",
+          "shape": "box",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0.0025
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "size": {
+            "x": 0.035,
+            "y": 0.015,
+            "z": 0.215
+          }
+        }
+      ]
+    },
+    "physics": {
+      "mode": "solid",
+      "shape": "automatic",
+      "mass": 0.06
+    },
+    "drawingTips": [
+      {
+        "version": 1,
+        "part": "",
+        "position": {
+          "x": 0,
+          "y": 0,
+          "z": 0.11
+        },
+        "rotation": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1
+        },
+        "color": {
+          "r": 0.1,
+          "g": 0.3,
+          "b": 0.8,
+          "a": 1
+        },
+        "radius": 0.01,
+        "enabled": true
+      }
+    ]
+  }
+}

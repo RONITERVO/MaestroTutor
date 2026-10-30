@@ -9,6 +9,7 @@ export const TOKEN_CATEGORY = {
   TTS: 'tts',
   STT: 'stt',
   GEN: 'gen',
+  AGENT: 'agent',
   LIVE: 'live',
   VAD: 'vad',
   WHISPER: 'whisper',
@@ -26,6 +27,7 @@ export const TOKEN_SUBTYPE = {
 
   // GEN
   RESPONSE: 'response',
+  TASK: 'task',
   SUGGESTIONS: 'suggestions',
   CREATE_SUGGESTION: 'create-suggestion',
 
@@ -100,7 +102,8 @@ export const isSilentObserverActivityToken = (token: string): boolean =>
 
 /** Background work that may run while the passive observer drains or listens. */
 export const isSilentObserverCompatibleActivityToken = (token: string): boolean =>
-  token === buildToken(TOKEN_CATEGORY.GEN, TOKEN_SUBTYPE.SUGGESTIONS);
+  token === buildToken(TOKEN_CATEGORY.GEN, TOKEN_SUBTYPE.SUGGESTIONS)
+  || token === buildToken(TOKEN_CATEGORY.AGENT, TOKEN_SUBTYPE.TASK);
 
 // -----------------------------------------------------------------------------
 // DISPLAY CONFIGURATION
@@ -310,4 +313,9 @@ export const SPEECH_GATE_TOKEN_DISPLAY: Record<string, TokenDisplayConfig> = {
     titleKey: 'chat.maestro.title.whisperTriggered',
     priority: 0,
   },
+};
+
+export const AGENT_TOKEN_DISPLAY: TokenDisplayConfig = {
+  icon: 'IconSparkles', textKey: 'chat.maestro.agentWorking', titleKey: 'chat.maestro.title.agentWorking',
+  animate: true, priority: 6,
 };

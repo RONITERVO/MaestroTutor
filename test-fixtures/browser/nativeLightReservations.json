@@ -1,0 +1,55 @@
+{
+  "budget": {
+    "lights": 8,
+    "shadowFaces": 2,
+    "preparing": 6,
+    "ready": 2,
+    "retiring": 0,
+    "lightLimit": 8,
+    "shadowFaceLimit": 12
+  },
+  "preparing": {
+    "reservationId": "a4c9c06e65c740cb9925b6cfb942022c",
+    "worldId": "62bd2e0a52644875bcd39c6f42314f8b",
+    "regionId": "4e2787079da3409b9c9a83963877ebd6",
+    "target": "18c5445aa5be476396c32e4febeacd8c",
+    "light": "Lamp",
+    "kind": "spot",
+    "phase": "preparing",
+    "shadowFaces": 1,
+    "active": false
+  },
+  "ready": {
+    "reservationId": "a4c9c06e65c740cb9925b6cfb942022c",
+    "worldId": "62bd2e0a52644875bcd39c6f42314f8b",
+    "regionId": "4e2787079da3409b9c9a83963877ebd6",
+    "target": "18c5445aa5be476396c32e4febeacd8c",
+    "light": "Lamp",
+    "kind": "spot",
+    "phase": "ready",
+    "shadowFaces": 1,
+    "active": true
+  },
+  "disabled": {
+    "reservationId": "a4c9c06e65c740cb9925b6cfb942022c",
+    "worldId": "62bd2e0a52644875bcd39c6f42314f8b",
+    "regionId": "4e2787079da3409b9c9a83963877ebd6",
+    "target": "18c5445aa5be476396c32e4febeacd8c",
+    "light": "Lamp",
+    "kind": "spot",
+    "phase": "ready",
+    "shadowFaces": 1,
+    "active": false
+  },
+  "retiring": {
+    "reservationId": "a4c9c06e65c740cb9925b6cfb942022c",
+    "worldId": "62bd2e0a52644875bcd39c6f42314f8b",
+    "regionId": "4e2787079da3409b9c9a83963877ebd6",
+    "target": "18c5445aa5be476396c32e4febeacd8c",
+    "light": "Lamp",
+    "kind": "spot",
+    "phase": "retiring",
+    "shadowFaces": 1,
+    "active": false
+  }
+}

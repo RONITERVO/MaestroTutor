@@ -1,0 +1,130 @@
+{
+  "before": {
+    "target": "0eb01e3118ac42b98a0b807f7389aeba",
+    "revision": 8,
+    "kind": "Drawing",
+    "name": "",
+    "position": {
+      "x": 0.2,
+      "y": 1.0,
+      "z": 0.5
+    },
+    "rotation": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 1.0
+    },
+    "scale": 1.0,
+    "content": {
+      "points": 3,
+      "parts": 0,
+      "frames": 2,
+      "modelHash": "",
+      "recipePlaying": false
+    }
+  },
+  "call": {
+    "id": "object.create",
+    "version": 1,
+    "arguments": {
+      "kind": "copy",
+      "target": "0eb01e3118ac42b98a0b807f7389aeba",
+      "revision": 8,
+      "name": "",
+      "x": 0.6,
+      "y": 1.0,
+      "z": 0.5
+    }
+  },
+  "request": {
+    "operation": "start",
+    "runId": "8f2deb10ca904eb287f17fa9cd4065b5",
+    "call": {
+      "id": "object.create",
+      "version": 1,
+      "arguments": {
+        "kind": "copy",
+        "target": "0eb01e3118ac42b98a0b807f7389aeba",
+        "revision": 8,
+        "name": "",
+        "x": 0.6,
+        "y": 1.0,
+        "z": 0.5
+      }
+    }
+  },
+  "receipt": {
+    "selected": {
+      "id": "8f2deb10ca904eb287f17fa9cd4065b5",
+      "capability": "object.create",
+      "version": 1,
+      "resources": [
+        "0eb01e3118ac42b98a0b807f7389aeba"
+      ],
+      "phase": "completed",
+      "status": "Action completed",
+      "output": {
+        "objectId": "3307d096117e4eab851ae26c08bef07a"
+      },
+      "call": {
+        "id": "object.create",
+        "version": 1,
+        "arguments": {
+          "kind": "copy",
+          "target": "0eb01e3118ac42b98a0b807f7389aeba",
+          "revision": 8,
+          "name": "",
+          "x": 0.6,
+          "y": 1.0,
+          "z": 0.5
+        }
+      }
+    },
+    "running": [],
+    "outcomes": [
+      {
+        "id": "8f2deb10ca904eb287f17fa9cd4065b5",
+        "capability": "object.create",
+        "version": 1,
+        "resources": [
+          "0eb01e3118ac42b98a0b807f7389aeba"
+        ],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "objectId": "3307d096117e4eab851ae26c08bef07a"
+        }
+      }
+    ],
+    "nextRunId": "150e3f534d454ff4b204807052710b0e",
+    "storageError": null,
+    "recovery": null
+  },
+  "copied": {
+    "target": "3307d096117e4eab851ae26c08bef07a",
+    "revision": 9,
+    "kind": "Drawing",
+    "name": "",
+    "position": {
+      "x": 0.6,
+      "y": 1.0,
+      "z": 0.5
+    },
+    "rotation": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 1.0
+    },
+    "scale": 1.0,
+    "content": {
+      "points": 3,
+      "parts": 0,
+      "frames": 2,
+      "modelHash": "",
+      "recipePlaying": false
+    }
+  },
+  "sourceUnchanged": true
+}

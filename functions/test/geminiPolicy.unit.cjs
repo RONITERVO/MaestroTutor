@@ -240,3 +240,17 @@ test('every nested file URI is discovered once', () => {
   assert.equal(resolvePinnedManagedGenerationModel('models/gemini-3.7-flash'), 'gemini-3.8-flash');
   assert.equal(appConfig.managedMusicSessionCredits, 1);
 });
+
+
+test('only the metered gateway can opt into the exact room tool catalogue', () => {
+  const { ROOM_LIVE_TOOLS } = require('../lib/shared/prompts/room.js');
+  const config = {tools:ROOM_LIVE_TOOLS, responseModalities:['AUDIO']};
+  assert.throws(() => requireSafeManagedLiveConfig(config), error => error.status === 400);
+  assert.deepEqual(requireSafeManagedLiveConfig(config,{allowRoomTools:true}).tools,ROOM_LIVE_TOOLS);
+  for (const tools of [[{googleSearch:{}}],[{functionDeclarations:[{name:'observeMaestroRoom'}]}],
+    [...ROOM_LIVE_TOOLS,{codeExecution:{}}]]) {
+    assert.throws(() => requireSafeManagedLiveConfig({tools},{allowRoomTools:true}), error => error.status === 400);
+  }
+  assert.throws(() => requireSafeManagedLiveConfig({...config,toolConfig:{functionCallingConfig:{mode:'ANY'}}},{allowRoomTools:true}), error => error.status === 400);
+  assert.ok(calculateManagedLiveSpendAdmissionUsd(true)>calculateManagedLiveSpendAdmissionUsd());
+});

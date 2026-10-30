@@ -1,0 +1,124 @@
+{
+  "version": 3,
+  "entry": "main",
+  "resources": [],
+  "state": [
+    {
+      "name": "crossings",
+      "initial": 0
+    },
+    {
+      "name": "inside",
+      "initial": false
+    },
+    {
+      "name": "distance",
+      "initial": 0
+    }
+  ],
+  "events": [],
+  "functions": [
+    {
+      "name": "main",
+      "returns": "void",
+      "parameters": [],
+      "locals": [
+        {
+          "name": "received",
+          "initial": false
+        },
+        {
+          "name": "source",
+          "initial": ""
+        },
+        {
+          "name": "inside",
+          "initial": false
+        },
+        {
+          "name": "distance",
+          "initial": 0
+        },
+        {
+          "name": "other",
+          "initial": ""
+        }
+      ],
+      "body": [
+        {
+          "id": "watch",
+          "op": "forever",
+          "body": [
+            {
+              "id": "near",
+              "op": "awaitEvent",
+              "event": "object.proximity.changed",
+              "source": "",
+              "version": 1,
+              "arguments": {
+                "source": "maestro",
+                "target": "book",
+                "radius": 0.5,
+                "hysteresis": 0.1,
+                "transition": "either"
+              },
+              "bindings": {},
+              "timeout": {
+                "value": 0
+              },
+              "received": "received",
+              "value": "source",
+              "fields": {
+                "inside": "inside",
+                "distance": "distance",
+                "otherId": "other"
+              }
+            },
+            {
+              "id": "record",
+              "op": "if",
+              "test": {
+                "var": "received"
+              },
+              "then": [
+                {
+                  "id": "count",
+                  "op": "setState",
+                  "variable": "crossings",
+                  "value": {
+                    "op": "add",
+                    "args": [
+                      {
+                        "state": "crossings"
+                      },
+                      {
+                        "value": 1
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "inside",
+                  "op": "setState",
+                  "variable": "inside",
+                  "value": {
+                    "var": "inside"
+                  }
+                },
+                {
+                  "id": "distance",
+                  "op": "setState",
+                  "variable": "distance",
+                  "value": {
+                    "var": "distance"
+                  }
+                }
+              ],
+              "else": []
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+// Copyright 2026 Roni Tervo
+// SPDX-License-Identifier: Apache-2.0
+// Development replay only; native edit/Undo and physics are verified separately.
+import {createRoot} from 'react-dom/client';
+import {RoomAgentClient} from '../../src/core-sdk/room/roomAgentClient';
+import type {RoomAgentState} from '../../src/core-sdk/room/roomAgent';
+import {CapabilityBrowser} from '../../src/platform/quest/CapabilityBrowser';
+import '../../src/app/index.css';
+import '../../src/platform/quest/roomWorkspace.css';
+if(!import.meta.env.DEV)throw new Error('Development fixture only');
+const native=await (await fetch('./constructionCaptureAuthoring.json')).json() as {before:RoomAgentState;search:RoomAgentState;definition:RoomAgentState;captured:RoomAgentState;facts:RoomAgentState[]};
+const client=new RoomAgentClient(),requests:unknown[]=[];
+let state=structuredClone(native.before);state.visible=true;let revision=state.revision;
+if(!client.receive(state))throw new Error('Invalid captured native construction capture state');
+Object.assign(window,{maestroConstructionCaptureRequests:requests,maestroConstructionCaptureSnapshot:()=>client.snapshot()});
+setInterval(()=>{
+ const request=client.snapshot().request;
+ if(request&&request.sequence>state.ack){
+  requests.push(structuredClone(request));const command=request.commands[0];let replay:RoomAgentState|undefined;
+  if(command.action==='catalog'&&command.catalog?.operation==='search')replay=native.search;
+  else if(command.action==='catalog'&&command.catalog?.operation==='inspect'){
+   const query=command.catalog;replay=query.category==='facts'?native.facts.find(f=>f.catalog?.operation==='inspect'&&f.catalog.category==='facts'&&f.catalog.capability===query.capability&&JSON.stringify(f.catalog.arguments)===JSON.stringify(query.arguments)):native.definition;
+  }
+  else if(command.action==='execution'&&command.execution?.operation==='start'&&command.execution.call.id==='program.module.captureConstruction')replay=native.captured;
+  else throw new Error('Unexpected construction capture replay command');
+  if(!replay)throw new Error('No exact native fact response for these inputs');
+  state=structuredClone(replay);state.visible=true;state.ack=request.sequence;
+ }
+ state={...state,revision:++revision};if(!client.receive(state))throw new Error('Rejected native construction capture replay state');
+},200);
+createRoot(document.getElementById('root')!).render(<CapabilityBrowser client={client} onClose={()=>{}}/>);

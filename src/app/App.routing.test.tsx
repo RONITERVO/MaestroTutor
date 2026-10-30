@@ -11,7 +11,7 @@ const ports = vi.hoisted(() => ({
   initConfig: {} as any, speechConfig: {} as any, smartConfig: {} as any, observerConfig: {} as any,
   chatProps: {} as any, chatConfig: {} as any,
   initialize: vi.fn(), speech: {} as any, conversation: {} as any, camera: {} as any,
-  stopListening: vi.fn(), startListening: vi.fn(), clearTranscript: vi.fn(), stopSpeaking: vi.fn(),
+  stopListening: vi.fn(), startListening: vi.fn(), clearTranscript: vi.fn(), stopSpeaking: vi.fn(), cancelAgentSpeech: vi.fn(),
   send: vi.fn(), createSuggestion: vi.fn(), capture: vi.fn(), stopObserver: vi.fn(), resetObserver: vi.fn(),
   startLive: vi.fn(), stopLive: vi.fn(), liveTurn: vi.fn(), schedule: vi.fn(), cancel: vi.fn(),
   userActivity: vi.fn(), saveSettings: vi.fn(), setKeyError: vi.fn(),
@@ -20,7 +20,7 @@ const ports = vi.hoisted(() => ({
 vi.mock('../features/chat', () => ({
   ChatInterface: (props: unknown) => { ports.chatProps = props; return null; },
   useTutorConversation: (config: unknown) => { ports.chatConfig = config; return ports.conversation; },
-  useSuggestions: vi.fn(), useChatPersistence: vi.fn(), setChatMetaDB: vi.fn(),
+  useSuggestions: vi.fn(), useChatPersistence: vi.fn(), useAgentTaskSpeech: () => ports.cancelAgentSpeech, setChatMetaDB: vi.fn(),
 }));
 vi.mock('../features/speech', () => ({
   useSpeechOrchestrator: (config: unknown) => { ports.speechConfig = config; return ports.speech; },
@@ -295,7 +295,7 @@ describe('actual App speech and idle routing (baseline before extraction)', () =
   it('manual Live starts after observer stop, and observer completion schedules only after turn persistence', async () => {
     mount();
     await act(async () => { await ports.chatProps.onStartLiveSession(); });
-    expect(events).toEqual(['stop-observer', 'start-live']);
+    expect(events).toEqual(['stop-speaking', 'stop-observer', 'start-live']);
     const persisted = deferred(); ports.liveTurn.mockReturnValue(persisted.promise);
     ports.schedule.mockClear();
     const completion = ports.observerConfig.onTurnComplete('user', 'model');
@@ -396,4 +396,22 @@ describe('actual App speech and idle routing (baseline before extraction)', () =
     act(() => useMaestroStore.setState({ isUserActive: false }));
     expect(ports.schedule).toHaveBeenCalledExactlyOnceWith('became-idle');
   });
+});
+
+it('manual Live waits for speech output teardown before acquiring the microphone', async () => {
+  mount(); const stopped = deferred(); ports.stopSpeaking.mockReturnValue(stopped.promise);
+  let starting!: Promise<void>;
+  act(() => { starting = ports.chatProps.onStartLiveSession(); });
+  expect(ports.startLive).not.toHaveBeenCalled(); expect(ports.stopObserver).not.toHaveBeenCalled();
+  await act(async () => { stopped.resolve(); await starting; });
+  expect(ports.startLive).toHaveBeenCalledOnce();
+});
+
+it('manual Live awaits the task-owned output stop without tearing down the same transport twice', async () => {
+  mount(); const stopped = deferred(); ports.cancelAgentSpeech.mockReturnValue(stopped.promise);
+  let starting!: Promise<void>;
+  act(() => { starting = ports.chatProps.onStartLiveSession(); });
+  expect(ports.stopSpeaking).not.toHaveBeenCalled(); expect(ports.startLive).not.toHaveBeenCalled();
+  await act(async () => { stopped.resolve(); await starting; });
+  expect(ports.startLive).toHaveBeenCalledOnce(); expect(ports.stopSpeaking).not.toHaveBeenCalled();
 });

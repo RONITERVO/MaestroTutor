@@ -1,0 +1,212 @@
+{
+  "format": "maestro-creation-template",
+  "version": 1,
+  "id": "chalkboard",
+  "name": "Chalkboard",
+  "description": "Framed board with an editable drawing patch. Choose Surface to draw or Erase ink to remove a stroke. Marks move with the board.",
+  "tags": [
+    "drawing",
+    "surface",
+    "board"
+  ],
+  "author": "Roni Tervo / Maestro",
+  "license": "Apache-2.0",
+  "definition": {
+    "version": 1,
+    "recipe": {
+      "version": 1,
+      "parts": [
+        {
+          "id": "Board",
+          "shape": "box",
+          "parent": "",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "size": {
+            "x": 1.1,
+            "y": 0.75,
+            "z": 0.025
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "color": {
+            "r": 0.04,
+            "g": 0.16,
+            "b": 0.13,
+            "a": 1
+          }
+        },
+        {
+          "id": "Left",
+          "shape": "box",
+          "parent": "",
+          "position": {
+            "x": -0.565,
+            "y": 0,
+            "z": 0
+          },
+          "size": {
+            "x": 0.03,
+            "y": 0.81,
+            "z": 0.045
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "color": {
+            "r": 0.52,
+            "g": 0.32,
+            "b": 0.15,
+            "a": 1
+          }
+        },
+        {
+          "id": "Right",
+          "shape": "box",
+          "parent": "",
+          "position": {
+            "x": 0.565,
+            "y": 0,
+            "z": 0
+          },
+          "size": {
+            "x": 0.03,
+            "y": 0.81,
+            "z": 0.045
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "color": {
+            "r": 0.52,
+            "g": 0.32,
+            "b": 0.15,
+            "a": 1
+          }
+        },
+        {
+          "id": "Top",
+          "shape": "box",
+          "parent": "",
+          "position": {
+            "x": 0,
+            "y": 0.39,
+            "z": 0
+          },
+          "size": {
+            "x": 1.16,
+            "y": 0.03,
+            "z": 0.045
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "color": {
+            "r": 0.52,
+            "g": 0.32,
+            "b": 0.15,
+            "a": 1
+          }
+        },
+        {
+          "id": "Bottom",
+          "shape": "box",
+          "parent": "",
+          "position": {
+            "x": 0,
+            "y": -0.39,
+            "z": 0
+          },
+          "size": {
+            "x": 1.16,
+            "y": 0.03,
+            "z": 0.045
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "color": {
+            "r": 0.52,
+            "g": 0.32,
+            "b": 0.15,
+            "a": 1
+          }
+        }
+      ],
+      "tracks": [],
+      "duration": 1,
+      "loop": false,
+      "playing": false
+    },
+    "collision": {
+      "version": 1,
+      "shapes": [
+        {
+          "id": "Board",
+          "shape": "box",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "size": {
+            "x": 1.16,
+            "y": 0.81,
+            "z": 0.045
+          }
+        }
+      ]
+    },
+    "physics": {
+      "mode": "fixed",
+      "shape": "automatic",
+      "mass": 1
+    },
+    "surfaces": [
+      {
+        "version": 1,
+        "id": "Front",
+        "part": "Board",
+        "position": {
+          "x": 0,
+          "y": 0,
+          "z": -0.0135
+        },
+        "rotation": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1
+        },
+        "width": 1.08,
+        "height": 0.73,
+        "enabled": true
+      }
+    ]
+  }
+}

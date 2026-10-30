@@ -1,0 +1,20 @@
+// Copyright 2026 Roni Tervo
+// SPDX-License-Identifier: Apache-2.0
+using Maestro.Quest.Art;
+using Maestro.Quest.Diagnostics;
+using Newtonsoft.Json.Linq;
+namespace Maestro.Quest.Programs
+{
+    public static class ImageResourceFacts
+    {
+        static bool Available(BehaviourCatalog.FactContext context)=>context.Editor&&context.Editor.GetComponentInParent<RuntimeDiagnostics>();
+        static readonly string[] Features={RuntimeDiagnosticFacts.Feature};
+        public static BehaviourCatalog.FactDefinition Budget()=>new("runtime.imageResources",ProgramDataType.Read(JObject.Parse("{\"record\":{\"textureInstances\":\"number\",\"textureBytes\":\"number\",\"decodeScratchBytes\":\"number\",\"payloadReads\":\"number\",\"payloadBytes\":\"number\",\"queuedDecodes\":\"number\",\"textureInstanceLimit\":\"number\",\"textureByteLimit\":\"number\",\"decodeScratchByteLimit\":\"number\",\"payloadReadLimit\":\"number\",\"payloadByteLimit\":\"number\",\"decodesPerFrame\":\"number\"}}")),
+            "Shared image lifetime budget","Process-wide authored appearance-image and local/chat import-verification reservations across workspaces. Payload reads include reserved encoded buffers and pending-preview payloads; cancelled asynchronous work stays charged until drained. Native decoding is serialized to one attempt per frame; a single decode is not a frame-time guarantee. Texture bytes conservatively estimate complete RGBA32 mip chains, including at least 2x2 decoder initialization, orientation scratch textures and deferred destruction. Decode scratch estimates metadata-copy buffers, orientation arrays and readable texture source copies; after a decode it retains readable scratch textures until destruction. These logical limits are independent of saved quotas and are not measured CPU/GPU/peak process memory: decoder internals, driver copies and garbage awaiting collection are excluded. Embedded model textures, camera/browser surfaces and system placeholders have separate ownership. Existing runtime.imageBudget remains current-workspace accounting. Reads never load, retry, evict or persist.",null,null,
+            (context,args)=>Available(context)?ProgramValue.Literal(ImageResources.ObserveBudget()):null,features:Features);
+        public static BehaviourCatalog.FactDefinition Reservation()=>new("runtime.imageResource",ProgramDataType.Read(JObject.Parse("{\"record\":{\"reservationId\":\"text\",\"worldId\":\"text\",\"regionId\":\"text\",\"target\":\"text\",\"role\":\"text\",\"imageHash\":\"text\",\"kind\":\"text\",\"phase\":\"text\",\"textureBytes\":\"number\",\"payloadBytes\":\"number\",\"decodeScratchBytes\":\"number\",\"textureCount\":\"number\",\"workPending\":\"boolean\"}}")),
+            "Shared image reservation","Read a process-wide image reservation by index, from zero to runtime.imageResources.payloadReads plus textureInstances minus one. Indices may shift; reservationId is runtime-only. Kind is payload or texture. Payload phases are held (reserved or inspected bytes), working (asynchronous read/decode still in flight) and retiring. Texture phases are preparing, ready and retiring; ready does not promise that a renderer has refreshed. TextureCount includes reserved allocation slots and live scratch/output textures. Retiring textures remain charged until actual destruction. World/region and role are copied from the originating request; cache target identifies its first requester, not every current owner. Use the existing workspace runtime.imageOwner facts for current material holders. Preview targets and unscoped world/region are empty; imageHash can be empty before import inspection. A read cannot mutate resources or bypass workspace file/hash validation.",
+            CapabilitySchema.Object(new JObject{["index"]=CapabilitySchema.Number(0,ImageResources.MaximumTextureInstances+ImageResources.MaximumPayloadReads-1,true)}),new JObject{["index"]=0},
+            (context,args)=>!Available(context)?null:ImageResources.Observe((int)args["index"]) is JObject value?ProgramValue.Literal(value):null,features:Features);
+    }
+}

@@ -1,3 +1,4 @@
+import { registerCameraSources, VIRTUAL_SCENE_CAMERA_ID } from '../../../platform/browser/cameraSources';
 // @vitest-environment jsdom
 import { afterEach, expect, it, vi } from 'vitest';
 import { cleanup, renderHook, waitFor } from '@testing-library/react';
@@ -49,4 +50,19 @@ it('does not open a temporary camera when a completed Live turn requests a snaps
   result.current.visualContextVideoRef.current = document.createElement('video');
   expect(await result.current.captureSnapshot(false)).toBeNull();
   expect(getUserMedia).not.toHaveBeenCalled();
+});
+
+it('enumerates native choices without OS permission and cancels a pending selection immediately', async () => {
+ const getUserMedia = vi.fn(); let signal: AbortSignal | undefined;
+ const acquire = vi.fn((_id: string, value?: AbortSignal) => { signal = value; return new Promise<MediaStream>((_resolve, reject) => value?.addEventListener('abort', () => reject(new DOMException('Cancelled', 'AbortError')))); });
+ const remove = registerCameraSources({ devices: () => [{ deviceId: VIRTUAL_SCENE_CAMERA_ID, label: 'Virtual scene', facingMode: 'environment' }], acquire, subscribe: () => () => {} });
+ vi.stubGlobal('navigator', { mediaDevices: { getUserMedia, addEventListener: vi.fn(), removeEventListener: vi.fn() } });
+ try {
+  const t = (key: string) => key;
+  const { rerender, result } = renderHook(({ selected }: { selected: string | null }) => useCameraManager({ t, selectedCameraId: selected, sendWithSnapshotEnabled: true, useVisualContext: false }), { initialProps: { selected: VIRTUAL_SCENE_CAMERA_ID as string | null } });
+  await waitFor(() => expect(acquire).toHaveBeenCalledOnce());
+  expect(getUserMedia).not.toHaveBeenCalled(); expect(result.current.availableCameras[0].deviceId).toBe(VIRTUAL_SCENE_CAMERA_ID);
+  rerender({ selected: null }); expect(signal?.aborted).toBe(true);
+  await waitFor(() => expect(result.current.liveVideoStream).toBeNull()); expect(getUserMedia).not.toHaveBeenCalled();
+ } finally { remove(); }
 });

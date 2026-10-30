@@ -1,0 +1,809 @@
+[
+  {
+    "name": "hollow cup cross section",
+    "recipe": {
+      "version": 1,
+      "duration": 2,
+      "playing": false,
+      "loop": false,
+      "parts": [
+        {
+          "id": "Body",
+          "parent": "",
+          "shape": "lathe",
+          "profile": [
+            {
+              "x": 0,
+              "y": -0.5
+            },
+            {
+              "x": 0.5,
+              "y": -0.5
+            },
+            {
+              "x": 0.5,
+              "y": 0.5
+            },
+            {
+              "x": 0.4,
+              "y": 0.5
+            },
+            {
+              "x": 0.4,
+              "y": -0.4
+            },
+            {
+              "x": 0,
+              "y": -0.4
+            }
+          ],
+          "segments": 24,
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "size": {
+            "x": 0.2,
+            "y": 0.22,
+            "z": 0.2
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "color": {
+            "r": 0.2,
+            "g": 0.65,
+            "b": 0.6,
+            "a": 1
+          }
+        }
+      ],
+      "tracks": []
+    },
+    "valid": true
+  },
+  {
+    "name": "reverse winding",
+    "recipe": {
+      "version": 1,
+      "duration": 2,
+      "playing": false,
+      "loop": false,
+      "parts": [
+        {
+          "id": "Body",
+          "parent": "",
+          "shape": "lathe",
+          "profile": [
+            {
+              "x": 0,
+              "y": -0.4
+            },
+            {
+              "x": 0.4,
+              "y": -0.4
+            },
+            {
+              "x": 0.4,
+              "y": 0.5
+            },
+            {
+              "x": 0.5,
+              "y": 0.5
+            },
+            {
+              "x": 0.5,
+              "y": -0.5
+            },
+            {
+              "x": 0,
+              "y": -0.5
+            }
+          ],
+          "segments": 24,
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "size": {
+            "x": 0.2,
+            "y": 0.22,
+            "z": 0.2
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "color": {
+            "r": 0.2,
+            "g": 0.65,
+            "b": 0.6,
+            "a": 1
+          }
+        }
+      ],
+      "tracks": []
+    },
+    "valid": false
+  },
+  {
+    "name": "crossed outline",
+    "recipe": {
+      "version": 1,
+      "duration": 2,
+      "playing": false,
+      "loop": false,
+      "parts": [
+        {
+          "id": "Body",
+          "parent": "",
+          "shape": "lathe",
+          "profile": [
+            {
+              "x": 0.1,
+              "y": -0.5
+            },
+            {
+              "x": 0.5,
+              "y": 0.5
+            },
+            {
+              "x": 0.1,
+              "y": 0.5
+            },
+            {
+              "x": 0.5,
+              "y": -0.5
+            }
+          ],
+          "segments": 24,
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "size": {
+            "x": 0.2,
+            "y": 0.22,
+            "z": 0.2
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "color": {
+            "r": 0.2,
+            "g": 0.65,
+            "b": 0.6,
+            "a": 1
+          }
+        }
+      ],
+      "tracks": []
+    },
+    "valid": false
+  },
+  {
+    "name": "repeated closing point",
+    "recipe": {
+      "version": 1,
+      "duration": 2,
+      "playing": false,
+      "loop": false,
+      "parts": [
+        {
+          "id": "Body",
+          "parent": "",
+          "shape": "lathe",
+          "profile": [
+            {
+              "x": 0,
+              "y": -0.5
+            },
+            {
+              "x": 0.5,
+              "y": -0.5
+            },
+            {
+              "x": 0.5,
+              "y": 0.5
+            },
+            {
+              "x": 0.4,
+              "y": 0.5
+            },
+            {
+              "x": 0.4,
+              "y": -0.4
+            },
+            {
+              "x": 0,
+              "y": -0.4
+            },
+            {
+              "x": 0,
+              "y": -0.5
+            }
+          ],
+          "segments": 24,
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "size": {
+            "x": 0.2,
+            "y": 0.22,
+            "z": 0.2
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "color": {
+            "r": 0.2,
+            "g": 0.65,
+            "b": 0.6,
+            "a": 1
+          }
+        }
+      ],
+      "tracks": []
+    },
+    "valid": false
+  },
+  {
+    "name": "negative radius",
+    "recipe": {
+      "version": 1,
+      "duration": 2,
+      "playing": false,
+      "loop": false,
+      "parts": [
+        {
+          "id": "Body",
+          "parent": "",
+          "shape": "lathe",
+          "profile": [
+            {
+              "x": 0,
+              "y": -0.5
+            },
+            {
+              "x": 0.5,
+              "y": -0.5
+            },
+            {
+              "x": -0.1,
+              "y": 0.5
+            },
+            {
+              "x": 0.4,
+              "y": 0.5
+            },
+            {
+              "x": 0.4,
+              "y": -0.4
+            },
+            {
+              "x": 0,
+              "y": -0.4
+            }
+          ],
+          "segments": 24,
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "size": {
+            "x": 0.2,
+            "y": 0.22,
+            "z": 0.2
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "color": {
+            "r": 0.2,
+            "g": 0.65,
+            "b": 0.6,
+            "a": 1
+          }
+        }
+      ],
+      "tracks": []
+    },
+    "valid": false
+  },
+  {
+    "name": "outside height",
+    "recipe": {
+      "version": 1,
+      "duration": 2,
+      "playing": false,
+      "loop": false,
+      "parts": [
+        {
+          "id": "Body",
+          "parent": "",
+          "shape": "lathe",
+          "profile": [
+            {
+              "x": 0,
+              "y": -0.5
+            },
+            {
+              "x": 0.5,
+              "y": -0.5
+            },
+            {
+              "x": 0.5,
+              "y": 0.51
+            },
+            {
+              "x": 0.4,
+              "y": 0.5
+            },
+            {
+              "x": 0.4,
+              "y": -0.4
+            },
+            {
+              "x": 0,
+              "y": -0.4
+            }
+          ],
+          "segments": 24,
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "size": {
+            "x": 0.2,
+            "y": 0.22,
+            "z": 0.2
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "color": {
+            "r": 0.2,
+            "g": 0.65,
+            "b": 0.6,
+            "a": 1
+          }
+        }
+      ],
+      "tracks": []
+    },
+    "valid": false
+  },
+  {
+    "name": "too few segments",
+    "recipe": {
+      "version": 1,
+      "duration": 2,
+      "playing": false,
+      "loop": false,
+      "parts": [
+        {
+          "id": "Body",
+          "parent": "",
+          "shape": "lathe",
+          "profile": [
+            {
+              "x": 0,
+              "y": -0.5
+            },
+            {
+              "x": 0.5,
+              "y": -0.5
+            },
+            {
+              "x": 0.5,
+              "y": 0.5
+            },
+            {
+              "x": 0.4,
+              "y": 0.5
+            },
+            {
+              "x": 0.4,
+              "y": -0.4
+            },
+            {
+              "x": 0,
+              "y": -0.4
+            }
+          ],
+          "segments": 7,
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "size": {
+            "x": 0.2,
+            "y": 0.22,
+            "z": 0.2
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "color": {
+            "r": 0.2,
+            "g": 0.65,
+            "b": 0.6,
+            "a": 1
+          }
+        }
+      ],
+      "tracks": []
+    },
+    "valid": false
+  },
+  {
+    "name": "too many segments",
+    "recipe": {
+      "version": 1,
+      "duration": 2,
+      "playing": false,
+      "loop": false,
+      "parts": [
+        {
+          "id": "Body",
+          "parent": "",
+          "shape": "lathe",
+          "profile": [
+            {
+              "x": 0,
+              "y": -0.5
+            },
+            {
+              "x": 0.5,
+              "y": -0.5
+            },
+            {
+              "x": 0.5,
+              "y": 0.5
+            },
+            {
+              "x": 0.4,
+              "y": 0.5
+            },
+            {
+              "x": 0.4,
+              "y": -0.4
+            },
+            {
+              "x": 0,
+              "y": -0.4
+            }
+          ],
+          "segments": 49,
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "size": {
+            "x": 0.2,
+            "y": 0.22,
+            "z": 0.2
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "color": {
+            "r": 0.2,
+            "g": 0.65,
+            "b": 0.6,
+            "a": 1
+          }
+        }
+      ],
+      "tracks": []
+    },
+    "valid": false
+  },
+  {
+    "name": "fractional segments",
+    "recipe": {
+      "version": 1,
+      "duration": 2,
+      "playing": false,
+      "loop": false,
+      "parts": [
+        {
+          "id": "Body",
+          "parent": "",
+          "shape": "lathe",
+          "profile": [
+            {
+              "x": 0,
+              "y": -0.5
+            },
+            {
+              "x": 0.5,
+              "y": -0.5
+            },
+            {
+              "x": 0.5,
+              "y": 0.5
+            },
+            {
+              "x": 0.4,
+              "y": 0.5
+            },
+            {
+              "x": 0.4,
+              "y": -0.4
+            },
+            {
+              "x": 0,
+              "y": -0.4
+            }
+          ],
+          "segments": 12.5,
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "size": {
+            "x": 0.2,
+            "y": 0.22,
+            "z": 0.2
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "color": {
+            "r": 0.2,
+            "g": 0.65,
+            "b": 0.6,
+            "a": 1
+          }
+        }
+      ],
+      "tracks": []
+    },
+    "valid": false
+  },
+  {
+    "name": "primitive cannot hide a profile",
+    "recipe": {
+      "version": 1,
+      "duration": 2,
+      "playing": false,
+      "loop": false,
+      "parts": [
+        {
+          "id": "Body",
+          "parent": "",
+          "shape": "box",
+          "profile": [
+            {
+              "x": 0,
+              "y": -0.5
+            },
+            {
+              "x": 0.5,
+              "y": -0.5
+            },
+            {
+              "x": 0.5,
+              "y": 0.5
+            },
+            {
+              "x": 0.4,
+              "y": 0.5
+            },
+            {
+              "x": 0.4,
+              "y": -0.4
+            },
+            {
+              "x": 0,
+              "y": -0.4
+            }
+          ],
+          "segments": 24,
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "size": {
+            "x": 0.2,
+            "y": 0.22,
+            "z": 0.2
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "color": {
+            "r": 0.2,
+            "g": 0.65,
+            "b": 0.6,
+            "a": 1
+          }
+        }
+      ],
+      "tracks": []
+    },
+    "valid": false
+  },
+  {
+    "name": "primitive empty defaults",
+    "recipe": {
+      "version": 1,
+      "duration": 2,
+      "playing": false,
+      "loop": false,
+      "parts": [
+        {
+          "id": "Body",
+          "parent": "",
+          "shape": "box",
+          "profile": [],
+          "segments": 0,
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "size": {
+            "x": 0.2,
+            "y": 0.22,
+            "z": 0.2
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "color": {
+            "r": 0.2,
+            "g": 0.65,
+            "b": 0.6,
+            "a": 1
+          }
+        }
+      ],
+      "tracks": []
+    },
+    "valid": true
+  },
+  {
+    "name": "legacy primitive",
+    "recipe": {
+      "version": 1,
+      "duration": 2,
+      "playing": false,
+      "loop": false,
+      "parts": [
+        {
+          "id": "Body",
+          "parent": "",
+          "shape": "box",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "size": {
+            "x": 0.2,
+            "y": 0.22,
+            "z": 0.2
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "color": {
+            "r": 0.2,
+            "g": 0.65,
+            "b": 0.6,
+            "a": 1
+          }
+        }
+      ],
+      "tracks": []
+    },
+    "valid": true
+  },
+  {
+    "name": "off-axis closed ring",
+    "recipe": {
+      "version": 1,
+      "duration": 2,
+      "playing": false,
+      "loop": false,
+      "parts": [
+        {
+          "id": "Body",
+          "parent": "",
+          "shape": "lathe",
+          "profile": [
+            {
+              "x": 0.25,
+              "y": -0.2
+            },
+            {
+              "x": 0.5,
+              "y": -0.2
+            },
+            {
+              "x": 0.5,
+              "y": 0.2
+            },
+            {
+              "x": 0.25,
+              "y": 0.2
+            }
+          ],
+          "segments": 24,
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "size": {
+            "x": 0.2,
+            "y": 0.22,
+            "z": 0.2
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "color": {
+            "r": 0.2,
+            "g": 0.65,
+            "b": 0.6,
+            "a": 1
+          }
+        }
+      ],
+      "tracks": []
+    },
+    "valid": true
+  }
+]

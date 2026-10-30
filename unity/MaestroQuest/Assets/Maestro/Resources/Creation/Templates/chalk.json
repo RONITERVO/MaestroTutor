@@ -1,0 +1,108 @@
+{
+  "format": "maestro-creation-template",
+  "version": 1,
+  "id": "chalk",
+  "name": "Chalk",
+  "description": "Hold the chalk and touch its end to an enabled drawing patch. Lift it to save one stroke. Editable tip, ink and width.",
+  "tags": [
+    "drawing",
+    "tool",
+    "chalk"
+  ],
+  "author": "Roni Tervo / Maestro",
+  "license": "Apache-2.0",
+  "definition": {
+    "version": 1,
+    "recipe": {
+      "version": 1,
+      "parts": [
+        {
+          "id": "Chalk",
+          "shape": "cylinder",
+          "parent": "",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "size": {
+            "x": 0.018,
+            "y": 0.16,
+            "z": 0.018
+          },
+          "rotation": {
+            "x": 0.70710677,
+            "y": 0,
+            "z": 0,
+            "w": 0.70710677
+          },
+          "color": {
+            "r": 0.93,
+            "g": 0.94,
+            "b": 0.9,
+            "a": 1
+          }
+        }
+      ],
+      "tracks": [],
+      "duration": 1,
+      "loop": false,
+      "playing": false
+    },
+    "collision": {
+      "version": 1,
+      "shapes": [
+        {
+          "id": "Body",
+          "shape": "box",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "size": {
+            "x": 0.018,
+            "y": 0.018,
+            "z": 0.16
+          }
+        }
+      ]
+    },
+    "physics": {
+      "mode": "solid",
+      "shape": "automatic",
+      "mass": 0.05
+    },
+    "drawingTips": [
+      {
+        "version": 1,
+        "part": "Chalk",
+        "position": {
+          "x": 0,
+          "y": 0.08,
+          "z": 0
+        },
+        "rotation": {
+          "x": -0.70710677,
+          "y": 0,
+          "z": 0,
+          "w": 0.70710677
+        },
+        "color": {
+          "r": 1,
+          "g": 1,
+          "b": 1,
+          "a": 1
+        },
+        "radius": 0.004,
+        "enabled": true
+      }
+    ]
+  }
+}

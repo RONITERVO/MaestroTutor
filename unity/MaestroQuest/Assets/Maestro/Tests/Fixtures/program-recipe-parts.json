@@ -1,0 +1,102 @@
+{
+  "version": 3,
+  "parallelVersion": 1,
+  "entry": "main",
+  "resources": [
+    "00000000000000000000000000000000"
+  ],
+  "state": [],
+  "events": [],
+  "functions": [
+    {
+      "name": "main",
+      "returns": "void",
+      "parameters": [],
+      "locals": [],
+      "body": [
+        {
+          "id": "together",
+          "op": "parallel",
+          "branches": [
+            {
+              "function": "animate",
+              "args": [
+                {
+                  "value": "00000000000000000000000000000000"
+                },
+                {
+                  "value": "RightUpperArm"
+                },
+                {
+                  "value": 0.8
+                }
+              ]
+            },
+            {
+              "function": "animate",
+              "args": [
+                {
+                  "value": "00000000000000000000000000000000"
+                },
+                {
+                  "value": "RightLowerArm"
+                },
+                {
+                  "value": 1.2
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "animate",
+      "returns": "void",
+      "parameters": [
+        {
+          "name": "target",
+          "type": "text"
+        },
+        {
+          "name": "part",
+          "type": "text"
+        },
+        {
+          "name": "seconds",
+          "type": "number"
+        }
+      ],
+      "locals": [],
+      "body": [
+        {
+          "id": "playPart",
+          "op": "invoke",
+          "capability": "animation.play",
+          "version": 1,
+          "arguments": {
+            "target": "00000000000000000000000000000000",
+            "source": {
+              "kind": "recipe",
+              "part": "RightUpperArm"
+            },
+            "channel": "recipePart",
+            "seconds": 1,
+            "loop": false
+          },
+          "bindings": {
+            "target": {
+              "var": "target"
+            },
+            "source.part": {
+              "var": "part"
+            },
+            "seconds": {
+              "var": "seconds"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -21,6 +21,7 @@ import {
   managedUserRef,
   purchaseClaimId,
   purchaseClaimsCollection,
+  questAccountLinksCollection,
   rateLimitWindowId,
   rateLimitWindowsCollection,
   reportsCollection,
@@ -235,6 +236,10 @@ export const deleteManagedAccount = async (params: {
     deleteQueryDocuments(() => liveGatewayTicketsCollection().where('uid', '==', params.uid)),
     deleteQueryDocuments(() => liveGatewaySessionsCollection().where('uid', '==', params.uid)),
   ]);
+
+  // Approval transactions read the deletion tombstone, so no new link can
+  // race this cleanup and retain the deleted account's UID.
+  await deleteQueryDocuments(() => questAccountLinksCollection().where('uid', '==', params.uid));
 
   await sweepExpiredReservationsForUser(params.uid);
   const releasedReservationCount = await releaseActiveReservationsForUser(params.uid);

@@ -28,12 +28,13 @@ const STARTUP_BUFFER_MS = 120;
 const REFILL_BUFFER_MS = 60;
 
 type PlaybackMessage =
-  | { type: 'push'; pcm: Int16Array; inputSampleRate?: number }
-  | { type: 'request-drain'; requestId: number }
-  | { type: 'reset' };
+  | { type: 'push'; generation: number; pcm: Int16Array; inputSampleRate: number }
+  | { type: 'request-drain'; generation: number; requestId: number }
+  | { type: 'reset'; generation: number };
 
 type PlaybackTelemetryMessage = {
   type: 'telemetry';
+  generation: number;
   event: 'started' | 'resumed' | 'underrun';
   queuedSamples: number;
   inputSampleRate: number;
@@ -50,7 +51,11 @@ class PcmPlaybackProcessor extends AudioWorkletProcessor {
   private queuedSamples = 0;
   private playbackState: PlaybackState = 'startup';
   private inputSampleRate = DEFAULT_INPUT_SAMPLE_RATE;
-  private pendingDrainRequestIds: number[] = [];
+  private generation = 0;
+  private submittedSamples = 0;
+  private renderedSamples = 0;
+  private lastProgressSamples = 0;
+  private pendingDrains: { requestId: number; fence: number }[] = [];
 
   constructor() {
     super();
@@ -59,7 +64,8 @@ class PcmPlaybackProcessor extends AudioWorkletProcessor {
       const data = event.data;
       if (!data) return;
 
-      if (data.type === 'reset') {
+      if (data.type === 'reset' && Number.isSafeInteger(data.generation) && data.generation > this.generation) {
+        this.generation = data.generation;
         this.queue = [];
         this.currentChunk = null;
         this.currentSampleIndex = 0;
@@ -67,26 +73,28 @@ class PcmPlaybackProcessor extends AudioWorkletProcessor {
         this.queuedSamples = 0;
         this.playbackState = 'startup';
         this.inputSampleRate = DEFAULT_INPUT_SAMPLE_RATE;
-        this.pendingDrainRequestIds = [];
+        this.pendingDrains = [];
+        this.submittedSamples = this.renderedSamples = this.lastProgressSamples = 0;
         return;
       }
+      if (data.generation !== this.generation) return;
 
       if (data.type === 'request-drain' && Number.isSafeInteger(data.requestId) && data.requestId > 0) {
-        this.pendingDrainRequestIds.push(data.requestId);
+        if (this.pendingDrains.length >= 64) { this.port.postMessage({ type: 'error', generation: this.generation }); return; }
+        this.pendingDrains.push({ requestId: data.requestId, fence: this.submittedSamples });
         return;
       }
 
       if (data.type === 'push' && data.pcm instanceof Int16Array && data.pcm.length > 0) {
-        this.inputSampleRate = Math.max(1, Math.round(data.inputSampleRate || this.inputSampleRate));
-
-        // Preserve already-buffered speech. If backlog ever becomes truly
-        // pathological, refuse only the newest chunk instead of discarding the
-        // queue and audibly jumping ahead in the transcript.
-        if (this.queuedSamples + data.pcm.length > this.getHardQueueLimitSamples()) {
+        // Never silently discard a chunk or jump ahead. Report a refusal to the
+        // output owner, which terminates the response with a playback error.
+        if (data.inputSampleRate !== DEFAULT_INPUT_SAMPLE_RATE || this.queuedSamples + data.pcm.length > this.getHardQueueLimitSamples()) {
+          this.port.postMessage({ type: 'error', generation: this.generation });
           return;
         }
         this.queue.push(data.pcm);
         this.queuedSamples += data.pcm.length;
+        this.submittedSamples += data.pcm.length;
       }
     };
   }
@@ -107,6 +115,7 @@ class PcmPlaybackProcessor extends AudioWorkletProcessor {
   private emitTelemetry(event: PlaybackTelemetryMessage['event']) {
     const message: PlaybackTelemetryMessage = {
       type: 'telemetry',
+      generation: this.generation,
       event,
       queuedSamples: this.queuedSamples,
       inputSampleRate: this.inputSampleRate,
@@ -116,11 +125,17 @@ class PcmPlaybackProcessor extends AudioWorkletProcessor {
   }
 
   private emitCompletedDrains() {
-    if (this.queuedSamples > 0 || this.pendingDrainRequestIds.length === 0) return;
-    const completed = this.pendingDrainRequestIds.splice(0);
-    for (const requestId of completed) {
-      this.port.postMessage({ type: 'drained', requestId });
+    while (this.pendingDrains[0]?.fence <= this.renderedSamples) {
+      const { requestId } = this.pendingDrains.shift()!;
+      this.port.postMessage({ type: 'drained', requestId, generation: this.generation, renderedSamples: this.renderedSamples });
     }
+  }
+
+  private emitProgress() {
+    if (this.renderedSamples === this.lastProgressSamples) return;
+    if (this.queuedSamples > 0 && this.renderedSamples - this.lastProgressSamples < DEFAULT_INPUT_SAMPLE_RATE / 20) return;
+    this.lastProgressSamples = this.renderedSamples;
+    this.port.postMessage({ type: 'progress', generation: this.generation, renderedSamples: this.renderedSamples });
   }
 
   private ensureCurrentChunk(): boolean {
@@ -171,6 +186,7 @@ class PcmPlaybackProcessor extends AudioWorkletProcessor {
       const advanceNow = Math.min(remainingToAdvance, remainingInChunk);
       this.currentSampleIndex += advanceNow;
       this.queuedSamples = Math.max(0, this.queuedSamples - advanceNow);
+      this.renderedSamples += advanceNow;
       remainingToAdvance -= advanceNow;
 
       if (this.currentSampleIndex >= this.currentChunk.length) {
@@ -190,10 +206,9 @@ class PcmPlaybackProcessor extends AudioWorkletProcessor {
       return true;
     }
 
-    // Once the main thread seals a transport, no more chunks are coming. Drain
-    // even a sub-threshold startup/refill tail instead of waiting forever for
-    // the normal anti-stutter buffer target.
-    const requiredBufferedSamples = this.pendingDrainRequestIds.length > 0
+    // A submitted fence must drain even a sub-threshold startup/refill tail;
+    // it cannot wait indefinitely for new chunks to fill the anti-stutter buffer.
+    const requiredBufferedSamples = this.pendingDrains.length > 0
       ? 0
       : this.getRequiredBufferedSamples();
 
@@ -236,6 +251,7 @@ class PcmPlaybackProcessor extends AudioWorkletProcessor {
       output[writeIndex++] = 0;
     }
 
+    this.emitProgress();
     this.emitCompletedDrains();
 
     return true;

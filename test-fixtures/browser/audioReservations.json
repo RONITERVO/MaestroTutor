@@ -1,0 +1,49 @@
+{
+  "ready": {
+    "reservationId": "882ce706423848d5afe022397c413cb0",
+    "worldId": "4168e82751874d609e2ee2084d24ffa3",
+    "regionId": "5f10b447fa1f4aea82ed92104c638edd",
+    "sourceId": "0347a91349204f5cad5d9d54fbefb46e",
+    "kind": "tone",
+    "assetHash": "",
+    "definitionHash": "3173e014d6eeff873132e0c084735d9ed5ad66afe0f62e8a6d0ed2559ac9b6ea",
+    "state": "ready",
+    "owners": 2,
+    "reservedPcmBytes": 240008,
+    "readyPcmBytes": 240000
+  },
+  "budget": {
+    "sources": 1,
+    "owners": 2,
+    "retiring": 0,
+    "reservedPcmBytes": 240008,
+    "readyPcmBytes": 240000,
+    "sourceLimit": 8,
+    "ownerLimit": 8,
+    "pcmByteLimit": 11520064
+  },
+  "owners": [
+    {
+      "reservationId": "882ce706423848d5afe022397c413cb0",
+      "instanceId": "4e5103acb3b647f982472deeeedc69e0",
+      "worldId": "4168e82751874d609e2ee2084d24ffa3",
+      "regionId": "5f10b447fa1f4aea82ed92104c638edd",
+      "target": "book",
+      "role": "audio",
+      "emitter": "sound",
+      "sourceId": "0347a91349204f5cad5d9d54fbefb46e",
+      "sourceRevision": 10
+    },
+    {
+      "reservationId": "882ce706423848d5afe022397c413cb0",
+      "instanceId": "e8546a4aa13141a0ad582470c6a5fda6",
+      "worldId": "4168e82751874d609e2ee2084d24ffa3",
+      "regionId": "5f10b447fa1f4aea82ed92104c638edd",
+      "target": "88e3fb35e84e48708ecb7168513ca93f",
+      "role": "audio",
+      "emitter": "sound",
+      "sourceId": "0347a91349204f5cad5d9d54fbefb46e",
+      "sourceRevision": 10
+    }
+  ]
+}

@@ -1,0 +1,646 @@
+[
+  {
+    "name": "open cup",
+    "collision": {
+      "version": 1,
+      "shapes": [
+        {
+          "id": "Floor",
+          "shape": "cylinder",
+          "position": {
+            "x": 0,
+            "y": -0.099,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "size": {
+            "x": 0.2,
+            "y": 0.022,
+            "z": 0.2
+          },
+          "segments": 12,
+          "innerRadius": 0
+        },
+        {
+          "id": "Wall",
+          "shape": "ring",
+          "position": {
+            "x": 0,
+            "y": 0.011,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "size": {
+            "x": 0.2,
+            "y": 0.198,
+            "z": 0.2
+          },
+          "segments": 12,
+          "innerRadius": 0.4
+        }
+      ]
+    },
+    "valid": true
+  },
+  {
+    "name": "future version",
+    "collision": {
+      "version": 2,
+      "shapes": [
+        {
+          "id": "Floor",
+          "shape": "cylinder",
+          "position": {
+            "x": 0,
+            "y": -0.099,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "size": {
+            "x": 0.2,
+            "y": 0.022,
+            "z": 0.2
+          },
+          "segments": 12,
+          "innerRadius": 0
+        },
+        {
+          "id": "Wall",
+          "shape": "ring",
+          "position": {
+            "x": 0,
+            "y": 0.011,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "size": {
+            "x": 0.2,
+            "y": 0.198,
+            "z": 0.2
+          },
+          "segments": 12,
+          "innerRadius": 0.4
+        }
+      ]
+    },
+    "valid": false
+  },
+  {
+    "name": "duplicate ID",
+    "collision": {
+      "version": 1,
+      "shapes": [
+        {
+          "id": "Floor",
+          "shape": "cylinder",
+          "position": {
+            "x": 0,
+            "y": -0.099,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "size": {
+            "x": 0.2,
+            "y": 0.022,
+            "z": 0.2
+          },
+          "segments": 12,
+          "innerRadius": 0
+        },
+        {
+          "id": "Floor",
+          "shape": "ring",
+          "position": {
+            "x": 0,
+            "y": 0.011,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "size": {
+            "x": 0.2,
+            "y": 0.198,
+            "z": 0.2
+          },
+          "segments": 12,
+          "innerRadius": 0.4
+        }
+      ]
+    },
+    "valid": false
+  },
+  {
+    "name": "unknown shape",
+    "collision": {
+      "version": 1,
+      "shapes": [
+        {
+          "id": "Floor",
+          "shape": "mesh",
+          "position": {
+            "x": 0,
+            "y": -0.099,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "size": {
+            "x": 0.2,
+            "y": 0.022,
+            "z": 0.2
+          },
+          "segments": 12,
+          "innerRadius": 0
+        },
+        {
+          "id": "Wall",
+          "shape": "ring",
+          "position": {
+            "x": 0,
+            "y": 0.011,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "size": {
+            "x": 0.2,
+            "y": 0.198,
+            "z": 0.2
+          },
+          "segments": 12,
+          "innerRadius": 0.4
+        }
+      ]
+    },
+    "valid": false
+  },
+  {
+    "name": "thin ring wall",
+    "collision": {
+      "version": 1,
+      "shapes": [
+        {
+          "id": "Floor",
+          "shape": "cylinder",
+          "position": {
+            "x": 0,
+            "y": -0.099,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "size": {
+            "x": 0.2,
+            "y": 0.022,
+            "z": 0.2
+          },
+          "segments": 12,
+          "innerRadius": 0
+        },
+        {
+          "id": "Wall",
+          "shape": "ring",
+          "position": {
+            "x": 0,
+            "y": 0.011,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "size": {
+            "x": 0.04,
+            "y": 0.2,
+            "z": 0.05
+          },
+          "segments": 12,
+          "innerRadius": 0.4
+        }
+      ]
+    },
+    "valid": false
+  },
+  {
+    "name": "fractional segments",
+    "collision": {
+      "version": 1,
+      "shapes": [
+        {
+          "id": "Floor",
+          "shape": "cylinder",
+          "position": {
+            "x": 0,
+            "y": -0.099,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "size": {
+            "x": 0.2,
+            "y": 0.022,
+            "z": 0.2
+          },
+          "segments": 12,
+          "innerRadius": 0
+        },
+        {
+          "id": "Wall",
+          "shape": "ring",
+          "position": {
+            "x": 0,
+            "y": 0.011,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "size": {
+            "x": 0.2,
+            "y": 0.198,
+            "z": 0.2
+          },
+          "segments": 12.5,
+          "innerRadius": 0.4
+        }
+      ]
+    },
+    "valid": false
+  },
+  {
+    "name": "too many segments",
+    "collision": {
+      "version": 1,
+      "shapes": [
+        {
+          "id": "Floor",
+          "shape": "cylinder",
+          "position": {
+            "x": 0,
+            "y": -0.099,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "size": {
+            "x": 0.2,
+            "y": 0.022,
+            "z": 0.2
+          },
+          "segments": 12,
+          "innerRadius": 0
+        },
+        {
+          "id": "Wall",
+          "shape": "ring",
+          "position": {
+            "x": 0,
+            "y": 0.011,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "size": {
+            "x": 0.2,
+            "y": 0.198,
+            "z": 0.2
+          },
+          "segments": 25,
+          "innerRadius": 0.4
+        }
+      ]
+    },
+    "valid": false
+  },
+  {
+    "name": "sphere must be uniform",
+    "collision": {
+      "version": 1,
+      "shapes": [
+        {
+          "id": "Floor",
+          "shape": "sphere",
+          "position": {
+            "x": 0,
+            "y": -0.099,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "size": {
+            "x": 0.2,
+            "y": 0.022,
+            "z": 0.2
+          },
+          "segments": 0,
+          "innerRadius": 0
+        },
+        {
+          "id": "Wall",
+          "shape": "ring",
+          "position": {
+            "x": 0,
+            "y": 0.011,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "size": {
+            "x": 0.2,
+            "y": 0.198,
+            "z": 0.2
+          },
+          "segments": 12,
+          "innerRadius": 0.4
+        }
+      ]
+    },
+    "valid": false
+  },
+  {
+    "name": "primitive ignores no ring parameters",
+    "collision": {
+      "version": 1,
+      "shapes": [
+        {
+          "id": "Floor",
+          "shape": "cylinder",
+          "position": {
+            "x": 0,
+            "y": -0.099,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "size": {
+            "x": 0.2,
+            "y": 0.022,
+            "z": 0.2
+          },
+          "segments": 12,
+          "innerRadius": 0
+        },
+        {
+          "id": "Wall",
+          "shape": "box",
+          "position": {
+            "x": 0,
+            "y": 0.011,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "size": {
+            "x": 0.2,
+            "y": 0.198,
+            "z": 0.2
+          },
+          "segments": 12,
+          "innerRadius": 0.4
+        }
+      ]
+    },
+    "valid": false
+  },
+  {
+    "name": "piece budget",
+    "collision": {
+      "version": 1,
+      "shapes": [
+        {
+          "id": "Wall0",
+          "shape": "ring",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "size": {
+            "x": 0.2,
+            "y": 0.2,
+            "z": 0.2
+          },
+          "segments": 24,
+          "innerRadius": 0.4
+        },
+        {
+          "id": "Wall1",
+          "shape": "ring",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "size": {
+            "x": 0.2,
+            "y": 0.2,
+            "z": 0.2
+          },
+          "segments": 24,
+          "innerRadius": 0.4
+        },
+        {
+          "id": "Wall2",
+          "shape": "ring",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "size": {
+            "x": 0.2,
+            "y": 0.2,
+            "z": 0.2
+          },
+          "segments": 24,
+          "innerRadius": 0.4
+        }
+      ]
+    },
+    "valid": false
+  },
+  {
+    "name": "clear custom recipe",
+    "collision": {
+      "version": 1,
+      "shapes": []
+    },
+    "valid": true
+  },
+  {
+    "name": "old primitive defaults",
+    "collision": {
+      "version": 1,
+      "shapes": [
+        {
+          "id": "Box",
+          "shape": "box",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "size": {
+            "x": 0.1,
+            "y": 0.1,
+            "z": 0.1
+          },
+          "segments": 0,
+          "innerRadius": 0
+        }
+      ]
+    },
+    "valid": true
+  },
+  {
+    "name": "ring wall exactly at minimum thickness",
+    "collision": {
+      "version": 1,
+      "shapes": [
+        {
+          "id": "Floor",
+          "shape": "cylinder",
+          "position": {
+            "x": 0,
+            "y": -0.099,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "size": {
+            "x": 0.2,
+            "y": 0.022,
+            "z": 0.2
+          },
+          "segments": 12,
+          "innerRadius": 0
+        },
+        {
+          "id": "Wall",
+          "shape": "ring",
+          "position": {
+            "x": 0,
+            "y": 0.011,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "size": {
+            "x": 0.1,
+            "y": 0.198,
+            "z": 0.1
+          },
+          "segments": 12,
+          "innerRadius": 0.45
+        }
+      ]
+    },
+    "valid": true
+  }
+]

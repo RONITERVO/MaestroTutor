@@ -9,6 +9,7 @@ import {
 } from '../../../core/config/activityTokens';
 import { useMaestroStore } from '../../../store';
 import { createSmartRef } from '../../../shared/utils/smartRef';
+import { sessionActivity } from '../../../platform/browser/sessionActivity';
 
 interface UseSmartReengagementProps {
   isLoadingHistory: boolean;
@@ -113,6 +114,7 @@ export const useSmartReengagement = ({
   // startWaitTimer - starts the wait timer before countdown
   // Uses refs for interdependent callbacks to avoid circular dependencies
   const startWaitTimer = useCallback((delayMs: number, reason: string) => {
+    if (!sessionActivity.isActive()) return;
     if (!canScheduleReengagementRef.current()) {
       cancelReengagementRef.current();
       return;
@@ -178,6 +180,7 @@ export const useSmartReengagement = ({
   // scheduleReengagement - main entry point to schedule reengagement
   // Uses refs for interdependent callbacks
   const scheduleReengagement = useCallback((reason: string, delayOverrideMs?: number) => {
+    if (!sessionActivity.isActive()) return;
     const defaultDelay = settingsRef.current.smartReengagement.thresholdSeconds * 1000;
     const delay = typeof delayOverrideMs === 'number' && Number.isFinite(delayOverrideMs)
       ? delayOverrideMs
@@ -195,6 +198,7 @@ export const useSmartReengagement = ({
   // beginCountdown - starts the final countdown before triggering reengagement
   // Uses refs for circular dependencies with scheduleReengagement
   const beginCountdown = useCallback((reason: string) => {
+    if (!sessionActivity.isActive()) return;
     if (isUserActiveRef.current) {
       scheduleReengagementRef.current('user-active-during-countdown');
       return;
@@ -230,6 +234,7 @@ export const useSmartReengagement = ({
     setReengagementDeadline(null);
     setReengagementPhase('countdown');
     timers.countdownTimer = window.setTimeout(async () => {
+      if (!sessionActivity.isActive()) return;
       timers.countdownTimer = null;
       if (isUserActiveRef.current) {
         scheduleReengagementRef.current('user-active-during-countdown');

@@ -1,0 +1,93 @@
+// Copyright 2026 Roni Tervo
+// SPDX-License-Identifier: Apache-2.0
+using System;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+using Maestro.Quest.Interaction;
+using Maestro.Quest.Programs;
+using Newtonsoft.Json.Linq;
+namespace Maestro.Quest.Imports
+{
+    public sealed partial class ImportWorkshop
+    {
+        JObject selectionResult;
+        static JObject EmptyImportResult()=>new() {["destination"]="",["objectId"]="",["revision"]=0,["temporary"]=false,["motionIds"]=new JArray()};
+        internal bool CanAcceptSelection(string id,string hash,string destination,int revision,out string error,bool manual=false)
+        {
+            error="Inspect the current ready model preview before accepting it";
+            if(disposed||Busy||!HasPreview||selectionPhase!="preview"||id!=selectionId||hash!=pending.Hash)return false;
+            if(!isActiveAndEnabled||selectionPaused||!selectionFocused||editor.RuntimeGate.Held||editor.Ownership.Suspended){error="Resume the room before accepting the model";return false;}
+            if(editor.WriteGate.Frozen||!editor.CanSaveRoom){error="Room saving is unavailable";return false;}
+            if(destination!="maestro"&&(editor.AnyHeld||editor.DrawingInProgress)){error="Release objects and finish drawing before accepting the model";return false;}
+            if(destination!="maestro"&&animationWorkshop&&(animationWorkshop.ControlsTarget(editor.SelectedId)||animationWorkshop.HasUnsavedPose||animationWorkshop.HasUnsavedRecording||animationWorkshop.HasUnsavedFrameEdit)){error="Finish authoring and resolve retained poses, takes or keyframe edits first";return false;}
+            if(destination=="object")return editor.CanCreatePrimitive(out error);
+            if(destination=="maestro"){
+                if(!preview.IsHumanoid){error=preview.HumanoidIssue??"Choose a valid humanoid for Maestro";return false;}
+                if(!editor.CanSelectMaestroModel(hash,revision,out error))return false;
+                return editor.Ownership.CanAcquire("model-import:"+id,manual?RoomActorRole.Control:RoomActorRole.Program,new[]{new BehaviourCatalog.Claim("maestro","wholeTarget")},out error,replaceControl:manual);
+            }
+            if(destination=="motions"&&pending.Inspection.Clips==0){error="This preview has no embedded animations";return false;}
+            if(destination is not ("motions" or "library")){error="Choose object, maestro, library or motions";return false;}
+            error=null;return true;
+        }
+        internal bool BeginAcceptSelection(string id,string hash,string destination,int revision,CancellationToken cancellation,out Task<JObject> completion,out string error,bool manual=false)
+        {
+            completion=null;if(!CanAcceptSelection(id,hash,destination,revision,out error,manual))return false;
+            var linked=CancellationTokenSource.CreateLinkedTokenSource(cancellation,selectionCancel.Token);RoomOwnership.Lease owner=null;
+            if(destination=="maestro"&&!editor.Ownership.TryAcquire("model-import:"+id,"Import Maestro",manual?RoomActorRole.Control:RoomActorRole.Program,
+                new[]{new BehaviourCatalog.Claim("maestro","wholeTarget")},_=>linked.Cancel(),out owner,out error,replaceControl:manual)){linked.Dispose();return false;}
+            busy=true;selectionPhase="accepting";selectionError="";
+            completion=AcceptSelectionAsync(pending,destination,revision,linked,owner);return true;
+        }
+        async Task<JObject> AcceptSelectionAsync(ModelAsset asset,string destination,int revision,CancellationTokenSource cancellation,RoomOwnership.Lease owner)
+        {
+            var token=cancellation.Token;string roomSession=editor.TemporarySessionId;var selectMaestro=editor.CaptureCompletedSelection("maestro");
+            var gate=editor.RuntimeGate;ModelAsset accepted=null;
+            // Own interruption from acceptance, including the library-copy wait
+            // before a room loader or avatar operation has started.
+            void Interrupted(){if(gate.Held)cancellation.Cancel();}
+            gate.Changed+=Interrupted;
+            try{
+                // Acceptance owns its source until all accepted work drains, even
+                // if destroying the workshop clears its pending preview meanwhile.
+                accepted=editor.Models.Admit(asset);string hash=accepted.Hash,name=accepted.Name;
+                Say("Saving the selected "+destination+"…");
+                await Task.Yield();token.ThrowIfCancellationRequested();
+                string objectId="";string[] motions=Array.Empty<string>();JObject avatarReceipt=null;
+                if(destination=="motions"){
+                    // Once accepted by the library, this atomic write is allowed to drain.
+                    // Cancellation never promises to remove an already committed library entry.
+                    var entries=await editor.Motions.ImportAsync(name,accepted.Bytes);motions=entries.Select(e=>e.id).Distinct().ToArray();
+                    libraryMode=true;libraryMotionId=entries.FirstOrDefault(e=>!e.Short)?.id;page=0;
+                } else {
+                    await editor.Models.SaveAsync(accepted);token.ThrowIfCancellationRequested();
+                    if(!this||disposed||!isActiveAndEnabled||editor.RuntimeGate.Held||editor.TemporarySessionId!=roomSession)throw new OperationCanceledException();
+                    if(destination=="object" && (editor.AnyHeld||editor.DrawingInProgress||animationWorkshop&&(animationWorkshop.ControlsTarget(editor.SelectedId)||animationWorkshop.HasUnsavedPose||animationWorkshop.HasUnsavedRecording||animationWorkshop.HasUnsavedFrameEdit)))
+                        throw new ModelImportException("Room interaction changed while importing. Finish the active edit, then retry this preview.");
+                    if(destination=="object"){
+                        objectId=await editor.CreateImportedModelAsync(hash,token);
+                        editor.Select(editor.Find(objectId));
+                    }else if(destination=="maestro"){
+                        avatarReceipt=await editor.SelectMaestroModelAsync(hash,revision,token);
+                        objectId="maestro";selectMaestro();
+                    }
+                }
+                selectionResult=new JObject {["destination"]=destination,["objectId"]=objectId,["revision"]=avatarReceipt?["revision"]??new JValue(objectId==""?0:editor.ObjectRevision(objectId)),["temporary"]=avatarReceipt?["temporary"]??new JValue(editor.TemporaryRoom),["motionIds"]=new JArray(motions)};
+                selectionPhase="completed";ClearPreview();if(destination=="motions")ShowLibraryDetails();Say("Import completed — ready to use");
+                var result=(JObject)selectionResult.DeepClone();result["requestId"]=selectionId;result["modelHash"]=hash;return result;
+            }catch(OperationCanceledException){selectionPhase=HasPreview?"preview":"cancelled";selectionError="Import stopped. A verified library copy may remain; no interrupted placement will restart.";Say(selectionError);return null;}
+            catch(Exception ex){selectionPhase=HasPreview?"preview":"failed";selectionError=Bounded(ex is ModelImportException?ex.Message:"Import could not finish. Inspect the preview before retrying; copied library assets may remain.");Say(selectionError);return null;}
+            finally{
+                gate.Changed-=Interrupted;accepted?.Dispose();owner?.Dispose();cancellation.Dispose();busy=false;
+                if(disposed||!this||!isActiveAndEnabled){selectionPhase=selectionResult==null?"cancelled":"completed";ClearPreview();EndSelectionOwner();}
+            }
+        }
+        async Task<bool> AcceptPreviewManually(string destination)
+        {
+            if(!HasPreview){Say("Choose a ready model preview first");return false;}
+            if(!BeginAcceptSelection(selectionId,pending.Hash,destination,editor.ObjectRevision("maestro"),CancellationToken.None,out var completion,out var error,manual:true)){Say(error);return false;}
+            return await completion!=null;
+        }
+    }
+}

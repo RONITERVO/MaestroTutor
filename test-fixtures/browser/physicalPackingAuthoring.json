@@ -1,0 +1,5242 @@
+{
+  "boundary": "Actual native shared configuration and readback only. Physical touch/trigger gestures have separate PlayMode evidence; no headset/provider proof.",
+  "created": {
+    "version": 1,
+    "revision": 277,
+    "sceneRevision": 48,
+    "ack": 116,
+    "session": "5e910ac6a4044d8a90ae007144a3ac2c",
+    "status": "Action completed",
+    "selectedId": "fdf06d558f8740a1b21ef861397a9626",
+    "ok": true,
+    "canUndo": true,
+    "canRedo": false,
+    "physicsRunning": false,
+    "visible": false,
+    "inspection": null,
+    "constructionSelection": {
+      "stateId": "7723dfd48d884e12b5720814b90eecaa",
+      "collecting": false,
+      "members": []
+    },
+    "constructionManipulation": {
+      "stateId": "7723dfd48d884e12b5720814b90eecaa",
+      "error": "",
+      "visible": false,
+      "holding": false
+    },
+    "workspaceView": "objects",
+    "rules": {
+      "revision": 1,
+      "bindingPage": 0,
+      "bindingCount": 0,
+      "queued": 0,
+      "eventQueue": 0,
+      "eventsDropped": 0,
+      "canUndo": false,
+      "canRedo": false,
+      "readOnly": false,
+      "status": "Create an action sequence, then add triggers or buttons",
+      "selectedError": "",
+      "sequences": [],
+      "selected": null,
+      "memory": null,
+      "bindings": [],
+      "buttons": [],
+      "running": [],
+      "outcomes": []
+    },
+    "motions": null,
+    "capabilities": [
+      "physicsSettings.v1",
+      "avatarSettings.v1",
+      "physicsRun.v1",
+      "avatarMotion.v1",
+      "avatarWalk.v1",
+      "motions.v1",
+      "avatarActivities.v1",
+      "catalog.v1",
+      "catalogVocabulary.v1",
+      "roomOwnership.v1",
+      "behaviourPrograms.v3",
+      "eventPrograms.v1",
+      "eventFields.v1",
+      "eventSubscriptions.v1",
+      "factQueries.v1",
+      "conditionWaits.v1",
+      "parallelPrograms.v1",
+      "rememberedVariables.v1",
+      "temporaryMemory.v1",
+      "structuredValues.v1",
+      "programModules.v1",
+      "moduleLibrary.v1",
+      "moduleLibraryFiles.v1",
+      "execution.v1",
+      "executionReceipts.v1",
+      "actionResults.v1",
+      "recipeCreation.v1",
+      "creationComponents.v1",
+      "creationTemplates.v1",
+      "layoutEdits.v1",
+      "structures.v1",
+      "batchCreation.v1",
+      "structuredResults.v1",
+      "structuredInputs.v1",
+      "indexedInputs.v1",
+      "constructionSelection.v1",
+      "groupTransforms.v1",
+      "constructionManipulation.v1",
+      "constructionSnapping.v1",
+      "objectEdits.v1",
+      "objectCopy.v1",
+      "drawingEdits.v1",
+      "drawingSurfaces.v1",
+      "curvedDrawingSurfaces.v1",
+      "drawingTips.v1",
+      "drawingErasers.v1",
+      "containers.v1",
+      "heightFields.v1",
+      "heightFieldTransfer.v1",
+      "materialStores.v1",
+      "materialTransfer.v1",
+      "materialPacking.v1",
+      "physicalMaterialPacking.v1",
+      "physicalSculpting.v1",
+      "physicalMaterialTools.v1",
+      "containerPouring.v1",
+      "containerScooping.v1",
+      "physicalConnections.v1",
+      "physicalSliders.v1",
+      "snapPoints.v1",
+      "connectedBlueprints.v2",
+      "creationPrototypes.v1",
+      "constructionCapture.v1",
+      "recipeEdits.v1",
+      "latheGeometry.v1",
+      "extrusionGeometry.v1",
+      "sweepGeometry.v1",
+      "recipePatterns.v1",
+      "roomViewCapture.v1",
+      "collisionShapes.v1",
+      "recipePartPlayback.v1",
+      "objectAttachments.v1",
+      "anchorZones.v1",
+      "channelWaits.v1",
+      "objectLaunch.v1",
+      "physicalCatching.v1",
+      "calendarSchedules.v1",
+      "animationAuthoring.v1",
+      "animationRecording.v1",
+      "animationPosing.v1",
+      "avatarModels.v1",
+      "modelImport.v1",
+      "modelArchiveImport.v1",
+      "motionBatchImport.v1",
+      "includedMotions.v1",
+      "authoredMotion.v1",
+      "unavailablePrograms.v1",
+      "actionRecovery.v1",
+      "temporaryRoom.v1",
+      "spatialSettings.v1",
+      "physicsSimulation.v1",
+      "roomEnvironment.v1",
+      "surfacePlacement.v1",
+      "controllerConfiguration.v1",
+      "controllerModes.v1",
+      "runtimeDiagnostics.v1",
+      "workspaceMaintenance.v1",
+      "workspaceArchiveActivation.v1",
+      "workspaceReview.v1",
+      "workspacePrevious.v1",
+      "workspaceRecovery.v1",
+      "workspaceSavedRecovery.v1",
+      "workspaceHistory.v1",
+      "workspaceEvidence.v1",
+      "workspaceRetention.v1",
+      "workspaceDisposal.v1"
+    ],
+    "physics": {
+      "ready": true,
+      "running": false,
+      "status": "Probe-only synthetic floor; no real scan or alignment proof"
+    },
+    "temporaryRoom": {
+      "active": false,
+      "pending": false,
+      "id": "ad3f79af357844c79c4b274faf5aafa4",
+      "saveId": "",
+      "phase": "idle",
+      "error": "",
+      "savedRevision": 0
+    },
+    "ownership": {
+      "suspended": false,
+      "error": "",
+      "owners": [
+        {
+          "id": "ambient:maestro",
+          "label": "Maestro tutor activity",
+          "role": "ambient",
+          "allowsGrab": false,
+          "claims": [
+            {
+              "target": "maestro",
+              "channel": "wholeTarget"
+            }
+          ]
+        }
+      ]
+    },
+    "avatar": {
+      "active": false,
+      "canLook": true,
+      "canFollow": false,
+      "mode": "stopped",
+      "status": "Choose Look at me or Follow me",
+      "lookReason": "",
+      "followReason": "Load the room, check its alignment, then Start physics before walking",
+      "distance": 1.3,
+      "speed": 0.65
+    },
+    "walk": {
+      "source": "embedded",
+      "motionId": "",
+      "modelHash": "dcd59fb02d378322b656c2cfbe9851d08229ac3a618e90ad5aa06eac7c88759c",
+      "name": "Walking",
+      "status": "Embedded walking clip is available",
+      "playbackStatus": "",
+      "clipIndex": 0,
+      "available": true
+    },
+    "activityProfile": {
+      "modelHash": "dcd59fb02d378322b656c2cfbe9851d08229ac3a618e90ad5aa06eac7c88759c",
+      "status": "Uses included animations where no state motion is assigned",
+      "revision": 1,
+      "canAssign": true,
+      "readOnly": false,
+      "canUndo": false,
+      "canRedo": false,
+      "roles": [
+        {
+          "role": 0,
+          "choices": [
+            {
+              "motionId": "21da54acb5c38d147ad297bf7ef22977",
+              "name": "Idle_4",
+              "weight": 1,
+              "speed": 1,
+              "cooldown": 0,
+              "loop": true,
+              "available": true
+            }
+          ]
+        },
+        {
+          "role": 1,
+          "choices": [
+            {
+              "motionId": "bd0bf1a849d86d785e00c3a392639359",
+              "name": "Listening_Gesture",
+              "weight": 1,
+              "speed": 1,
+              "cooldown": 0,
+              "loop": true,
+              "available": true
+            }
+          ]
+        },
+        {
+          "role": 2,
+          "choices": [
+            {
+              "motionId": "9a66ea13d9ba08b954b9a0cbdc7d89dc",
+              "name": "Idle_12",
+              "weight": 1,
+              "speed": 1,
+              "cooldown": 0,
+              "loop": true,
+              "available": true
+            }
+          ]
+        },
+        {
+          "role": 3,
+          "choices": [
+            {
+              "motionId": "b56ece79da8e21bac89927310921d734",
+              "name": "Talk_with_Hands_Open",
+              "weight": 1,
+              "speed": 1,
+              "cooldown": 2,
+              "loop": false,
+              "available": true
+            },
+            {
+              "motionId": "852ac885964d693deb8d3d3ba835acec",
+              "name": "Talk_with_Right_Hand_Open",
+              "weight": 1,
+              "speed": 1,
+              "cooldown": 2,
+              "loop": false,
+              "available": true
+            }
+          ]
+        }
+      ]
+    },
+    "objects": [
+      {
+        "id": "39d289d258dd4c119e4c64119c0ce269",
+        "name": "Editable material scoop",
+        "kind": "Assembly",
+        "objectRevision": 49,
+        "position": {
+          "x": 0.30000001192092896,
+          "y": 1.2999999523162842,
+          "z": 0.6499999761581421
+        },
+        "scale": 1,
+        "color": {
+          "r": 1,
+          "g": 1,
+          "b": 1,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "solid",
+          "shape": "automatic",
+          "mass": 0.11999999731779099
+        },
+        "movement": null
+      },
+      {
+        "id": "3fa0f9a640a444f8b84981f7eef00ade",
+        "name": "Ball",
+        "kind": "Ball",
+        "objectRevision": 4,
+        "position": {
+          "x": 0.6899999976158142,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1,
+        "color": {
+          "r": 0.7647058963775635,
+          "g": 0.6000000238418579,
+          "b": 0.3137255012989044,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "73feebc422834841bedb6af0f05c4f3f",
+        "name": "Block",
+        "kind": "Block",
+        "objectRevision": 3,
+        "position": {
+          "x": 0.5199999809265137,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1,
+        "color": {
+          "r": 0.45098039507865906,
+          "g": 0.32549020648002625,
+          "b": 0.30588236451148987,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "bdf48555100a436398c330c45227b6f0",
+        "name": "Cylinder",
+        "kind": "Cylinder",
+        "objectRevision": 5,
+        "position": {
+          "x": 0.8600000143051147,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1,
+        "color": {
+          "r": 0.16862745583057404,
+          "g": 0.5529412031173706,
+          "b": 0.5333333611488342,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "book",
+        "name": "Book",
+        "kind": "Book",
+        "objectRevision": 1,
+        "position": {
+          "x": 0,
+          "y": 1.159999966621399,
+          "z": 0.6499999761581421
+        },
+        "scale": 1,
+        "color": {
+          "r": 1,
+          "g": 1,
+          "b": 1,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "maestro",
+        "name": "Maestro",
+        "kind": "Maestro",
+        "objectRevision": 2,
+        "position": {
+          "x": -0.7799999713897705,
+          "y": 0,
+          "z": 1.399999976158142
+        },
+        "scale": 1,
+        "color": {
+          "r": 1,
+          "g": 1,
+          "b": 1,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": {
+          "distance": 1.3,
+          "speed": 0.65
+        }
+      }
+    ],
+    "created": [],
+    "capture": {
+      "captureId": "4d4c8e48cd014fc28d4b9c503a08f6e7",
+      "sha256": "852cbebf2a4ec97b57803a674051a85b1ab82710377fc801e2406c67f608b993",
+      "mimeType": "image/jpeg",
+      "width": 512,
+      "height": 384,
+      "capturedAt": "2026-10-04T17:42:38.555461Z",
+      "sceneRevision": 3,
+      "verticalFov": 60,
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 1
+      }
+    },
+    "catalog": {
+      "operation": "inspect",
+      "capability": "object.field.capture",
+      "version": 1,
+      "definition": {
+        "id": "object.field.capture",
+        "version": 1,
+        "type": {
+          "record": {
+            "sessionId": "text",
+            "phase": "text",
+            "target": "text",
+            "brush": {
+              "record": {
+                "mode": "text",
+                "radius": "number",
+                "height": "number"
+              }
+            },
+            "points": "number",
+            "temporary": "boolean",
+            "error": "text"
+          }
+        },
+        "label": "Physical sculpt draft",
+        "description": "Current shared shape or material gesture, field target, brush settings, sampled point count and bounded error. Material take/deposit/pack has one point and zero height; inspect object.material.capture or material.pack.capture for quantities and the last packed ball identity. Preview is visible only; collision/saved heights remain accepted. Unsaved needs explicit Retry/Discard. Read object.field.capture.path for exact points. Reads do not change the draft.",
+        "features": [
+          "physicalSculpting.v1"
+        ]
+      },
+      "status": "Current fact value. Reading does not change the room.",
+      "category": "facts",
+      "available": true,
+      "value": {
+        "sessionId": "db518405239148879f0e4f08602da2c7",
+        "phase": "idle",
+        "target": "",
+        "brush": {
+          "mode": "none",
+          "radius": 0,
+          "height": 0
+        },
+        "points": 0,
+        "temporary": false,
+        "error": ""
+      }
+    },
+    "execution": {
+      "selected": {
+        "id": "a319fb57fadb41a88e360d8962b6e3b0",
+        "capability": "object.create",
+        "version": 1,
+        "resources": [],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "objectId": "39d289d258dd4c119e4c64119c0ce269"
+        },
+        "call": {
+          "id": "object.create",
+          "version": 1,
+          "arguments": {
+            "templateHash": "7e2d4e5a90a2d5408dc34766fde83249c9ae611b4bcad8b536a8b755fee69a6d",
+            "name": "Editable material scoop",
+            "x": 0.3,
+            "y": 1.3,
+            "z": 0.65,
+            "scale": 1,
+            "kind": "template"
+          }
+        }
+      },
+      "running": [],
+      "outcomes": [
+        {
+          "id": "719140fa7e9142b78eed5e00052a3063",
+          "capability": "object.recipe.edit",
+          "version": 1,
+          "resources": [
+            "460ce05f5bc9423698e56e8d0a07cbb2"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "target": "460ce05f5bc9423698e56e8d0a07cbb2",
+            "revision": 21,
+            "parts": 1,
+            "tracks": 0,
+            "duration": 2,
+            "loop": false,
+            "playing": false,
+            "autoplay": false
+          }
+        },
+        {
+          "id": "e4af67230c484f09b1209db7b75da7f7",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "68aae688b3a647aa87cacd4dcc240732"
+          }
+        },
+        {
+          "id": "4368ad2b0f9542898157e8ba1ba1aaf2",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "55d83238de7349618ba58fd9f34103c7"
+          }
+        },
+        {
+          "id": "7fd20643cff64a989bb9d30eaef49c77",
+          "capability": "object.field.sculpt",
+          "version": 1,
+          "resources": [
+            "55d83238de7349618ba58fd9f34103c7"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "changedVertices": 63
+          }
+        },
+        {
+          "id": "0bf2cc7aa4d34151813d275f434d9cf1",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "7909542c2f5b4ff6bd2e72fe3e4e94d2"
+          }
+        },
+        {
+          "id": "06235d7af3774975ae7f3919ed5ac425",
+          "capability": "object.field.transfer",
+          "version": 1,
+          "resources": [
+            "55d83238de7349618ba58fd9f34103c7",
+            "7909542c2f5b4ff6bd2e72fe3e4e94d2"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "removedLitres": 1.0000001930166034,
+            "addedLitres": 1.0000003094319252,
+            "roundingLitres": 1.1641532182693481e-07
+          }
+        },
+        {
+          "id": "9491f9fac63a488a903f37560689505e",
+          "capability": "object.material.pack",
+          "version": 1,
+          "resources": [
+            "55d83238de7349618ba58fd9f34103c7"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "fdf06d558f8740a1b21ef861397a9626",
+            "amountLitres": 0.4999998782295733
+          }
+        },
+        {
+          "id": "33934ff3867642e2ad0cb11ceb3b274e",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "ab2636127c9f4dec8470d2d9176180e8"
+          }
+        },
+        {
+          "id": "8a8d276eddd64a0f987d36e1c951a39f",
+          "capability": "object.material.edit",
+          "version": 1,
+          "resources": [
+            "ab2636127c9f4dec8470d2d9176180e8"
+          ],
+          "phase": "completed",
+          "status": "Action completed"
+        },
+        {
+          "id": "f4c03576c4584a1fb95a727045fe7cf7",
+          "capability": "object.material.transfer",
+          "version": 1,
+          "resources": [
+            "55d83238de7349618ba58fd9f34103c7",
+            "ab2636127c9f4dec8470d2d9176180e8"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "removedLitres": 0.19999913638457656,
+            "addedLitres": 0.19999913638457653,
+            "roundingLitres": -2.7755575615628914e-17
+          }
+        },
+        {
+          "id": "0acb509f1e3149d782824e68b2d3872c",
+          "capability": "object.material.transfer",
+          "version": 1,
+          "resources": [
+            "ab2636127c9f4dec8470d2d9176180e8",
+            "55d83238de7349618ba58fd9f34103c7"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "removedLitres": 0.09999965550377964,
+            "addedLitres": 0.09999965550377965,
+            "roundingLitres": 1.3877787807814457e-17
+          }
+        },
+        {
+          "id": "4bafad006db34e6ea66cfd91bdfbb255",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "c8b4ff852c724d2288930625fe3d67dc"
+          }
+        },
+        {
+          "id": "f2f9ac3af40346e6912e7f65d3086ba3",
+          "capability": "object.sculptTip.edit",
+          "version": 1,
+          "resources": [
+            "c8b4ff852c724d2288930625fe3d67dc"
+          ],
+          "phase": "completed",
+          "status": "Action completed"
+        },
+        {
+          "id": "4848f78b01f740b88ae7873c19b05d4d",
+          "capability": "field.tool.set",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed"
+        },
+        {
+          "id": "093674af571c430ead55cf172a8e469f",
+          "capability": "field.tool.set",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed"
+        },
+        {
+          "id": "a319fb57fadb41a88e360d8962b6e3b0",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "39d289d258dd4c119e4c64119c0ce269"
+          }
+        }
+      ],
+      "nextRunId": "130575d50bdb42b2bb65c25f35255a9e",
+      "storageError": null,
+      "recovery": null,
+      "workspace": {
+        "selected": null,
+        "running": [],
+        "outcomes": [],
+        "nextRunId": "eda39c2a04ee441eb25bfe6990b74518",
+        "storageError": null,
+        "recovery": null
+      }
+    }
+  },
+  "search": {
+    "version": 1,
+    "revision": 281,
+    "sceneRevision": 48,
+    "ack": 117,
+    "session": "5e910ac6a4044d8a90ae007144a3ac2c",
+    "status": "Found 1 actions. Search does not run or enable anything.",
+    "selectedId": "fdf06d558f8740a1b21ef861397a9626",
+    "ok": true,
+    "canUndo": true,
+    "canRedo": false,
+    "physicsRunning": false,
+    "visible": false,
+    "inspection": null,
+    "constructionSelection": {
+      "stateId": "7723dfd48d884e12b5720814b90eecaa",
+      "collecting": false,
+      "members": []
+    },
+    "constructionManipulation": {
+      "stateId": "7723dfd48d884e12b5720814b90eecaa",
+      "error": "",
+      "visible": false,
+      "holding": false
+    },
+    "workspaceView": "objects",
+    "rules": {
+      "revision": 1,
+      "bindingPage": 0,
+      "bindingCount": 0,
+      "queued": 0,
+      "eventQueue": 0,
+      "eventsDropped": 0,
+      "canUndo": false,
+      "canRedo": false,
+      "readOnly": false,
+      "status": "Create an action sequence, then add triggers or buttons",
+      "selectedError": "",
+      "sequences": [],
+      "selected": null,
+      "memory": null,
+      "bindings": [],
+      "buttons": [],
+      "running": [],
+      "outcomes": []
+    },
+    "motions": null,
+    "capabilities": [
+      "physicsSettings.v1",
+      "avatarSettings.v1",
+      "physicsRun.v1",
+      "avatarMotion.v1",
+      "avatarWalk.v1",
+      "motions.v1",
+      "avatarActivities.v1",
+      "catalog.v1",
+      "catalogVocabulary.v1",
+      "roomOwnership.v1",
+      "behaviourPrograms.v3",
+      "eventPrograms.v1",
+      "eventFields.v1",
+      "eventSubscriptions.v1",
+      "factQueries.v1",
+      "conditionWaits.v1",
+      "parallelPrograms.v1",
+      "rememberedVariables.v1",
+      "temporaryMemory.v1",
+      "structuredValues.v1",
+      "programModules.v1",
+      "moduleLibrary.v1",
+      "moduleLibraryFiles.v1",
+      "execution.v1",
+      "executionReceipts.v1",
+      "actionResults.v1",
+      "recipeCreation.v1",
+      "creationComponents.v1",
+      "creationTemplates.v1",
+      "layoutEdits.v1",
+      "structures.v1",
+      "batchCreation.v1",
+      "structuredResults.v1",
+      "structuredInputs.v1",
+      "indexedInputs.v1",
+      "constructionSelection.v1",
+      "groupTransforms.v1",
+      "constructionManipulation.v1",
+      "constructionSnapping.v1",
+      "objectEdits.v1",
+      "objectCopy.v1",
+      "drawingEdits.v1",
+      "drawingSurfaces.v1",
+      "curvedDrawingSurfaces.v1",
+      "drawingTips.v1",
+      "drawingErasers.v1",
+      "containers.v1",
+      "heightFields.v1",
+      "heightFieldTransfer.v1",
+      "materialStores.v1",
+      "materialTransfer.v1",
+      "materialPacking.v1",
+      "physicalMaterialPacking.v1",
+      "physicalSculpting.v1",
+      "physicalMaterialTools.v1",
+      "containerPouring.v1",
+      "containerScooping.v1",
+      "physicalConnections.v1",
+      "physicalSliders.v1",
+      "snapPoints.v1",
+      "connectedBlueprints.v2",
+      "creationPrototypes.v1",
+      "constructionCapture.v1",
+      "recipeEdits.v1",
+      "latheGeometry.v1",
+      "extrusionGeometry.v1",
+      "sweepGeometry.v1",
+      "recipePatterns.v1",
+      "roomViewCapture.v1",
+      "collisionShapes.v1",
+      "recipePartPlayback.v1",
+      "objectAttachments.v1",
+      "anchorZones.v1",
+      "channelWaits.v1",
+      "objectLaunch.v1",
+      "physicalCatching.v1",
+      "calendarSchedules.v1",
+      "animationAuthoring.v1",
+      "animationRecording.v1",
+      "animationPosing.v1",
+      "avatarModels.v1",
+      "modelImport.v1",
+      "modelArchiveImport.v1",
+      "motionBatchImport.v1",
+      "includedMotions.v1",
+      "authoredMotion.v1",
+      "unavailablePrograms.v1",
+      "actionRecovery.v1",
+      "temporaryRoom.v1",
+      "spatialSettings.v1",
+      "physicsSimulation.v1",
+      "roomEnvironment.v1",
+      "surfacePlacement.v1",
+      "controllerConfiguration.v1",
+      "controllerModes.v1",
+      "runtimeDiagnostics.v1",
+      "workspaceMaintenance.v1",
+      "workspaceArchiveActivation.v1",
+      "workspaceReview.v1",
+      "workspacePrevious.v1",
+      "workspaceRecovery.v1",
+      "workspaceSavedRecovery.v1",
+      "workspaceHistory.v1",
+      "workspaceEvidence.v1",
+      "workspaceRetention.v1",
+      "workspaceDisposal.v1"
+    ],
+    "physics": {
+      "ready": true,
+      "running": false,
+      "status": "Probe-only synthetic floor; no real scan or alignment proof"
+    },
+    "temporaryRoom": {
+      "active": false,
+      "pending": false,
+      "id": "ad3f79af357844c79c4b274faf5aafa4",
+      "saveId": "",
+      "phase": "idle",
+      "error": "",
+      "savedRevision": 0
+    },
+    "ownership": {
+      "suspended": false,
+      "error": "",
+      "owners": [
+        {
+          "id": "ambient:maestro",
+          "label": "Maestro tutor activity",
+          "role": "ambient",
+          "allowsGrab": false,
+          "claims": [
+            {
+              "target": "maestro",
+              "channel": "wholeTarget"
+            }
+          ]
+        }
+      ]
+    },
+    "avatar": {
+      "active": false,
+      "canLook": true,
+      "canFollow": false,
+      "mode": "stopped",
+      "status": "Choose Look at me or Follow me",
+      "lookReason": "",
+      "followReason": "Load the room, check its alignment, then Start physics before walking",
+      "distance": 1.3,
+      "speed": 0.65
+    },
+    "walk": {
+      "source": "embedded",
+      "motionId": "",
+      "modelHash": "dcd59fb02d378322b656c2cfbe9851d08229ac3a618e90ad5aa06eac7c88759c",
+      "name": "Walking",
+      "status": "Embedded walking clip is available",
+      "playbackStatus": "",
+      "clipIndex": 0,
+      "available": true
+    },
+    "activityProfile": {
+      "modelHash": "dcd59fb02d378322b656c2cfbe9851d08229ac3a618e90ad5aa06eac7c88759c",
+      "status": "Uses included animations where no state motion is assigned",
+      "revision": 1,
+      "canAssign": true,
+      "readOnly": false,
+      "canUndo": false,
+      "canRedo": false,
+      "roles": [
+        {
+          "role": 0,
+          "choices": [
+            {
+              "motionId": "21da54acb5c38d147ad297bf7ef22977",
+              "name": "Idle_4",
+              "weight": 1,
+              "speed": 1,
+              "cooldown": 0,
+              "loop": true,
+              "available": true
+            }
+          ]
+        },
+        {
+          "role": 1,
+          "choices": [
+            {
+              "motionId": "bd0bf1a849d86d785e00c3a392639359",
+              "name": "Listening_Gesture",
+              "weight": 1,
+              "speed": 1,
+              "cooldown": 0,
+              "loop": true,
+              "available": true
+            }
+          ]
+        },
+        {
+          "role": 2,
+          "choices": [
+            {
+              "motionId": "9a66ea13d9ba08b954b9a0cbdc7d89dc",
+              "name": "Idle_12",
+              "weight": 1,
+              "speed": 1,
+              "cooldown": 0,
+              "loop": true,
+              "available": true
+            }
+          ]
+        },
+        {
+          "role": 3,
+          "choices": [
+            {
+              "motionId": "b56ece79da8e21bac89927310921d734",
+              "name": "Talk_with_Hands_Open",
+              "weight": 1,
+              "speed": 1,
+              "cooldown": 2,
+              "loop": false,
+              "available": true
+            },
+            {
+              "motionId": "852ac885964d693deb8d3d3ba835acec",
+              "name": "Talk_with_Right_Hand_Open",
+              "weight": 1,
+              "speed": 1,
+              "cooldown": 2,
+              "loop": false,
+              "available": true
+            }
+          ]
+        }
+      ]
+    },
+    "objects": [
+      {
+        "id": "39d289d258dd4c119e4c64119c0ce269",
+        "name": "Editable material scoop",
+        "kind": "Assembly",
+        "objectRevision": 49,
+        "position": {
+          "x": 0.30000001192092896,
+          "y": 1.2999999523162842,
+          "z": 0.6499999761581421
+        },
+        "scale": 1,
+        "color": {
+          "r": 1,
+          "g": 1,
+          "b": 1,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "solid",
+          "shape": "automatic",
+          "mass": 0.11999999731779099
+        },
+        "movement": null
+      },
+      {
+        "id": "3fa0f9a640a444f8b84981f7eef00ade",
+        "name": "Ball",
+        "kind": "Ball",
+        "objectRevision": 4,
+        "position": {
+          "x": 0.6899999976158142,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1,
+        "color": {
+          "r": 0.7647058963775635,
+          "g": 0.6000000238418579,
+          "b": 0.3137255012989044,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "73feebc422834841bedb6af0f05c4f3f",
+        "name": "Block",
+        "kind": "Block",
+        "objectRevision": 3,
+        "position": {
+          "x": 0.5199999809265137,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1,
+        "color": {
+          "r": 0.45098039507865906,
+          "g": 0.32549020648002625,
+          "b": 0.30588236451148987,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "bdf48555100a436398c330c45227b6f0",
+        "name": "Cylinder",
+        "kind": "Cylinder",
+        "objectRevision": 5,
+        "position": {
+          "x": 0.8600000143051147,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1,
+        "color": {
+          "r": 0.16862745583057404,
+          "g": 0.5529412031173706,
+          "b": 0.5333333611488342,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "book",
+        "name": "Book",
+        "kind": "Book",
+        "objectRevision": 1,
+        "position": {
+          "x": 0,
+          "y": 1.159999966621399,
+          "z": 0.6499999761581421
+        },
+        "scale": 1,
+        "color": {
+          "r": 1,
+          "g": 1,
+          "b": 1,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "maestro",
+        "name": "Maestro",
+        "kind": "Maestro",
+        "objectRevision": 2,
+        "position": {
+          "x": -0.7799999713897705,
+          "y": 0,
+          "z": 1.399999976158142
+        },
+        "scale": 1,
+        "color": {
+          "r": 1,
+          "g": 1,
+          "b": 1,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": {
+          "distance": 1.3,
+          "speed": 0.65
+        }
+      }
+    ],
+    "created": [],
+    "capture": {
+      "captureId": "4d4c8e48cd014fc28d4b9c503a08f6e7",
+      "sha256": "852cbebf2a4ec97b57803a674051a85b1ab82710377fc801e2406c67f608b993",
+      "mimeType": "image/jpeg",
+      "width": 512,
+      "height": 384,
+      "capturedAt": "2026-10-04T17:42:38.555461Z",
+      "sceneRevision": 3,
+      "verticalFov": 60,
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 1
+      }
+    },
+    "catalog": {
+      "operation": "search",
+      "query": "physical material packing tool",
+      "offset": 0,
+      "pageSize": 6,
+      "total": 1,
+      "entries": [
+        {
+          "id": "material.pack.tool.set",
+          "version": 1,
+          "label": "Choose the physical material packing tool"
+        }
+      ],
+      "status": "Found 1 actions. Search does not run or enable anything."
+    },
+    "execution": {
+      "selected": {
+        "id": "a319fb57fadb41a88e360d8962b6e3b0",
+        "capability": "object.create",
+        "version": 1,
+        "resources": [],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "objectId": "39d289d258dd4c119e4c64119c0ce269"
+        },
+        "call": {
+          "id": "object.create",
+          "version": 1,
+          "arguments": {
+            "templateHash": "7e2d4e5a90a2d5408dc34766fde83249c9ae611b4bcad8b536a8b755fee69a6d",
+            "name": "Editable material scoop",
+            "x": 0.3,
+            "y": 1.3,
+            "z": 0.65,
+            "scale": 1,
+            "kind": "template"
+          }
+        }
+      },
+      "running": [],
+      "outcomes": [
+        {
+          "id": "719140fa7e9142b78eed5e00052a3063",
+          "capability": "object.recipe.edit",
+          "version": 1,
+          "resources": [
+            "460ce05f5bc9423698e56e8d0a07cbb2"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "target": "460ce05f5bc9423698e56e8d0a07cbb2",
+            "revision": 21,
+            "parts": 1,
+            "tracks": 0,
+            "duration": 2,
+            "loop": false,
+            "playing": false,
+            "autoplay": false
+          }
+        },
+        {
+          "id": "e4af67230c484f09b1209db7b75da7f7",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "68aae688b3a647aa87cacd4dcc240732"
+          }
+        },
+        {
+          "id": "4368ad2b0f9542898157e8ba1ba1aaf2",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "55d83238de7349618ba58fd9f34103c7"
+          }
+        },
+        {
+          "id": "7fd20643cff64a989bb9d30eaef49c77",
+          "capability": "object.field.sculpt",
+          "version": 1,
+          "resources": [
+            "55d83238de7349618ba58fd9f34103c7"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "changedVertices": 63
+          }
+        },
+        {
+          "id": "0bf2cc7aa4d34151813d275f434d9cf1",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "7909542c2f5b4ff6bd2e72fe3e4e94d2"
+          }
+        },
+        {
+          "id": "06235d7af3774975ae7f3919ed5ac425",
+          "capability": "object.field.transfer",
+          "version": 1,
+          "resources": [
+            "55d83238de7349618ba58fd9f34103c7",
+            "7909542c2f5b4ff6bd2e72fe3e4e94d2"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "removedLitres": 1.0000001930166034,
+            "addedLitres": 1.0000003094319252,
+            "roundingLitres": 1.1641532182693481e-07
+          }
+        },
+        {
+          "id": "9491f9fac63a488a903f37560689505e",
+          "capability": "object.material.pack",
+          "version": 1,
+          "resources": [
+            "55d83238de7349618ba58fd9f34103c7"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "fdf06d558f8740a1b21ef861397a9626",
+            "amountLitres": 0.4999998782295733
+          }
+        },
+        {
+          "id": "33934ff3867642e2ad0cb11ceb3b274e",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "ab2636127c9f4dec8470d2d9176180e8"
+          }
+        },
+        {
+          "id": "8a8d276eddd64a0f987d36e1c951a39f",
+          "capability": "object.material.edit",
+          "version": 1,
+          "resources": [
+            "ab2636127c9f4dec8470d2d9176180e8"
+          ],
+          "phase": "completed",
+          "status": "Action completed"
+        },
+        {
+          "id": "f4c03576c4584a1fb95a727045fe7cf7",
+          "capability": "object.material.transfer",
+          "version": 1,
+          "resources": [
+            "55d83238de7349618ba58fd9f34103c7",
+            "ab2636127c9f4dec8470d2d9176180e8"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "removedLitres": 0.19999913638457656,
+            "addedLitres": 0.19999913638457653,
+            "roundingLitres": -2.7755575615628914e-17
+          }
+        },
+        {
+          "id": "0acb509f1e3149d782824e68b2d3872c",
+          "capability": "object.material.transfer",
+          "version": 1,
+          "resources": [
+            "ab2636127c9f4dec8470d2d9176180e8",
+            "55d83238de7349618ba58fd9f34103c7"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "removedLitres": 0.09999965550377964,
+            "addedLitres": 0.09999965550377965,
+            "roundingLitres": 1.3877787807814457e-17
+          }
+        },
+        {
+          "id": "4bafad006db34e6ea66cfd91bdfbb255",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "c8b4ff852c724d2288930625fe3d67dc"
+          }
+        },
+        {
+          "id": "f2f9ac3af40346e6912e7f65d3086ba3",
+          "capability": "object.sculptTip.edit",
+          "version": 1,
+          "resources": [
+            "c8b4ff852c724d2288930625fe3d67dc"
+          ],
+          "phase": "completed",
+          "status": "Action completed"
+        },
+        {
+          "id": "4848f78b01f740b88ae7873c19b05d4d",
+          "capability": "field.tool.set",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed"
+        },
+        {
+          "id": "093674af571c430ead55cf172a8e469f",
+          "capability": "field.tool.set",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed"
+        },
+        {
+          "id": "a319fb57fadb41a88e360d8962b6e3b0",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "39d289d258dd4c119e4c64119c0ce269"
+          }
+        }
+      ],
+      "nextRunId": "130575d50bdb42b2bb65c25f35255a9e",
+      "storageError": null,
+      "recovery": null,
+      "workspace": {
+        "selected": null,
+        "running": [],
+        "outcomes": [],
+        "nextRunId": "eda39c2a04ee441eb25bfe6990b74518",
+        "storageError": null,
+        "recovery": null
+      }
+    }
+  },
+  "definition": {
+    "version": 1,
+    "revision": 283,
+    "sceneRevision": 48,
+    "ack": 118,
+    "session": "5e910ac6a4044d8a90ae007144a3ac2c",
+    "status": "Action definition. Check concrete arguments before running it.",
+    "selectedId": "fdf06d558f8740a1b21ef861397a9626",
+    "ok": true,
+    "canUndo": true,
+    "canRedo": false,
+    "physicsRunning": false,
+    "visible": false,
+    "inspection": null,
+    "constructionSelection": {
+      "stateId": "7723dfd48d884e12b5720814b90eecaa",
+      "collecting": false,
+      "members": []
+    },
+    "constructionManipulation": {
+      "stateId": "7723dfd48d884e12b5720814b90eecaa",
+      "error": "",
+      "visible": false,
+      "holding": false
+    },
+    "workspaceView": "objects",
+    "rules": {
+      "revision": 1,
+      "bindingPage": 0,
+      "bindingCount": 0,
+      "queued": 0,
+      "eventQueue": 0,
+      "eventsDropped": 0,
+      "canUndo": false,
+      "canRedo": false,
+      "readOnly": false,
+      "status": "Create an action sequence, then add triggers or buttons",
+      "selectedError": "",
+      "sequences": [],
+      "selected": null,
+      "memory": null,
+      "bindings": [],
+      "buttons": [],
+      "running": [],
+      "outcomes": []
+    },
+    "motions": null,
+    "capabilities": [
+      "physicsSettings.v1",
+      "avatarSettings.v1",
+      "physicsRun.v1",
+      "avatarMotion.v1",
+      "avatarWalk.v1",
+      "motions.v1",
+      "avatarActivities.v1",
+      "catalog.v1",
+      "catalogVocabulary.v1",
+      "roomOwnership.v1",
+      "behaviourPrograms.v3",
+      "eventPrograms.v1",
+      "eventFields.v1",
+      "eventSubscriptions.v1",
+      "factQueries.v1",
+      "conditionWaits.v1",
+      "parallelPrograms.v1",
+      "rememberedVariables.v1",
+      "temporaryMemory.v1",
+      "structuredValues.v1",
+      "programModules.v1",
+      "moduleLibrary.v1",
+      "moduleLibraryFiles.v1",
+      "execution.v1",
+      "executionReceipts.v1",
+      "actionResults.v1",
+      "recipeCreation.v1",
+      "creationComponents.v1",
+      "creationTemplates.v1",
+      "layoutEdits.v1",
+      "structures.v1",
+      "batchCreation.v1",
+      "structuredResults.v1",
+      "structuredInputs.v1",
+      "indexedInputs.v1",
+      "constructionSelection.v1",
+      "groupTransforms.v1",
+      "constructionManipulation.v1",
+      "constructionSnapping.v1",
+      "objectEdits.v1",
+      "objectCopy.v1",
+      "drawingEdits.v1",
+      "drawingSurfaces.v1",
+      "curvedDrawingSurfaces.v1",
+      "drawingTips.v1",
+      "drawingErasers.v1",
+      "containers.v1",
+      "heightFields.v1",
+      "heightFieldTransfer.v1",
+      "materialStores.v1",
+      "materialTransfer.v1",
+      "materialPacking.v1",
+      "physicalMaterialPacking.v1",
+      "physicalSculpting.v1",
+      "physicalMaterialTools.v1",
+      "containerPouring.v1",
+      "containerScooping.v1",
+      "physicalConnections.v1",
+      "physicalSliders.v1",
+      "snapPoints.v1",
+      "connectedBlueprints.v2",
+      "creationPrototypes.v1",
+      "constructionCapture.v1",
+      "recipeEdits.v1",
+      "latheGeometry.v1",
+      "extrusionGeometry.v1",
+      "sweepGeometry.v1",
+      "recipePatterns.v1",
+      "roomViewCapture.v1",
+      "collisionShapes.v1",
+      "recipePartPlayback.v1",
+      "objectAttachments.v1",
+      "anchorZones.v1",
+      "channelWaits.v1",
+      "objectLaunch.v1",
+      "physicalCatching.v1",
+      "calendarSchedules.v1",
+      "animationAuthoring.v1",
+      "animationRecording.v1",
+      "animationPosing.v1",
+      "avatarModels.v1",
+      "modelImport.v1",
+      "modelArchiveImport.v1",
+      "motionBatchImport.v1",
+      "includedMotions.v1",
+      "authoredMotion.v1",
+      "unavailablePrograms.v1",
+      "actionRecovery.v1",
+      "temporaryRoom.v1",
+      "spatialSettings.v1",
+      "physicsSimulation.v1",
+      "roomEnvironment.v1",
+      "surfacePlacement.v1",
+      "controllerConfiguration.v1",
+      "controllerModes.v1",
+      "runtimeDiagnostics.v1",
+      "workspaceMaintenance.v1",
+      "workspaceArchiveActivation.v1",
+      "workspaceReview.v1",
+      "workspacePrevious.v1",
+      "workspaceRecovery.v1",
+      "workspaceSavedRecovery.v1",
+      "workspaceHistory.v1",
+      "workspaceEvidence.v1",
+      "workspaceRetention.v1",
+      "workspaceDisposal.v1"
+    ],
+    "physics": {
+      "ready": true,
+      "running": false,
+      "status": "Probe-only synthetic floor; no real scan or alignment proof"
+    },
+    "temporaryRoom": {
+      "active": false,
+      "pending": false,
+      "id": "ad3f79af357844c79c4b274faf5aafa4",
+      "saveId": "",
+      "phase": "idle",
+      "error": "",
+      "savedRevision": 0
+    },
+    "ownership": {
+      "suspended": false,
+      "error": "",
+      "owners": [
+        {
+          "id": "ambient:maestro",
+          "label": "Maestro tutor activity",
+          "role": "ambient",
+          "allowsGrab": false,
+          "claims": [
+            {
+              "target": "maestro",
+              "channel": "wholeTarget"
+            }
+          ]
+        }
+      ]
+    },
+    "avatar": {
+      "active": false,
+      "canLook": true,
+      "canFollow": false,
+      "mode": "stopped",
+      "status": "Choose Look at me or Follow me",
+      "lookReason": "",
+      "followReason": "Load the room, check its alignment, then Start physics before walking",
+      "distance": 1.3,
+      "speed": 0.65
+    },
+    "walk": {
+      "source": "embedded",
+      "motionId": "",
+      "modelHash": "dcd59fb02d378322b656c2cfbe9851d08229ac3a618e90ad5aa06eac7c88759c",
+      "name": "Walking",
+      "status": "Embedded walking clip is available",
+      "playbackStatus": "",
+      "clipIndex": 0,
+      "available": true
+    },
+    "activityProfile": {
+      "modelHash": "dcd59fb02d378322b656c2cfbe9851d08229ac3a618e90ad5aa06eac7c88759c",
+      "status": "Uses included animations where no state motion is assigned",
+      "revision": 1,
+      "canAssign": true,
+      "readOnly": false,
+      "canUndo": false,
+      "canRedo": false,
+      "roles": [
+        {
+          "role": 0,
+          "choices": [
+            {
+              "motionId": "21da54acb5c38d147ad297bf7ef22977",
+              "name": "Idle_4",
+              "weight": 1,
+              "speed": 1,
+              "cooldown": 0,
+              "loop": true,
+              "available": true
+            }
+          ]
+        },
+        {
+          "role": 1,
+          "choices": [
+            {
+              "motionId": "bd0bf1a849d86d785e00c3a392639359",
+              "name": "Listening_Gesture",
+              "weight": 1,
+              "speed": 1,
+              "cooldown": 0,
+              "loop": true,
+              "available": true
+            }
+          ]
+        },
+        {
+          "role": 2,
+          "choices": [
+            {
+              "motionId": "9a66ea13d9ba08b954b9a0cbdc7d89dc",
+              "name": "Idle_12",
+              "weight": 1,
+              "speed": 1,
+              "cooldown": 0,
+              "loop": true,
+              "available": true
+            }
+          ]
+        },
+        {
+          "role": 3,
+          "choices": [
+            {
+              "motionId": "b56ece79da8e21bac89927310921d734",
+              "name": "Talk_with_Hands_Open",
+              "weight": 1,
+              "speed": 1,
+              "cooldown": 2,
+              "loop": false,
+              "available": true
+            },
+            {
+              "motionId": "852ac885964d693deb8d3d3ba835acec",
+              "name": "Talk_with_Right_Hand_Open",
+              "weight": 1,
+              "speed": 1,
+              "cooldown": 2,
+              "loop": false,
+              "available": true
+            }
+          ]
+        }
+      ]
+    },
+    "objects": [
+      {
+        "id": "39d289d258dd4c119e4c64119c0ce269",
+        "name": "Editable material scoop",
+        "kind": "Assembly",
+        "objectRevision": 49,
+        "position": {
+          "x": 0.30000001192092896,
+          "y": 1.2999999523162842,
+          "z": 0.6499999761581421
+        },
+        "scale": 1,
+        "color": {
+          "r": 1,
+          "g": 1,
+          "b": 1,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "solid",
+          "shape": "automatic",
+          "mass": 0.11999999731779099
+        },
+        "movement": null
+      },
+      {
+        "id": "3fa0f9a640a444f8b84981f7eef00ade",
+        "name": "Ball",
+        "kind": "Ball",
+        "objectRevision": 4,
+        "position": {
+          "x": 0.6899999976158142,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1,
+        "color": {
+          "r": 0.7647058963775635,
+          "g": 0.6000000238418579,
+          "b": 0.3137255012989044,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "73feebc422834841bedb6af0f05c4f3f",
+        "name": "Block",
+        "kind": "Block",
+        "objectRevision": 3,
+        "position": {
+          "x": 0.5199999809265137,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1,
+        "color": {
+          "r": 0.45098039507865906,
+          "g": 0.32549020648002625,
+          "b": 0.30588236451148987,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "bdf48555100a436398c330c45227b6f0",
+        "name": "Cylinder",
+        "kind": "Cylinder",
+        "objectRevision": 5,
+        "position": {
+          "x": 0.8600000143051147,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1,
+        "color": {
+          "r": 0.16862745583057404,
+          "g": 0.5529412031173706,
+          "b": 0.5333333611488342,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "book",
+        "name": "Book",
+        "kind": "Book",
+        "objectRevision": 1,
+        "position": {
+          "x": 0,
+          "y": 1.159999966621399,
+          "z": 0.6499999761581421
+        },
+        "scale": 1,
+        "color": {
+          "r": 1,
+          "g": 1,
+          "b": 1,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "maestro",
+        "name": "Maestro",
+        "kind": "Maestro",
+        "objectRevision": 2,
+        "position": {
+          "x": -0.7799999713897705,
+          "y": 0,
+          "z": 1.399999976158142
+        },
+        "scale": 1,
+        "color": {
+          "r": 1,
+          "g": 1,
+          "b": 1,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": {
+          "distance": 1.3,
+          "speed": 0.65
+        }
+      }
+    ],
+    "created": [],
+    "capture": {
+      "captureId": "4d4c8e48cd014fc28d4b9c503a08f6e7",
+      "sha256": "852cbebf2a4ec97b57803a674051a85b1ab82710377fc801e2406c67f608b993",
+      "mimeType": "image/jpeg",
+      "width": 512,
+      "height": 384,
+      "capturedAt": "2026-10-04T17:42:38.555461Z",
+      "sceneRevision": 3,
+      "verticalFov": 60,
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 1
+      }
+    },
+    "catalog": {
+      "operation": "inspect",
+      "capability": "material.pack.tool.set",
+      "version": 1,
+      "definition": {
+        "id": "material.pack.tool.set",
+        "version": 1,
+        "label": "Choose the physical material packing tool",
+        "input": {
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            },
+            "radius": {
+              "type": "number",
+              "minimum": 0.005,
+              "maximum": 2
+            },
+            "amountLitres": {
+              "type": "number",
+              "minimum": 0.001,
+              "maximum": 20
+            },
+            "mass": {
+              "type": "number",
+              "minimum": 0.05,
+              "maximum": 20
+            }
+          },
+          "required": [
+            "enabled",
+            "radius",
+            "amountLitres",
+            "mass"
+          ],
+          "additionalProperties": false,
+          "x-features": [
+            "physicalMaterialPacking.v1"
+          ]
+        },
+        "duration": "instant",
+        "ownership": "none",
+        "channels": [],
+        "requirements": [
+          "authoring.idle",
+          "room.active"
+        ],
+        "description": "Enable/disable touch-and-lift material packing with a local footprint radius, requested local litres and explicit ball mass. Hands: separate from the accepted surface after enabling, touch with an index fingertip, then lift. Controller: hold trigger with its pointer within 25 cm, then release or leave the surface. One contact previews one ball; dragging/waiting cannot multiply material. Uses the same object.material.pack evaluator, saved measured store, sphere recipe/collision and atomic Undo. Ball appears above the original contact with 25 mm clearance; solid obstructions refuse, including scanned geometry. It is not automatically held or thrown. Grab it normally after successful publication. Choosing settings changes no objects and never starts physics. Enabling puts away drawing, sculpting and construction selection. Failed saves/tracking loss retain the draft; inspect material.pack.capture and use object.field.resolve to retry/discard. Retry requires the original source/pose and clear ball space. Settings are session-local, quantities independent of world scale. No finger/granular/compaction physics.",
+        "example": {
+          "enabled": true,
+          "radius": 0.12,
+          "amountLitres": 0.25,
+          "mass": 0.15
+        }
+      },
+      "status": "Action definition. Check concrete arguments before running it."
+    },
+    "execution": {
+      "selected": {
+        "id": "a319fb57fadb41a88e360d8962b6e3b0",
+        "capability": "object.create",
+        "version": 1,
+        "resources": [],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "objectId": "39d289d258dd4c119e4c64119c0ce269"
+        },
+        "call": {
+          "id": "object.create",
+          "version": 1,
+          "arguments": {
+            "templateHash": "7e2d4e5a90a2d5408dc34766fde83249c9ae611b4bcad8b536a8b755fee69a6d",
+            "name": "Editable material scoop",
+            "x": 0.3,
+            "y": 1.3,
+            "z": 0.65,
+            "scale": 1,
+            "kind": "template"
+          }
+        }
+      },
+      "running": [],
+      "outcomes": [
+        {
+          "id": "719140fa7e9142b78eed5e00052a3063",
+          "capability": "object.recipe.edit",
+          "version": 1,
+          "resources": [
+            "460ce05f5bc9423698e56e8d0a07cbb2"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "target": "460ce05f5bc9423698e56e8d0a07cbb2",
+            "revision": 21,
+            "parts": 1,
+            "tracks": 0,
+            "duration": 2,
+            "loop": false,
+            "playing": false,
+            "autoplay": false
+          }
+        },
+        {
+          "id": "e4af67230c484f09b1209db7b75da7f7",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "68aae688b3a647aa87cacd4dcc240732"
+          }
+        },
+        {
+          "id": "4368ad2b0f9542898157e8ba1ba1aaf2",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "55d83238de7349618ba58fd9f34103c7"
+          }
+        },
+        {
+          "id": "7fd20643cff64a989bb9d30eaef49c77",
+          "capability": "object.field.sculpt",
+          "version": 1,
+          "resources": [
+            "55d83238de7349618ba58fd9f34103c7"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "changedVertices": 63
+          }
+        },
+        {
+          "id": "0bf2cc7aa4d34151813d275f434d9cf1",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "7909542c2f5b4ff6bd2e72fe3e4e94d2"
+          }
+        },
+        {
+          "id": "06235d7af3774975ae7f3919ed5ac425",
+          "capability": "object.field.transfer",
+          "version": 1,
+          "resources": [
+            "55d83238de7349618ba58fd9f34103c7",
+            "7909542c2f5b4ff6bd2e72fe3e4e94d2"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "removedLitres": 1.0000001930166034,
+            "addedLitres": 1.0000003094319252,
+            "roundingLitres": 1.1641532182693481e-07
+          }
+        },
+        {
+          "id": "9491f9fac63a488a903f37560689505e",
+          "capability": "object.material.pack",
+          "version": 1,
+          "resources": [
+            "55d83238de7349618ba58fd9f34103c7"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "fdf06d558f8740a1b21ef861397a9626",
+            "amountLitres": 0.4999998782295733
+          }
+        },
+        {
+          "id": "33934ff3867642e2ad0cb11ceb3b274e",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "ab2636127c9f4dec8470d2d9176180e8"
+          }
+        },
+        {
+          "id": "8a8d276eddd64a0f987d36e1c951a39f",
+          "capability": "object.material.edit",
+          "version": 1,
+          "resources": [
+            "ab2636127c9f4dec8470d2d9176180e8"
+          ],
+          "phase": "completed",
+          "status": "Action completed"
+        },
+        {
+          "id": "f4c03576c4584a1fb95a727045fe7cf7",
+          "capability": "object.material.transfer",
+          "version": 1,
+          "resources": [
+            "55d83238de7349618ba58fd9f34103c7",
+            "ab2636127c9f4dec8470d2d9176180e8"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "removedLitres": 0.19999913638457656,
+            "addedLitres": 0.19999913638457653,
+            "roundingLitres": -2.7755575615628914e-17
+          }
+        },
+        {
+          "id": "0acb509f1e3149d782824e68b2d3872c",
+          "capability": "object.material.transfer",
+          "version": 1,
+          "resources": [
+            "ab2636127c9f4dec8470d2d9176180e8",
+            "55d83238de7349618ba58fd9f34103c7"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "removedLitres": 0.09999965550377964,
+            "addedLitres": 0.09999965550377965,
+            "roundingLitres": 1.3877787807814457e-17
+          }
+        },
+        {
+          "id": "4bafad006db34e6ea66cfd91bdfbb255",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "c8b4ff852c724d2288930625fe3d67dc"
+          }
+        },
+        {
+          "id": "f2f9ac3af40346e6912e7f65d3086ba3",
+          "capability": "object.sculptTip.edit",
+          "version": 1,
+          "resources": [
+            "c8b4ff852c724d2288930625fe3d67dc"
+          ],
+          "phase": "completed",
+          "status": "Action completed"
+        },
+        {
+          "id": "4848f78b01f740b88ae7873c19b05d4d",
+          "capability": "field.tool.set",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed"
+        },
+        {
+          "id": "093674af571c430ead55cf172a8e469f",
+          "capability": "field.tool.set",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed"
+        },
+        {
+          "id": "a319fb57fadb41a88e360d8962b6e3b0",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "39d289d258dd4c119e4c64119c0ce269"
+          }
+        }
+      ],
+      "nextRunId": "130575d50bdb42b2bb65c25f35255a9e",
+      "storageError": null,
+      "recovery": null,
+      "workspace": {
+        "selected": null,
+        "running": [],
+        "outcomes": [],
+        "nextRunId": "eda39c2a04ee441eb25bfe6990b74518",
+        "storageError": null,
+        "recovery": null
+      }
+    }
+  },
+  "call": {
+    "id": "material.pack.tool.set",
+    "version": 1,
+    "arguments": {
+      "enabled": true,
+      "radius": 0.15,
+      "amountLitres": 0.1,
+      "mass": 0.2
+    }
+  },
+  "set": {
+    "version": 1,
+    "revision": 285,
+    "sceneRevision": 48,
+    "ack": 119,
+    "session": "5e910ac6a4044d8a90ae007144a3ac2c",
+    "status": "Action completed",
+    "selectedId": "fdf06d558f8740a1b21ef861397a9626",
+    "ok": true,
+    "canUndo": true,
+    "canRedo": false,
+    "physicsRunning": false,
+    "visible": false,
+    "inspection": null,
+    "constructionSelection": {
+      "stateId": "7723dfd48d884e12b5720814b90eecaa",
+      "collecting": false,
+      "members": []
+    },
+    "constructionManipulation": {
+      "stateId": "7723dfd48d884e12b5720814b90eecaa",
+      "error": "",
+      "visible": false,
+      "holding": false
+    },
+    "workspaceView": "objects",
+    "rules": {
+      "revision": 1,
+      "bindingPage": 0,
+      "bindingCount": 0,
+      "queued": 0,
+      "eventQueue": 0,
+      "eventsDropped": 0,
+      "canUndo": false,
+      "canRedo": false,
+      "readOnly": false,
+      "status": "Create an action sequence, then add triggers or buttons",
+      "selectedError": "",
+      "sequences": [],
+      "selected": null,
+      "memory": null,
+      "bindings": [],
+      "buttons": [],
+      "running": [],
+      "outcomes": []
+    },
+    "motions": null,
+    "capabilities": [
+      "physicsSettings.v1",
+      "avatarSettings.v1",
+      "physicsRun.v1",
+      "avatarMotion.v1",
+      "avatarWalk.v1",
+      "motions.v1",
+      "avatarActivities.v1",
+      "catalog.v1",
+      "catalogVocabulary.v1",
+      "roomOwnership.v1",
+      "behaviourPrograms.v3",
+      "eventPrograms.v1",
+      "eventFields.v1",
+      "eventSubscriptions.v1",
+      "factQueries.v1",
+      "conditionWaits.v1",
+      "parallelPrograms.v1",
+      "rememberedVariables.v1",
+      "temporaryMemory.v1",
+      "structuredValues.v1",
+      "programModules.v1",
+      "moduleLibrary.v1",
+      "moduleLibraryFiles.v1",
+      "execution.v1",
+      "executionReceipts.v1",
+      "actionResults.v1",
+      "recipeCreation.v1",
+      "creationComponents.v1",
+      "creationTemplates.v1",
+      "layoutEdits.v1",
+      "structures.v1",
+      "batchCreation.v1",
+      "structuredResults.v1",
+      "structuredInputs.v1",
+      "indexedInputs.v1",
+      "constructionSelection.v1",
+      "groupTransforms.v1",
+      "constructionManipulation.v1",
+      "constructionSnapping.v1",
+      "objectEdits.v1",
+      "objectCopy.v1",
+      "drawingEdits.v1",
+      "drawingSurfaces.v1",
+      "curvedDrawingSurfaces.v1",
+      "drawingTips.v1",
+      "drawingErasers.v1",
+      "containers.v1",
+      "heightFields.v1",
+      "heightFieldTransfer.v1",
+      "materialStores.v1",
+      "materialTransfer.v1",
+      "materialPacking.v1",
+      "physicalMaterialPacking.v1",
+      "physicalSculpting.v1",
+      "physicalMaterialTools.v1",
+      "containerPouring.v1",
+      "containerScooping.v1",
+      "physicalConnections.v1",
+      "physicalSliders.v1",
+      "snapPoints.v1",
+      "connectedBlueprints.v2",
+      "creationPrototypes.v1",
+      "constructionCapture.v1",
+      "recipeEdits.v1",
+      "latheGeometry.v1",
+      "extrusionGeometry.v1",
+      "sweepGeometry.v1",
+      "recipePatterns.v1",
+      "roomViewCapture.v1",
+      "collisionShapes.v1",
+      "recipePartPlayback.v1",
+      "objectAttachments.v1",
+      "anchorZones.v1",
+      "channelWaits.v1",
+      "objectLaunch.v1",
+      "physicalCatching.v1",
+      "calendarSchedules.v1",
+      "animationAuthoring.v1",
+      "animationRecording.v1",
+      "animationPosing.v1",
+      "avatarModels.v1",
+      "modelImport.v1",
+      "modelArchiveImport.v1",
+      "motionBatchImport.v1",
+      "includedMotions.v1",
+      "authoredMotion.v1",
+      "unavailablePrograms.v1",
+      "actionRecovery.v1",
+      "temporaryRoom.v1",
+      "spatialSettings.v1",
+      "physicsSimulation.v1",
+      "roomEnvironment.v1",
+      "surfacePlacement.v1",
+      "controllerConfiguration.v1",
+      "controllerModes.v1",
+      "runtimeDiagnostics.v1",
+      "workspaceMaintenance.v1",
+      "workspaceArchiveActivation.v1",
+      "workspaceReview.v1",
+      "workspacePrevious.v1",
+      "workspaceRecovery.v1",
+      "workspaceSavedRecovery.v1",
+      "workspaceHistory.v1",
+      "workspaceEvidence.v1",
+      "workspaceRetention.v1",
+      "workspaceDisposal.v1"
+    ],
+    "physics": {
+      "ready": true,
+      "running": false,
+      "status": "Probe-only synthetic floor; no real scan or alignment proof"
+    },
+    "temporaryRoom": {
+      "active": false,
+      "pending": false,
+      "id": "ad3f79af357844c79c4b274faf5aafa4",
+      "saveId": "",
+      "phase": "idle",
+      "error": "",
+      "savedRevision": 0
+    },
+    "ownership": {
+      "suspended": false,
+      "error": "",
+      "owners": [
+        {
+          "id": "ambient:maestro",
+          "label": "Maestro tutor activity",
+          "role": "ambient",
+          "allowsGrab": false,
+          "claims": [
+            {
+              "target": "maestro",
+              "channel": "wholeTarget"
+            }
+          ]
+        }
+      ]
+    },
+    "avatar": {
+      "active": false,
+      "canLook": true,
+      "canFollow": false,
+      "mode": "stopped",
+      "status": "Choose Look at me or Follow me",
+      "lookReason": "",
+      "followReason": "Load the room, check its alignment, then Start physics before walking",
+      "distance": 1.3,
+      "speed": 0.65
+    },
+    "walk": {
+      "source": "embedded",
+      "motionId": "",
+      "modelHash": "dcd59fb02d378322b656c2cfbe9851d08229ac3a618e90ad5aa06eac7c88759c",
+      "name": "Walking",
+      "status": "Embedded walking clip is available",
+      "playbackStatus": "",
+      "clipIndex": 0,
+      "available": true
+    },
+    "activityProfile": {
+      "modelHash": "dcd59fb02d378322b656c2cfbe9851d08229ac3a618e90ad5aa06eac7c88759c",
+      "status": "Uses included animations where no state motion is assigned",
+      "revision": 1,
+      "canAssign": true,
+      "readOnly": false,
+      "canUndo": false,
+      "canRedo": false,
+      "roles": [
+        {
+          "role": 0,
+          "choices": [
+            {
+              "motionId": "21da54acb5c38d147ad297bf7ef22977",
+              "name": "Idle_4",
+              "weight": 1,
+              "speed": 1,
+              "cooldown": 0,
+              "loop": true,
+              "available": true
+            }
+          ]
+        },
+        {
+          "role": 1,
+          "choices": [
+            {
+              "motionId": "bd0bf1a849d86d785e00c3a392639359",
+              "name": "Listening_Gesture",
+              "weight": 1,
+              "speed": 1,
+              "cooldown": 0,
+              "loop": true,
+              "available": true
+            }
+          ]
+        },
+        {
+          "role": 2,
+          "choices": [
+            {
+              "motionId": "9a66ea13d9ba08b954b9a0cbdc7d89dc",
+              "name": "Idle_12",
+              "weight": 1,
+              "speed": 1,
+              "cooldown": 0,
+              "loop": true,
+              "available": true
+            }
+          ]
+        },
+        {
+          "role": 3,
+          "choices": [
+            {
+              "motionId": "b56ece79da8e21bac89927310921d734",
+              "name": "Talk_with_Hands_Open",
+              "weight": 1,
+              "speed": 1,
+              "cooldown": 2,
+              "loop": false,
+              "available": true
+            },
+            {
+              "motionId": "852ac885964d693deb8d3d3ba835acec",
+              "name": "Talk_with_Right_Hand_Open",
+              "weight": 1,
+              "speed": 1,
+              "cooldown": 2,
+              "loop": false,
+              "available": true
+            }
+          ]
+        }
+      ]
+    },
+    "objects": [
+      {
+        "id": "39d289d258dd4c119e4c64119c0ce269",
+        "name": "Editable material scoop",
+        "kind": "Assembly",
+        "objectRevision": 49,
+        "position": {
+          "x": 0.30000001192092896,
+          "y": 1.2999999523162842,
+          "z": 0.6499999761581421
+        },
+        "scale": 1,
+        "color": {
+          "r": 1,
+          "g": 1,
+          "b": 1,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "solid",
+          "shape": "automatic",
+          "mass": 0.11999999731779099
+        },
+        "movement": null
+      },
+      {
+        "id": "3fa0f9a640a444f8b84981f7eef00ade",
+        "name": "Ball",
+        "kind": "Ball",
+        "objectRevision": 4,
+        "position": {
+          "x": 0.6899999976158142,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1,
+        "color": {
+          "r": 0.7647058963775635,
+          "g": 0.6000000238418579,
+          "b": 0.3137255012989044,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "73feebc422834841bedb6af0f05c4f3f",
+        "name": "Block",
+        "kind": "Block",
+        "objectRevision": 3,
+        "position": {
+          "x": 0.5199999809265137,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1,
+        "color": {
+          "r": 0.45098039507865906,
+          "g": 0.32549020648002625,
+          "b": 0.30588236451148987,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "bdf48555100a436398c330c45227b6f0",
+        "name": "Cylinder",
+        "kind": "Cylinder",
+        "objectRevision": 5,
+        "position": {
+          "x": 0.8600000143051147,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1,
+        "color": {
+          "r": 0.16862745583057404,
+          "g": 0.5529412031173706,
+          "b": 0.5333333611488342,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "book",
+        "name": "Book",
+        "kind": "Book",
+        "objectRevision": 1,
+        "position": {
+          "x": 0,
+          "y": 1.159999966621399,
+          "z": 0.6499999761581421
+        },
+        "scale": 1,
+        "color": {
+          "r": 1,
+          "g": 1,
+          "b": 1,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "maestro",
+        "name": "Maestro",
+        "kind": "Maestro",
+        "objectRevision": 2,
+        "position": {
+          "x": -0.7799999713897705,
+          "y": 0,
+          "z": 1.399999976158142
+        },
+        "scale": 1,
+        "color": {
+          "r": 1,
+          "g": 1,
+          "b": 1,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": {
+          "distance": 1.3,
+          "speed": 0.65
+        }
+      }
+    ],
+    "created": [],
+    "capture": {
+      "captureId": "4d4c8e48cd014fc28d4b9c503a08f6e7",
+      "sha256": "852cbebf2a4ec97b57803a674051a85b1ab82710377fc801e2406c67f608b993",
+      "mimeType": "image/jpeg",
+      "width": 512,
+      "height": 384,
+      "capturedAt": "2026-10-04T17:42:38.555461Z",
+      "sceneRevision": 3,
+      "verticalFov": 60,
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 1
+      }
+    },
+    "catalog": {
+      "operation": "inspect",
+      "capability": "material.pack.tool.set",
+      "version": 1,
+      "definition": {
+        "id": "material.pack.tool.set",
+        "version": 1,
+        "label": "Choose the physical material packing tool",
+        "input": {
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            },
+            "radius": {
+              "type": "number",
+              "minimum": 0.005,
+              "maximum": 2
+            },
+            "amountLitres": {
+              "type": "number",
+              "minimum": 0.001,
+              "maximum": 20
+            },
+            "mass": {
+              "type": "number",
+              "minimum": 0.05,
+              "maximum": 20
+            }
+          },
+          "required": [
+            "enabled",
+            "radius",
+            "amountLitres",
+            "mass"
+          ],
+          "additionalProperties": false,
+          "x-features": [
+            "physicalMaterialPacking.v1"
+          ]
+        },
+        "duration": "instant",
+        "ownership": "none",
+        "channels": [],
+        "requirements": [
+          "authoring.idle",
+          "room.active"
+        ],
+        "description": "Enable/disable touch-and-lift material packing with a local footprint radius, requested local litres and explicit ball mass. Hands: separate from the accepted surface after enabling, touch with an index fingertip, then lift. Controller: hold trigger with its pointer within 25 cm, then release or leave the surface. One contact previews one ball; dragging/waiting cannot multiply material. Uses the same object.material.pack evaluator, saved measured store, sphere recipe/collision and atomic Undo. Ball appears above the original contact with 25 mm clearance; solid obstructions refuse, including scanned geometry. It is not automatically held or thrown. Grab it normally after successful publication. Choosing settings changes no objects and never starts physics. Enabling puts away drawing, sculpting and construction selection. Failed saves/tracking loss retain the draft; inspect material.pack.capture and use object.field.resolve to retry/discard. Retry requires the original source/pose and clear ball space. Settings are session-local, quantities independent of world scale. No finger/granular/compaction physics.",
+        "example": {
+          "enabled": true,
+          "radius": 0.12,
+          "amountLitres": 0.25,
+          "mass": 0.15
+        }
+      },
+      "status": "Action definition. Check concrete arguments before running it."
+    },
+    "execution": {
+      "selected": {
+        "id": "130575d50bdb42b2bb65c25f35255a9e",
+        "capability": "material.pack.tool.set",
+        "version": 1,
+        "resources": [],
+        "phase": "completed",
+        "status": "Action completed",
+        "call": {
+          "id": "material.pack.tool.set",
+          "version": 1,
+          "arguments": {
+            "enabled": true,
+            "radius": 0.15,
+            "amountLitres": 0.1,
+            "mass": 0.2
+          }
+        }
+      },
+      "running": [],
+      "outcomes": [
+        {
+          "id": "e4af67230c484f09b1209db7b75da7f7",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "68aae688b3a647aa87cacd4dcc240732"
+          }
+        },
+        {
+          "id": "4368ad2b0f9542898157e8ba1ba1aaf2",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "55d83238de7349618ba58fd9f34103c7"
+          }
+        },
+        {
+          "id": "7fd20643cff64a989bb9d30eaef49c77",
+          "capability": "object.field.sculpt",
+          "version": 1,
+          "resources": [
+            "55d83238de7349618ba58fd9f34103c7"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "changedVertices": 63
+          }
+        },
+        {
+          "id": "0bf2cc7aa4d34151813d275f434d9cf1",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "7909542c2f5b4ff6bd2e72fe3e4e94d2"
+          }
+        },
+        {
+          "id": "06235d7af3774975ae7f3919ed5ac425",
+          "capability": "object.field.transfer",
+          "version": 1,
+          "resources": [
+            "55d83238de7349618ba58fd9f34103c7",
+            "7909542c2f5b4ff6bd2e72fe3e4e94d2"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "removedLitres": 1.0000001930166034,
+            "addedLitres": 1.0000003094319252,
+            "roundingLitres": 1.1641532182693481e-07
+          }
+        },
+        {
+          "id": "9491f9fac63a488a903f37560689505e",
+          "capability": "object.material.pack",
+          "version": 1,
+          "resources": [
+            "55d83238de7349618ba58fd9f34103c7"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "fdf06d558f8740a1b21ef861397a9626",
+            "amountLitres": 0.4999998782295733
+          }
+        },
+        {
+          "id": "33934ff3867642e2ad0cb11ceb3b274e",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "ab2636127c9f4dec8470d2d9176180e8"
+          }
+        },
+        {
+          "id": "8a8d276eddd64a0f987d36e1c951a39f",
+          "capability": "object.material.edit",
+          "version": 1,
+          "resources": [
+            "ab2636127c9f4dec8470d2d9176180e8"
+          ],
+          "phase": "completed",
+          "status": "Action completed"
+        },
+        {
+          "id": "f4c03576c4584a1fb95a727045fe7cf7",
+          "capability": "object.material.transfer",
+          "version": 1,
+          "resources": [
+            "55d83238de7349618ba58fd9f34103c7",
+            "ab2636127c9f4dec8470d2d9176180e8"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "removedLitres": 0.19999913638457656,
+            "addedLitres": 0.19999913638457653,
+            "roundingLitres": -2.7755575615628914e-17
+          }
+        },
+        {
+          "id": "0acb509f1e3149d782824e68b2d3872c",
+          "capability": "object.material.transfer",
+          "version": 1,
+          "resources": [
+            "ab2636127c9f4dec8470d2d9176180e8",
+            "55d83238de7349618ba58fd9f34103c7"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "removedLitres": 0.09999965550377964,
+            "addedLitres": 0.09999965550377965,
+            "roundingLitres": 1.3877787807814457e-17
+          }
+        },
+        {
+          "id": "4bafad006db34e6ea66cfd91bdfbb255",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "c8b4ff852c724d2288930625fe3d67dc"
+          }
+        },
+        {
+          "id": "f2f9ac3af40346e6912e7f65d3086ba3",
+          "capability": "object.sculptTip.edit",
+          "version": 1,
+          "resources": [
+            "c8b4ff852c724d2288930625fe3d67dc"
+          ],
+          "phase": "completed",
+          "status": "Action completed"
+        },
+        {
+          "id": "4848f78b01f740b88ae7873c19b05d4d",
+          "capability": "field.tool.set",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed"
+        },
+        {
+          "id": "093674af571c430ead55cf172a8e469f",
+          "capability": "field.tool.set",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed"
+        },
+        {
+          "id": "a319fb57fadb41a88e360d8962b6e3b0",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "39d289d258dd4c119e4c64119c0ce269"
+          }
+        },
+        {
+          "id": "130575d50bdb42b2bb65c25f35255a9e",
+          "capability": "material.pack.tool.set",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed"
+        }
+      ],
+      "nextRunId": "7749214dafd0447982c735ba330a8b44",
+      "storageError": null,
+      "recovery": null,
+      "workspace": {
+        "selected": null,
+        "running": [],
+        "outcomes": [],
+        "nextRunId": "eda39c2a04ee441eb25bfe6990b74518",
+        "storageError": null,
+        "recovery": null
+      }
+    }
+  },
+  "read": {
+    "version": 1,
+    "revision": 287,
+    "sceneRevision": 48,
+    "ack": 120,
+    "session": "5e910ac6a4044d8a90ae007144a3ac2c",
+    "status": "Current fact value. Reading does not change the room.",
+    "selectedId": "fdf06d558f8740a1b21ef861397a9626",
+    "ok": true,
+    "canUndo": true,
+    "canRedo": false,
+    "physicsRunning": false,
+    "visible": false,
+    "inspection": null,
+    "constructionSelection": {
+      "stateId": "7723dfd48d884e12b5720814b90eecaa",
+      "collecting": false,
+      "members": []
+    },
+    "constructionManipulation": {
+      "stateId": "7723dfd48d884e12b5720814b90eecaa",
+      "error": "",
+      "visible": false,
+      "holding": false
+    },
+    "workspaceView": "objects",
+    "rules": {
+      "revision": 1,
+      "bindingPage": 0,
+      "bindingCount": 0,
+      "queued": 0,
+      "eventQueue": 0,
+      "eventsDropped": 0,
+      "canUndo": false,
+      "canRedo": false,
+      "readOnly": false,
+      "status": "Create an action sequence, then add triggers or buttons",
+      "selectedError": "",
+      "sequences": [],
+      "selected": null,
+      "memory": null,
+      "bindings": [],
+      "buttons": [],
+      "running": [],
+      "outcomes": []
+    },
+    "motions": null,
+    "capabilities": [
+      "physicsSettings.v1",
+      "avatarSettings.v1",
+      "physicsRun.v1",
+      "avatarMotion.v1",
+      "avatarWalk.v1",
+      "motions.v1",
+      "avatarActivities.v1",
+      "catalog.v1",
+      "catalogVocabulary.v1",
+      "roomOwnership.v1",
+      "behaviourPrograms.v3",
+      "eventPrograms.v1",
+      "eventFields.v1",
+      "eventSubscriptions.v1",
+      "factQueries.v1",
+      "conditionWaits.v1",
+      "parallelPrograms.v1",
+      "rememberedVariables.v1",
+      "temporaryMemory.v1",
+      "structuredValues.v1",
+      "programModules.v1",
+      "moduleLibrary.v1",
+      "moduleLibraryFiles.v1",
+      "execution.v1",
+      "executionReceipts.v1",
+      "actionResults.v1",
+      "recipeCreation.v1",
+      "creationComponents.v1",
+      "creationTemplates.v1",
+      "layoutEdits.v1",
+      "structures.v1",
+      "batchCreation.v1",
+      "structuredResults.v1",
+      "structuredInputs.v1",
+      "indexedInputs.v1",
+      "constructionSelection.v1",
+      "groupTransforms.v1",
+      "constructionManipulation.v1",
+      "constructionSnapping.v1",
+      "objectEdits.v1",
+      "objectCopy.v1",
+      "drawingEdits.v1",
+      "drawingSurfaces.v1",
+      "curvedDrawingSurfaces.v1",
+      "drawingTips.v1",
+      "drawingErasers.v1",
+      "containers.v1",
+      "heightFields.v1",
+      "heightFieldTransfer.v1",
+      "materialStores.v1",
+      "materialTransfer.v1",
+      "materialPacking.v1",
+      "physicalMaterialPacking.v1",
+      "physicalSculpting.v1",
+      "physicalMaterialTools.v1",
+      "containerPouring.v1",
+      "containerScooping.v1",
+      "physicalConnections.v1",
+      "physicalSliders.v1",
+      "snapPoints.v1",
+      "connectedBlueprints.v2",
+      "creationPrototypes.v1",
+      "constructionCapture.v1",
+      "recipeEdits.v1",
+      "latheGeometry.v1",
+      "extrusionGeometry.v1",
+      "sweepGeometry.v1",
+      "recipePatterns.v1",
+      "roomViewCapture.v1",
+      "collisionShapes.v1",
+      "recipePartPlayback.v1",
+      "objectAttachments.v1",
+      "anchorZones.v1",
+      "channelWaits.v1",
+      "objectLaunch.v1",
+      "physicalCatching.v1",
+      "calendarSchedules.v1",
+      "animationAuthoring.v1",
+      "animationRecording.v1",
+      "animationPosing.v1",
+      "avatarModels.v1",
+      "modelImport.v1",
+      "modelArchiveImport.v1",
+      "motionBatchImport.v1",
+      "includedMotions.v1",
+      "authoredMotion.v1",
+      "unavailablePrograms.v1",
+      "actionRecovery.v1",
+      "temporaryRoom.v1",
+      "spatialSettings.v1",
+      "physicsSimulation.v1",
+      "roomEnvironment.v1",
+      "surfacePlacement.v1",
+      "controllerConfiguration.v1",
+      "controllerModes.v1",
+      "runtimeDiagnostics.v1",
+      "workspaceMaintenance.v1",
+      "workspaceArchiveActivation.v1",
+      "workspaceReview.v1",
+      "workspacePrevious.v1",
+      "workspaceRecovery.v1",
+      "workspaceSavedRecovery.v1",
+      "workspaceHistory.v1",
+      "workspaceEvidence.v1",
+      "workspaceRetention.v1",
+      "workspaceDisposal.v1"
+    ],
+    "physics": {
+      "ready": true,
+      "running": false,
+      "status": "Probe-only synthetic floor; no real scan or alignment proof"
+    },
+    "temporaryRoom": {
+      "active": false,
+      "pending": false,
+      "id": "ad3f79af357844c79c4b274faf5aafa4",
+      "saveId": "",
+      "phase": "idle",
+      "error": "",
+      "savedRevision": 0
+    },
+    "ownership": {
+      "suspended": false,
+      "error": "",
+      "owners": [
+        {
+          "id": "ambient:maestro",
+          "label": "Maestro tutor activity",
+          "role": "ambient",
+          "allowsGrab": false,
+          "claims": [
+            {
+              "target": "maestro",
+              "channel": "wholeTarget"
+            }
+          ]
+        }
+      ]
+    },
+    "avatar": {
+      "active": false,
+      "canLook": true,
+      "canFollow": false,
+      "mode": "stopped",
+      "status": "Choose Look at me or Follow me",
+      "lookReason": "",
+      "followReason": "Load the room, check its alignment, then Start physics before walking",
+      "distance": 1.3,
+      "speed": 0.65
+    },
+    "walk": {
+      "source": "embedded",
+      "motionId": "",
+      "modelHash": "dcd59fb02d378322b656c2cfbe9851d08229ac3a618e90ad5aa06eac7c88759c",
+      "name": "Walking",
+      "status": "Embedded walking clip is available",
+      "playbackStatus": "",
+      "clipIndex": 0,
+      "available": true
+    },
+    "activityProfile": {
+      "modelHash": "dcd59fb02d378322b656c2cfbe9851d08229ac3a618e90ad5aa06eac7c88759c",
+      "status": "Uses included animations where no state motion is assigned",
+      "revision": 1,
+      "canAssign": true,
+      "readOnly": false,
+      "canUndo": false,
+      "canRedo": false,
+      "roles": [
+        {
+          "role": 0,
+          "choices": [
+            {
+              "motionId": "21da54acb5c38d147ad297bf7ef22977",
+              "name": "Idle_4",
+              "weight": 1,
+              "speed": 1,
+              "cooldown": 0,
+              "loop": true,
+              "available": true
+            }
+          ]
+        },
+        {
+          "role": 1,
+          "choices": [
+            {
+              "motionId": "bd0bf1a849d86d785e00c3a392639359",
+              "name": "Listening_Gesture",
+              "weight": 1,
+              "speed": 1,
+              "cooldown": 0,
+              "loop": true,
+              "available": true
+            }
+          ]
+        },
+        {
+          "role": 2,
+          "choices": [
+            {
+              "motionId": "9a66ea13d9ba08b954b9a0cbdc7d89dc",
+              "name": "Idle_12",
+              "weight": 1,
+              "speed": 1,
+              "cooldown": 0,
+              "loop": true,
+              "available": true
+            }
+          ]
+        },
+        {
+          "role": 3,
+          "choices": [
+            {
+              "motionId": "b56ece79da8e21bac89927310921d734",
+              "name": "Talk_with_Hands_Open",
+              "weight": 1,
+              "speed": 1,
+              "cooldown": 2,
+              "loop": false,
+              "available": true
+            },
+            {
+              "motionId": "852ac885964d693deb8d3d3ba835acec",
+              "name": "Talk_with_Right_Hand_Open",
+              "weight": 1,
+              "speed": 1,
+              "cooldown": 2,
+              "loop": false,
+              "available": true
+            }
+          ]
+        }
+      ]
+    },
+    "objects": [
+      {
+        "id": "39d289d258dd4c119e4c64119c0ce269",
+        "name": "Editable material scoop",
+        "kind": "Assembly",
+        "objectRevision": 49,
+        "position": {
+          "x": 0.30000001192092896,
+          "y": 1.2999999523162842,
+          "z": 0.6499999761581421
+        },
+        "scale": 1,
+        "color": {
+          "r": 1,
+          "g": 1,
+          "b": 1,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "solid",
+          "shape": "automatic",
+          "mass": 0.11999999731779099
+        },
+        "movement": null
+      },
+      {
+        "id": "3fa0f9a640a444f8b84981f7eef00ade",
+        "name": "Ball",
+        "kind": "Ball",
+        "objectRevision": 4,
+        "position": {
+          "x": 0.6899999976158142,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1,
+        "color": {
+          "r": 0.7647058963775635,
+          "g": 0.6000000238418579,
+          "b": 0.3137255012989044,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "73feebc422834841bedb6af0f05c4f3f",
+        "name": "Block",
+        "kind": "Block",
+        "objectRevision": 3,
+        "position": {
+          "x": 0.5199999809265137,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1,
+        "color": {
+          "r": 0.45098039507865906,
+          "g": 0.32549020648002625,
+          "b": 0.30588236451148987,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "bdf48555100a436398c330c45227b6f0",
+        "name": "Cylinder",
+        "kind": "Cylinder",
+        "objectRevision": 5,
+        "position": {
+          "x": 0.8600000143051147,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1,
+        "color": {
+          "r": 0.16862745583057404,
+          "g": 0.5529412031173706,
+          "b": 0.5333333611488342,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "book",
+        "name": "Book",
+        "kind": "Book",
+        "objectRevision": 1,
+        "position": {
+          "x": 0,
+          "y": 1.159999966621399,
+          "z": 0.6499999761581421
+        },
+        "scale": 1,
+        "color": {
+          "r": 1,
+          "g": 1,
+          "b": 1,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "maestro",
+        "name": "Maestro",
+        "kind": "Maestro",
+        "objectRevision": 2,
+        "position": {
+          "x": -0.7799999713897705,
+          "y": 0,
+          "z": 1.399999976158142
+        },
+        "scale": 1,
+        "color": {
+          "r": 1,
+          "g": 1,
+          "b": 1,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": {
+          "distance": 1.3,
+          "speed": 0.65
+        }
+      }
+    ],
+    "created": [],
+    "capture": {
+      "captureId": "4d4c8e48cd014fc28d4b9c503a08f6e7",
+      "sha256": "852cbebf2a4ec97b57803a674051a85b1ab82710377fc801e2406c67f608b993",
+      "mimeType": "image/jpeg",
+      "width": 512,
+      "height": 384,
+      "capturedAt": "2026-10-04T17:42:38.555461Z",
+      "sceneRevision": 3,
+      "verticalFov": 60,
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 1
+      }
+    },
+    "catalog": {
+      "operation": "inspect",
+      "capability": "material.pack.tool",
+      "version": 1,
+      "definition": {
+        "id": "material.pack.tool",
+        "version": 1,
+        "type": {
+          "record": {
+            "enabled": "boolean",
+            "radius": "number",
+            "amountLitres": "number",
+            "mass": "number"
+          }
+        },
+        "label": "Current physical material packing tool",
+        "description": "Session-local touch-and-lift/trigger packing settings. Enabling does not create a ball or start physics. Reads do not enable input.",
+        "features": [
+          "physicalMaterialPacking.v1"
+        ]
+      },
+      "status": "Current fact value. Reading does not change the room.",
+      "category": "facts",
+      "available": true,
+      "value": {
+        "enabled": true,
+        "radius": 0.15,
+        "amountLitres": 0.1,
+        "mass": 0.2
+      }
+    },
+    "execution": {
+      "selected": {
+        "id": "130575d50bdb42b2bb65c25f35255a9e",
+        "capability": "material.pack.tool.set",
+        "version": 1,
+        "resources": [],
+        "phase": "completed",
+        "status": "Action completed",
+        "call": {
+          "id": "material.pack.tool.set",
+          "version": 1,
+          "arguments": {
+            "enabled": true,
+            "radius": 0.15,
+            "amountLitres": 0.1,
+            "mass": 0.2
+          }
+        }
+      },
+      "running": [],
+      "outcomes": [
+        {
+          "id": "e4af67230c484f09b1209db7b75da7f7",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "68aae688b3a647aa87cacd4dcc240732"
+          }
+        },
+        {
+          "id": "4368ad2b0f9542898157e8ba1ba1aaf2",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "55d83238de7349618ba58fd9f34103c7"
+          }
+        },
+        {
+          "id": "7fd20643cff64a989bb9d30eaef49c77",
+          "capability": "object.field.sculpt",
+          "version": 1,
+          "resources": [
+            "55d83238de7349618ba58fd9f34103c7"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "changedVertices": 63
+          }
+        },
+        {
+          "id": "0bf2cc7aa4d34151813d275f434d9cf1",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "7909542c2f5b4ff6bd2e72fe3e4e94d2"
+          }
+        },
+        {
+          "id": "06235d7af3774975ae7f3919ed5ac425",
+          "capability": "object.field.transfer",
+          "version": 1,
+          "resources": [
+            "55d83238de7349618ba58fd9f34103c7",
+            "7909542c2f5b4ff6bd2e72fe3e4e94d2"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "removedLitres": 1.0000001930166034,
+            "addedLitres": 1.0000003094319252,
+            "roundingLitres": 1.1641532182693481e-07
+          }
+        },
+        {
+          "id": "9491f9fac63a488a903f37560689505e",
+          "capability": "object.material.pack",
+          "version": 1,
+          "resources": [
+            "55d83238de7349618ba58fd9f34103c7"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "fdf06d558f8740a1b21ef861397a9626",
+            "amountLitres": 0.4999998782295733
+          }
+        },
+        {
+          "id": "33934ff3867642e2ad0cb11ceb3b274e",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "ab2636127c9f4dec8470d2d9176180e8"
+          }
+        },
+        {
+          "id": "8a8d276eddd64a0f987d36e1c951a39f",
+          "capability": "object.material.edit",
+          "version": 1,
+          "resources": [
+            "ab2636127c9f4dec8470d2d9176180e8"
+          ],
+          "phase": "completed",
+          "status": "Action completed"
+        },
+        {
+          "id": "f4c03576c4584a1fb95a727045fe7cf7",
+          "capability": "object.material.transfer",
+          "version": 1,
+          "resources": [
+            "55d83238de7349618ba58fd9f34103c7",
+            "ab2636127c9f4dec8470d2d9176180e8"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "removedLitres": 0.19999913638457656,
+            "addedLitres": 0.19999913638457653,
+            "roundingLitres": -2.7755575615628914e-17
+          }
+        },
+        {
+          "id": "0acb509f1e3149d782824e68b2d3872c",
+          "capability": "object.material.transfer",
+          "version": 1,
+          "resources": [
+            "ab2636127c9f4dec8470d2d9176180e8",
+            "55d83238de7349618ba58fd9f34103c7"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "removedLitres": 0.09999965550377964,
+            "addedLitres": 0.09999965550377965,
+            "roundingLitres": 1.3877787807814457e-17
+          }
+        },
+        {
+          "id": "4bafad006db34e6ea66cfd91bdfbb255",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "c8b4ff852c724d2288930625fe3d67dc"
+          }
+        },
+        {
+          "id": "f2f9ac3af40346e6912e7f65d3086ba3",
+          "capability": "object.sculptTip.edit",
+          "version": 1,
+          "resources": [
+            "c8b4ff852c724d2288930625fe3d67dc"
+          ],
+          "phase": "completed",
+          "status": "Action completed"
+        },
+        {
+          "id": "4848f78b01f740b88ae7873c19b05d4d",
+          "capability": "field.tool.set",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed"
+        },
+        {
+          "id": "093674af571c430ead55cf172a8e469f",
+          "capability": "field.tool.set",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed"
+        },
+        {
+          "id": "a319fb57fadb41a88e360d8962b6e3b0",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "39d289d258dd4c119e4c64119c0ce269"
+          }
+        },
+        {
+          "id": "130575d50bdb42b2bb65c25f35255a9e",
+          "capability": "material.pack.tool.set",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed"
+        }
+      ],
+      "nextRunId": "7749214dafd0447982c735ba330a8b44",
+      "storageError": null,
+      "recovery": null,
+      "workspace": {
+        "selected": null,
+        "running": [],
+        "outcomes": [],
+        "nextRunId": "eda39c2a04ee441eb25bfe6990b74518",
+        "storageError": null,
+        "recovery": null
+      }
+    }
+  },
+  "idle": {
+    "version": 1,
+    "revision": 289,
+    "sceneRevision": 48,
+    "ack": 121,
+    "session": "5e910ac6a4044d8a90ae007144a3ac2c",
+    "status": "Current fact value. Reading does not change the room.",
+    "selectedId": "fdf06d558f8740a1b21ef861397a9626",
+    "ok": true,
+    "canUndo": true,
+    "canRedo": false,
+    "physicsRunning": false,
+    "visible": false,
+    "inspection": null,
+    "constructionSelection": {
+      "stateId": "7723dfd48d884e12b5720814b90eecaa",
+      "collecting": false,
+      "members": []
+    },
+    "constructionManipulation": {
+      "stateId": "7723dfd48d884e12b5720814b90eecaa",
+      "error": "",
+      "visible": false,
+      "holding": false
+    },
+    "workspaceView": "objects",
+    "rules": {
+      "revision": 1,
+      "bindingPage": 0,
+      "bindingCount": 0,
+      "queued": 0,
+      "eventQueue": 0,
+      "eventsDropped": 0,
+      "canUndo": false,
+      "canRedo": false,
+      "readOnly": false,
+      "status": "Create an action sequence, then add triggers or buttons",
+      "selectedError": "",
+      "sequences": [],
+      "selected": null,
+      "memory": null,
+      "bindings": [],
+      "buttons": [],
+      "running": [],
+      "outcomes": []
+    },
+    "motions": null,
+    "capabilities": [
+      "physicsSettings.v1",
+      "avatarSettings.v1",
+      "physicsRun.v1",
+      "avatarMotion.v1",
+      "avatarWalk.v1",
+      "motions.v1",
+      "avatarActivities.v1",
+      "catalog.v1",
+      "catalogVocabulary.v1",
+      "roomOwnership.v1",
+      "behaviourPrograms.v3",
+      "eventPrograms.v1",
+      "eventFields.v1",
+      "eventSubscriptions.v1",
+      "factQueries.v1",
+      "conditionWaits.v1",
+      "parallelPrograms.v1",
+      "rememberedVariables.v1",
+      "temporaryMemory.v1",
+      "structuredValues.v1",
+      "programModules.v1",
+      "moduleLibrary.v1",
+      "moduleLibraryFiles.v1",
+      "execution.v1",
+      "executionReceipts.v1",
+      "actionResults.v1",
+      "recipeCreation.v1",
+      "creationComponents.v1",
+      "creationTemplates.v1",
+      "layoutEdits.v1",
+      "structures.v1",
+      "batchCreation.v1",
+      "structuredResults.v1",
+      "structuredInputs.v1",
+      "indexedInputs.v1",
+      "constructionSelection.v1",
+      "groupTransforms.v1",
+      "constructionManipulation.v1",
+      "constructionSnapping.v1",
+      "objectEdits.v1",
+      "objectCopy.v1",
+      "drawingEdits.v1",
+      "drawingSurfaces.v1",
+      "curvedDrawingSurfaces.v1",
+      "drawingTips.v1",
+      "drawingErasers.v1",
+      "containers.v1",
+      "heightFields.v1",
+      "heightFieldTransfer.v1",
+      "materialStores.v1",
+      "materialTransfer.v1",
+      "materialPacking.v1",
+      "physicalMaterialPacking.v1",
+      "physicalSculpting.v1",
+      "physicalMaterialTools.v1",
+      "containerPouring.v1",
+      "containerScooping.v1",
+      "physicalConnections.v1",
+      "physicalSliders.v1",
+      "snapPoints.v1",
+      "connectedBlueprints.v2",
+      "creationPrototypes.v1",
+      "constructionCapture.v1",
+      "recipeEdits.v1",
+      "latheGeometry.v1",
+      "extrusionGeometry.v1",
+      "sweepGeometry.v1",
+      "recipePatterns.v1",
+      "roomViewCapture.v1",
+      "collisionShapes.v1",
+      "recipePartPlayback.v1",
+      "objectAttachments.v1",
+      "anchorZones.v1",
+      "channelWaits.v1",
+      "objectLaunch.v1",
+      "physicalCatching.v1",
+      "calendarSchedules.v1",
+      "animationAuthoring.v1",
+      "animationRecording.v1",
+      "animationPosing.v1",
+      "avatarModels.v1",
+      "modelImport.v1",
+      "modelArchiveImport.v1",
+      "motionBatchImport.v1",
+      "includedMotions.v1",
+      "authoredMotion.v1",
+      "unavailablePrograms.v1",
+      "actionRecovery.v1",
+      "temporaryRoom.v1",
+      "spatialSettings.v1",
+      "physicsSimulation.v1",
+      "roomEnvironment.v1",
+      "surfacePlacement.v1",
+      "controllerConfiguration.v1",
+      "controllerModes.v1",
+      "runtimeDiagnostics.v1",
+      "workspaceMaintenance.v1",
+      "workspaceArchiveActivation.v1",
+      "workspaceReview.v1",
+      "workspacePrevious.v1",
+      "workspaceRecovery.v1",
+      "workspaceSavedRecovery.v1",
+      "workspaceHistory.v1",
+      "workspaceEvidence.v1",
+      "workspaceRetention.v1",
+      "workspaceDisposal.v1"
+    ],
+    "physics": {
+      "ready": true,
+      "running": false,
+      "status": "Probe-only synthetic floor; no real scan or alignment proof"
+    },
+    "temporaryRoom": {
+      "active": false,
+      "pending": false,
+      "id": "ad3f79af357844c79c4b274faf5aafa4",
+      "saveId": "",
+      "phase": "idle",
+      "error": "",
+      "savedRevision": 0
+    },
+    "ownership": {
+      "suspended": false,
+      "error": "",
+      "owners": [
+        {
+          "id": "ambient:maestro",
+          "label": "Maestro tutor activity",
+          "role": "ambient",
+          "allowsGrab": false,
+          "claims": [
+            {
+              "target": "maestro",
+              "channel": "wholeTarget"
+            }
+          ]
+        }
+      ]
+    },
+    "avatar": {
+      "active": false,
+      "canLook": true,
+      "canFollow": false,
+      "mode": "stopped",
+      "status": "Choose Look at me or Follow me",
+      "lookReason": "",
+      "followReason": "Load the room, check its alignment, then Start physics before walking",
+      "distance": 1.3,
+      "speed": 0.65
+    },
+    "walk": {
+      "source": "embedded",
+      "motionId": "",
+      "modelHash": "dcd59fb02d378322b656c2cfbe9851d08229ac3a618e90ad5aa06eac7c88759c",
+      "name": "Walking",
+      "status": "Embedded walking clip is available",
+      "playbackStatus": "",
+      "clipIndex": 0,
+      "available": true
+    },
+    "activityProfile": {
+      "modelHash": "dcd59fb02d378322b656c2cfbe9851d08229ac3a618e90ad5aa06eac7c88759c",
+      "status": "Uses included animations where no state motion is assigned",
+      "revision": 1,
+      "canAssign": true,
+      "readOnly": false,
+      "canUndo": false,
+      "canRedo": false,
+      "roles": [
+        {
+          "role": 0,
+          "choices": [
+            {
+              "motionId": "21da54acb5c38d147ad297bf7ef22977",
+              "name": "Idle_4",
+              "weight": 1,
+              "speed": 1,
+              "cooldown": 0,
+              "loop": true,
+              "available": true
+            }
+          ]
+        },
+        {
+          "role": 1,
+          "choices": [
+            {
+              "motionId": "bd0bf1a849d86d785e00c3a392639359",
+              "name": "Listening_Gesture",
+              "weight": 1,
+              "speed": 1,
+              "cooldown": 0,
+              "loop": true,
+              "available": true
+            }
+          ]
+        },
+        {
+          "role": 2,
+          "choices": [
+            {
+              "motionId": "9a66ea13d9ba08b954b9a0cbdc7d89dc",
+              "name": "Idle_12",
+              "weight": 1,
+              "speed": 1,
+              "cooldown": 0,
+              "loop": true,
+              "available": true
+            }
+          ]
+        },
+        {
+          "role": 3,
+          "choices": [
+            {
+              "motionId": "b56ece79da8e21bac89927310921d734",
+              "name": "Talk_with_Hands_Open",
+              "weight": 1,
+              "speed": 1,
+              "cooldown": 2,
+              "loop": false,
+              "available": true
+            },
+            {
+              "motionId": "852ac885964d693deb8d3d3ba835acec",
+              "name": "Talk_with_Right_Hand_Open",
+              "weight": 1,
+              "speed": 1,
+              "cooldown": 2,
+              "loop": false,
+              "available": true
+            }
+          ]
+        }
+      ]
+    },
+    "objects": [
+      {
+        "id": "39d289d258dd4c119e4c64119c0ce269",
+        "name": "Editable material scoop",
+        "kind": "Assembly",
+        "objectRevision": 49,
+        "position": {
+          "x": 0.30000001192092896,
+          "y": 1.2999999523162842,
+          "z": 0.6499999761581421
+        },
+        "scale": 1,
+        "color": {
+          "r": 1,
+          "g": 1,
+          "b": 1,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "solid",
+          "shape": "automatic",
+          "mass": 0.11999999731779099
+        },
+        "movement": null
+      },
+      {
+        "id": "3fa0f9a640a444f8b84981f7eef00ade",
+        "name": "Ball",
+        "kind": "Ball",
+        "objectRevision": 4,
+        "position": {
+          "x": 0.6899999976158142,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1,
+        "color": {
+          "r": 0.7647058963775635,
+          "g": 0.6000000238418579,
+          "b": 0.3137255012989044,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "73feebc422834841bedb6af0f05c4f3f",
+        "name": "Block",
+        "kind": "Block",
+        "objectRevision": 3,
+        "position": {
+          "x": 0.5199999809265137,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1,
+        "color": {
+          "r": 0.45098039507865906,
+          "g": 0.32549020648002625,
+          "b": 0.30588236451148987,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "bdf48555100a436398c330c45227b6f0",
+        "name": "Cylinder",
+        "kind": "Cylinder",
+        "objectRevision": 5,
+        "position": {
+          "x": 0.8600000143051147,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1,
+        "color": {
+          "r": 0.16862745583057404,
+          "g": 0.5529412031173706,
+          "b": 0.5333333611488342,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "book",
+        "name": "Book",
+        "kind": "Book",
+        "objectRevision": 1,
+        "position": {
+          "x": 0,
+          "y": 1.159999966621399,
+          "z": 0.6499999761581421
+        },
+        "scale": 1,
+        "color": {
+          "r": 1,
+          "g": 1,
+          "b": 1,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "maestro",
+        "name": "Maestro",
+        "kind": "Maestro",
+        "objectRevision": 2,
+        "position": {
+          "x": -0.7799999713897705,
+          "y": 0,
+          "z": 1.399999976158142
+        },
+        "scale": 1,
+        "color": {
+          "r": 1,
+          "g": 1,
+          "b": 1,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": {
+          "distance": 1.3,
+          "speed": 0.65
+        }
+      }
+    ],
+    "created": [],
+    "capture": {
+      "captureId": "4d4c8e48cd014fc28d4b9c503a08f6e7",
+      "sha256": "852cbebf2a4ec97b57803a674051a85b1ab82710377fc801e2406c67f608b993",
+      "mimeType": "image/jpeg",
+      "width": 512,
+      "height": 384,
+      "capturedAt": "2026-10-04T17:42:38.555461Z",
+      "sceneRevision": 3,
+      "verticalFov": 60,
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 1
+      }
+    },
+    "catalog": {
+      "operation": "inspect",
+      "capability": "material.pack.capture",
+      "version": 1,
+      "definition": {
+        "id": "material.pack.capture",
+        "version": 1,
+        "type": {
+          "record": {
+            "sessionId": "text",
+            "phase": "text",
+            "field": "text",
+            "requestedLitres": "number",
+            "amountLitres": "number",
+            "position": {
+              "record": {
+                "x": "number",
+                "y": "number",
+                "z": "number"
+              }
+            },
+            "lastSaved": {
+              "record": {
+                "sessionId": "text",
+                "objectId": "text",
+                "amountLitres": "number"
+              }
+            },
+            "error": "text"
+          }
+        },
+        "label": "Physical material packing draft",
+        "description": "Frozen preview amount/ball position and exact capture session. Use object.field.capture.path for its single local footprint and object.field.resolve for explicit Retry/Discard. lastSaved records the most recent successful physical packing in this live room, not current existence: Undo/deletion may remove that ball. Explicit object.material.pack calls do not set this physical observation. Reads have no effect.",
+        "features": [
+          "physicalMaterialPacking.v1"
+        ]
+      },
+      "status": "Current fact value. Reading does not change the room.",
+      "category": "facts",
+      "available": true,
+      "value": {
+        "sessionId": "db518405239148879f0e4f08602da2c7",
+        "phase": "idle",
+        "field": "",
+        "requestedLitres": 0,
+        "amountLitres": 0,
+        "position": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "lastSaved": {
+          "sessionId": "",
+          "objectId": "",
+          "amountLitres": 0
+        },
+        "error": ""
+      }
+    },
+    "execution": {
+      "selected": {
+        "id": "130575d50bdb42b2bb65c25f35255a9e",
+        "capability": "material.pack.tool.set",
+        "version": 1,
+        "resources": [],
+        "phase": "completed",
+        "status": "Action completed",
+        "call": {
+          "id": "material.pack.tool.set",
+          "version": 1,
+          "arguments": {
+            "enabled": true,
+            "radius": 0.15,
+            "amountLitres": 0.1,
+            "mass": 0.2
+          }
+        }
+      },
+      "running": [],
+      "outcomes": [
+        {
+          "id": "e4af67230c484f09b1209db7b75da7f7",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "68aae688b3a647aa87cacd4dcc240732"
+          }
+        },
+        {
+          "id": "4368ad2b0f9542898157e8ba1ba1aaf2",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "55d83238de7349618ba58fd9f34103c7"
+          }
+        },
+        {
+          "id": "7fd20643cff64a989bb9d30eaef49c77",
+          "capability": "object.field.sculpt",
+          "version": 1,
+          "resources": [
+            "55d83238de7349618ba58fd9f34103c7"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "changedVertices": 63
+          }
+        },
+        {
+          "id": "0bf2cc7aa4d34151813d275f434d9cf1",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "7909542c2f5b4ff6bd2e72fe3e4e94d2"
+          }
+        },
+        {
+          "id": "06235d7af3774975ae7f3919ed5ac425",
+          "capability": "object.field.transfer",
+          "version": 1,
+          "resources": [
+            "55d83238de7349618ba58fd9f34103c7",
+            "7909542c2f5b4ff6bd2e72fe3e4e94d2"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "removedLitres": 1.0000001930166034,
+            "addedLitres": 1.0000003094319252,
+            "roundingLitres": 1.1641532182693481e-07
+          }
+        },
+        {
+          "id": "9491f9fac63a488a903f37560689505e",
+          "capability": "object.material.pack",
+          "version": 1,
+          "resources": [
+            "55d83238de7349618ba58fd9f34103c7"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "fdf06d558f8740a1b21ef861397a9626",
+            "amountLitres": 0.4999998782295733
+          }
+        },
+        {
+          "id": "33934ff3867642e2ad0cb11ceb3b274e",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "ab2636127c9f4dec8470d2d9176180e8"
+          }
+        },
+        {
+          "id": "8a8d276eddd64a0f987d36e1c951a39f",
+          "capability": "object.material.edit",
+          "version": 1,
+          "resources": [
+            "ab2636127c9f4dec8470d2d9176180e8"
+          ],
+          "phase": "completed",
+          "status": "Action completed"
+        },
+        {
+          "id": "f4c03576c4584a1fb95a727045fe7cf7",
+          "capability": "object.material.transfer",
+          "version": 1,
+          "resources": [
+            "55d83238de7349618ba58fd9f34103c7",
+            "ab2636127c9f4dec8470d2d9176180e8"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "removedLitres": 0.19999913638457656,
+            "addedLitres": 0.19999913638457653,
+            "roundingLitres": -2.7755575615628914e-17
+          }
+        },
+        {
+          "id": "0acb509f1e3149d782824e68b2d3872c",
+          "capability": "object.material.transfer",
+          "version": 1,
+          "resources": [
+            "ab2636127c9f4dec8470d2d9176180e8",
+            "55d83238de7349618ba58fd9f34103c7"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "removedLitres": 0.09999965550377964,
+            "addedLitres": 0.09999965550377965,
+            "roundingLitres": 1.3877787807814457e-17
+          }
+        },
+        {
+          "id": "4bafad006db34e6ea66cfd91bdfbb255",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "c8b4ff852c724d2288930625fe3d67dc"
+          }
+        },
+        {
+          "id": "f2f9ac3af40346e6912e7f65d3086ba3",
+          "capability": "object.sculptTip.edit",
+          "version": 1,
+          "resources": [
+            "c8b4ff852c724d2288930625fe3d67dc"
+          ],
+          "phase": "completed",
+          "status": "Action completed"
+        },
+        {
+          "id": "4848f78b01f740b88ae7873c19b05d4d",
+          "capability": "field.tool.set",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed"
+        },
+        {
+          "id": "093674af571c430ead55cf172a8e469f",
+          "capability": "field.tool.set",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed"
+        },
+        {
+          "id": "a319fb57fadb41a88e360d8962b6e3b0",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "39d289d258dd4c119e4c64119c0ce269"
+          }
+        },
+        {
+          "id": "130575d50bdb42b2bb65c25f35255a9e",
+          "capability": "material.pack.tool.set",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed"
+        }
+      ],
+      "nextRunId": "7749214dafd0447982c735ba330a8b44",
+      "storageError": null,
+      "recovery": null,
+      "workspace": {
+        "selected": null,
+        "running": [],
+        "outcomes": [],
+        "nextRunId": "eda39c2a04ee441eb25bfe6990b74518",
+        "storageError": null,
+        "recovery": null
+      }
+    }
+  },
+  "disabled": {
+    "version": 1,
+    "revision": 293,
+    "sceneRevision": 48,
+    "ack": 122,
+    "session": "5e910ac6a4044d8a90ae007144a3ac2c",
+    "status": "Action completed",
+    "selectedId": "fdf06d558f8740a1b21ef861397a9626",
+    "ok": true,
+    "canUndo": true,
+    "canRedo": false,
+    "physicsRunning": false,
+    "visible": false,
+    "inspection": null,
+    "constructionSelection": {
+      "stateId": "7723dfd48d884e12b5720814b90eecaa",
+      "collecting": false,
+      "members": []
+    },
+    "constructionManipulation": {
+      "stateId": "7723dfd48d884e12b5720814b90eecaa",
+      "error": "",
+      "visible": false,
+      "holding": false
+    },
+    "workspaceView": "objects",
+    "rules": {
+      "revision": 1,
+      "bindingPage": 0,
+      "bindingCount": 0,
+      "queued": 0,
+      "eventQueue": 0,
+      "eventsDropped": 0,
+      "canUndo": false,
+      "canRedo": false,
+      "readOnly": false,
+      "status": "Create an action sequence, then add triggers or buttons",
+      "selectedError": "",
+      "sequences": [],
+      "selected": null,
+      "memory": null,
+      "bindings": [],
+      "buttons": [],
+      "running": [],
+      "outcomes": []
+    },
+    "motions": null,
+    "capabilities": [
+      "physicsSettings.v1",
+      "avatarSettings.v1",
+      "physicsRun.v1",
+      "avatarMotion.v1",
+      "avatarWalk.v1",
+      "motions.v1",
+      "avatarActivities.v1",
+      "catalog.v1",
+      "catalogVocabulary.v1",
+      "roomOwnership.v1",
+      "behaviourPrograms.v3",
+      "eventPrograms.v1",
+      "eventFields.v1",
+      "eventSubscriptions.v1",
+      "factQueries.v1",
+      "conditionWaits.v1",
+      "parallelPrograms.v1",
+      "rememberedVariables.v1",
+      "temporaryMemory.v1",
+      "structuredValues.v1",
+      "programModules.v1",
+      "moduleLibrary.v1",
+      "moduleLibraryFiles.v1",
+      "execution.v1",
+      "executionReceipts.v1",
+      "actionResults.v1",
+      "recipeCreation.v1",
+      "creationComponents.v1",
+      "creationTemplates.v1",
+      "layoutEdits.v1",
+      "structures.v1",
+      "batchCreation.v1",
+      "structuredResults.v1",
+      "structuredInputs.v1",
+      "indexedInputs.v1",
+      "constructionSelection.v1",
+      "groupTransforms.v1",
+      "constructionManipulation.v1",
+      "constructionSnapping.v1",
+      "objectEdits.v1",
+      "objectCopy.v1",
+      "drawingEdits.v1",
+      "drawingSurfaces.v1",
+      "curvedDrawingSurfaces.v1",
+      "drawingTips.v1",
+      "drawingErasers.v1",
+      "containers.v1",
+      "heightFields.v1",
+      "heightFieldTransfer.v1",
+      "materialStores.v1",
+      "materialTransfer.v1",
+      "materialPacking.v1",
+      "physicalMaterialPacking.v1",
+      "physicalSculpting.v1",
+      "physicalMaterialTools.v1",
+      "containerPouring.v1",
+      "containerScooping.v1",
+      "physicalConnections.v1",
+      "physicalSliders.v1",
+      "snapPoints.v1",
+      "connectedBlueprints.v2",
+      "creationPrototypes.v1",
+      "constructionCapture.v1",
+      "recipeEdits.v1",
+      "latheGeometry.v1",
+      "extrusionGeometry.v1",
+      "sweepGeometry.v1",
+      "recipePatterns.v1",
+      "roomViewCapture.v1",
+      "collisionShapes.v1",
+      "recipePartPlayback.v1",
+      "objectAttachments.v1",
+      "anchorZones.v1",
+      "channelWaits.v1",
+      "objectLaunch.v1",
+      "physicalCatching.v1",
+      "calendarSchedules.v1",
+      "animationAuthoring.v1",
+      "animationRecording.v1",
+      "animationPosing.v1",
+      "avatarModels.v1",
+      "modelImport.v1",
+      "modelArchiveImport.v1",
+      "motionBatchImport.v1",
+      "includedMotions.v1",
+      "authoredMotion.v1",
+      "unavailablePrograms.v1",
+      "actionRecovery.v1",
+      "temporaryRoom.v1",
+      "spatialSettings.v1",
+      "physicsSimulation.v1",
+      "roomEnvironment.v1",
+      "surfacePlacement.v1",
+      "controllerConfiguration.v1",
+      "controllerModes.v1",
+      "runtimeDiagnostics.v1",
+      "workspaceMaintenance.v1",
+      "workspaceArchiveActivation.v1",
+      "workspaceReview.v1",
+      "workspacePrevious.v1",
+      "workspaceRecovery.v1",
+      "workspaceSavedRecovery.v1",
+      "workspaceHistory.v1",
+      "workspaceEvidence.v1",
+      "workspaceRetention.v1",
+      "workspaceDisposal.v1"
+    ],
+    "physics": {
+      "ready": true,
+      "running": false,
+      "status": "Probe-only synthetic floor; no real scan or alignment proof"
+    },
+    "temporaryRoom": {
+      "active": false,
+      "pending": false,
+      "id": "ad3f79af357844c79c4b274faf5aafa4",
+      "saveId": "",
+      "phase": "idle",
+      "error": "",
+      "savedRevision": 0
+    },
+    "ownership": {
+      "suspended": false,
+      "error": "",
+      "owners": [
+        {
+          "id": "ambient:maestro",
+          "label": "Maestro tutor activity",
+          "role": "ambient",
+          "allowsGrab": false,
+          "claims": [
+            {
+              "target": "maestro",
+              "channel": "wholeTarget"
+            }
+          ]
+        }
+      ]
+    },
+    "avatar": {
+      "active": false,
+      "canLook": true,
+      "canFollow": false,
+      "mode": "stopped",
+      "status": "Choose Look at me or Follow me",
+      "lookReason": "",
+      "followReason": "Load the room, check its alignment, then Start physics before walking",
+      "distance": 1.3,
+      "speed": 0.65
+    },
+    "walk": {
+      "source": "embedded",
+      "motionId": "",
+      "modelHash": "dcd59fb02d378322b656c2cfbe9851d08229ac3a618e90ad5aa06eac7c88759c",
+      "name": "Walking",
+      "status": "Embedded walking clip is available",
+      "playbackStatus": "",
+      "clipIndex": 0,
+      "available": true
+    },
+    "activityProfile": {
+      "modelHash": "dcd59fb02d378322b656c2cfbe9851d08229ac3a618e90ad5aa06eac7c88759c",
+      "status": "Uses included animations where no state motion is assigned",
+      "revision": 1,
+      "canAssign": true,
+      "readOnly": false,
+      "canUndo": false,
+      "canRedo": false,
+      "roles": [
+        {
+          "role": 0,
+          "choices": [
+            {
+              "motionId": "21da54acb5c38d147ad297bf7ef22977",
+              "name": "Idle_4",
+              "weight": 1,
+              "speed": 1,
+              "cooldown": 0,
+              "loop": true,
+              "available": true
+            }
+          ]
+        },
+        {
+          "role": 1,
+          "choices": [
+            {
+              "motionId": "bd0bf1a849d86d785e00c3a392639359",
+              "name": "Listening_Gesture",
+              "weight": 1,
+              "speed": 1,
+              "cooldown": 0,
+              "loop": true,
+              "available": true
+            }
+          ]
+        },
+        {
+          "role": 2,
+          "choices": [
+            {
+              "motionId": "9a66ea13d9ba08b954b9a0cbdc7d89dc",
+              "name": "Idle_12",
+              "weight": 1,
+              "speed": 1,
+              "cooldown": 0,
+              "loop": true,
+              "available": true
+            }
+          ]
+        },
+        {
+          "role": 3,
+          "choices": [
+            {
+              "motionId": "b56ece79da8e21bac89927310921d734",
+              "name": "Talk_with_Hands_Open",
+              "weight": 1,
+              "speed": 1,
+              "cooldown": 2,
+              "loop": false,
+              "available": true
+            },
+            {
+              "motionId": "852ac885964d693deb8d3d3ba835acec",
+              "name": "Talk_with_Right_Hand_Open",
+              "weight": 1,
+              "speed": 1,
+              "cooldown": 2,
+              "loop": false,
+              "available": true
+            }
+          ]
+        }
+      ]
+    },
+    "objects": [
+      {
+        "id": "39d289d258dd4c119e4c64119c0ce269",
+        "name": "Editable material scoop",
+        "kind": "Assembly",
+        "objectRevision": 49,
+        "position": {
+          "x": 0.30000001192092896,
+          "y": 1.2999999523162842,
+          "z": 0.6499999761581421
+        },
+        "scale": 1,
+        "color": {
+          "r": 1,
+          "g": 1,
+          "b": 1,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "solid",
+          "shape": "automatic",
+          "mass": 0.11999999731779099
+        },
+        "movement": null
+      },
+      {
+        "id": "3fa0f9a640a444f8b84981f7eef00ade",
+        "name": "Ball",
+        "kind": "Ball",
+        "objectRevision": 4,
+        "position": {
+          "x": 0.6899999976158142,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1,
+        "color": {
+          "r": 0.7647058963775635,
+          "g": 0.6000000238418579,
+          "b": 0.3137255012989044,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "73feebc422834841bedb6af0f05c4f3f",
+        "name": "Block",
+        "kind": "Block",
+        "objectRevision": 3,
+        "position": {
+          "x": 0.5199999809265137,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1,
+        "color": {
+          "r": 0.45098039507865906,
+          "g": 0.32549020648002625,
+          "b": 0.30588236451148987,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "bdf48555100a436398c330c45227b6f0",
+        "name": "Cylinder",
+        "kind": "Cylinder",
+        "objectRevision": 5,
+        "position": {
+          "x": 0.8600000143051147,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1,
+        "color": {
+          "r": 0.16862745583057404,
+          "g": 0.5529412031173706,
+          "b": 0.5333333611488342,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "book",
+        "name": "Book",
+        "kind": "Book",
+        "objectRevision": 1,
+        "position": {
+          "x": 0,
+          "y": 1.159999966621399,
+          "z": 0.6499999761581421
+        },
+        "scale": 1,
+        "color": {
+          "r": 1,
+          "g": 1,
+          "b": 1,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "maestro",
+        "name": "Maestro",
+        "kind": "Maestro",
+        "objectRevision": 2,
+        "position": {
+          "x": -0.7799999713897705,
+          "y": 0,
+          "z": 1.399999976158142
+        },
+        "scale": 1,
+        "color": {
+          "r": 1,
+          "g": 1,
+          "b": 1,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": {
+          "distance": 1.3,
+          "speed": 0.65
+        }
+      }
+    ],
+    "created": [],
+    "capture": {
+      "captureId": "4d4c8e48cd014fc28d4b9c503a08f6e7",
+      "sha256": "852cbebf2a4ec97b57803a674051a85b1ab82710377fc801e2406c67f608b993",
+      "mimeType": "image/jpeg",
+      "width": 512,
+      "height": 384,
+      "capturedAt": "2026-10-04T17:42:38.555461Z",
+      "sceneRevision": 3,
+      "verticalFov": 60,
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 1
+      }
+    },
+    "catalog": {
+      "operation": "inspect",
+      "capability": "material.pack.capture",
+      "version": 1,
+      "definition": {
+        "id": "material.pack.capture",
+        "version": 1,
+        "type": {
+          "record": {
+            "sessionId": "text",
+            "phase": "text",
+            "field": "text",
+            "requestedLitres": "number",
+            "amountLitres": "number",
+            "position": {
+              "record": {
+                "x": "number",
+                "y": "number",
+                "z": "number"
+              }
+            },
+            "lastSaved": {
+              "record": {
+                "sessionId": "text",
+                "objectId": "text",
+                "amountLitres": "number"
+              }
+            },
+            "error": "text"
+          }
+        },
+        "label": "Physical material packing draft",
+        "description": "Frozen preview amount/ball position and exact capture session. Use object.field.capture.path for its single local footprint and object.field.resolve for explicit Retry/Discard. lastSaved records the most recent successful physical packing in this live room, not current existence: Undo/deletion may remove that ball. Explicit object.material.pack calls do not set this physical observation. Reads have no effect.",
+        "features": [
+          "physicalMaterialPacking.v1"
+        ]
+      },
+      "status": "Current fact value. Reading does not change the room.",
+      "category": "facts",
+      "available": true,
+      "value": {
+        "sessionId": "db518405239148879f0e4f08602da2c7",
+        "phase": "idle",
+        "field": "",
+        "requestedLitres": 0,
+        "amountLitres": 0,
+        "position": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "lastSaved": {
+          "sessionId": "",
+          "objectId": "",
+          "amountLitres": 0
+        },
+        "error": ""
+      }
+    },
+    "execution": {
+      "selected": {
+        "id": "7749214dafd0447982c735ba330a8b44",
+        "capability": "material.pack.tool.set",
+        "version": 1,
+        "resources": [],
+        "phase": "completed",
+        "status": "Action completed",
+        "call": {
+          "id": "material.pack.tool.set",
+          "version": 1,
+          "arguments": {
+            "enabled": false,
+            "radius": 0.15,
+            "amountLitres": 0.1,
+            "mass": 0.2
+          }
+        }
+      },
+      "running": [],
+      "outcomes": [
+        {
+          "id": "4368ad2b0f9542898157e8ba1ba1aaf2",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "55d83238de7349618ba58fd9f34103c7"
+          }
+        },
+        {
+          "id": "7fd20643cff64a989bb9d30eaef49c77",
+          "capability": "object.field.sculpt",
+          "version": 1,
+          "resources": [
+            "55d83238de7349618ba58fd9f34103c7"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "changedVertices": 63
+          }
+        },
+        {
+          "id": "0bf2cc7aa4d34151813d275f434d9cf1",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "7909542c2f5b4ff6bd2e72fe3e4e94d2"
+          }
+        },
+        {
+          "id": "06235d7af3774975ae7f3919ed5ac425",
+          "capability": "object.field.transfer",
+          "version": 1,
+          "resources": [
+            "55d83238de7349618ba58fd9f34103c7",
+            "7909542c2f5b4ff6bd2e72fe3e4e94d2"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "removedLitres": 1.0000001930166034,
+            "addedLitres": 1.0000003094319252,
+            "roundingLitres": 1.1641532182693481e-07
+          }
+        },
+        {
+          "id": "9491f9fac63a488a903f37560689505e",
+          "capability": "object.material.pack",
+          "version": 1,
+          "resources": [
+            "55d83238de7349618ba58fd9f34103c7"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "fdf06d558f8740a1b21ef861397a9626",
+            "amountLitres": 0.4999998782295733
+          }
+        },
+        {
+          "id": "33934ff3867642e2ad0cb11ceb3b274e",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "ab2636127c9f4dec8470d2d9176180e8"
+          }
+        },
+        {
+          "id": "8a8d276eddd64a0f987d36e1c951a39f",
+          "capability": "object.material.edit",
+          "version": 1,
+          "resources": [
+            "ab2636127c9f4dec8470d2d9176180e8"
+          ],
+          "phase": "completed",
+          "status": "Action completed"
+        },
+        {
+          "id": "f4c03576c4584a1fb95a727045fe7cf7",
+          "capability": "object.material.transfer",
+          "version": 1,
+          "resources": [
+            "55d83238de7349618ba58fd9f34103c7",
+            "ab2636127c9f4dec8470d2d9176180e8"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "removedLitres": 0.19999913638457656,
+            "addedLitres": 0.19999913638457653,
+            "roundingLitres": -2.7755575615628914e-17
+          }
+        },
+        {
+          "id": "0acb509f1e3149d782824e68b2d3872c",
+          "capability": "object.material.transfer",
+          "version": 1,
+          "resources": [
+            "ab2636127c9f4dec8470d2d9176180e8",
+            "55d83238de7349618ba58fd9f34103c7"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "removedLitres": 0.09999965550377964,
+            "addedLitres": 0.09999965550377965,
+            "roundingLitres": 1.3877787807814457e-17
+          }
+        },
+        {
+          "id": "4bafad006db34e6ea66cfd91bdfbb255",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "c8b4ff852c724d2288930625fe3d67dc"
+          }
+        },
+        {
+          "id": "f2f9ac3af40346e6912e7f65d3086ba3",
+          "capability": "object.sculptTip.edit",
+          "version": 1,
+          "resources": [
+            "c8b4ff852c724d2288930625fe3d67dc"
+          ],
+          "phase": "completed",
+          "status": "Action completed"
+        },
+        {
+          "id": "4848f78b01f740b88ae7873c19b05d4d",
+          "capability": "field.tool.set",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed"
+        },
+        {
+          "id": "093674af571c430ead55cf172a8e469f",
+          "capability": "field.tool.set",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed"
+        },
+        {
+          "id": "a319fb57fadb41a88e360d8962b6e3b0",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "39d289d258dd4c119e4c64119c0ce269"
+          }
+        },
+        {
+          "id": "130575d50bdb42b2bb65c25f35255a9e",
+          "capability": "material.pack.tool.set",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed"
+        },
+        {
+          "id": "7749214dafd0447982c735ba330a8b44",
+          "capability": "material.pack.tool.set",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed"
+        }
+      ],
+      "nextRunId": "b84926d8f4fd40b2a3a453d5f12307bf",
+      "storageError": null,
+      "recovery": null,
+      "workspace": {
+        "selected": null,
+        "running": [],
+        "outcomes": [],
+        "nextRunId": "eda39c2a04ee441eb25bfe6990b74518",
+        "storageError": null,
+        "recovery": null
+      }
+    }
+  }
+}

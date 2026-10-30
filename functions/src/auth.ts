@@ -19,6 +19,8 @@ export interface AuthContext {
   uid: string;
   token: DecodedIdToken;
   user: AppUser;
+  /** Server-verified Firebase app identity; never supplied by the request body. */
+  appCheckAppId?: string | null;
 }
 
 export const applyCors = (req: Request, res: Response): boolean => {
@@ -65,20 +67,23 @@ export const APP_CHECK_INVALID_CODE = 'app-check/invalid';
 
 const shouldEnforceAppCheck = (): boolean => appConfig.requireAppCheck;
 
-export const verifyAppCheckIfNeeded = async (req: Request): Promise<void> => {
-  if (!shouldEnforceAppCheck()) return;
+export const verifyAppCheckIfNeeded = async (req: Request): Promise<string | null> => {
+  if (!shouldEnforceAppCheck()) return null;
   const appCheckToken = req.headers['x-firebase-appcheck'];
   if (typeof appCheckToken !== 'string' || !appCheckToken.trim()) {
     throw createHttpError(401, 'Missing Firebase App Check token.', APP_CHECK_MISSING_CODE);
   }
   try {
-    await adminAppCheck.verifyToken(appCheckToken.trim());
+    const verified = await adminAppCheck.verifyToken(appCheckToken.trim());
+    if (!verified.appId) throw new Error('Missing verified app identity.');
+    return verified.appId;
   } catch {
     throw createHttpError(401, 'Invalid Firebase App Check token.', APP_CHECK_INVALID_CODE);
   }
 };
 
-const buildAuthContext = (decodedToken: DecodedIdToken): AuthContext => ({
+const buildAuthContext = (decodedToken: DecodedIdToken, appCheckAppId: string | null): AuthContext => ({
+  appCheckAppId,
   uid: decodedToken.uid,
   token: decodedToken,
   user: {
@@ -90,7 +95,7 @@ const buildAuthContext = (decodedToken: DecodedIdToken): AuthContext => ({
 });
 
 export const getOptionalAuthContext = async (req: Request): Promise<AuthContext | null> => {
-  await verifyAppCheckIfNeeded(req);
+  const appCheckAppId = await verifyAppCheckIfNeeded(req);
   const bearerToken = getBearerToken(req);
   if (!bearerToken) {
     return null;
@@ -103,7 +108,7 @@ export const getOptionalAuthContext = async (req: Request): Promise<AuthContext 
     throw createHttpError(401, 'Invalid Firebase Authentication token.', 'auth/invalid-token');
   }
 
-  return buildAuthContext(decodedToken);
+  return buildAuthContext(decodedToken, appCheckAppId);
 };
 
 export const requireAuthContext = async (req: Request): Promise<AuthContext> => {

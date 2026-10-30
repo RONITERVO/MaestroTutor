@@ -1,0 +1,51 @@
+{
+  "frames": {
+    "active": true,
+    "hasSamples": true,
+    "samples": 2856,
+    "seconds": 1.0996592000000049,
+    "milliseconds": {
+      "mean": 0.38503473389355919,
+      "p95": 0.44330000000059044,
+      "max": 9.7222999999928561
+    },
+    "capacityLimited": false,
+    "ageSeconds": 3.329999999834854E-05,
+    "editor": true
+  },
+  "empty": {
+    "active": true,
+    "hasSamples": false,
+    "samples": 0,
+    "seconds": 0.0,
+    "milliseconds": {
+      "mean": 0.0,
+      "p95": 0.0,
+      "max": 0.0
+    },
+    "capacityLimited": false,
+    "ageSeconds": 0.0,
+    "editor": true
+  },
+  "models": {
+    "reserved": {
+      "models": 0,
+      "vertices": 0,
+      "textureMiPixels": 0.0,
+      "morphMillionVertices": 0.0
+    },
+    "limits": {
+      "models": 6,
+      "vertices": 500000,
+      "textureMiPixels": 64.0,
+      "morphMillionVertices": 8.0
+    }
+  },
+  "motions": {
+    "clips": 0,
+    "curveValues": 0,
+    "clipLimit": 8,
+    "curveValueLimit": 800000
+  },
+  "boundary": "Unity desktop PlayMode observations, not Quest performance evidence"
+}

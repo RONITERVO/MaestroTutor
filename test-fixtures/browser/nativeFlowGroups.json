@@ -1,0 +1,88 @@
+{
+  "waiting": {
+    "sessionId": "f8c464f98f1446e8be819c481402746c",
+    "phase": "waiting",
+    "contents": {
+      "amountMl": 400.0,
+      "savedAmountMl": 400.0,
+      "capacityMl": 500.0,
+      "transferredMl": 0.0,
+      "spilledMl": 0.0
+    },
+    "temporary": false,
+    "error": "Required liquid-flow collision geometry is unavailable"
+  },
+  "waitingRain": {
+    "sessionId": "f8c464f98f1446e8be819c481402746c",
+    "phase": "waiting",
+    "collectedMl": 0.0,
+    "exposure": 0.0,
+    "ready": false,
+    "reason": "Required liquid-flow collision geometry is unavailable"
+  },
+  "flowing": {
+    "sessionId": "f8c464f98f1446e8be819c481402746c",
+    "phase": "flowing",
+    "contents": {
+      "amountMl": 383.96169338167289,
+      "savedAmountMl": 400.0,
+      "capacityMl": 500.0,
+      "transferredMl": 16.038306618327088,
+      "spilledMl": 0.0
+    },
+    "temporary": false,
+    "error": ""
+  },
+  "receiver": {
+    "sessionId": "f8c464f98f1446e8be819c481402746c",
+    "phase": "flowing",
+    "contents": {
+      "amountMl": 16.038306618327088,
+      "savedAmountMl": 0.0,
+      "capacityMl": 500.0,
+      "transferredMl": 0.0,
+      "spilledMl": 0.0
+    },
+    "temporary": false,
+    "error": ""
+  },
+  "recovered": {
+    "sessionId": "f8c464f98f1446e8be819c481402746c",
+    "phase": "flowing",
+    "contents": {
+      "amountMl": 383.96169338167289,
+      "savedAmountMl": 400.0,
+      "capacityMl": 500.0,
+      "transferredMl": 16.038306618327088,
+      "spilledMl": 0.0
+    },
+    "temporary": false,
+    "error": ""
+  },
+  "recoveredReceiver": {
+    "sessionId": "f8c464f98f1446e8be819c481402746c",
+    "phase": "flowing",
+    "contents": {
+      "amountMl": 16.038306618327088,
+      "savedAmountMl": 0.0,
+      "capacityMl": 500.0,
+      "transferredMl": 0.0,
+      "spilledMl": 0.0
+    },
+    "temporary": false,
+    "error": ""
+  },
+  "accepted": {
+    "sessionId": "f8c464f98f1446e8be819c481402746c",
+    "phase": "idle",
+    "contents": {
+      "amountMl": 16.038306618327088,
+      "savedAmountMl": 16.038306618327088,
+      "capacityMl": 500.0,
+      "transferredMl": 0.0,
+      "spilledMl": 0.0
+    },
+    "temporary": false,
+    "error": ""
+  }
+}
