@@ -19023,3 +19023,12 @@ checks 22 selected ARM64 library hashes and 16 KiB ELF LOAD alignment, plus all
 The [compile checkpoint](QUEST_RELEASE_BUILD.md#model-ownership-compile-checkpoint--2026-10-30)
 records the exact export and evidence. No APK/AAB or physical/provider/release
 operation was performed. Model removal remains unexposed.
+
+The first CI run for `cd9ce403` stopped at catalog provenance: the native source
+list/hashes had not been copied into the committed generated manifest. The
+already completed Android configuration had produced a current native export;
+its public capability definitions are exactly unchanged. Copying that exact
+export adds the two new runtime inputs and refreshes 17 source hashes. The local
+catalog verifier now passes. This correction changes provenance only, not the
+native implementation exercised above; `catalog-correction.json` records the
+comparison and the initial failed CI rather than treating it as a pass.
