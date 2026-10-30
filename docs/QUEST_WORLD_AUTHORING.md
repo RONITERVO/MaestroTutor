@@ -4092,6 +4092,41 @@ Authored writes and image admission stay held while removal runs. Stop before
 dispatch prevents deletion. Once file deletion has been dispatched, Stop ends
 waiting but the worker can still finish; inspect current files and the existing
 receipt before issuing another request. This image path establishes reusable
-asset lifetime and reference checks. It does not yet expose sound or model
-payload reclamation, and does not claim to protect against arbitrary external
-software changing private files during the operation.
+asset lifetime and reference checks. At that image-only checkpoint, sound and model
+payload reclamation were not exposed. It does not claim to protect against
+arbitrary external software changing private files during the operation.
+
+
+## Remove an unused imported sound download
+
+`audio.library.inspect` and `audio.library.edit` use the same shared native path
+from book controls, agent discovery and programs. Select the canonical stored
+`assetHash`, inspect it, and pass the exact `inspectionRevision` for an explicit
+removal. The generated form loads that revision from `audio.library.review`
+and confirms the permanent action. The passive review is cached file evidence,
+never permission to delete; fresh saved/live checks run again during removal.
+
+Only the private finite clip payload is removed. Its display-name sidecar and
+identity remain; there is no Undo. Reimporting the exact canonical WAV bytes
+restores the identity. MP3/Ogg input is normalized on import: future decoding of
+the compressed original is not promised to recreate identical canonical bytes.
+The retained name file does not preserve the complete compressed-source export.
+Live URLs, procedural tones and conversational speech are outside this cleanup.
+
+Current and unbound clip sources, Undo/Redo, saved/recovery and temporary work,
+programs/modules/memory, live values, queued events and pending saves protect the
+sound. A saved cleanup program containing the hash protects it like any other
+reference; one-off cleanup is the validated path. Failed, loading, cached,
+paused, looping and room-owned playback also retains protection until its last
+owner and actual decoder/stream closure drain. Cached reuse still checks the
+exact workspace, including retirement. Ordinary preservation can coexist with
+these readers; a preservation freeze alone cannot authorize deletion.
+
+A bounded damaged payload can be removed only after exact file inspection and a
+complete unused-reference proof. Damage alone establishes neither permission
+nor a refusal. Unknown, unreadable, linked, unsupported or over-budget evidence
+blocks removal. Import/removal invalidates old library pages and review guards;
+Refresh supplies current inventory. Completed requests remain historical and
+cannot delete a later exact reimport. Stop before dispatch cancels removal;
+after dispatch it can stop waiting while the worker finishes. Inspect the file
+and retained receipt before making another explicit request after uncertainty.

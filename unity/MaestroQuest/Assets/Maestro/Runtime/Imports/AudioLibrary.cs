@@ -16,11 +16,14 @@ namespace Maestro.Quest.Imports {
     }
     /// <summary>Immutable imported clip payloads in the same private workspace as
     /// models and motions. Definitions reference content hashes, never source URIs.</summary>
-    public sealed class AudioLibrary {
+    public sealed partial class AudioLibrary {
         internal const int MaximumFiles=32;internal const long MaximumTotalBytes=128L*1024*1024;
         static readonly SemaphoreSlim decoders=new(2,2);
         readonly string directory;readonly WorkspaceWriteGate workspace;readonly SemaphoreSlim writes=new(1,1);
         public AudioLibrary(string directory,WorkspaceWriteGate writeGate=null){this.directory=Path.GetFullPath(directory);workspace=writeGate??new();}
+        internal WorkspaceAssetFence Assets=>workspace.Assets;
+        internal Action<string> ReadCheckpoint;
+        IDisposable Pin(string hash){_=AssetPath(hash);return Assets.Pin(ImportedAssetKind.Audio,hash);}
         internal static string SafeName(string value)=>new string((value??"Imported sound").Where(c=>!char.IsControl(c)&&c!='<'&&c!='>').Take(80).ToArray());
         internal static AudioAsset Inspect(string name,byte[] bytes,CancellationToken cancel=default)=>new(name,bytes==null?null:(byte[])bytes.Clone(),cancel);
         internal static AudioAsset ReadSelected(string name,string path,CancellationToken token)=>new(name,ReadBounded(path,token),token);
@@ -59,26 +62,33 @@ namespace Maestro.Quest.Imports {
             using var reader=new StreamReader(path,new UTF8Encoding(false,true),true);return SafeName(reader.ReadLine());
         }
         public async Task<AudioAsset> ReadAsync(string hash,CancellationToken cancel=default){
-            using var use=workspace.Write();await writes.WaitAsync(cancel).ConfigureAwait(false);
-            try{return await Task.Run(()=>ReadCore(hash,cancel),cancel).ConfigureAwait(false);}finally{writes.Release();}
+            using var pin=Pin(hash);using var use=workspace.Write();await writes.WaitAsync(cancel).ConfigureAwait(false);
+            try{return await Task.Run(()=>{ReadCheckpoint?.Invoke("reading");return ReadCore(hash,cancel);},cancel).ConfigureAwait(false);}finally{writes.Release();}
         }
         internal async Task<short[]> DecodeAsync(string hash,CancellationToken cancel=default,float? expectedSeconds=null){
-            using var use=workspace.Write();await decoders.WaitAsync(cancel).ConfigureAwait(false);
+            using var pin=Pin(hash);using var use=workspace.Write();await decoders.WaitAsync(cancel).ConfigureAwait(false);
             try{
                 AudioAsset asset;await writes.WaitAsync(cancel).ConfigureAwait(false);
-                try{asset=await Task.Run(()=>ReadCore(hash,cancel),cancel).ConfigureAwait(false);}finally{writes.Release();}
+                try{asset=await Task.Run(()=>{ReadCheckpoint?.Invoke("reading");return ReadCore(hash,cancel);},cancel).ConfigureAwait(false);}finally{writes.Release();}
                 if(expectedSeconds.HasValue&&Math.Abs(asset.Inspection.Seconds-expectedSeconds.Value)>.0001)throw new InvalidDataException("The saved sound duration differs from the exact clip; inspect and save the source again.");
-                return await Task.Run(()=>WaveAudio.Decode(asset.Content,cancel),cancel).ConfigureAwait(false);
+                return await Task.Run(()=>{ReadCheckpoint?.Invoke("decoding");return WaveAudio.Decode(asset.Content,cancel);},cancel).ConfigureAwait(false);
             }finally{decoders.Release();}
         }
         internal async Task<AudioPcmAsset> PrepareAsync(string hash,float expectedSeconds,CancellationToken cancel=default){
-            if(expectedSeconds<=WaveAudio.ResidentSeconds)return AudioPcmAsset.Resident(await DecodeAsync(hash,cancel,expectedSeconds).ConfigureAwait(false));
-            using var opening=workspace.Write();await decoders.WaitAsync(cancel).ConfigureAwait(false);
+            IDisposable pin=Pin(hash);
             try{
-                await writes.WaitAsync(cancel).ConfigureAwait(false);
-                try{return await Task.Run(()=>OpenStream(hash,expectedSeconds,cancel),cancel).ConfigureAwait(false);}
-                finally{writes.Release();}
-            }finally{decoders.Release();}
+                AudioPcmAsset asset;
+                if(expectedSeconds<=WaveAudio.ResidentSeconds)asset=AudioPcmAsset.Resident(await DecodeAsync(hash,cancel,expectedSeconds).ConfigureAwait(false));
+                else{
+                    using var opening=workspace.Write();await decoders.WaitAsync(cancel).ConfigureAwait(false);
+                    try{
+                        await writes.WaitAsync(cancel).ConfigureAwait(false);
+                        try{asset=await Task.Run(()=>{ReadCheckpoint?.Invoke("opening");return OpenStream(hash,expectedSeconds,cancel);},cancel).ConfigureAwait(false);}
+                        finally{writes.Release();}
+                    }finally{decoders.Release();}
+                }
+                var result=AudioPcmAsset.Retained(asset,pin);pin=null;return result;
+            }finally{pin?.Dispose();}
         }
         AudioPcmAsset OpenStream(string hash,float expectedSeconds,CancellationToken token){
             string path=AssetPath(hash);WorkspaceArchive.NoLink(directory);WorkspaceArchive.NoLink(path);
@@ -99,7 +109,7 @@ namespace Maestro.Quest.Imports {
         }
         public async Task SaveAsync(AudioAsset asset,CancellationToken cancel=default){
             if(asset==null)throw new ArgumentNullException(nameof(asset));using var use=workspace.Write();await writes.WaitAsync(cancel).ConfigureAwait(false);
-            try{await Task.Run(()=>SaveCore(asset,cancel),cancel).ConfigureAwait(false);}finally{writes.Release();}
+            try{InvalidateReview(asset.Hash);await Task.Run(()=>SaveCore(asset,cancel),cancel).ConfigureAwait(false);}finally{writes.Release();}
         }
         void SaveCore(AudioAsset asset,CancellationToken cancel){
             cancel.ThrowIfCancellationRequested();_=WaveAudio.Inspect(asset.Content,cancel);
@@ -120,8 +130,8 @@ namespace Maestro.Quest.Imports {
         public async Task<Entry[]> ListAsync(CancellationToken cancel=default)=>(await ScanAsync(cancel).ConfigureAwait(false)).RequireComplete();
         internal async Task<ImportedAssetInventory<Entry>> ScanAsync(CancellationToken cancel=default){
             using var use=workspace.Write();await writes.WaitAsync(cancel).ConfigureAwait(false);
-            try{return await Task.Run(()=>ImportedAssetInventory.Scan(directory,".wav",new ImportedAssetReadBudget(MaximumTotalBytes+MaximumFiles,ImportedAssetInventory.MediaMetadataBytes),
-                (path,budget,token)=>{var asset=ReadCore(Path.GetFileNameWithoutExtension(path),token,budget);return new Entry{Hash=asset.Hash,Name=asset.Name,Bytes=asset.Content.Length,Seconds=asset.Inspection.Seconds,Rate=asset.Inspection.Rate,Channels=asset.Inspection.Channels};},cancel),cancel).ConfigureAwait(false);}finally{writes.Release();}
+            try{return await Task.Run(()=>{var snapshot=ImportedAssetInventory.Scan(directory,".wav",new ImportedAssetReadBudget(MaximumTotalBytes+MaximumFiles,ImportedAssetInventory.MediaMetadataBytes),
+                (path,budget,token)=>{var asset=ReadCore(Path.GetFileNameWithoutExtension(path),token,budget);return new Entry{Hash=asset.Hash,Name=asset.Name,Bytes=asset.Content.Length,Seconds=asset.Inspection.Seconds,Rate=asset.Inspection.Rate,Channels=asset.Inspection.Channels};},cancel);snapshot.SourceRevision=InventoryRevision;return snapshot;},cancel).ConfigureAwait(false);}finally{writes.Release();}
         }
         internal bool TryCaptureArchive(out WorkspaceLibraryCapture capture){
             capture=null;if(!writes.Wait(0))return false;

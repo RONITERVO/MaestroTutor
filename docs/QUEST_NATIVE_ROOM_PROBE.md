@@ -2334,3 +2334,40 @@ preserved four pre-existing image files; Headless had none, so its preservation
 check alone is not nonempty-library proof. Removal and restored-file fact screens
 were visually inspected. Evidence is under
 `.quest-evidence/image-reclamation-20261029/` and those native run directories.
+
+
+## Shared finite sound maintenance journey — 2026-10-30
+
+The ordinary full Headless and Book journeys also run
+`probe-audio-maintenance.ts` through client-specific shared-action adapters.
+The leaf creates an exclusive, bounded canonical WAV orphan in the fresh owned
+probe room and records all pre-existing sound bytes. It inspects the exact hash,
+removes only the WAV, preserves the metadata, rejects the stale revision, then
+uses the normal chat offer/selection/preview/acceptance path to restore the exact
+canonical bytes. An unbound imported clip definition must then protect that
+sound, and an actual follow-up removal must be refused. No new room-playback ID
+may appear; previously active sounds may finish during the journey.
+
+Headless repeats the original completed request ID; Book revisits the historical
+receipt through visible controls. These are distinct replay/readback checks.
+Both finish with fresh native file inspection and verify all other sound files
+remain unchanged. The tiny fixture is 9,644 bytes of mono 24 kHz PCM WAV; streamed
+playback lifetime is covered by native tests using longer clips, not inferred
+from this tiny import. Fact requests are derived from the shared catalog so
+parameterless facts omit arguments. All media/replies are synthetic/offline;
+these runs do not establish physical audibility, a Quest file-picker path,
+provider judgment or future compressed-input identity stability.
+
+
+The completed runs are Headless `1338a79cd6694a3482d54a25ace8e191`
+(3,335 acknowledged native requests, 3,110 prepared read sets and 3,111 recorded
+observations) and Book `17ea3e898e534d21a3744c2ef1dac580`
+(2,730 requests / 8,044 observations, zero client errors). Each completes six
+sound-maintenance/import receipts. Six pre-existing audio files in Headless and
+eight in Book remain unchanged; the image regressions preserve four prior Book
+files. Book removal and restored-file fact screens were visually inspected.
+Both clients close cleanly. The first incomplete Headless attempt is retained
+separately: it proved the protection refusal but its driver rejected the native
+interruption suffix. Fourteen exact-response regressions fix that assertion,
+without changing the runtime or accepting unrelated errors. Evidence is under
+`.quest-evidence/audio-reclamation-20261030/` and the named run directories.

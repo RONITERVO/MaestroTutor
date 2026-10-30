@@ -45,6 +45,8 @@ namespace Maestro.Quest.Creation
         }
         internal bool RetainsImageDocument(byte[] bytes,int version,string hash,out bool uncertain)=>file.InspectRetainedReferences(bytes,version,
             room=>(room.appearances??Array.Empty<RoomAppearance>()).Any(appearance=>appearance.style.imageHash==hash),out uncertain);
+        internal bool RetainsAudioDocument(byte[] bytes,int version,string hash,out bool uncertain)=>file.InspectRetainedReferences(bytes,version,
+            room=>(room.audioSources??Array.Empty<RoomAudioDefinition>()).Any(source=>source.kind=="clip"&&source.assetHash==hash),out uncertain);
         internal static void Normalize(RoomDocument room)
         {
             if(room.version<36)room.regions??=Array.Empty<RoomRegion>();

@@ -15,6 +15,22 @@ namespace Maestro.Quest.Imports {
         internal abstract int Read(int frame,short[] destination,int count);
         internal abstract Task Close();
         internal static AudioPcmAsset Resident(short[] samples)=>new Memory(samples);
+        // Direct preparation callers and shared playback both retain the original
+        // imported bytes until the actual decoder/stream close has drained.
+        internal static AudioPcmAsset Retained(AudioPcmAsset source,IDisposable retention)=>new RetainedSource(source,retention);
+        sealed class RetainedSource:AudioPcmAsset {
+            readonly AudioPcmAsset source;readonly object gate=new();IDisposable retention;Task closing;
+            internal RetainedSource(AudioPcmAsset source,IDisposable retention){this.source=source??throw new ArgumentNullException(nameof(source));this.retention=retention??throw new ArgumentNullException(nameof(retention));}
+            internal override bool IsLive=>source.IsLive;
+            internal override int Frames=>source.Frames;
+            internal override long BufferedBytes=>source.BufferedBytes;
+            internal override long CapacityBytes=>source.CapacityBytes;
+            internal override short[] ResidentSamples=>source.ResidentSamples;
+            internal override string Failure=>source.Failure;
+            internal override int Read(int frame,short[] destination,int count)=>source.Read(frame,destination,count);
+            internal override Task Close(){lock(gate)return closing??=Drain();}
+            async Task Drain(){try{await source.Close().ConfigureAwait(false);}finally{System.Threading.Interlocked.Exchange(ref retention,null)?.Dispose();}}
+        }
         sealed class Memory:AudioPcmAsset {
             short[] samples;readonly int frames;
             internal Memory(short[] value){samples=value??throw new ArgumentNullException(nameof(value));frames=value.Length;}

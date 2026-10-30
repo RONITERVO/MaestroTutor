@@ -2,11 +2,18 @@
 
 Status: active implementation. Nothing in this document claims store readiness.
 
-The latest [guarded image payload cleanup](#shared-image-payload-reclamation--2026-10-30)
+The latest [guarded finite sound cleanup](#shared-finite-sound-reclamation--2026-10-30)
+extends the shared inspection/removal path to imported audio, including exact
+workspace admission and actual decoder/stream closure. Canonical sound identity,
+retained references and historical receipts are preserved. Native, full offline
+Headless/Book and unsigned Android checks pass; physical acceptance and model
+payload cleanup remain separate.
+
+The preceding [guarded image payload cleanup](#shared-image-payload-reclamation--2026-10-30)
 adds an explicit shared user/agent inspection and removal path, fresh retained
 reference checks and per-image lifetime protection. Exact reimport restores the
-identity; historical requests cannot remove its restored bytes. Sound and model
-payload cleanup remain separate work.
+identity; historical requests cannot remove its restored bytes. At that image-only
+checkpoint, sound and model payload cleanup remained separate work.
 
 The preceding [shared partial asset discovery](#shared-partial-imported-asset-discovery--2026-10-29)
 keeps healthy models, pictures and sounds discoverable when a sibling import is
@@ -18840,3 +18847,87 @@ All 4,726 frozen source inputs match before and after the run. The project is
 was produced. Publication/CI evidence is recorded on the draft PR after push.
  Device/paid-provider/signing/deployment/Meta holds remain in force;
 no new physical, provider or Store acceptance is claimed.
+
+
+## Shared finite sound reclamation — 2026-10-30
+
+`audio.library.inspect`, `audio.library.edit` and `audio.library.review` extend
+the same revision-guarded native workflow to finite imported clips. Typed WAV
+validation stays in the sound library; saved-reference traversal, program/runtime
+identity checks, workspace holds and per-asset retirement use the shared system.
+The book uses generated current-value/confirmation controls. Agent and program
+calls get the same actual result and refusal. One-off removal is validated; a
+saved program containing the target hash also protects that sound.
+
+Reads and preparation acquire an exact workspace/audio/hash pin before admission.
+Returned resident/streamed PCM assets hold it until actual Close drains. Shared
+playback entries additionally retain their admission through failures and last-
+owner cancellation. Cached reuse must match the same workspace fence and pass
+fresh admission. This preserves paused, looping and room-owned users, while
+ordinary workspace preservation remains compatible with retained readers. Name
+metadata and canonical identity survive removal; no playback is started.
+
+Fresh retained-file proof includes clip definitions in supported room versions,
+including unbound, current/saved/temporary/in-flight and Undo/Redo sources. Generic
+behaviour/module/memory/live references remain shared with image maintenance.
+Unknown or bounded-out evidence refuses removal. A bounded damaged orphan may be
+removed under the same exact-file and complete-reference proof; corruption alone
+is not deletion authority. Inventory generations and cached file reviews become
+stale after accepted import/removal. Completed preview bookkeeping drops its
+large decoded input while preserving compact historical fields.
+
+Exact canonical WAV reimport restores its hash. MP3/Ogg inputs are normalized,
+so future decoder output is not promised to recreate identical bytes; the name
+sidecar does not preserve full compressed-source provenance. Live streams,
+procedural audio, conversational speech and model payloads are separate lifetimes.
+Stop before dispatch cancels; after dispatch an operation may finish while its
+caller stops waiting. Historical replay cannot remove restored bytes.
+
+The final full EditMode sweep passes 2,001 tests, with zero failures and five
+filesystem-link skips caused by Windows privilege limitations. All 95 affected
+PlayMode cases pass, including actual playback, shared paused/looping owners,
+worker drain, room ownership, exact reimport and historical receipt replay. Two
+new fixtures were corrected: legacy imported clips require supported format 33
+rather than rejected format 32, and playback handoff must wait for consumed
+samples rather than renderer creation. Neither correction changes runtime guards.
+The shared catalog exports 147 actions, 247 facts, 19 events and eleven guides.
+Focused generated UI, current-input and image/audio probe checks pass 162 tests
+across the original sweep and affected follow-up (overlapping counts excluded).
+App/probe TypeScript and scoped lint pass.
+
+The first actual Headless run correctly refused removal of the restored sound,
+but its driver expected only the retention reason and rejected the action
+system's appended interruption guidance. Its accepted payload remains intact;
+that incomplete run is not counted as a successful journey. Fourteen additional
+regressions accept only the exact native decorated failure on the matching receipt
+and reject malformed, unrelated or transport-only lookalikes. The native runtime
+is unchanged. Fresh full Headless `1338a79cd6694a3482d54a25ace8e191`
+and Book `17ea3e898e534d21a3744c2ef1dac580` journeys pass and close cleanly.
+Headless records 3,335 acknowledged native requests, 3,110 prepared read sets and
+3,111 observations; Book records 2,730 requests / 8,044 observations and zero
+client errors. Each completes six audio-maintenance/import receipts. All six
+pre-existing Headless sound files and eight Book sound files retain their hashes;
+image regressions also preserve four prior Book files. Exact reimport survives
+Headless duplicate-start replay and Book historical-result inspection. Fresh
+native file reads confirm both results, and no new playback starts. Removal and
+restored-file fact screens were visually inspected. Independent receipt/file
+reviews report no inconsistency. These are offline desktop checks, with scripted
+replies and media; physical or real-provider acceptance is not inferred.
+
+The production web build and native-browser AAR/lint pass. Native-browser unit
+reports contain 128 passes and two skips, reused by Gradle. Fresh unsigned
+Android export and selected compile/manifest/merge tasks pass in
+`Android-compile-20261030-003902-f6f36527`: five export warnings, zero errors,
+22 selected ARM64 libraries with 16 KiB ELF LOAD alignment and five unselected
+dependency libraries in the intermediate. No APK/AAB was produced. All 4,748
+frozen source inputs match before and after the build. The final staged check
+then removed only terminal blank lines in three probe files; that byte-only
+cleanup is separately recorded, and native/runtime inputs are unchanged.
+Evidence is under `.quest-evidence/audio-reclamation-20261030/`; commit-specific
+CI results are recorded in the draft PR.
+
+Device, paid-provider, signing, deployment and Meta holds remain authoritative.
+Model payload cleanup still needs its own complete avatar/motion/geometry/acoustic
+admission audit. Physical audio quality, comfort, Quest performance, provider and
+Store acceptance remain incomplete and are not established by these offline
+maintenance checks.

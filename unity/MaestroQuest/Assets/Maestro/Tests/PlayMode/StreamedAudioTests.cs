@@ -25,7 +25,7 @@ namespace Maestro.Quest.Tests {
             var audio=WorldAudio.For(editor);Assert.IsTrue(audio.Begin("book","sound",out var voice,out var error),error);
             double deadline=Time.realtimeSinceStartupAsDouble+45;
             while(!voice.Output&&!voice.Closed&&Time.realtimeSinceStartupAsDouble<deadline)yield return null;
-            Assert.IsNotNull(voice.Output,voice.Error);Assert.IsNull(voice.Samples);Assert.IsInstanceOf<WavePcmAsset>(voice.Asset);
+            Assert.IsNotNull(voice.Output,voice.Error);Assert.IsNull(voice.Samples);Assert.AreEqual(32*WaveAudio.OutputRate,voice.Asset.Frames);
             var asset=voice.Asset;Assert.Less(asset.CapacityBytes,32*24000*2);Assert.IsTrue(editor.WriteGate.CanFreeze(out _));
             while(!voice.Closed&&Time.realtimeSinceStartupAsDouble<deadline){Assert.LessOrEqual(asset.BufferedBytes,asset.CapacityBytes);yield return null;}
             Assert.IsTrue(voice.Closed,voice.Error);Assert.IsTrue(voice.Complete,voice.Error);Assert.That(voice.Cursor,Is.EqualTo(32).Within(.001));

@@ -25,7 +25,7 @@ declare global {interface Window {
  nativeBookCredentials?:()=>Promise<{mode:'byok';apiKey:string}|{mode:'managed';session:ManagedAccessSession;appCheckToken:string}>;
  nativeBookStop?:()=>void;
  nativeBookChatImage?:(synthetic?:{dataUrl:string;name:string})=>string;
- nativeBookChatAudio?:(dataUrl:string)=>void;
+ nativeBookChatAudio?:(dataUrl:string,name?:string)=>void;
  maestroNativeExchange?:(snapshot:ReturnType<RoomAgentClient['snapshot']>)=>Promise<{state?:unknown;capture?:unknown}>;
  nativeBookEvidence?:()=>{state:RoomAgentState|null;errors:string[];messages:ReturnType<typeof useMaestroStore.getState>['messages'];agentWorking:boolean;inputBlocked:boolean};
  nativeBookTask?:(id:string)=>ReturnType<typeof roomTaskStore.get>;
@@ -61,10 +61,11 @@ window.nativeBookChatImage=(synthetic)=>{
  store.addMessage({role:'assistant',text:'Synthetic chat texture fixture.',imageUrl:dataUrl,imageMimeType:'image/png',imageOrigin:'generated',attachmentName:'Chat checker.png'});
  return dataUrl;
 };
-window.nativeBookChatAudio=(dataUrl)=>{
+window.nativeBookChatAudio=(dataUrl,name)=>{
  const mime=/^data:(audio\/(?:wav|mpeg|ogg));base64,/.exec(dataUrl)?.[1];if(!mime)throw new Error('Unsupported synthetic sound fixture');
+ if(name!==undefined&&(!/^Maintenance orphan [a-f0-9]{8} book\.wav$/.test(name)||!/^data:audio\/wav;base64,[A-Za-z0-9+/]+={0,2}$/.test(dataUrl)||dataUrl.length>32768))throw new Error('Unsupported synthetic maintenance sound fixture');
  const extension=mime==='audio/mpeg'?'mp3':mime==='audio/ogg'?'ogg':'wav';
- store.addMessage({role:'assistant',text:'Synthetic generated rain sound.',imageUrl:dataUrl,imageMimeType:mime,maestroToolKind:'audio-note',attachmentName:`Chat rain.${extension}`});
+ store.addMessage({role:'assistant',text:name?'Explicit synthetic original sound for reimport.':'Synthetic generated rain sound.',imageUrl:dataUrl,imageMimeType:mime,maestroToolKind:'audio-note',attachmentName:name??`Chat rain.${extension}`});
 };
 const errors:string[]=[];let observed:RoomAgentState|null=null,busy=false;
 window.nativeBookEvidence=()=>({state:observed,errors:[...errors],messages:useMaestroStore.getState().messages,agentWorking:selectIsAgentWorking(useMaestroStore.getState()),inputBlocked:selectIsSending(useMaestroStore.getState())});

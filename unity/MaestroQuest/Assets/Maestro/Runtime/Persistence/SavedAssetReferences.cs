@@ -86,9 +86,24 @@ namespace Maestro.Quest.Persistence
         static bool DocumentSuffix(string suffix)=>suffix is "" or ".backup" or ".pending" or ".unreadable"||
             suffix!=null&&suffix.StartsWith(".prepare.",StringComparison.Ordinal)&&Guid.TryParseExact(suffix.Substring(9),"N",out _);
         static bool Family(string name,string stem)=>name.StartsWith(stem+".",StringComparison.OrdinalIgnoreCase);
+        delegate bool RoomReferences(RoomStorage storage,byte[] bytes,int version,string identity,out bool uncertain);
         internal static SavedAssetReferenceProof ReadImages(string saveDirectory,string imageHash,CancellationToken token=default)
         {
             if(!ModelLibrary.ValidHash(imageHash))throw new ArgumentException("Choose an exact image identity.",nameof(imageHash));
+            return Read(saveDirectory,imageHash,static (RoomStorage storage,byte[] bytes,int version,string identity,out bool uncertain)=>
+                storage.RetainsImageDocument(bytes,version,identity,out uncertain),token);
+        }
+        internal static SavedAssetReferenceProof ReadAudio(string saveDirectory,string assetHash,CancellationToken token=default)
+        {
+            if(!ModelLibrary.ValidHash(assetHash))throw new ArgumentException("Choose an exact audio identity.",nameof(assetHash));
+            return Read(saveDirectory,assetHash,static (RoomStorage storage,byte[] bytes,int version,string identity,out bool uncertain)=>
+                storage.RetainsAudioDocument(bytes,version,identity,out uncertain),token);
+        }
+        // Only the validated room selector differs by kind. Stored programs,
+        // modules and remembered values conservatively retain exact identities
+        // regardless of the eventual action that may consume them.
+        static SavedAssetReferenceProof Read(string saveDirectory,string identity,RoomReferences roomReferences,CancellationToken token)
+        {
             string directory=Path.GetFullPath(saveDirectory);var audit=new Audit();
             try{
                 token.ThrowIfCancellationRequested();WorkspaceFileInventory.Parents(directory);
@@ -109,16 +124,16 @@ namespace Maestro.Quest.Persistence
                             bool room=Family(name,"room");string stem=room?"room":"behaviours";
                             if(!Versioned(name,stem,out int version,out string suffix)||!DocumentSuffix(suffix)){audit.Unknown();continue;}
                             byte[] bytes=audit.Read(path,room?4*1024*1024:512*1024,token);bool uncertain;
-                            bool retained=room?rooms.RetainsImageDocument(bytes,version,imageHash,out uncertain):rules.RetainsAssetDocument(bytes,version,imageHash,out uncertain);
+                            bool retained=room?roomReferences(rooms,bytes,version,identity,out uncertain):rules.RetainsAssetDocument(bytes,version,identity,out uncertain);
                             if(retained)audit.Found(room?"Saved room or retained room history":"Saved behaviour or retained behaviour history");if(uncertain)audit.Unknown();continue;
                         }
                         if(Family(name,"program-memory")){
                             if(!Versioned(name,"program-memory",out int version,out string suffix)||version!=1||!(suffix is "" or ".backup"||suffix.StartsWith(".pending.",StringComparison.Ordinal)&&Guid.TryParseExact(suffix.Substring(9),"N",out _))){audit.Unknown();continue;}
-                            if(ProgramMemoryDocument.Decode(audit.Read(path,ProgramMemoryDocument.MaximumBytes,token)).Retains(imageHash))audit.Found("Saved remembered behaviour value");continue;
+                            if(ProgramMemoryDocument.Decode(audit.Read(path,ProgramMemoryDocument.MaximumBytes,token)).Retains(identity))audit.Found("Saved remembered behaviour value");continue;
                         }
                         if(Family(name,"program-modules")){
                             if(name!="program-modules.v1"){audit.Unknown();continue;}
-                            ReadModules(audit,path,imageHash,token);
+                            ReadModules(audit,path,identity,token);
                         }
                     }catch(Exception error) when(Expected(error)){audit.Unknown();}
                 }

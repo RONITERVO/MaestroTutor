@@ -484,6 +484,55 @@ it('invalidates image removal confirmation on identity edits and cannot use an u
  expect((screen.getByRole('button',{name:'Run action now'}) as HTMLButtonElement).disabled).toBe(true);expect(screen.queryByRole('button',{name:'Confirm permanent action'})).toBeNull();expect(client.snapshot().request).toBeNull();
  act(()=>client.cancel());
 });
+it('loads the exact sound review guard and removes only after confirmation of that exact call',async()=>{
+ const {client,screen,receive}=setup(true,['audioLibraryMaintenance.v1','execution.v1','actionResults.v1']);
+ const definition=capabilityDefinition('audio.library.edit')!,fact=behaviourFact('audio.library.review')!,assetHash='a'.repeat(64),inspectionRevision='b'.repeat(64),runId='c'.repeat(32);
+ expect(definition.input['x-confirmation']).toContain('There is no Undo');
+ await receive(undefined,false,{execution:{selected:null,running:[],outcomes:[],nextRunId:runId,storageError:null}});
+ fireEvent.click(screen.getByRole('button',{name:'Action catalog'}));fireEvent.click(screen.getByRole('button',{name:'Search'}));
+ await receive({operation:'search',query:'',offset:0,total:1,pageSize:6,entries:[{id:definition.id,version:definition.version,label:definition.label}],status:'Inspect sound maintenance'});
+ fireEvent.click(screen.getByRole('button',{name:new RegExp(definition.label)}));await receive({operation:'inspect',capability:definition.id,version:definition.version,definition,status:'Review exact sound'});
+ fireEvent.change(screen.getByLabelText('Action inputs assetHash'),{target:{value:assetHash}});
+ expect((screen.getByLabelText('Action inputs inspectionRevision') as HTMLInputElement).readOnly).toBe(true);
+ expect((screen.getByRole('button',{name:'Run action now'}) as HTMLButtonElement).disabled).toBe(true);
+ fireEvent.click(screen.getByRole('button',{name:'Load current values'}));
+ expect(client.snapshot().request?.commands).toEqual([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:fact.id,version:fact.version,arguments:{assetHash}}}]);
+ await receive({operation:'inspect',category:'facts',capability:fact.id,version:fact.version,definition:fact,arguments:{assetHash},available:true,
+  value:{assetHash,inspectionRevision,name:'Reviewed sound',payloadPresent:true,metadataPresent:true,contentValid:true,payloadBytes:80},status:'Reviewed file identity only'});
+ const args={assetHash,inspectionRevision};
+ expect(JSON.parse((screen.getByLabelText('Action arguments') as HTMLTextAreaElement).value)).toEqual(args);
+ expect(client.snapshot().request).toBeNull();
+ fireEvent.click(screen.getByRole('button',{name:'Run action now'}));
+ expect(screen.getByRole('region',{name:'Confirm permanent action'}).textContent).toContain(definition.input['x-confirmation']);
+ expect(client.snapshot().request).toBeNull();fireEvent.click(screen.getByRole('button',{name:'Cancel confirmation'}));
+ expect(screen.queryByRole('button',{name:'Confirm permanent action'})).toBeNull();expect(client.snapshot().request).toBeNull();
+ fireEvent.click(screen.getByRole('button',{name:'Run action now'}));fireEvent.click(screen.getByRole('button',{name:'Confirm permanent action'}));
+ expect(client.snapshot().request?.commands).toEqual([{action:'execution',execution:{operation:'start',runId,call:{id:definition.id,version:definition.version,arguments:args}}}]);
+ act(()=>client.cancel());
+});
+it('invalidates sound removal confirmation on identity edits and cannot use an unavailable or stale review',async()=>{
+ const {client,screen,receive}=setup(true,['audioLibraryMaintenance.v1','execution.v1','actionResults.v1']);
+ const definition=capabilityDefinition('audio.library.edit')!,fact=behaviourFact('audio.library.review')!,first='a'.repeat(64),second='b'.repeat(64),revision='c'.repeat(64);
+ await receive(undefined,false,{execution:{selected:null,running:[],outcomes:[],nextRunId:'d'.repeat(32),storageError:null}});
+ fireEvent.click(screen.getByRole('button',{name:'Action catalog'}));fireEvent.click(screen.getByRole('button',{name:'Search'}));
+ await receive({operation:'search',query:'',offset:0,total:1,pageSize:6,entries:[{id:definition.id,version:definition.version,label:definition.label}],status:'Image maintenance'});
+ fireEvent.click(screen.getByRole('button',{name:new RegExp(definition.label)}));await receive({operation:'inspect',capability:definition.id,version:definition.version,definition,status:'Image removal'});
+ const review=(hash:string):Extract<CatalogView,{operation:'inspect';category:'facts'}>=>({operation:'inspect',category:'facts',capability:fact.id,version:fact.version,definition:fact,arguments:{assetHash:hash},available:true,
+  value:{assetHash:hash,inspectionRevision:revision,name:'Reviewed sound',payloadPresent:true,metadataPresent:true,contentValid:true,payloadBytes:80},status:'Reviewed sound'});
+ fireEvent.change(screen.getByLabelText('Action inputs assetHash'),{target:{value:first}});fireEvent.click(screen.getByRole('button',{name:'Load current values'}));await receive(review(first));
+ fireEvent.click(screen.getByRole('button',{name:'Run action now'}));expect(screen.getByRole('button',{name:'Confirm permanent action'})).toBeTruthy();
+ fireEvent.change(screen.getByLabelText('Action inputs assetHash'),{target:{value:second}});
+ expect(screen.queryByRole('button',{name:'Confirm permanent action'})).toBeNull();expect((screen.getByRole('button',{name:'Run action now'}) as HTMLButtonElement).disabled).toBe(true);
+ fireEvent.click(screen.getByRole('button',{name:'Load current values'}));
+ expect(client.snapshot().request?.commands[0]).toEqual({action:'catalog',catalog:{operation:'inspect',category:'facts',capability:fact.id,version:fact.version,arguments:{assetHash:second}}});
+ await receive({...review(second),available:false,value:null,status:'Inspect this sound first'});
+ expect(screen.getByText('Inspect this sound first')).toBeTruthy();expect((screen.getByRole('button',{name:'Run action now'}) as HTMLButtonElement).disabled).toBe(true);expect(client.snapshot().request).toBeNull();
+ fireEvent.click(screen.getByRole('button',{name:'Load current values'}));
+ fireEvent.change(screen.getByLabelText('Action inputs assetHash'),{target:{value:first}});await receive(review(second));
+ expect(JSON.parse((screen.getByLabelText('Action arguments') as HTMLTextAreaElement).value).assetHash).toBe(first);
+ expect((screen.getByRole('button',{name:'Run action now'}) as HTMLButtonElement).disabled).toBe(true);expect(screen.queryByRole('button',{name:'Confirm permanent action'})).toBeNull();expect(client.snapshot().request).toBeNull();
+ act(()=>client.cancel());
+});
 it.each(['removeDownload','forgetMotion'])('confirms the exact motion %s variant and invalidates approval when its draft changes',async operation=>{
  const {client,screen,receive}=setup(true,['motionLibraryMaintenance.v1','execution.v1','actionResults.v1']);
  const definition=capabilityDefinition('motion.library.edit')!,motionId='a'.repeat(32),entryRevision='b'.repeat(64),runId='c'.repeat(32);

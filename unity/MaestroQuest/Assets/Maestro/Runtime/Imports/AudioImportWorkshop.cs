@@ -11,7 +11,7 @@ namespace Maestro.Quest.Imports {
     /// <summary>One explicit selected-file owner. File bytes stay private; only bounded
     /// inspection and accepted identities cross the shared capability interface.</summary>
     public sealed class AudioImportWorkshop:MonoBehaviour {
-        RoomEditor editor;IModelPicker picker;AudioAsset asset;IDisposable lease;CancellationTokenSource cancel;
+        RoomEditor editor;IModelPicker picker;AudioAsset asset;JObject lastPreview;IDisposable lease;CancellationTokenSource cancel;
         internal readonly ChatAudioTransfer Chat=new();
         bool fromChat;string chatHash="";
         string request="",phase="idle",error="",source="";int revision;bool paused,focused=true,disposed,working;float began,nextPoll;
@@ -43,7 +43,7 @@ namespace Maestro.Quest.Imports {
             if(choose){try{if(picker==null||!picker.ReadyToStart)return false;}catch(Exception){return false;}}
             issue=null;return true;
         }
-        void Begin(){fromChat=false;chatHash="";Chat.Stop();lease=editor.WriteGate.Write();cancel=new();request=Guid.NewGuid().ToString("N");error="";source="";revision=0;asset=null;began=Time.realtimeSinceStartup;}
+        void Begin(){fromChat=false;chatHash="";Chat.Stop();lease=editor.WriteGate.Write();cancel=new();request=Guid.NewGuid().ToString("N");error="";source="";revision=0;asset=null;lastPreview=null;began=Time.realtimeSinceStartup;}
         internal string Select(){
             if(!CanStart(true,out var issue))throw new InvalidOperationException(issue);Begin();phase="selecting";
             try{picker.Start(request);}catch(Exception){Fail("The sound chooser could not open. Resume Maestro and try again.");ReleasePicker(request);End();}
@@ -52,7 +52,7 @@ namespace Maestro.Quest.Imports {
         internal bool CanSelectChat(string set,string hash,out string issue)=>CanStart(false,out issue)&&Chat.CanSelect(set,hash,out issue);
         internal string SelectChat(string set,string hash){
             if(!CanSelectChat(set,hash,out var issue))throw new InvalidOperationException(issue);
-            Begin();fromChat=true;chatHash=hash;phase="receiving";Chat.Start(request,set,hash,Time.realtimeSinceStartupAsDouble);return request;
+            Begin();fromChat=true;chatHash=hash;phase="receiving";try{Chat.Start(request,set,hash,Time.realtimeSinceStartupAsDouble);}catch{End();throw;}return request;
         }
         internal void SyncChat(string session,JObject wire){
             string previous=Chat.OfferSet;
@@ -140,17 +140,20 @@ namespace Maestro.Quest.Imports {
             catch(Exception){listError="Sound-library inspection failed. Existing files are preserved; repair or reimport the damaged sound.";Fail(listError);throw;}
             finally{working=false;End();}
         }
-        internal JObject Receipt()=>new(){["requestId"]=request,["assetHash"]=asset?.Hash??"",["sourceId"]=source,["revision"]=revision,["temporary"]=editor&&editor.TemporaryRoom,["library"]=Library(0,1),["inventory"]=ImportedInventoryObservation.Summary(inventory,listError)};
-        internal JObject Observe()=>new(){["requestId"]=request,["phase"]=phase,["error"]=ImportObservation.Text(error),["preview"]=new JObject {["assetHash"]=asset?.Hash??"",["name"]=ImportObservation.Text(asset?.Name??""),["seconds"]=asset?.Inspection.Seconds??0,["sampleRate"]=asset?.Inspection.Rate??0,["channels"]=asset?.Inspection.Channels??0,["kibibytes"]=(asset?.Content.Length??0)/1024d},["sourceId"]=source,["revision"]=revision};
+        ImportedAssetInventory<AudioLibrary.Entry> CurrentInventory=>inventory!=null&&inventory.SourceRevision==editor.Sounds.InventoryRevision?inventory:null;
+        string CurrentListError=>inventory!=null&&CurrentInventory==null?"Library changed; refresh to inspect saved files.":listError;
+        internal JObject Receipt()=>new(){["requestId"]=request,["assetHash"]=asset?.Hash??(string)(lastPreview?["assetHash"])??"",["sourceId"]=source,["revision"]=revision,["temporary"]=editor&&editor.TemporaryRoom,["library"]=Library(0,1),["inventory"]=ImportedInventoryObservation.Summary(CurrentInventory,CurrentListError)};
+        internal JObject Observe()=>new(){["requestId"]=request,["phase"]=phase,["error"]=ImportObservation.Text(error),["preview"]=asset!=null?Preview(asset):lastPreview?.DeepClone()??Preview(null),["sourceId"]=source,["revision"]=revision};
         internal JObject Library(int offset,int pageSize=2){
-            bool listed=inventory?.Ready==true;var entries=inventory?.Entries??Array.Empty<AudioLibrary.Entry>();
+            var current=CurrentInventory;bool listed=current?.Ready==true;var entries=current?.Entries??Array.Empty<AudioLibrary.Entry>();
             var page=listed?entries.Skip(offset).Take(pageSize).ToArray():Array.Empty<AudioLibrary.Entry>();
-            return new JObject {["ready"]=listed,["error"]=ImportObservation.Text(listError),["total"]=listed?entries.Length:0,["next"]=listed&&offset+page.Length<entries.Length?offset+page.Length:-1,["entries"]=new JArray(page.Select(e=>new JObject {["id"]=e.Hash,["name"]=ImportObservation.Text(e.Name),["seconds"]=e.Seconds,["sampleRate"]=e.Rate,["channels"]=e.Channels}))};
+            return new JObject {["ready"]=listed,["error"]=ImportObservation.Text(CurrentListError),["total"]=listed?entries.Length:0,["next"]=listed&&offset+page.Length<entries.Length?offset+page.Length:-1,["entries"]=new JArray(page.Select(e=>new JObject {["id"]=e.Hash,["name"]=ImportObservation.Text(e.Name),["seconds"]=e.Seconds,["sampleRate"]=e.Rate,["channels"]=e.Channels}))};
         }
+        static JObject Preview(AudioAsset value)=>new(){["assetHash"]=value?.Hash??"",["name"]=ImportObservation.Text(value?.Name??""),["seconds"]=value?.Inspection.Seconds??0,["sampleRate"]=value?.Inspection.Rate??0,["channels"]=value?.Inspection.Channels??0,["kibibytes"]=(value?.Content.Length??0)/1024d};
         void Fail(string value){phase="failed";error=ImportObservation.Text(value);}
         void ReleasePicker(string id){try{picker?.Release(id);}catch(Exception){error="The selected stream is still closing. Resume Maestro before choosing another.";}}
-        void End(){Chat.Stop();lease?.Dispose();lease=null;cancel?.Dispose();cancel=null;}
-        void Close(){Chat.Clear();disposed=true;cancel?.Cancel();if(working)return;ReleasePicker(request);if(lease!=null)phase="cancelled";End();asset=null;}
+        void End(){if(asset!=null)lastPreview=Preview(asset);asset=null;Chat.Stop();lease?.Dispose();lease=null;cancel?.Dispose();cancel=null;}
+        void Close(){Chat.Clear();disposed=true;cancel?.Cancel();if(working)return;ReleasePicker(request);if(lease!=null)phase="cancelled";End();asset=null;lastPreview=null;}
         void OnEnable()=>disposed=false;
         void OnApplicationPause(bool value){paused=value;if(value)ClearChat();}
         void OnApplicationFocus(bool value){focused=value;if(!value)ClearChat();}

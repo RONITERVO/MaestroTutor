@@ -71,9 +71,9 @@ namespace Maestro.Quest.Creation
             var v=new Instance {Id=Guid.NewGuid().ToString("N"),Target=target,Emitter=emitter,Source=definition.id,SourceRevision=editor.AudioRevision(definition.id),ObjectRevision=editor.ObjectRevision(target),ProgressAt=Time.realtimeSinceStartupAsDouble,Session=editor.TemporarySessionId,Item=item,Attachment=config.Copy(),Definition=JsonUtility.ToJson(config),CacheKey=JsonUtility.ToJson(definition),Loop=loop,Gain=config.gain,IsLive=definition.kind=="stream",LiveSync=definition.kind=="stream"};
             if(v.IsLive)v.CacheKey+=":"+v.Id;
             try {
-                decoded.TryGetValue(v.CacheKey,out var cached);var recipe=definition.Copy();
+                decoded.TryGetValue(v.CacheKey,out var cached);var recipe=definition.Copy();var sounds=editor.Sounds;
                 v.Resource=AudioReservations.AcquireSource(cached,recipe,new RoomResourceOwner(editor.WorldIdentity,target,"audio"),v.Id,emitter,v.SourceRevision,
-                    cancel=>recipe.kind=="stream"?LiveAudioHttp.Open(recipe.endpoint,cancel):recipe.kind=="clip"?editor.Sounds.PrepareAsync(recipe.assetHash,recipe.seconds,cancel):Task.Run(()=>{var floats=AudioTone.Render(recipe,cancel);var pcm=new short[floats.Length];for(int i=0;i<pcm.Length;i++){if((i&1023)==0)cancel.ThrowIfCancellationRequested();pcm[i]=(short)Math.Round(floats[i]*short.MaxValue);}return AudioPcmAsset.Resident(pcm);},cancel));
+                    cancel=>recipe.kind=="stream"?LiveAudioHttp.Open(recipe.endpoint,cancel):recipe.kind=="clip"?sounds.PrepareAsync(recipe.assetHash,recipe.seconds,cancel):Task.Run(()=>{var floats=AudioTone.Render(recipe,cancel);var pcm=new short[floats.Length];for(int i=0;i<pcm.Length;i++){if((i&1023)==0)cancel.ThrowIfCancellationRequested();pcm[i]=(short)Math.Round(floats[i]*short.MaxValue);}return AudioPcmAsset.Resident(pcm);},cancel),recipe.kind=="clip"?sounds.Assets:null);
                 decoded[v.CacheKey]=v.Resource.Resource;instances.Add(v.Id,v);Note(v);voice=v;error=null;return true;
             } catch(Exception e){Close(v,e.Message);error="Could not prepare room sound: "+e.Message;return false;}
         }

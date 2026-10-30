@@ -4472,6 +4472,248 @@
       }
     },
     {
+      "id": "audio.library.edit",
+      "version": 1,
+      "label": "Remove an unused sound download",
+      "input": {
+        "type": "object",
+        "properties": {
+          "assetHash": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "maxLength": 64
+          },
+          "inspectionRevision": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "maxLength": 64
+          }
+        },
+        "required": [
+          "assetHash",
+          "inspectionRevision"
+        ],
+        "additionalProperties": false,
+        "x-current": {
+          "fact": "audio.library.review",
+          "version": 1,
+          "arguments": {
+            "assetHash": "assetHash"
+          },
+          "fields": {
+            "inspectionRevision": [
+              "inspectionRevision"
+            ]
+          },
+          "guards": [
+            "inspectionRevision"
+          ]
+        },
+        "x-confirmation": "Remove this unused sound's local download? Its identity and name metadata remain. Reimport the exact stored WAV to restore its bytes; MP3/Ogg decoding may produce a different hash. There is no Undo, and Stop cannot reverse a deletion already started.",
+        "x-features": [
+          "audioLibraryMaintenance.v1"
+        ]
+      },
+      "duration": "completion",
+      "ownership": "audioLibraryWrite",
+      "channels": [],
+      "requirements": [],
+      "description": "Remove only an unused sound's private payload after audio.library.inspect. Pass its exact assetHash and inspectionRevision. Current or unbound clip sources, Undo/Redo, saved/recovery data, reusable programs/modules, remembered or live values, and loading/playback pins protect the bytes; uncertain evidence also refuses deletion. Checks repeat under a workspace edit hold and per-asset admission fence immediately before dispatch. The complete display-name sidecar, identity and source export remain; reimporting the exact canonical stored WAV restores its hash. MP3/Ogg input hashes differ from normalized WAV hashes; future decoding is not promised to reproduce identical bytes. A bounded damaged payload can be removed only after the same exact revision and unused-reference proof; contentValid:false alone is not permission. No Undo. Request removal only when the user asked for it; inspection never authorizes deletion. Existing library facts become refresh-needed. Stop before dispatch prevents removal; after dispatch the operation drains and may delete after Stop. An uncertain result requires inspecting the file and historical receipt before another explicit request. Historical replay never deletes again.",
+      "example": {
+        "assetHash": "0000000000000000000000000000000000000000000000000000000000000000",
+        "inspectionRevision": "0000000000000000000000000000000000000000000000000000000000000000"
+      },
+      "output": {
+        "type": "object",
+        "properties": {
+          "removed": {
+            "type": "boolean"
+          },
+          "previousRevision": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "maxLength": 64
+          },
+          "entry": {
+            "type": "object",
+            "properties": {
+              "assetHash": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$",
+                "maxLength": 64
+              },
+              "inspectionRevision": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$",
+                "maxLength": 64
+              },
+              "name": {
+                "type": "string",
+                "pattern": "^[^\\u0000-\\u001f]{0,80}$",
+                "maxLength": 80
+              },
+              "payloadPresent": {
+                "type": "boolean"
+              },
+              "metadataPresent": {
+                "type": "boolean"
+              },
+              "contentValid": {
+                "type": "boolean"
+              },
+              "payloadBytes": {
+                "type": "integer",
+                "minimum": 0.0,
+                "maximum": 33554432.0
+              }
+            },
+            "required": [
+              "assetHash",
+              "inspectionRevision",
+              "name",
+              "payloadPresent",
+              "metadataPresent",
+              "contentValid",
+              "payloadBytes"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "removed",
+          "previousRevision",
+          "entry"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "id": "audio.library.inspect",
+      "version": 1,
+      "label": "Inspect a sound download",
+      "input": {
+        "type": "object",
+        "properties": {
+          "assetHash": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "maxLength": 64
+          }
+        },
+        "required": [
+          "assetHash"
+        ],
+        "additionalProperties": false,
+        "x-features": [
+          "audioLibraryMaintenance.v1"
+        ]
+      },
+      "duration": "completion",
+      "ownership": "none",
+      "channels": [],
+      "requirements": [],
+      "description": "Inspect one exact sound content hash, its bounded private payload/name metadata, and current, Undo/Redo, saved/recovery, module, remembered and live-program references. Also reports pending decode, playback and streaming users. Reads retained files off-thread without repairing them. inspectionRevision fingerprints exact inspected file content/presence, not deletion permission; removal always checks again. Unavailable evidence protects the download. Read audio.library for imported hashes first. The passive audio.library.review fact keeps only the last bounded file inspection, never a fresh safety proof.",
+      "example": {
+        "assetHash": "0000000000000000000000000000000000000000000000000000000000000000"
+      },
+      "output": {
+        "type": "object",
+        "properties": {
+          "entry": {
+            "type": "object",
+            "properties": {
+              "assetHash": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$",
+                "maxLength": 64
+              },
+              "inspectionRevision": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$",
+                "maxLength": 64
+              },
+              "name": {
+                "type": "string",
+                "pattern": "^[^\\u0000-\\u001f]{0,80}$",
+                "maxLength": 80
+              },
+              "payloadPresent": {
+                "type": "boolean"
+              },
+              "metadataPresent": {
+                "type": "boolean"
+              },
+              "contentValid": {
+                "type": "boolean"
+              },
+              "payloadBytes": {
+                "type": "integer",
+                "minimum": 0.0,
+                "maximum": 33554432.0
+              }
+            },
+            "required": [
+              "assetHash",
+              "inspectionRevision",
+              "name",
+              "payloadPresent",
+              "metadataPresent",
+              "contentValid",
+              "payloadBytes"
+            ],
+            "additionalProperties": false
+          },
+          "usage": {
+            "type": "object",
+            "properties": {
+              "current": {
+                "type": "boolean"
+              },
+              "history": {
+                "type": "boolean"
+              },
+              "saved": {
+                "type": "boolean"
+              },
+              "runtime": {
+                "type": "boolean"
+              },
+              "inUse": {
+                "type": "boolean"
+              },
+              "uncertain": {
+                "type": "boolean"
+              },
+              "canRemove": {
+                "type": "boolean"
+              },
+              "protection": {
+                "type": "string",
+                "pattern": "^.{0,512}$",
+                "maxLength": 512
+              }
+            },
+            "required": [
+              "current",
+              "history",
+              "saved",
+              "runtime",
+              "inUse",
+              "uncertain",
+              "canRemove",
+              "protection"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "entry",
+          "usage"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
       "id": "audio.source.edit",
       "version": 1,
       "label": "Create or edit a reusable sound",
@@ -41176,6 +41418,44 @@
       ]
     },
     {
+      "id": "audio.library.review",
+      "version": 1,
+      "type": {
+        "record": {
+          "assetHash": "text",
+          "inspectionRevision": "text",
+          "name": "text",
+          "payloadPresent": "boolean",
+          "metadataPresent": "boolean",
+          "contentValid": "boolean",
+          "payloadBytes": "number"
+        }
+      },
+      "label": "Inspected sound file",
+      "description": "Last bounded file inspection for this exact assetHash. Run audio.library.inspect first. inspectionRevision guards file identity/presence for audio.library.edit; it is not proof that deletion is currently safe. Import or removal invalidates older cached inspections. Missing/evicted inspections are unavailable. This passive fact never reads files, repairs data or checks retained references.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "assetHash": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "maxLength": 64
+          }
+        },
+        "required": [
+          "assetHash"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "assetHash": "0000000000000000000000000000000000000000000000000000000000000000"
+      },
+      "features": [
+        "factQueries.v1",
+        "audioLibraryMaintenance.v1"
+      ]
+    },
+    {
       "id": "audio.source.list",
       "version": 1,
       "type": {
@@ -51678,6 +51958,10 @@
       "sha256": "9f0db60bf5eb764ff074547e665415bdf14d30472ee63d19411d17eefa76eb74"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/AudioMaintenanceCapability.cs",
+      "sha256": "b0bb140de34ea89a8f9d2728a73f74d4a9ccd740888a258b929a121857f1b822"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/AudioMixCapability.cs",
       "sha256": "0ed1a22e20d8bc1a9db1c594f2a9341ffb1723265d23ccba2a4467d674c786fe"
     },
@@ -51703,7 +51987,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilityModules.cs",
-      "sha256": "3d1a50ffa9ad7ef9f09120f8b656ba38cde31baba2f66fb2bbec82ef3e840ab9"
+      "sha256": "1c597880daeb3134a8d6e9cbd2c9d86491fdbcb95ab7248a620d4d5f62f04bcb"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilitySchema.cs",
@@ -52303,7 +52587,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/AudioReservations.cs",
-      "sha256": "ed32375f00fc2c65c258b3b9e901c22c4216492e5655b4e8628057cb915b9c1c"
+      "sha256": "6bb5c27018650cf9aa020229c883a5dbae14ed029706ec71a86d52cd573e16ca"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/AudioTone.cs",
@@ -52807,7 +53091,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomControls.cs",
-      "sha256": "9c0e769e5b934fd241d565f73954a70641aaba70a3a0703b7053f8b62e48ec49"
+      "sha256": "2099e68e4915da002278807efebfe2b6b70cad63208c6c295065ad8154a6c5f1"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomCreationBudget.cs",
@@ -52844,6 +53128,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditPreparation.cs",
       "sha256": "066480ef126fb95375ed52d92406a6a4b7b3469ffe853ff1bf4f3ef18c8e2f8a"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditor.AudioRetention.cs",
+      "sha256": "b9be1fd51e2009770bcd9fe6c0754c0f251326b1f12a62a157c80635de553248"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditor.ImageRetention.cs",
@@ -53235,7 +53523,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomStorage.cs",
-      "sha256": "e13b1a685b329fe34e7d992e910139da67e60697ff6101c50d15e59c1b6f28db"
+      "sha256": "e0f99ec5c2b1fda07a08aa052b52e8f2a3664abfc96fda6709e3b3ffc173732f"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomStructure.cs",
@@ -53447,7 +53735,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/WorldAudio.cs",
-      "sha256": "285223d72d524c659a66dc391c08c23358f0ad28d31f9e726f01c0cce5235e04"
+      "sha256": "c71226d3e15275603dabdc92b543a5353806f058bb0bd888ad54b17e0fb87fe2"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Diagnostics/FrameIntervalWindow.cs",
@@ -53463,15 +53751,19 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/AudioImportWorkshop.cs",
-      "sha256": "e441745e170a6c2a611bc648f8c8ba7f5fef3d4c47c9f6a17ff510b23fe96f87"
+      "sha256": "11397a76dd45f8904636ca4969f0cd0be0faaf503582a1bd93a8bcde8cf5358a"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/AudioLibrary.Maintenance.cs",
+      "sha256": "8e447c87558cfad1173efe1f480c3cd88c2742fc3d0c74618390ded5ba43aa19"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/AudioLibrary.cs",
-      "sha256": "5715056fd968960cfa2ab3eea4f02c463be8d150a50116c9a9528ae3bd42cc03"
+      "sha256": "474c64c3e04fb6cb0378e239922c494f2b1ab5afa39f3dc64c4b0ba9705322f3"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/AudioPcmAsset.cs",
-      "sha256": "334df23803e1e76d9cdf1c3e1ff46f1ea2b3489f5ecb5003ca98f395b714aa71"
+      "sha256": "656650f03cd5426de7b85c89cdf5ee5cc16f06da8a6c727de750f37c93e155ce"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/AudioSampleReader.cs",
@@ -54115,7 +54407,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/SavedAssetReferences.cs",
-      "sha256": "e42d6b213b3f00d721245b9c205ee6abed0c8399e4b0909f273575fd9e45ecb6"
+      "sha256": "74b6e905c60b969554c24c0d3579ec30e0841aa0115528b160e7703b5ed61bd5"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceAcceptedSave.cs",
@@ -54255,7 +54547,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "42d2f7e981c47cd877f09e3d7d5e78694c5d005d83c7a81a57e039dd562c4552"
+      "sha256": "62ef849b6963bbb126fc374938e149d480ce0d8678971223f933658c7785fe14"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourProgram.cs",
