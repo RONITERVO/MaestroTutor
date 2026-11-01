@@ -2,7 +2,12 @@
 
 Status: active implementation. Nothing in this document claims store readiness.
 
-The latest [model source ownership and retained-reference increment](#model-source-ownership-and-retained-references--2026-10-30)
+The latest model download-maintenance increment adds shared inspection and
+confirmed removal of unused private model payloads. Full metadata is retained,
+including across portable backups and exact reimport. Native and journey
+verification is in progress; this is not physical or release acceptance.
+
+The preceding [model source ownership and retained-reference increment](#model-source-ownership-and-retained-references--2026-10-30)
 protects source files through reads, previews, native imports, background geometry
 checks and workspace closure. Saved avatar preferences and dormant/temporary
 room history retain exact model identities. It establishes prerequisites for
@@ -19032,3 +19037,147 @@ export adds the two new runtime inputs and refreshes 17 source hashes. The local
 catalog verifier now passes. This correction changes provenance only, not the
 native implementation exercised above; `catalog-correction.json` records the
 comparison and the initial failed CI rather than treating it as a pass.
+
+
+## Guarded model download maintenance and portable metadata — 2026-11-01
+
+Model download maintenance uses the shared capability catalog: the book's
+generated controls and agent/program calls invoke `model.download.inspect` and
+`model.download.edit`; `model.download.review` exposes cached file evidence.
+The existing `model.library.inspect` v1 browsing and stored receipt contract is
+unchanged. The book presents permanent-action confirmation. Agent removal is
+for explicit user intent; an inspection or cached review is not permission to
+delete.
+
+Removal requires the exact content hash and inspected file revision, then
+rechecks complete payload/metadata fingerprints and fresh reference evidence
+inside one workspace hold and exact-source retirement fence. Current/dormant/
+temporary rooms, Undo/Redo, saved/recovery copies, inactive avatar settings,
+program/module values, previews, pending work and native users protect their
+source. Unavailable evidence refuses removal. The included Maestro remains
+protected even when its private copy is absent. Stop before dispatch cancels;
+a dispatched worker retains ownership until it actually finishes. Historical
+receipt replay cannot delete a later reimport.
+
+Only the unused private payload is removed. The complete metadata sidecar
+remains, up to the existing 128 KiB model bound. Exact GLB/VRM reimport restores
+the same identity and healthy metadata byte-for-byte; explicit acceptance can
+repair empty or corrupt metadata, while passive inspection and archive capture
+cannot. Bounds, clips and cached file reviews are invalidated at the persistence
+boundary. Parent links,
+wrong path kinds and unavailable file evidence fail without being treated as
+empty storage.
+
+Review also found that portable backups previously omitted sidecars after their
+payload was removed. Shared capture now preserves valid metadata-only model,
+image and sound identities. Archive format 33 adds that behavior and BOM-aware
+sidecar validation without normalizing bytes; format 32 remains readable with
+its original pairing and decoding rules. Payload counts and missing-reference
+reports still describe actual payloads. The existing 1,536-entry/512 MiB archive
+limits and per-library payload/metadata limits remain; overflow fails explicitly
+without silently dropping source entries. Retained export and damaged-selection
+recovery preserve the same metadata.
+
+A native Headless journey exposed an additional packaged-content defect:
+`avatar.included` passed the shipped avatar's full attribution into a typed fact
+whose text fields are limited to 128 characters. The fact now projects bounded,
+control-free display text and marks shortened names or attribution summaries.
+Its v1 shape and exact model identity remain unchanged; complete canonical
+metadata and stored attribution are untouched. Regression coverage queries the
+real shared catalog with the shipped package, maximum-length metadata and the
+sketch fallback, then verifies that subsequent native queries still work.
+
+Review also found a recovery inconsistency: explicit reimport considered a
+zero-byte sidecar healthy even though archive capture rejected it. Verified
+reimport now repairs that empty sidecar through the shared atomic writer.
+Passive capture still refuses it without changing source files. Three-kind
+regressions cover model, sound and image cleanup, exact reimport, successful
+archive staging and preservation of the repaired metadata on later imports.
+
+Final native verification: the full EditMode suite reports 2,187 passes, zero
+failures and thirteen filesystem-link skips because this Windows account lacks
+symlink creation privilege. This includes all five avatar text-projection cases
+and all three empty-sidecar recovery cases. The final focused PlayMode run
+passes all three avatar methods, including the actual shipped model, with no
+skips. Both runs have normal exit-code-zero logs and terminal records, and all
+3,165 frozen native inputs match current source.
+
+The earlier broader PlayMode run accounts for exactly 212 selected methods
+across 37 files: 210 pass and two optional external-model cases skip. Seven new
+flows exercise real import/preview acceptance, reference protection, worker
+drain and historical receipt reuse. That run preceded the later avatar-fact,
+sidecar and probe corrections; it is not a rerun of all 212 methods on the final
+source. Its first wrapper reached the eight-minute deadline after all cases
+completed without normal-exit proof. An identical-source bounded twelve-minute
+repeat exited normally. Neither complete XML nor a killed process substitutes
+for clean-exit evidence. `native-review-final.json` records the exact source
+hashes, later source differences, test selection and remaining proof limits.
+
+The shared room web suite passes 1,589 tests across 162 files. Maintenance
+driver groups pass, including sparse-mode and positive offline ownership checks;
+those driver mocks establish orchestration assertions, not native execution.
+Probe TypeScript and scoped lint pass. A fresh native export matches the shared
+catalog: 149 actions, 248 facts, 19 events and eleven guides.
+
+The full offline Headless run `7736e7411e57470c97e90eba8399814c` completed and
+passed independent review in `headless-review-final.json`. The final
+acknowledged sequence is 3,372, with 3,148 recorded observations and 3,147
+readsets; preparation reads and selected direct calls are outside those arrays.
+Client, Editor and terminal exit records are all zero, final saved/native room
+identity agrees, and all 3,165 captured native inputs match current source.
+Provider evidence is false: this is desktop Unity with synthetic physics, not
+real-provider, physical Quest or Store acceptance.
+
+The model journey produced seven completed receipts and three refusal
+observations, preserving the exact 860-byte GLB, complete 6,834-byte metadata
+and all six pre-existing model files through cleanup and native picker/preview
+reimport. Historical replay did not delete the restored payload. The included
+Maestro's fact reports a marked 126-character summary while its full 363-byte
+canonical metadata remains unchanged. The three refusals include two
+pre-dispatch rejections and one failed current-source-pin receipt; they are not
+three failed executions.
+
+The full Book journey `9a3a1f68aa10457fafd0bc3eb7afe342` also passed independent
+review: all 2,778 requests acknowledged, 8,554 observations, zero browser errors
+and clean client/Editor/terminal exits. Its generated controls loaded the current
+revision, required permanent-action confirmation and completed seven model
+receipts with three refusal observations. Its exact 856-byte GLB, 6,830-byte
+metadata and six prior model files remain intact. Visible history inspection
+returned the whole original receipt unchanged without another start; a final
+reload created a new observation session with no post-reload commands. This is
+separate from Headless's actual duplicate-start replay. Removed/restored fact
+screens and import/history screens were visually reviewed on desktop.
+
+Fresh unsigned Android export and compilation also pass: Unity reports five
+warnings and zero errors; all 41 actionable tasks execute. Independent review
+checks 22 selected ARM64 library hashes and 73 ELF LOAD segments for 16 KiB
+alignment, the exported disabled platform profile, final development manifest
+and all 152 web payloads. All 4,921 frozen inputs and sixteen protected files
+remain unchanged. NativeBrowser test and lint results are explicitly reused
+(128 passes/two skips; six lint warnings), not new executions. See the
+[compile checkpoint](QUEST_RELEASE_BUILD.md#model-maintenance-compile-checkpoint--2026-11-01).
+
+Evidence root: `.quest-evidence/model-reclamation-20261101/`, including
+`native-review-final.json`, `headless-review-final.json`,
+`book-review-final.json`, `book-visual-review.json` and
+`android-final/independent-review-2.json`. The earlier `native-review.json`
+remains historical evidence for its own source snapshot. The first Android
+review rejected Unity-generated web companion metadata; its failed receipt is
+retained. The corrected verifier accepts only validated default companion
+metadata while still requiring every source/mirror/export web payload to match;
+no product source or build was changed to resolve that verifier error.
+
+The next reliability checkpoint is cost-aware fact paging and a bounded,
+visible catalog-read failure. Source-derived counterexamples show accepted
+entries in `image.chat.library` and `audio.chat.library` can cost 1,120 units,
+and `audio.source.list` can cost 1,162, against the existing 1,024-unit typed
+value budget. These are synthetic contract calculations, not native replays.
+Keep exact identities, program failure and action-receipt semantics intact;
+do not raise the global budget or substitute plausible defaults. The
+counterexamples and boundary review are retained under
+`fact-read-review/`. This work precedes the separately reviewed incremental
+spatial-cache optimization; neither is completed by this checkpoint.
+
+The existing device/provider/signing/deployment/Meta holds remain. This slice
+does not raise saved/native object, distance, terrain or liquid limits, establish
+Quest performance, or close the remaining world-scale, audio and Store gates.

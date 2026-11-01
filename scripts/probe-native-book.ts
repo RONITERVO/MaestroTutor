@@ -1,6 +1,7 @@
 import {probeBookAssetInventory} from './probe-book-asset-inventory';
 import {probeBookImageMaintenance} from './probe-book-image-maintenance';
 import {probeBookAudioMaintenance} from './probe-book-audio-maintenance';
+import {probeBookModelMaintenance} from './probe-book-model-maintenance';
 import {validFactValue} from '../shared/behaviourFacts';
 import {nativeBookObjects,readNativeBookObjects} from './native-book-objects';
 import {probeBookEnvironmentRecovery} from './probe-book-environment-recovery';
@@ -1327,6 +1328,7 @@ try{
  await probeBookAssetInventory(page,directory);
  await probeBookImageMaintenance(page,directory);
  await probeBookAudioMaintenance(page,directory);
+ await probeBookModelMaintenance(page,directory);
  await page.getByRole('button',{name:'Back to chat',exact:true}).first().click();
  await page.waitForFunction(()=>window.nativeBookEvidence!().state!.visible===false);
  const commandCount=requests.size;

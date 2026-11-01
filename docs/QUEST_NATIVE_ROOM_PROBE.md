@@ -2396,3 +2396,126 @@ cause or prove sustained rendered gait. Evidence and independent reviews are in
 `.quest-evidence/model-ownership-20261030/` and the named native-run directories.
 These are scripted desktop Unity checks, not real-provider, OS-picker, Quest
 texture, physical-device, microphone, audibility or performance acceptance.
+
+## Shared model download maintenance journey — 2026-11-01
+
+The ordinary full offline Headless and Book journeys include
+`probe-model-maintenance.ts` through their respective adapters. Sparse object
+observation remains supported and is recorded explicitly. The leaf requires a
+fresh owned probe, explicit offline launcher flags, the matching ready receipt,
+and the original workspace/receipt directory. Provider, resumed, restarted and
+dedicated scenario runs cannot qualify this fixture.
+
+The leaf exclusively creates one original, bounded triangle GLB and a metadata
+sidecar larger than 1 KiB in the probe room's model library. This initial orphan
+has no authored reference. It also creates `model-maintenance-source.glb` and
+`model-maintenance-source.json` in the evidence directory. The marker contains
+only its version, owner ID, exact model hash and safe display name. All existing
+model files are hashed before the fixture and checked unchanged afterward. Once
+any native request starts, failure preserves the fixture and diagnostic evidence.
+
+Shared `model.download.inspect` establishes the exact file revision and
+known-unused references. The passive `model.download.review` fact must match that
+file snapshot; it is not fresh removal permission. `model.download.edit` removes
+only the GLB; the complete sidecar and external fixture source remain byte-exact.
+The changed presence revision must make the previous removal arguments fail
+with the specific native stale-revision cause, not an unrelated transport error.
+Ordinary `model.library.inspect` browsing keeps its existing contract.
+
+Reimport uses `model.import` with `operation: select`, observes the native
+`model.import.selection` preview, then accepts with `operation: object`, the
+request ID and exact model hash. The Editor-only `IModelPicker` fixture replaces
+Android's document chooser. It accepts only the canonical bounded source and
+marker in this owned evidence directory, validates the original workspace and
+GLB, and supplies a private UUID/UUID cache copy through the ordinary picker
+interface. It does not inject a native reply or restore the library file directly.
+`model-maintenance-picker.json` must report one selection, one release, the exact
+owner/request/hash, and the same sparse-observation flag. This establishes the
+shared selection, native preparation/preview and object-acceptance path when the
+journey passes; it does not test the Android OS picker.
+
+The accepted object must protect the restored payload. Fresh inspection must
+recover the original full payload/metadata fingerprint, report a current
+reference and deny removal. The attempted removal must return the exact current
+reference or native-source-pin refusal. Headless then repeats the original
+completed removal request ID; Book uses visible recent-result controls to revisit
+that receipt. The entire historical receipt must remain unchanged and the
+reimported files must survive. These are distinct duplicate-start and UI-history
+checks. Both adapters also inspect the packaged default Maestro hash and verify
+that its removal is refused, then finish with another fresh native inspection of
+the restored fixture. A successful leaf contains seven completed inspection,
+removal and import receipts, plus the three refusal observations.
+
+Book drives generated fields, the current-revision loader, permanent-action
+confirmation and historical result controls. It saves screenshots beside
+`book-model-maintenance.json`; Headless writes
+`headless-model-maintenance.json`. Those files retain the original file inventory,
+full metadata hash/length, preview, picker receipt, completed actions and refusals.
+The fixture does not establish rendered model quality, humanoid compatibility,
+physical Quest behavior, provider judgment or headset performance.
+
+The completed full Headless run `7736e7411e57470c97e90eba8399814c` passed its
+independent review in
+`.quest-evidence/model-reclamation-20261101/headless-review-final.json`.
+The client, Editor and launcher terminal all exited with code zero. Its final
+acknowledged sequence is 3,372, with 3,148 recorded observations and 3,147
+readsets. Those arrays omit preparation reads and selected direct calls; they
+are not exhaustive wire logs or line/branch coverage. The final saved room and
+world identity match the recorded native state, with no running actions or
+storage error. All 3,165 captured native inputs match authoritative source.
+Provider evidence is explicitly false; this is the ordinary desktop offline
+journey with synthetic physics.
+
+The model leaf completed seven receipts and observed three refusals. Stale and
+included-default refusals happened before dispatch; the current-source-pin
+refusal has a failed attempted-call receipt. These are not three failed
+receipts. The 860-byte GLB and complete 6,834-byte metadata survived cleanup and
+ordinary native picker/preview acceptance with their original exact fingerprint
+restored. All six pre-existing model files remained byte-identical. Duplicate
+start reused the immutable historical removal receipt without deleting the
+reimported payload. Inspection of the included Maestro now returns an explicit
+126-character attribution summary while its complete 363-byte canonical
+metadata remains unchanged and the exact included hash stays protected.
+
+The full Book run `9a3a1f68aa10457fafd0bc3eb7afe342` passed independent review
+in `book-review-final.json`: 2,778 requests all acknowledged, 8,554 observations,
+zero browser errors and clean client/Editor/terminal exits. It uses visible
+generated inputs, loads the current read-only revision and confirms permanent
+removal. Three deliberate refusal cases use the visible Advanced arguments
+control. The native path selects, previews and accepts the actual fixture into
+an object; the 856-byte GLB and complete 6,830-byte metadata return to their exact
+original fingerprint. All six prior model files remain unchanged.
+
+Book completes seven model receipts and three native refusal observations. It
+revisits the entire unchanged historical removal receipt through visible
+controls; that run ID has only its original start. This proves history viewing,
+not the duplicate-start replay exercised by Headless. After the full journey,
+reload creates a fresh observation session with acknowledgement zero and no
+post-reload requests. Final saved/native identity agrees. Image and audio
+maintenance each complete six receipts and motion maintenance completes
+fourteen in both clients. All 3,165 captured native inputs still match source.
+
+Removed/restored fact captures and import/history screenshots were visually
+reviewed on desktop; `book-visual-review.json` records the root inspection. The
+Book controls and states are visible without clipping in these captures. This
+does not establish Quest texture readability, optical comfort, Android picker,
+real-provider or Store acceptance. The separately verified unsigned Android
+export/compilation is recorded in the
+[model maintenance compile checkpoint](QUEST_RELEASE_BUILD.md#model-maintenance-compile-checkpoint--2026-11-01).
+
+Archive retention has separate native regression coverage in
+`MetadataOnlyArchiveTests`. It exercises model, audio and image sidecars after
+payload cleanup, byte-preserving capture/staging and exact reimport, retained
+exports/recovery, version 32 compatibility and version 33 metadata-only entries,
+and invalid paths, links, decoding and aggregate limits. Those codec/storage
+checks are not inferred from these Headless or Book journeys; the model leaf
+reimports its payload before continuing the full journey.
+
+
+## Full offline journey time budget — 2026-11-01
+
+Ordinary fresh offline `Headless` and `Book` runs now use a 20-minute native session deadline. `Run-QuestRoomProbe.ps1 -FullJourneyTimeoutMinutes <minutes>` can select an integer from 15 through 30 for those runs, including sparse observation and optional synthetic asset fixtures. The deadline starts when the Editor enters Play mode; it is not a per-action timeout or proof that a journey passed.
+
+The launcher records the selected minutes in `owner.json`, the native probe validates that the owner explicitly describes an ordinary offline journey, and `ready.json` records both `fullJourneyTimeoutMinutes` and the applied `sessionTimeoutSeconds`. Successful full runs verify those values before writing `verified.json`. Provider, first-learner, focused, resumed and process-restart modes retain their existing deadlines; they record zero for this override and reject an explicitly supplied `FullJourneyTimeoutMinutes`. The restart supervisor still has its separate 15-minute client limit, and interactive provider learner sessions retain their 60-minute native limit. Legacy and restart-child owners without this new field retain their prior native limit.
+
+`Test-QuestProbeTimeout.ps1` executes the actual launcher's parameter and scope selection in isolation, checks the evidence/deadline linkage, and runs in the offline release gate. `QuestRoomProbeTimeoutTests` separately covers native admission and bounds. These checks do not claim a completed full native journey.

@@ -12,7 +12,7 @@ const view=():CatalogView=>({operation:'inspect',category:'facts',capability:'ob
 it('checks every native current-input annotation against both registered contracts',()=>{
  let count=0;
  const visit=(s:CapabilitySchema)=>{if(s['x-current'])count++;expect(()=>validateCurrentInputMapping(s)).not.toThrow();for(const child of [...s.oneOf??[],...Object.values(s.properties??{}),...s.items?[s.items]:[]])visit(child);};
- for(const action of behaviourCatalog.actions)visit(action.input as CapabilitySchema);expect(count).toBe(129);
+ for(const action of behaviourCatalog.actions)visit(action.input as CapabilitySchema);expect(count).toBe(130);
 });
 it('loads exact fact values atomically and distinguishes guards from editable preferences',()=>{
  const next=applyCurrentInputs(schema(),args(),view());expect(next).toEqual({target:native.beforePhysics.target,revision:native.beforePhysics.revision,mode:native.beforePhysics.mode,shape:native.beforePhysics.shape,mass:native.beforePhysics.mass});
@@ -152,4 +152,22 @@ it('loads restored-object recovery guards without retrying or substituting an un
  expect(currentInputIdentity(input,loaded,'session')).not.toBe(currentInputIdentity(input,{...loaded,stateId:'2'.repeat(32)},'session'));
  expect(()=>applyCurrentInputs(input,draft,{...observation,available:false,value:null})).toThrow();
  expect(()=>applyCurrentInputs(input,draft,{...observation,arguments:{target:'b'.repeat(32)}})).toThrow();
+});
+
+
+it('loads the model-download revision only for the requested content hash and isolates its reviewed identity',()=>{
+ const input=capabilityDefinition('model.download.edit')!.input;
+ const draft={modelHash:'a'.repeat(64),inspectionRevision:'0'.repeat(64)};
+ const value={modelHash:draft.modelHash,inspectionRevision:'b'.repeat(64),name:'My model',payloadPresent:true,metadataPresent:true,contentValid:true,included:false,payloadBytes:512};
+ const observation:CatalogView={operation:'inspect',category:'facts',capability:'model.download.review',version:1,definition:behaviourFact('model.download.review')!,arguments:{modelHash:draft.modelHash},available:true,value,status:'Available'};
+ expect(currentInputRequest(input,draft)).toEqual({operation:'inspect',category:'facts',capability:'model.download.review',version:1,arguments:{modelHash:draft.modelHash}});
+ expect(currentInputFields(input,draft).map(({path,guard})=>({path,guard}))).toEqual([{path:'inspectionRevision',guard:true}]);
+ const loaded=applyCurrentInputs(input,draft,observation);expect(loaded).toEqual({modelHash:draft.modelHash,inspectionRevision:value.inspectionRevision});
+ const identity=currentInputIdentity(input,loaded,'workspace');
+ for(const changed of [{...loaded,modelHash:'c'.repeat(64)},{...loaded,inspectionRevision:'d'.repeat(64)}])expect(currentInputIdentity(input,changed,'workspace')).not.toBe(identity);
+ expect(currentInputIdentity(input,loaded,'other-workspace')).not.toBe(identity);
+ const otherFact:CatalogView={operation:'inspect',category:'facts',capability:'audio.library.review',version:1,definition:behaviourFact('audio.library.review')!,arguments:{assetHash:draft.modelHash},available:true,status:'Available',value:{assetHash:draft.modelHash,inspectionRevision:value.inspectionRevision,name:value.name,payloadPresent:true,metadataPresent:true,contentValid:true,payloadBytes:512}};
+ for(const mismatched of [otherFact,{...observation,arguments:{modelHash:'c'.repeat(64)}},{...observation,version:2},{...observation,available:false,value:null},{...observation,value:{...value,inspectionRevision:'not-a-file-revision'}}])expect(()=>applyCurrentInputs(input,draft,mismatched as CatalogView)).toThrow();
+ expect(()=>currentInputRequest(input,{...draft,modelHash:'../model.glb'})).toThrow();
+ expect(draft).toEqual({modelHash:'a'.repeat(64),inspectionRevision:'0'.repeat(64)});expect(value.inspectionRevision).toBe('b'.repeat(64));
 });

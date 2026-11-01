@@ -23,6 +23,7 @@
     "scripts/probe-image-maintenance.test.ts",
     "scripts/probe-native-image-maintenance.test.ts",
     "scripts/probe-audio-maintenance.test.ts",
+    "scripts/probe-model-maintenance.test.ts",
     "scripts/probe-maintenance-facts.test.ts",
     "scripts/agent-provider-contract.test.ts",
     "scripts/probe-agent-program.test.ts",

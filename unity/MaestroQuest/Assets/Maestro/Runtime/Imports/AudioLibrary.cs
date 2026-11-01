@@ -135,11 +135,7 @@ namespace Maestro.Quest.Imports {
         }
         internal bool TryCaptureArchive(out WorkspaceLibraryCapture capture){
             capture=null;if(!writes.Wait(0))return false;
-            capture=new WorkspaceLibraryCapture(()=>writes.Release(),(documents,assets)=>{
-                if(!Directory.Exists(directory))return;WorkspaceArchive.NoLink(directory);var files=new DirectoryInfo(directory).GetFiles("*.wav");
-                if(files.Length>MaximumFiles||files.Sum(f=>f.Length)>MaximumTotalBytes)throw new InvalidDataException("The sound library exceeds its archive bounds.");
-                foreach(var file in files){string hash=Path.GetFileNameWithoutExtension(file.Name);_=AssetPath(hash);string path=file.FullName;assets.Add("audio/"+hash+".wav",()=>WorkspaceLibraryCapture.Open(path));string info=Path.Combine(directory,hash+".txt");if(File.Exists(info))documents.Add("audio/"+hash+".txt",WorkspaceLibraryCapture.ReadDocument(info,1024));}
-            });return true;
+            capture=new WorkspaceLibraryCapture(()=>writes.Release(),(documents,assets)=>WorkspaceLibraryCapture.CollectAssetLibrary(directory,"audio/",".wav",MaximumFiles,MaximumTotalBytes,documents,assets));return true;
         }
     }
 }

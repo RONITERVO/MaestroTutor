@@ -55,10 +55,23 @@ namespace Maestro.Quest.Programs
         {
             operation=null;return CanRun(context,args,out error)&&context.Editor.StartMaestroModel((string)args["modelHash"],(int)args["revision"],out operation,out error);
         }
+        // Typed facts have a smaller text budget than canonical package metadata.
+        // Mark a changed display projection; never modify or replace the full source terms.
+        internal static string IncludedMetadataText(string value,bool attribution=false)
+        {
+            string projected=ImportObservation.Text(value);if(projected==(value??""))return projected;
+            string marker=attribution?" [summary; full attribution retained]":" [shortened]";
+            for(int length=projected.Length;length>=0;length--){
+                string candidate=projected.Substring(0,length).TrimEnd()+marker;
+                // The existing helper also accounts for JSON escaping and surrogate pairs.
+                if(ImportObservation.Text(candidate)==candidate)return candidate;
+            }
+            return marker.TrimStart();
+        }
         internal static BehaviourCatalog.FactDefinition IncludedFact()=>new("avatar.included",ProgramDataType.Read(new JObject {["record"]=new JObject {["modelHash"]="text",["name"]="text",["bundled"]="boolean",["attribution"]="text",["walkClipIndex"]="number"}}),
-            "Included Maestro avatar","Metadata for this app build's offline default. Selecting empty modelHash resolves to this exact identity and stores it. Existing room selections, backups and animation references keep their own exact hashes across app updates. bundled=false means the original sketch fallback (empty hash). Metadata is not evidence of a loaded model: inspect avatar.model after selection. walkClipIndex identifies the declared embedded walk (-1 means the canonical walk); new rooms and a changed selection to this default use it when walking is explicitly started. Embedded clips do not start on selection.",null,null,(context,args)=>{
+            "Included Maestro avatar","Metadata for this app build's offline default. name and attribution are bounded display projections, not complete author/use terms. Changed projections carry [shortened] or [summary; full attribution retained]; complete attribution remains in the original bundled metadata and is not replaced by this fact. Selecting empty modelHash resolves to this exact identity and stores it. Existing room selections, backups and animation references keep their own exact hashes across app updates. bundled=false means the original sketch fallback (empty hash). Metadata is not evidence of a loaded model: inspect avatar.model after selection. walkClipIndex identifies the declared embedded walk (-1 means the canonical walk); new rooms and a changed selection to this default use it when walking is explicitly started. Embedded clips do not start on selection.",null,null,(context,args)=>{
                 if(!context.Editor)return null;var included=context.Editor.IncludedAvatar;
-                return ProgramValue.Literal(new JObject {["modelHash"]=included?.Hash??"",["name"]=included?.Name??"Sketch Maestro",["bundled"]=included!=null,["attribution"]=included?.Attribution??"Maestro project artwork",["walkClipIndex"]=included?.WalkClipIndex??-1});
+                return ProgramValue.Literal(new JObject {["modelHash"]=included?.Hash??"",["name"]=IncludedMetadataText(included?.Name??"Sketch Maestro"),["bundled"]=included!=null,["attribution"]=IncludedMetadataText(included?.Attribution??"Maestro project artwork",true),["walkClipIndex"]=included?.WalkClipIndex??-1});
             });
         internal static BehaviourCatalog.FactDefinition Fact()=>new("avatar.model",ProgramDataType.Read(new JObject {["record"]=new JObject {["revision"]="number",["selectedHash"]="text",["displayedHash"]="text",["busy"]="boolean",["phase"]="text",["status"]="text",["temporary"]="boolean",["canPose"]="boolean"}}),
             "Current Maestro model","Live selected versus displayed model identity; empty hash denotes the original sketch fallback, while a packaged included avatar has its exact model hash. Read avatar.included to identify the current bundled default. loading includes queueing, preparation and publication while retaining the previous display. ready means live selected and displayed identities match, not independent disk verification; unavailable means those identities differ or publication was not confirmed. Rejected preparation leaves the previous saved identity. Unconfirmed publication can leave disk different from both live identities and blocks saves; bounded status reports this and recovery is required. Read the revision before selecting. Poses use canonical joints across supported humanoids.",null,null,(context,args)=>{var value=context.Editor?context.Editor.ObserveMaestroModel():null;return value==null?null:ProgramValue.Literal(value);});

@@ -25,6 +25,7 @@ param(
  [switch]$IdentityOnly,
  [string]$ResumeIdentityRun,
  [string]$ResumeLearnerRun,
+ [ValidateRange(15,30)][int]$FullJourneyTimeoutMinutes = 20,
  [ValidateSet('Headless','Book')][string]$Journey = 'Headless'
 )
 $ErrorActionPreference='Stop'
@@ -74,6 +75,10 @@ if($ProviderScenario){
 }
 if($Journey -eq 'Book' -and !$ProviderScenario -and ![string]::IsNullOrWhiteSpace($Prompt)){throw 'The deterministic book journey does not accept a provider prompt.'}
 if($ResumeLearnerRun -and ($ProviderScenario -ne 'LearnerConversation' -or $ResumeLearnerRun -notmatch '^[a-f0-9]{32}$')){throw 'ResumeLearnerRun requires a completed learner run ID.'}
+# Only the growing, ordinary offline journeys receive this bounded native session budget.
+$fullJourney=$Journey -in @('Headless','Book') -and [string]::IsNullOrWhiteSpace($Prompt) -and !$ProviderScenario -and !$ResumeIdentityRun -and !$ResumeLearnerRun -and !$FirstLearner -and !$LiveContinuity -and !$restarting -and !$TransportOnly -and !$MotionOnly -and !$SteeringOnly -and !$IdentityOnly
+if($PSBoundParameters.ContainsKey('FullJourneyTimeoutMinutes') -and !$fullJourney){throw 'FullJourneyTimeoutMinutes applies only to ordinary offline Headless or Book journeys.'}
+$fullJourneyTimeout=$(if($fullJourney){$FullJourneyTimeoutMinutes}else{0})
 . (Join-Path $PSScriptRoot 'QuestBuildProcesses.ps1')
 $repoRoot=[IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../..'))
 $mirror=(Resolve-Path -LiteralPath $BuildMirror).Path
@@ -110,7 +115,7 @@ foreach($running in Get-CimInstance Win32_Process -Filter "Name='Unity.exe'"){
 }
 $id=[Guid]::NewGuid().ToString('N');$directory=Join-Path $repoRoot ".quest-evidence/native-room/$id"
 New-Item -ItemType Directory -Path $directory | Out-Null
-@{version=1;id=$id;firstLearner=[bool]$FirstLearner;liveContinuity=[bool]$LiveContinuity;nativeRestart=[bool]$restarting;actionInterruption=[bool]$ActionInterruption;sparseObjectView=[bool]$SparseObjectView;motionOnly=[bool]$MotionOnly;steeringOnly=[bool]$SteeringOnly;identityOnly=[bool]$IdentityOnly;transportOnly=[bool]$TransportOnly} | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $directory 'owner.json') -Encoding utf8
+@{version=1;id=$id;journey=$Journey;fullJourneyTimeoutMinutes=$fullJourneyTimeout;providerUsed=![string]::IsNullOrWhiteSpace($Prompt);providerScenario=$ProviderScenario;resumedFrom=$(if($ResumeIdentityRun){$ResumeIdentityRun}else{$ResumeLearnerRun});firstLearner=[bool]$FirstLearner;liveContinuity=[bool]$LiveContinuity;nativeRestart=[bool]$restarting;actionInterruption=[bool]$ActionInterruption;sparseObjectView=[bool]$SparseObjectView;motionOnly=[bool]$MotionOnly;steeringOnly=[bool]$SteeringOnly;identityOnly=[bool]$IdentityOnly;transportOnly=[bool]$TransportOnly} | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $directory 'owner.json') -Encoding utf8
 if($ResumeIdentityRun){
  $previousRun=Join-Path $repoRoot ".quest-evidence/native-room/$ResumeIdentityRun"
  $previousOwner=Get-Content -LiteralPath (Join-Path $previousRun 'owner.json') -Raw | ConvertFrom-Json
@@ -198,6 +203,10 @@ try{
  }
  $terminal=Get-Content -LiteralPath (Join-Path $activeDirectory 'terminal.json') -Raw | ConvertFrom-Json
  if($clientExit -ne 0 -or $process.ExitCode -ne 0 -or $terminal.exitCode -ne 0 -or $terminal.id -ne $activeId){throw "Native room probe failed. Evidence: $directory"}
+ if($fullJourney){
+  $ready=Get-Content -LiteralPath (Join-Path $directory 'ready.json') -Raw | ConvertFrom-Json
+  if($ready.id -cne $id -or $ready.fullJourneyTimeoutMinutes -ne $fullJourneyTimeout -or $ready.sessionTimeoutSeconds -ne 60*$fullJourneyTimeout){throw "Full journey native timeout evidence does not match the launcher. Evidence: $directory"}
+ }
  if($FirstLearner){
   $learnerResult=Get-Content -LiteralPath (Join-Path $directory 'first-learner/result.json') -Raw | ConvertFrom-Json
   if($learnerResult.status -ne 'passed' -or $learnerResult.nativeProbeId -ne $id -or $learnerResult.nativeExecution -ne $true -or $learnerResult.productionComposition -ne $true -or $learnerResult.realProvider -ne $false){throw "Production-entry learner did not prove the owned offline native journey. Evidence: $directory"}
@@ -213,7 +222,7 @@ try{
  }
  if($restarting){& (Join-Path $PSScriptRoot 'Assert-QuestUnityLog.ps1') -LogPath $initialLog}
  & (Join-Path $PSScriptRoot 'Assert-QuestUnityLog.ps1') -LogPath $log
- @{version=1;id=$id;clientExit=$clientExit;editorExit=$process.ExitCode;directory=$directory;providerUsed=![string]::IsNullOrWhiteSpace($Prompt);journey=$Journey;firstLearner=[bool]$FirstLearner;liveContinuity=[bool]$LiveContinuity;nativeRestart=[bool]$restarting;actionInterruption=[bool]$ActionInterruption;sparseObjectView=[bool]$SparseObjectView;motionOnly=[bool]$MotionOnly;steeringOnly=[bool]$SteeringOnly;identityOnly=[bool]$IdentityOnly;transportOnly=[bool]$TransportOnly;providerScenario=$ProviderScenario;outcome=$(if($ProviderScenario -eq 'LearnerConversation'){'collected-requires-semantic-review'}else{'passed'});resumedFrom=$(if($ResumeIdentityRun){$ResumeIdentityRun}else{$ResumeLearnerRun})} | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $directory 'verified.json')
+ @{version=1;id=$id;clientExit=$clientExit;editorExit=$process.ExitCode;directory=$directory;providerUsed=![string]::IsNullOrWhiteSpace($Prompt);journey=$Journey;fullJourneyTimeoutMinutes=$fullJourneyTimeout;firstLearner=[bool]$FirstLearner;liveContinuity=[bool]$LiveContinuity;nativeRestart=[bool]$restarting;actionInterruption=[bool]$ActionInterruption;sparseObjectView=[bool]$SparseObjectView;motionOnly=[bool]$MotionOnly;steeringOnly=[bool]$SteeringOnly;identityOnly=[bool]$IdentityOnly;transportOnly=[bool]$TransportOnly;providerScenario=$ProviderScenario;outcome=$(if($ProviderScenario -eq 'LearnerConversation'){'collected-requires-semantic-review'}else{'passed'});resumedFrom=$(if($ResumeIdentityRun){$ResumeIdentityRun}else{$ResumeLearnerRun})} | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $directory 'verified.json')
  if($ProviderScenario -eq 'LearnerConversation'){Write-Output "Learner session collected (manual outcome review required): $directory"}else{Write-Output "Native room probe passed: $directory"}
 }finally{
  $env:MAESTRO_ROOM_PROBE_PROMPT=$previousPrompt;$env:MAESTRO_ROOM_PROBE_PROFILE=$previousProfile;$env:MAESTRO_ROOM_PROBE_SCENARIO=$previousScenario;$env:MAESTRO_ROOM_PROBE_SPEECH=$previousSpeech

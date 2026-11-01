@@ -63,7 +63,7 @@ namespace Maestro.Quest.Tests
             using(var staged=WorkspaceArchive.Stage(new MemoryStream(Archive()),directory)){Assert.AreEqual(1,staged.Receipt.Summary.Images);Assert.IsEmpty(staged.Receipt.Summary.MissingImages);CollectionAssert.AreEqual(bytes,File.ReadAllBytes(Path.Combine(staged.DirectoryPath,path)));var restored=new RoomStorage(staged.DirectoryPath).Load(out var error);Assert.IsNotNull(restored,error);Assert.AreEqual(hash,restored.appearances[0].style.imageHash);Assert.AreEqual(.5f,restored.appearances[0].style.opacity);Assert.AreEqual(hash,new ImageLibrary(Path.Combine(staged.DirectoryPath,"images")).ReadAsync(hash).GetAwaiter().GetResult().Hash);}
             payloads[path][40]^=1;Assert.That(()=>Archive(),Throws.Exception);
         }
-        [Test] public void ImageArchiveRejectsOrphanMetadataAndFutureStyleFields(){documents["images/"+new string('a',64)+".txt"]=Bytes("Orphan");Assert.That(()=>Snapshot(),Throws.Exception);documents.Remove("images/"+new string('a',64)+".txt");var room=JsonUtility.FromJson<RoomDocument>(Encoding.UTF8.GetString(documents[RoomStorage.FileName]));room.appearances=new[]{new RoomAppearance{id=new string('a',32),name="Tiles"}};var wire=JObject.Parse(JsonUtility.ToJson(room));wire["appearances"][0]["style"]["imageUrl"]="future";documents[RoomStorage.FileName]=Bytes(wire.ToString());Assert.That(()=>Snapshot(),Throws.Exception);}
+        [Test] public void ImageArchiveKeepsOrphanMetadataAndRejectsFutureStyleFields(){documents["images/"+new string('a',64)+".txt"]=Bytes("Orphan");Assert.That(WorkspaceArchive.Fingerprint(Snapshot()).Summary.Images,Is.Zero);documents.Remove("images/"+new string('a',64)+".txt");var room=JsonUtility.FromJson<RoomDocument>(Encoding.UTF8.GetString(documents[RoomStorage.FileName]));room.appearances=new[]{new RoomAppearance{id=new string('a',32),name="Tiles"}};var wire=JObject.Parse(JsonUtility.ToJson(room));wire["appearances"][0]["style"]["imageUrl"]="future";documents[RoomStorage.FileName]=Bytes(wire.ToString());Assert.That(()=>Snapshot(),Throws.Exception);}
         [Test] public void ImportedAudioRoundTripsExactBytesAndReportsMissingAssets(){
             var bytes=WaveAudioTests.File();var hash=ModelLibrary.Hash(bytes);string path="audio/"+hash+".wav";
             var room=JsonUtility.FromJson<RoomDocument>(Encoding.UTF8.GetString(documents[RoomStorage.FileName]));
@@ -79,8 +79,8 @@ namespace Maestro.Quest.Tests
             room.audioSources[0].seconds=.2f;documents[RoomStorage.FileName]=Document(room);Assert.That(()=>Archive(),Throws.Exception,"A saved duration must match its exact bytes");
             room.audioSources[0].seconds=.1f;documents[RoomStorage.FileName]=Document(room);payloads[path][44]^=1;Assert.That(()=>Archive(),Throws.Exception,"Payload tampering cannot keep the earlier identity");
         }
-        [Test] public void AudioArchiveRejectsOrphanMetadataAndFutureSourceFields(){
-            documents["audio/"+new string('a',64)+".txt"]=Bytes("Orphan");Assert.That(()=>Snapshot(),Throws.Exception);documents.Remove("audio/"+new string('a',64)+".txt");
+        [Test] public void AudioArchiveKeepsOrphanMetadataAndRejectsFutureSourceFields(){
+            documents["audio/"+new string('a',64)+".txt"]=Bytes("Orphan");Assert.That(WorkspaceArchive.Fingerprint(Snapshot()).Summary.Sounds,Is.Zero);documents.Remove("audio/"+new string('a',64)+".txt");
             var room=JsonUtility.FromJson<RoomDocument>(Encoding.UTF8.GetString(documents[RoomStorage.FileName]));room.audioSources=new[]{new RoomAudioDefinition{id=new string('a',32)}};
             var wire=JObject.Parse(JsonUtility.ToJson(room));wire["audioSources"][0]["streamUrl"]="future";documents[RoomStorage.FileName]=Bytes(wire.ToString());Assert.That(()=>Snapshot(),Throws.Exception);
         }

@@ -2263,6 +2263,256 @@
       }
     },
     {
+      "id": "model.download.edit",
+      "version": 1,
+      "label": "Remove an unused model download",
+      "input": {
+        "type": "object",
+        "properties": {
+          "modelHash": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "maxLength": 64
+          },
+          "inspectionRevision": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "maxLength": 64
+          }
+        },
+        "required": [
+          "modelHash",
+          "inspectionRevision"
+        ],
+        "additionalProperties": false,
+        "x-current": {
+          "fact": "model.download.review",
+          "version": 1,
+          "arguments": {
+            "modelHash": "modelHash"
+          },
+          "fields": {
+            "inspectionRevision": [
+              "inspectionRevision"
+            ]
+          },
+          "guards": [
+            "inspectionRevision"
+          ]
+        },
+        "x-confirmation": "Remove this unused model's local download? Its identity and complete metadata remain. Reimport the exact original GLB/VRM to restore its bytes. There is no Undo, and Stop cannot reverse a deletion already started.",
+        "x-features": [
+          "modelDownloadMaintenance.v1"
+        ]
+      },
+      "duration": "completion",
+      "ownership": "modelLibraryWrite",
+      "channels": [],
+      "requirements": [],
+      "description": "Remove only an unused model's private payload after model.download.inspect. Pass its exact modelHash and inspectionRevision. Current/dormant/temporary rooms, Undo/Redo, saved/recovery data, inactive avatar profiles and exact calibration/material choices, reusable programs/modules, remembered/live values, and loading/preview/native pins protect the bytes; uncertain evidence also refuses deletion. The included Maestro cannot be removed. Checks repeat under a workspace edit hold and per-asset admission fence immediately before dispatch. The complete metadata sidecar, identity and external source export remain; reimporting the exact original GLB/VRM restores its hash and healthy metadata. A bounded damaged payload can be removed only after the same exact revision and unused-reference proof; contentValid:false alone is not permission. No Undo. Request removal only when the user asked for it; inspection never authorizes deletion. Refresh model.library.inspect after changes; older receipts remain historical. Stop before dispatch prevents removal; after dispatch the operation drains and may delete after Stop. An uncertain result requires inspecting the file and historical receipt before another explicit request. Historical replay never deletes again.",
+      "example": {
+        "modelHash": "0000000000000000000000000000000000000000000000000000000000000000",
+        "inspectionRevision": "0000000000000000000000000000000000000000000000000000000000000000"
+      },
+      "output": {
+        "type": "object",
+        "properties": {
+          "removed": {
+            "type": "boolean"
+          },
+          "previousRevision": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "maxLength": 64
+          },
+          "entry": {
+            "type": "object",
+            "properties": {
+              "modelHash": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$",
+                "maxLength": 64
+              },
+              "inspectionRevision": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$",
+                "maxLength": 64
+              },
+              "name": {
+                "type": "string",
+                "pattern": "^[^\\u0000-\\u001f]{0,100}$",
+                "maxLength": 100
+              },
+              "payloadPresent": {
+                "type": "boolean"
+              },
+              "metadataPresent": {
+                "type": "boolean"
+              },
+              "contentValid": {
+                "type": "boolean"
+              },
+              "included": {
+                "type": "boolean"
+              },
+              "payloadBytes": {
+                "type": "integer",
+                "minimum": 0.0,
+                "maximum": 67108864.0
+              }
+            },
+            "required": [
+              "modelHash",
+              "inspectionRevision",
+              "name",
+              "payloadPresent",
+              "metadataPresent",
+              "contentValid",
+              "included",
+              "payloadBytes"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "removed",
+          "previousRevision",
+          "entry"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "id": "model.download.inspect",
+      "version": 1,
+      "label": "Inspect a model download",
+      "input": {
+        "type": "object",
+        "properties": {
+          "modelHash": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "maxLength": 64
+          }
+        },
+        "required": [
+          "modelHash"
+        ],
+        "additionalProperties": false,
+        "x-features": [
+          "modelDownloadMaintenance.v1"
+        ]
+      },
+      "duration": "completion",
+      "ownership": "none",
+      "channels": [],
+      "requirements": [],
+      "description": "Inspect one exact model content hash, its bounded private GLB/VRM payload and complete metadata, and current, dormant, temporary, Undo/Redo, saved/recovery, avatar-profile, module, remembered and live-program references. Also reports pending reads, previews, geometry preparation and native users. Reads retained files off-thread without repairing them. inspectionRevision fingerprints exact inspected file content/presence, not deletion permission; removal always checks again. Unavailable evidence protects the download. Read model.library.inspect for imported hashes first. The included Maestro is always protected, even when its private copy is absent. The passive model.download.review fact keeps only the last bounded file inspection, never a fresh safety proof.",
+      "example": {
+        "modelHash": "0000000000000000000000000000000000000000000000000000000000000000"
+      },
+      "output": {
+        "type": "object",
+        "properties": {
+          "entry": {
+            "type": "object",
+            "properties": {
+              "modelHash": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$",
+                "maxLength": 64
+              },
+              "inspectionRevision": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$",
+                "maxLength": 64
+              },
+              "name": {
+                "type": "string",
+                "pattern": "^[^\\u0000-\\u001f]{0,100}$",
+                "maxLength": 100
+              },
+              "payloadPresent": {
+                "type": "boolean"
+              },
+              "metadataPresent": {
+                "type": "boolean"
+              },
+              "contentValid": {
+                "type": "boolean"
+              },
+              "included": {
+                "type": "boolean"
+              },
+              "payloadBytes": {
+                "type": "integer",
+                "minimum": 0.0,
+                "maximum": 67108864.0
+              }
+            },
+            "required": [
+              "modelHash",
+              "inspectionRevision",
+              "name",
+              "payloadPresent",
+              "metadataPresent",
+              "contentValid",
+              "included",
+              "payloadBytes"
+            ],
+            "additionalProperties": false
+          },
+          "usage": {
+            "type": "object",
+            "properties": {
+              "current": {
+                "type": "boolean"
+              },
+              "history": {
+                "type": "boolean"
+              },
+              "saved": {
+                "type": "boolean"
+              },
+              "runtime": {
+                "type": "boolean"
+              },
+              "inUse": {
+                "type": "boolean"
+              },
+              "uncertain": {
+                "type": "boolean"
+              },
+              "canRemove": {
+                "type": "boolean"
+              },
+              "protection": {
+                "type": "string",
+                "pattern": "^.{0,512}$",
+                "maxLength": 512
+              }
+            },
+            "required": [
+              "current",
+              "history",
+              "saved",
+              "runtime",
+              "inUse",
+              "uncertain",
+              "canRemove",
+              "protection"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "entry",
+          "usage"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
       "id": "model.import",
       "version": 1,
       "label": "Import a model together",
@@ -46883,7 +47133,46 @@
         }
       },
       "label": "Included Maestro avatar",
-      "description": "Metadata for this app build's offline default. Selecting empty modelHash resolves to this exact identity and stores it. Existing room selections, backups and animation references keep their own exact hashes across app updates. bundled=false means the original sketch fallback (empty hash). Metadata is not evidence of a loaded model: inspect avatar.model after selection. walkClipIndex identifies the declared embedded walk (-1 means the canonical walk); new rooms and a changed selection to this default use it when walking is explicitly started. Embedded clips do not start on selection."
+      "description": "Metadata for this app build's offline default. name and attribution are bounded display projections, not complete author/use terms. Changed projections carry [shortened] or [summary; full attribution retained]; complete attribution remains in the original bundled metadata and is not replaced by this fact. Selecting empty modelHash resolves to this exact identity and stores it. Existing room selections, backups and animation references keep their own exact hashes across app updates. bundled=false means the original sketch fallback (empty hash). Metadata is not evidence of a loaded model: inspect avatar.model after selection. walkClipIndex identifies the declared embedded walk (-1 means the canonical walk); new rooms and a changed selection to this default use it when walking is explicitly started. Embedded clips do not start on selection."
+    },
+    {
+      "id": "model.download.review",
+      "version": 1,
+      "type": {
+        "record": {
+          "modelHash": "text",
+          "inspectionRevision": "text",
+          "name": "text",
+          "payloadPresent": "boolean",
+          "metadataPresent": "boolean",
+          "contentValid": "boolean",
+          "included": "boolean",
+          "payloadBytes": "number"
+        }
+      },
+      "label": "Inspected model file",
+      "description": "Last bounded file inspection for this exact modelHash. Run model.download.inspect first. inspectionRevision guards file identity/presence for model.download.edit; it is not proof that deletion is currently safe. Import or removal invalidates older cached inspections. Missing/evicted inspections are unavailable. This passive fact never reads files, repairs data or checks retained references.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "modelHash": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "maxLength": 64
+          }
+        },
+        "required": [
+          "modelHash"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "modelHash": "0000000000000000000000000000000000000000000000000000000000000000"
+      },
+      "features": [
+        "factQueries.v1",
+        "modelDownloadMaintenance.v1"
+      ]
     },
     {
       "id": "model.import.selection",
@@ -51975,7 +52264,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/AvatarModelCapabilities.cs",
-      "sha256": "f62d73ec8994e226327fb2174d181141009e085dbac10a73c039dcefda3f8821"
+      "sha256": "bb8106ab38707704f0e6c5d4ce0c21c7bf39f09a4f5b62e2d7de943ba34adf80"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/BatchCreationCapability.cs",
@@ -51987,7 +52276,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilityModules.cs",
-      "sha256": "1c597880daeb3134a8d6e9cbd2c9d86491fdbcb95ab7248a620d4d5f62f04bcb"
+      "sha256": "6ecea961b78f9190baf3752aa9925960b1a529f44262408f82645ae877f6b7d7"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilitySchema.cs",
@@ -52236,6 +52525,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ModelImportCapability.cs",
       "sha256": "03d4157d121140ce308ba76915970c997040f7818e10b97df2b71123f70bd188"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ModelMaintenanceCapability.cs",
+      "sha256": "7a76999a6600033e97c852d79fe12eab022655db264efe1b7014899cb0aebf40"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/MotionBatchCapability.cs",
@@ -53091,7 +53384,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomControls.cs",
-      "sha256": "2099e68e4915da002278807efebfe2b6b70cad63208c6c295065ad8154a6c5f1"
+      "sha256": "6ccd8b0580d47fc3c3e0cf792af91c4b12ca1cd655fb2547ad71b8480540ccdd"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomCreationBudget.cs",
@@ -53763,7 +54056,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/AudioLibrary.cs",
-      "sha256": "474c64c3e04fb6cb0378e239922c494f2b1ab5afa39f3dc64c4b0ba9705322f3"
+      "sha256": "dc6c8a751c4d9022aee1f793351cb63cb0cd8665f9be07ad399695663c83b5c1"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/AudioPcmAsset.cs",
@@ -53811,7 +54104,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/ImageLibrary.cs",
-      "sha256": "caf2928dfd46ea175f25db105e6fbed8e9d2a93cdfd40e74c10ac8e4f3d16652"
+      "sha256": "467d71e7b8af944198a85450b7141108bdd2ed7191ba1ef818d61b1b20c1ead4"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/ImportAcceptance.cs",
@@ -53855,7 +54148,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/ImportedAssetSidecar.cs",
-      "sha256": "b26269040a7cb0c20b5f59130793fa10eaf8cc8013b4197e12de844b4ac159cd"
+      "sha256": "ded1af1cb63797a49268681f8ce2b5dbf89105d3644b33f630e671065f98b5ac"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/ImportedCollisionGeometry.cs",
@@ -53930,8 +54223,12 @@
       "sha256": "1a9f3286f13b677d90239a39c9c733ebc988ee3f0910923d302fb6f03a099d1a"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/ModelLibrary.Maintenance.cs",
+      "sha256": "bee6c163ae013d822315ac2eab05604addd844b37bda05304e7786f668f42088"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/ModelLibrary.cs",
-      "sha256": "0b248d0227bb885b303e42e823cc01d7ae0716a8cd6007d0425f62f06303fd67"
+      "sha256": "1895b2842bf3acff67ba56ad88b1aba2b2151d47254e28b66f40de6364722a5d"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/ModelLibraryAcoustics.cs",
@@ -54427,7 +54724,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceArchive.cs",
-      "sha256": "e5baad8056434f2043d054aaa1eb0aa9f3c0b33637469ba23956c2c819ceebbb"
+      "sha256": "afe09765707c52845b8075af8908845176edb5e20ef2fd06ea124effadd63d39"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceArchiveCapture.cs",
@@ -54435,7 +54732,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceArchiveSnapshot.cs",
-      "sha256": "e69af2d70c2aa39c387c0f14518c9e67e4740821756d395332d556c6892dab01"
+      "sha256": "702091266e6b364c398e138c7d1d4bec0eed1d52c9d20cf3ece7f76f4e6da9a9"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceAssetFence.cs",
@@ -54479,7 +54776,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceGenerationStore.Retention.cs",
-      "sha256": "f5ba0954a480345150be7d06f0dac9c268dabb89eb97c27479c5fc9b48259da3"
+      "sha256": "4ca6efb3ce978b4dda6e611d8040174dc44297b809842932ea0cf7797ab9dc89"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceGenerationStore.cs",
@@ -54507,7 +54804,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceLibraryCapture.cs",
-      "sha256": "c674178055b64b9839e054eed02104626aff994dc89e874f81690ea06893f29e"
+      "sha256": "cc2aea974b17b3ff922218b17f66483b421b487a9deda4837216ce04c78965bd"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceRecovery.cs",
@@ -54555,7 +54852,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "62ef849b6963bbb126fc374938e149d480ce0d8678971223f933658c7785fe14"
+      "sha256": "a0f0aaa3a14ac8cba0f8f55fbe3530885fb37a94a228e14274047710202d3c6b"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourProgram.cs",

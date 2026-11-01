@@ -1,6 +1,7 @@
 import {probeAssetInventory} from './probe-asset-inventory';
 import {probeNativeImageMaintenance} from './probe-native-image-maintenance';
 import {probeNativeAudioMaintenance} from './probe-native-audio-maintenance';
+import {probeNativeModelMaintenance} from './probe-native-model-maintenance';
 import {validFactValue} from '../shared/behaviourFacts';
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
@@ -523,6 +524,11 @@ try{
  },directory);
  await probeNativeAudioMaintenance(transport,execute,async commands=>{
   const prepared=await transport.client.prepare(commands,lease.state());if(!lease.valid())throw new Error('Audio maintenance room changed while preparing refused action');
+  readSets.push({commands:structuredClone(commands),session:prepared.state.session,sceneRevision:prepared.state.sceneRevision,objects:structuredClone(prepared.objects)});
+  const result=await lease.execute(commands,prepared.state.sceneRevision,prepared.objects);checkSparse(result);observations.push(structuredClone(result));return result;
+ },directory);
+ await probeNativeModelMaintenance(execute,async commands=>{
+  const prepared=await transport.client.prepare(commands,lease.state());if(!lease.valid())throw new Error('Model maintenance room changed while preparing refused action');
   readSets.push({commands:structuredClone(commands),session:prepared.state.session,sceneRevision:prepared.state.sceneRevision,objects:structuredClone(prepared.objects)});
   const result=await lease.execute(commands,prepared.state.sceneRevision,prepared.objects);checkSparse(result);observations.push(structuredClone(result));return result;
  },directory);

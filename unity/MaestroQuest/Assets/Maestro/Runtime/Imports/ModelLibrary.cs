@@ -75,22 +75,26 @@ namespace Maestro.Quest.Imports
         {
             // Revalidate at the persistence boundary; the caller cannot substitute a hash/path.
             using var check = Inspect(asset.Name, asset.Bytes); if (check.Hash != asset.Hash) throw new ModelImportException("The selected model changed during import.");
-            Directory.CreateDirectory(directory);
-            string path = Path.Combine(directory, check.Hash + ".glb");
-            bool exists = File.Exists(path);
+            string attribution=check.Inspection.Attribution+(included?.Hash==check.Hash?"\n\n"+included.Attribution:"");
+            string metadata=check.Name+"\nSHA256: "+check.Hash+"\n\n"+attribution;
+            if(Encoding.UTF8.GetByteCount(metadata)>MaximumMetadataBytes)throw new ModelImportException("This model's attribution exceeds the 128 KiB metadata limit. Its existing files are preserved.");
+            InvalidateReview(check.Hash);
+            WorkspaceFileInventory.Parents(Path.GetDirectoryName(directory));
+            Directory.CreateDirectory(directory);WorkspaceArchive.NoLink(directory);
+            string path = AssetPath(check.Hash);
+            bool exists = File.Exists(path);if(exists)WorkspaceArchive.NoLink(path);
             bool intact = exists && new FileInfo(path).Length == asset.Bytes.Length && Hash(ReadBounded(path)) == check.Hash;
             if (!intact)
             {
-                var files = new DirectoryInfo(directory).GetFiles("*.glb");
+                var files = new DirectoryInfo(directory).GetFiles("*.glb");foreach(var file in files)WorkspaceArchive.NoLink(file.FullName);
                 if ((!exists && files.Length >= 32) || files.Sum(file => file.Length) - (exists ? new FileInfo(path).Length : 0) + asset.Bytes.Length > 256L * 1024 * 1024)
                     throw new ModelImportException("The model library is full (32 files or 256 MB). Existing models remain available.");
-                string temporary = path + ".part";
-                try { File.WriteAllBytes(temporary, asset.Bytes); if (exists) Maestro.Quest.Persistence.FilePublication.Replace(temporary, path, null); else File.Move(temporary, path); }
+                string temporary = path + "." + Guid.NewGuid().ToString("N") + ".part";
+                try { using(var output=new FileStream(temporary,FileMode.CreateNew,FileAccess.Write,FileShare.None)){output.Write(check.Bytes,0,check.Bytes.Length);output.Flush(true);} if (exists) FilePublication.Replace(temporary, path, null); else File.Move(temporary, path); }
                 finally { if (File.Exists(temporary)) File.Delete(temporary); }
             }
             // Original metadata remains in the GLB; the sidecar also preserves package attribution.
-            string attribution=check.Inspection.Attribution+(included?.Hash==check.Hash?"\n\n"+included.Attribution:"");
-            File.WriteAllText(Path.Combine(directory, check.Hash + ".txt"), check.Name + "\nSHA256: " + check.Hash + "\n\n" + attribution, Encoding.UTF8);
+            ImportedAssetSidecar.SaveAcceptedDocument(Path.Combine(directory,check.Hash+".txt"),metadata,MaximumMetadataBytes,CancellationToken.None);
             RememberBounds(check);
         }
         public sealed class Entry { public string Hash,Name;public long Bytes; }
@@ -100,7 +104,7 @@ namespace Maestro.Quest.Imports
         internal async Task<ImportedAssetInventory<Entry>> ScanAsync(CancellationToken cancel=default)
         {
             using var use=workspaceWrites.Write();await writes.WaitAsync(cancel).ConfigureAwait(false);
-            try {return await Task.Run(()=>ImportedAssetInventory.Scan(directory,".glb",new ImportedAssetReadBudget(256L*1024*1024,ImportedAssetInventory.ModelMetadataBytes),
+            try {return await Task.Run(()=>{var snapshot=ImportedAssetInventory.Scan(directory,".glb",new ImportedAssetReadBudget(256L*1024*1024,ImportedAssetInventory.ModelMetadataBytes),
                 (path,budget,token)=>{
                     WorkspaceArchive.NoLink(path);string hash=Path.GetFileNameWithoutExtension(path);long length=new FileInfo(path).Length;
                     if(!ValidHash(hash)||length<28||length>ModelInspection.MaximumBytes)throw new ModelImportException("The model library contains an invalid entry. Inspect the imported files.");
@@ -108,21 +112,12 @@ namespace Maestro.Quest.Imports
                     var metadata=budget.ReadMetadata(Path.Combine(directory,hash+".txt"),128*1024,token,()=>new ModelImportException("The model's information file is too large."));
                     if(metadata!=null){using var reader=new StreamReader(new MemoryStream(metadata,false),Encoding.UTF8,true);name=SafeName(reader.ReadLine());}
                     return new Entry {Hash=hash,Name=name,Bytes=length};
-                },cancel),cancel).ConfigureAwait(false);} finally {writes.Release();}
+                },cancel);snapshot.SourceRevision=InventoryRevision;return snapshot;},cancel).ConfigureAwait(false);} finally {writes.Release();}
         }
         internal bool TryCaptureArchive(out WorkspaceLibraryCapture capture)
         {
             capture=null;if(!writes.Wait(0))return false;
-            capture=new WorkspaceLibraryCapture(()=>writes.Release(),(documents,assets)=>{
-                if(!Directory.Exists(directory))return;WorkspaceArchive.NoLink(directory);
-                var files=new DirectoryInfo(directory).GetFiles("*.glb");
-                if(files.Length>32||files.Sum(x=>x.Length)>256L*1024*1024)throw new ModelImportException("Model library exceeds its archive budget.");
-                foreach(var file in files){
-                    string hash=Path.GetFileNameWithoutExtension(file.Name);if(!ValidHash(hash))throw new ModelImportException("Model library contains an invalid content identity.");
-                    string path=file.FullName;assets.Add("models/"+hash+".glb",()=>WorkspaceLibraryCapture.Open(path));
-                    string info=Path.Combine(directory,hash+".txt");if(File.Exists(info))documents.Add("models/"+hash+".txt",WorkspaceLibraryCapture.ReadDocument(info,128*1024));
-                }
-            });return true;
+            capture=new WorkspaceLibraryCapture(()=>writes.Release(),(documents,assets)=>WorkspaceLibraryCapture.CollectAssetLibrary(directory,"models/",".glb",MaximumFiles,256L*1024*1024,documents,assets));return true;
         }
         public static byte[] ReadBounded(string path,CancellationToken cancellation=default)
         {

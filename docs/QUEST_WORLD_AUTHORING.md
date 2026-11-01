@@ -4143,7 +4143,40 @@ workspace uses the same model hash.
 
 Saved and temporary rooms, dormant objects, Undo/Redo, inactive Maestro profiles
 and model-specific calibration/material settings retain model references. Missing
-or unreadable retained evidence stays uncertain. This foundation does not yet
-expose model download removal; image and finite sound cleanup remain the
-separately guarded actions described above. Users and agents continue to use the
-same model import and acceptance actions.
+or unreadable retained evidence stays uncertain. Users and agents use the same
+model import, acceptance and guarded download-maintenance actions.
+
+## Remove an unused model download
+
+Use `model.library.inspect` to find an exact imported model identity, then
+`model.download.inspect` to read its files and reference protection. Removal uses
+`model.download.edit` with that `modelHash` and the returned `inspectionRevision`.
+The generated book form and agent/program interface share the same definitions,
+revision guards and native execution. The book additionally presents a permanent-
+action confirmation. The agent should remove a download only on explicit user
+intent; inspection never authorizes removal by itself.
+
+Removal deletes only the unused private GLB/VRM payload. Its complete metadata,
+including name and attribution, stays in the workspace. The original external
+export is unaffected. Importing exactly the same model bytes restores the same
+hash and preserves healthy metadata; a differently rigged or exported model has
+a different identity. The included Maestro avatar is always protected.
+
+Current, dormant and temporary room objects, Undo/Redo, inactive avatar profiles,
+model-specific settings, saved/recovery content and program values protect their
+model. Loading, previews, background preparation and native users protect the
+source until they actually finish. Unreadable evidence refuses removal. A fresh
+reference check under the workspace hold is required even after a successful
+inspection. The passive `model.download.review` fact is cached file evidence,
+not current permission to delete.
+
+There is no Undo for download removal. Stop before dispatch cancels it; after
+dispatch, Stop may stop waiting while the removal finishes. Inspect the current
+file and historical receipt before another explicit request. Replaying an old
+completed request does not delete a model that was reimported later.
+
+Portable workspace archives retain valid metadata even when its model, image or
+sound payload was removed. Metadata alone does not count as an available asset
+or satisfy a missing reference. Archive format 33 adds this retention and reads
+format 32 archives as well. Archive entry and byte limits still apply; exceeding
+them fails explicitly and leaves the workspace unchanged.

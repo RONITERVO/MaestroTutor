@@ -38,7 +38,7 @@ namespace Maestro.Quest.Persistence
     /// download, activate a restore, migrate data, rebind IDs, or restore execution receipts/room scans.</summary>
     public static class WorkspaceArchive
     {
-        internal const int FormatVersion=32;
+        internal const int FormatVersion=33;
         public const int MaximumEntries=1536,MaximumManifestBytes=512*1024;
         public const long MaximumArchiveBytes=512L*1024*1024;
         static readonly UTF8Encoding Utf8=new(false,true);
@@ -94,17 +94,17 @@ namespace Maestro.Quest.Persistence
             manifest=Utf8.GetBytes(json.ToString(Formatting.None));if(manifest.Length>MaximumManifestBytes)throw Invalid("Archive manifest is too large.");
             cancellation.ThrowIfCancellationRequested();return new WorkspaceArchiveReceipt {ManifestHash=ModelLibrary.Hash(manifest),Summary=CopySummary(snapshot.Metadata.Summary,budget.Total)};
         }
-        static List<Entry> Manifest(byte[] bytes)
+        static List<Entry> Manifest(byte[] bytes,out int formatVersion)
         {
             using var reader=new JsonTextReader(new StringReader(Utf8.GetString(bytes))) {MaxDepth=8,DateParseHandling=DateParseHandling.None};
             var root=JObject.Load(reader,new JsonLoadSettings {DuplicatePropertyNameHandling=DuplicatePropertyNameHandling.Error});
-            if(reader.Read()||root.Count!=3||(string)root["format"]!="maestro-native-workspace"||root["version"]?.Type!=JTokenType.Integer||(int)root["version"]!=FormatVersion||root["entries"] is not JArray array||array.Count>MaximumEntries)throw Invalid("Unsupported workspace archive manifest.");
-            var entries=new List<Entry>();var budget=new Budget();
+            if(reader.Read()||root.Count!=3||(string)root["format"]!="maestro-native-workspace"||root["version"]?.Type!=JTokenType.Integer||((int)root["version"] is not (32 or FormatVersion))||root["entries"] is not JArray array||array.Count>MaximumEntries)throw Invalid("Unsupported workspace archive manifest.");
+            formatVersion=(int)root["version"];var entries=new List<Entry>();var budget=new Budget();
             foreach(var value in array){
                 if(value is not JObject item||item.Count!=3||item["path"]?.Type!=JTokenType.String||item["bytes"]?.Type!=JTokenType.Integer||item["sha256"]?.Type!=JTokenType.String||!ModelLibrary.ValidHash((string)item["sha256"]))throw Invalid("Invalid manifest entry.");
                 var e=new Entry {Path=(string)item["path"],Bytes=(long)item["bytes"],Hash=(string)item["sha256"]};budget.Add(e.Path,e.Bytes);entries.Add(e);
             }
-            WorkspaceArchiveMetadata.CheckNames(entries.Select(x=>x.Path));return entries;
+            WorkspaceArchiveMetadata.CheckNames(entries.Select(x=>x.Path),formatVersion);return entries;
         }
         // Inspect the bounded central directory before ZipArchive allocates its entry collection.
         // This format deliberately excludes split/encrypted/ZIP64 containers; our writer needs none.
@@ -138,11 +138,11 @@ namespace Maestro.Quest.Persistence
             try{
                 using var zip=new ZipArchive(source,ZipArchiveMode.Read,true);if(zip.Entries.Count>MaximumEntries+1)throw Invalid("Too many archive entries.");
                 var index=zip.Entries.ToDictionary(x=>x.FullName,StringComparer.Ordinal);
-                using var manifestStream=index["manifest.json"].Open();byte[] manifest=Read(manifestStream,MaximumManifestBytes,cancellation);var entries=Manifest(manifest);
+                using var manifestStream=index["manifest.json"].Open();byte[] manifest=Read(manifestStream,MaximumManifestBytes,cancellation);var entries=Manifest(manifest,out int formatVersion);
                 if(index.Count!=entries.Count+1||entries.Any(x=>!index.ContainsKey(x.Path)))throw Invalid("Archive inventory differs from its manifest.");
                 byte[] Verified(Entry entry){var zipped=index[entry.Path];if(zipped.Length!=entry.Bytes)throw Invalid("Archive entry length mismatch.");using var input=zipped.Open();var bytes=Read(input,(int)entry.Bytes,cancellation);if(bytes.Length!=entry.Bytes||ModelLibrary.Hash(bytes)!=entry.Hash)throw Invalid("Archive entry integrity mismatch.");return bytes;}
                 var documents=entries.Where(x=>!WorkspaceArchiveMetadata.IsAsset(x.Path)).ToDictionary(x=>x.Path,Verified,StringComparer.Ordinal);
-                var metadata=WorkspaceArchiveMetadata.Read(documents,entries.Where(x=>WorkspaceArchiveMetadata.IsAsset(x.Path)).Select(x=>x.Path));
+                var metadata=WorkspaceArchiveMetadata.Read(documents,entries.Where(x=>WorkspaceArchiveMetadata.IsAsset(x.Path)).Select(x=>x.Path),formatVersion);
                 var receipt=new WorkspaceArchiveReceipt {ManifestHash=ModelLibrary.Hash(manifest),Summary=CopySummary(metadata.Summary,entries.Sum(x=>x.Bytes))};
                 Directory.CreateDirectory(directory);owned=new PreparedWorkspaceArchive(directory,parent,receipt,manifest);
                 void Save(string path,byte[] bytes){cancellation.ThrowIfCancellationRequested();string target=Path.GetFullPath(Path.Combine(directory,path.Replace('/',Path.DirectorySeparatorChar)));if(!target.StartsWith(directory+Path.DirectorySeparatorChar,StringComparison.Ordinal))throw Invalid("Unsafe archive target.");Directory.CreateDirectory(Path.GetDirectoryName(target));using var file=new FileStream(target,FileMode.CreateNew,FileAccess.Write,FileShare.None);file.Write(bytes,0,bytes.Length);file.Flush(true);}
@@ -157,7 +157,7 @@ namespace Maestro.Quest.Persistence
         {
             cancellation.ThrowIfCancellationRequested();
             if(manifest==null||manifest.Length<1||manifest.Length>MaximumManifestBytes)throw Invalid("Invalid prepared manifest size.");
-            NoLink(directory);var entries=Manifest(manifest);var actual=new HashSet<string>(StringComparer.Ordinal);int visited=0;
+            NoLink(directory);var entries=Manifest(manifest,out int formatVersion);var actual=new HashSet<string>(StringComparer.Ordinal);int visited=0;
             void Walk(string folder,int depth=0){if(depth>2)throw Invalid("Prepared paths are too deep.");foreach(string path in Directory.EnumerateFileSystemEntries(folder)){
                 cancellation.ThrowIfCancellationRequested();if(++visited>MaximumEntries*2)throw Invalid("Too many prepared paths.");NoLink(path);
                 if(Directory.Exists(path))Walk(path,depth+1);else {string name=path.Substring(directory.Length+1).Replace(Path.DirectorySeparatorChar,'/');if(!actual.Add(name))throw Invalid("Duplicate prepared file.");}
@@ -165,7 +165,7 @@ namespace Maestro.Quest.Persistence
             Walk(directory);if(actual.Count!=entries.Count||entries.Any(x=>!actual.Contains(x.Path)))throw Invalid("Prepared files differ from the inspected inventory.");
             byte[] Verified(Entry entry){string path=Path.Combine(directory,entry.Path.Replace('/',Path.DirectorySeparatorChar));using var input=new FileStream(path,FileMode.Open,FileAccess.Read,FileShare.Read);if(input.Length!=entry.Bytes)throw Invalid("Prepared file length changed.");var bytes=Read(input,(int)entry.Bytes,cancellation);if(bytes.Length!=entry.Bytes||ModelLibrary.Hash(bytes)!=entry.Hash)throw Invalid("Prepared file changed after inspection.");return bytes;}
             var documents=entries.Where(x=>!WorkspaceArchiveMetadata.IsAsset(x.Path)).ToDictionary(x=>x.Path,Verified,StringComparer.Ordinal);
-            var metadata=WorkspaceArchiveMetadata.Read(documents,entries.Where(x=>WorkspaceArchiveMetadata.IsAsset(x.Path)).Select(x=>x.Path));
+            var metadata=WorkspaceArchiveMetadata.Read(documents,entries.Where(x=>WorkspaceArchiveMetadata.IsAsset(x.Path)).Select(x=>x.Path),formatVersion);
             foreach(var document in documents)copy?.Invoke(document.Key,document.Value);
             foreach(var entry in entries.Where(x=>WorkspaceArchiveMetadata.IsAsset(x.Path))){var bytes=Verified(entry);metadata.ValidateAsset(entry.Path,bytes);copy?.Invoke(entry.Path,bytes);}
             cancellation.ThrowIfCancellationRequested();return new WorkspaceArchiveReceipt {ManifestHash=ModelLibrary.Hash(manifest),Summary=CopySummary(metadata.Summary,entries.Sum(x=>x.Bytes))};

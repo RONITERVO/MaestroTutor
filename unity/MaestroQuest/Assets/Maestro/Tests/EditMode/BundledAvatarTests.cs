@@ -8,6 +8,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using Maestro.Quest.Imports;
 using Maestro.Quest.Persistence;
+using Maestro.Quest.Programs;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NUnit.Framework;
 namespace Maestro.Quest.Tests
@@ -17,6 +19,38 @@ namespace Maestro.Quest.Tests
         string directory;byte[] bytes;
         [SetUp]public void SetUp(){directory=Path.Combine(Path.GetTempPath(),"MaestroIncludedTests-"+Guid.NewGuid().ToString("N"));bytes=ModelFixture.Mixamo();}
         [TearDown]public void TearDown(){if(Directory.Exists(directory))Directory.Delete(directory,true);}
+        [TestCase("maximum")][TestCase("multiline")][TestCase("escaped")][TestCase("unicode")]
+        public void IncludedAvatarFactTextProjectionBoundsUnsafeDisplayValuesAndSignalsSummaries(string kind)
+        {
+            string original=kind switch {
+                "maximum"=>new string('a',2048),
+                "multiline"=>"First author line\r\nSecond\tline\0Full terms retained",
+                "escaped"=>string.Concat(Enumerable.Repeat("\\\"",1024)),
+                _=>string.Concat(Enumerable.Repeat("Dog \U0001F436 ",300))+"\ud800"
+            };
+            var source=new JObject {["name"]=original,["attribution"]=original};var before=source.DeepClone();
+            string name=AvatarModelCapability.IncludedMetadataText((string)source["name"]),attribution=AvatarModelCapability.IncludedMetadataText((string)source["attribution"],true);
+            Assert.That(name,Does.Contain("[shortened]"));Assert.That(attribution,Does.Contain("[summary; full attribution retained]"));
+            foreach(string text in new[]{name,attribution}){
+                Assert.That(text.Length,Is.LessThanOrEqualTo(128));Assert.That(JsonConvert.ToString(text).Length,Is.LessThanOrEqualTo(128));Assert.That(text.Any(char.IsControl),Is.False);
+                for(int i=0;i<text.Length;i++)if(char.IsHighSurrogate(text[i])){
+                    Assert.That(i+1,Is.LessThan(text.Length));Assert.That(char.IsLowSurrogate(text[++i]),Is.True);
+                }else Assert.That(char.IsLowSurrogate(text[i]),Is.False,"Display text must not contain a split Unicode character");
+            }
+            var value=new JObject {["modelHash"]=new string('a',64),["name"]=name,["bundled"]=true,["attribution"]=attribution,["walkClipIndex"]=31};
+            var definition=BehaviourCatalog.Fact("avatar.included");var typed=ProgramValue.Literal(value,definition.Type);
+            Assert.That(definition.Version,Is.EqualTo(1));Assert.That(definition.ValidValue(typed),Is.True);Assert.That(typed.Characters,Is.LessThanOrEqualTo(1024));
+            Assert.That(JToken.DeepEquals(source,before),Is.True,"The display projection must not overwrite complete metadata");
+        }
+        [Test]public void IncludedAvatarFactTextProjectionPreservesOrdinaryMetadataAndCanonicalParserRules()
+        {
+            const string name="Maestro",attribution="Original project artwork — full use terms";
+            Assert.That(AvatarModelCapability.IncludedMetadataText(name),Is.EqualTo(name));Assert.That(AvatarModelCapability.IncludedMetadataText(attribution,true),Is.EqualTo(attribution));
+            Assert.That(AvatarModelCapability.IncludedMetadataText(null),Is.Empty);Assert.That(AvatarModelCapability.IncludedMetadataText("",true),Is.Empty);
+            var manifest=JObject.Parse(BundledAvatarFixture.Manifest(bytes));manifest["attribution"]="First line\nSecond line";
+            Assert.Throws<ModelImportException>(()=>BundledAvatar.FromDirectory(manifest.ToString(),directory),"Display sanitization must not silently broaden the canonical package format");
+            Assert.That((string)manifest["attribution"],Is.EqualTo("First line\nSecond line"));
+        }
         [Test]public void DesktopAndCompressedApkReadTheSameBoundedModelAndRejectChangedContent()
         {
             var included=BundledAvatarFixture.Write(directory,bytes);Assert.That(included.Read().Bytes,Is.EqualTo(bytes));string apk=Path.Combine(directory,"app.apk");

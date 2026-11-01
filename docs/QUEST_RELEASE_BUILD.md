@@ -1045,3 +1045,52 @@ that directory. No APK/AAB, signing, installation, provider call, deployment,
 device or Meta operation occurred. This is source/compile evidence; installed
 **D85F3CB7 / f58dab48**, packaged **5899972E / 5100f612** and broader physical and
 release acceptance remain unchanged.
+
+
+## Model maintenance compile checkpoint — 2026-11-01
+
+Guarded model download cleanup, full sidecar archive retention and exact reimport
+passed full EditMode (2,187 passes, thirteen explicit Windows symlink-privilege
+skips), the three focused avatar PlayMode regressions and full offline Headless
+and Book journeys. The earlier 212-method PlayMode selection remains separate
+proof from before the final metadata/probe fixes; it is not relabeled as a rerun.
+See the [native journey evidence](QUEST_NATIVE_ROOM_PROBE.md#shared-model-download-maintenance-journey--2026-11-01)
+for the complete coverage boundaries.
+
+The fresh development-only export is
+`D:/Projects/Builds/MaestroQuestVerify/Builds/Android-compile-20261101-012034-5019082e`.
+Unity 6000.3.24f1 reports success, five warnings and zero errors. Five explicitly
+selected compilation/merge targets produce a 53-node task graph: 41 actionable
+tasks execute, nine nodes are up-to-date and three have no source. No packaging,
+signing or installation task runs, and no APK/AAB is produced.
+
+Independent review checks all 22 selected ARM64 library hashes and all 73 ELF
+LOAD segments for alignment of at least 16 KiB and congruent offsets. Five
+unselected dependency libraries remain in the intermediate; final package ABI
+filtering is not established. The final merged development manifest declares
+`com.maestro.quest.development`, Quest 3, minimum API 32 and target API 34. The
+platform profile is disabled in source, mirror and the exported TextAsset.
+These are observed build properties, not Store or device acceptance.
+
+The production web build is fresh: all 152 payloads match between dist, the
+Unity mirror and export. The mirror also has 161 strictly paired default Unity
+metadata companions. The first independent verifier incorrectly counted these
+as unexpected web payloads; its failed report is preserved. The corrected
+verifier validates those companions separately and still requires exact payload
+sets and hashes. No product source or rebuild changed for that correction.
+
+NativeBrowser's unchanged AAR, test and lint results are reused by Gradle:
+128 test passes/two skips and six lint warnings/zero errors. They are not new
+test or lint executions. All 4,921 frozen source/configuration files and sixteen
+protected unrelated files match after the build and independent review. The
+Unity Hub authentication broker is narrowly identified by exact executable,
+command and Hub parent; it is left running and other Editors still block the
+build mirror. No user device ADB session is touched.
+
+Evidence lives under `.quest-evidence/model-reclamation-20261101/android-final/`:
+`run.json`, `source-inputs.json`, `prebuilt-artifacts.json`,
+`independent-review-2.json` and `independent-review-result.md`. The original
+`independent-review.json` records the verifier error. No provider, device,
+signing, deployment or Meta action occurred. Installed **D85F3CB7 / f58dab48**
+and packaged **5899972E / 5100f612** remain unchanged; physical and release
+acceptance remain open.

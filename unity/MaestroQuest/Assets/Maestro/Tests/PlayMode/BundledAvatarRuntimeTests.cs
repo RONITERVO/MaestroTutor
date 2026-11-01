@@ -31,6 +31,24 @@ namespace Maestro.Quest.Tests
         }
         IEnumerator Loaded(){float until=Time.realtimeSinceStartup+20;while((avatar.ModelBusy||editor.AvatarSelectionPending)&&Time.realtimeSinceStartup<until)yield return null;Assert.That(avatar.ModelBusy,Is.False);Assert.That(editor.AvatarSelectionPending,Is.False);Assert.That(avatar.ModelLoad.IsCompleted,Is.True);}
         JObject Fact(string name){Assert.That(BehaviourCatalog.TryRead(name,new BehaviourCatalog.FactContext(editor:editor),out var value),Is.True);return JObject.FromObject(value.Value);}
+        JObject IncludedCatalogValue()
+        {
+            var catalog=new RoomCapabilityCatalog(editor);
+            Assert.That(catalog.Execute(new JObject {["operation"]="inspect",["category"]="facts",["capability"]="avatar.included",["version"]=1},out var error),Is.True,error);
+            var observation=catalog.Observe();Assert.That((bool)observation["available"],Is.True,observation.ToString());
+            Assert.That((int)observation["version"],Is.EqualTo(1));var value=(JObject)observation["value"];
+            CollectionAssert.AreEquivalent(new[]{"modelHash","name","bundled","attribution","walkClipIndex"},value.Properties().Select(p=>p.Name));
+            var definition=BehaviourCatalog.Fact("avatar.included");var typed=ProgramValue.Literal(value,definition.Type);
+            Assert.That(definition.ValidValue(typed),Is.True);Assert.That(typed.Characters,Is.LessThanOrEqualTo(1024));
+            foreach(var text in value.Properties().Where(p=>p.Value.Type==JTokenType.String)){
+                Assert.That(((string)text.Value).Length,Is.LessThanOrEqualTo(128),text.Name);
+                Assert.That(((string)text.Value).Any(char.IsControl),Is.False,text.Name);
+            }
+            // A following native query must still work after reading the attribution.
+            Assert.That(catalog.Execute(new JObject {["operation"]="inspect",["category"]="facts",["capability"]="avatar.model",["version"]=1},out error),Is.True,error);
+            Assert.That((bool)catalog.Observe()["available"],Is.True);
+            return value;
+        }
         JObject DefaultCall()=>new() {["operation"]="start",["runId"]=actions.Observe()["nextRunId"].DeepClone(),["call"]=new JObject {["id"]="avatar.model.select",["version"]=1,["arguments"]=new JObject {["target"]="maestro",["modelHash"]="",["revision"]=editor.ObjectRevision("maestro")}}};
         IEnumerator Completed(string phase="completed") {float until=Time.realtimeSinceStartup+20;while(Time.realtimeSinceStartup<until){string state=(string)actions.Observe()["selected"]["phase"];if(state is "completed" or "failed" or "cancelled")break;yield return null;}Assert.That((string)actions.Observe()["selected"]["phase"],Is.EqualTo(phase),actions.Observe().ToString());}
         [UnityTest]public IEnumerator IncludedAvatarLoadsOfflineAndSavedSelectionSurvivesAnAppArtworkUpdate()
@@ -65,11 +83,39 @@ namespace Maestro.Quest.Tests
         }
         [UnityTest]public IEnumerator ShippedModelUsesTheRealDefaultPoseAndWalkPathWithoutStartingItsClipOnLoad()
         {
-            var included=BundledAvatar.FromApplication();Assert.That(included,Is.Not.Null,"Release artwork must be explicitly packaged");Open(included);yield return Loaded();
+            var included=BundledAvatar.FromApplication();Assert.That(included,Is.Not.Null,"Release artwork must be explicitly packaged");
+            string canonicalName=included.Name,canonicalAttribution=included.Attribution;Open(included);yield return Loaded();
+            string sidecar=Path.Combine(directory,"saved","models",included.Hash+".txt");var originalMetadata=File.ReadAllBytes(sidecar);
+            var metadata=IncludedCatalogValue();Assert.That((bool)metadata["bundled"],Is.True);Assert.That((string)metadata["modelHash"],Is.EqualTo(included.Hash));
+            Assert.That((string)metadata["name"],Is.EqualTo(canonicalName));Assert.That((string)metadata["attribution"],Is.Not.Empty);Assert.That((int)metadata["walkClipIndex"],Is.EqualTo(included.WalkClipIndex));
+            Assert.That(included.Name,Is.EqualTo(canonicalName));Assert.That(included.Attribution,Is.EqualTo(canonicalAttribution));
+            Assert.That(File.ReadAllText(sidecar),Does.Contain(canonicalAttribution));Assert.That(File.ReadAllBytes(sidecar),Is.EqualTo(originalMetadata),"Fact inspection must not shorten canonical attribution");
             Assert.That(avatar.ModelLoad.Result,Is.True,avatar.ModelStatus);Assert.That(avatar.PoseRig.Capture(),Has.Length.EqualTo(17));Assert.That(avatar.CustomModel.IsHumanoid,Is.True);Assert.That(avatar.IsImportedClipPlaying,Is.False);Assert.That(avatar.CustomModel.ClipCount,Is.GreaterThan(0));
             var wrist=avatar.PoseRig.CanonicalBone(PoseJoint.LeftHand);var before=wrist.localRotation;avatar.SetEditing(true);avatar.PoseRig.SetPosing(true);avatar.PoseRig.Rotate(PoseJoint.LeftHand,wrist.parent.rotation*Quaternion.Euler(25,0,0));yield return null;Assert.That(Quaternion.Angle(before,wrist.localRotation),Is.GreaterThan(5));avatar.SetEditing(false);
             avatar.SpatialWalk(.4f);Assert.That(avatar.IsImportedClipPlaying,Is.True);yield return new WaitForSeconds(.1f);avatar.SpatialWalk(0);Assert.That(avatar.IsImportedClipPlaying,Is.False);
             Assert.That(File.ReadAllBytes(Path.Combine(directory,"saved","models",included.Hash+".glb")),Is.EqualTo(included.Read().Bytes));
+        }
+        [UnityTest]public IEnumerator IncludedAvatarFactBoundsMaximumMetadataWithoutChangingCanonicalAttribution()
+        {
+            var bytes=ModelFixture.Mixamo();string package=Path.Combine(directory,"package");BundledAvatarFixture.Write(package,bytes);
+            var manifest=JObject.Parse(BundledAvatarFixture.Manifest(bytes));string name=new string('N',100),attribution="Full author and use terms: "+new string('a',2021);
+            Assert.That(attribution.Length,Is.EqualTo(2048));manifest["name"]=name;manifest["attribution"]=attribution;
+            var included=BundledAvatar.FromDirectory(manifest.ToString(),package);Open(included);yield return Loaded();
+            string sidecar=Path.Combine(directory,"saved","models",included.Hash+".txt");var originalMetadata=File.ReadAllBytes(sidecar);
+            var first=IncludedCatalogValue();Assert.That((bool)first["bundled"],Is.True);Assert.That((string)first["modelHash"],Is.EqualTo(included.Hash));
+            Assert.That((string)first["name"],Is.EqualTo(name));Assert.That((string)first["attribution"],Does.Contain("[summary; full attribution retained]"));Assert.That((int)first["walkClipIndex"],Is.EqualTo(-1));
+            var accepted=first.DeepClone();first["name"]="Changed consumer copy";first["attribution"]="Changed consumer copy";
+            Assert.That(JToken.DeepEquals(IncludedCatalogValue(),accepted),Is.True,"A caller cannot mutate later observations");
+            Assert.That(included.Name,Is.EqualTo(name));Assert.That(included.Attribution,Is.EqualTo(attribution));
+            Assert.That(File.ReadAllText(sidecar),Does.Contain(attribution));Assert.That(File.ReadAllBytes(sidecar),Is.EqualTo(originalMetadata));
+        }
+        [UnityTest]public IEnumerator IncludedAvatarFactDistinguishesMissingNativeContextFromSketchFallback()
+        {
+            Assert.That(BehaviourCatalog.TryRead("avatar.included",new BehaviourCatalog.FactContext(),out _),Is.False);
+            Assert.That(BehaviourCatalog.TryRead("avatar.included",1,null,new BehaviourCatalog.FactContext(),out _),Is.False);
+            Open(null);yield return null;var value=IncludedCatalogValue();
+            Assert.That((bool)value["bundled"],Is.False);Assert.That((string)value["modelHash"],Is.Empty);Assert.That((string)value["name"],Is.EqualTo("Sketch Maestro"));
+            Assert.That((string)value["attribution"],Is.EqualTo("Maestro project artwork"));Assert.That((int)value["walkClipIndex"],Is.EqualTo(-1));Assert.That(editor.IncludedAvatar,Is.Null);
         }
         [UnityTearDown]public IEnumerator TearDown(){
             var modelLoad=avatar?avatar.ModelLoad:null;var includedCopy=editor?editor.Motions?.IncludedInitialization:null;

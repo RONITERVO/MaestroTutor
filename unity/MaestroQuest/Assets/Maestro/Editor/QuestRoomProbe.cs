@@ -38,6 +38,7 @@ namespace Maestro.Quest.Editor
                 var resume=JObject.Parse(File.ReadAllText(resumePath));
                 if((int?)resume["version"]!=1||!Guid.TryParseExact((string)resume["sourceRun"],"N",out _)||(string)resume["sourceRun"]==(string)owner["id"])throw new InvalidOperationException("Invalid learner restore receipt.");
             }
+            ResolveTimeoutSeconds(owner,Environment.GetEnvironmentVariable("MAESTRO_ROOM_PROBE_LEARNER")=="1");
             SessionState.SetString(Key,directory);
             // This is a disposable batch mirror, never an interactive user's open scene.
             EditorSceneManager.NewScene(NewSceneSetup.EmptyScene,NewSceneMode.Single);
@@ -52,12 +53,13 @@ namespace Maestro.Quest.Editor
                     var admission=QuestRoomProbeRestart.Resolve(directory,owner);
                     started=EditorApplication.timeSinceStartup;next=0;finishing=false;
                     // Deliberate interactive learner sessions need time between user turns.
-                    timeoutSeconds=Environment.GetEnvironmentVariable("MAESTRO_ROOM_PROBE_LEARNER")=="1"?3600:900;
+                    timeoutSeconds=ResolveTimeoutSeconds(owner,Environment.GetEnvironmentVariable("MAESTRO_ROOM_PROBE_LEARNER")=="1");
                     avatarProbe=Environment.GetEnvironmentVariable("MAESTRO_ROOM_PROBE_AVATAR")=="1"?new QuestAvatarProbe():null;
                     Application.runInBackground=true;Application.targetFrameRate=72;
                     root=new GameObject("Maestro probe app");root.SetActive(false);
                     var room=root.AddComponent<MaestroRoom>();room.ProbeWorkspaceDirectory=admission.WorkspaceDirectory;root.SetActive(true);
                     agent=root.GetComponent<RoomAgent>();
+                    QuestRoomProbeModelMaintenance.Configure(root,directory);
                     bool synthetic=Environment.GetEnvironmentVariable("MAESTRO_ROOM_PROBE_PHYSICS")=="1";
                     if(synthetic){
                         var floor=GameObject.CreatePrimitive(PrimitiveType.Cube);floor.name="Probe-only synthetic scanned floor";floor.transform.SetParent(root.transform,false);floor.transform.position=new Vector3(0,-.1f,0);floor.transform.localScale=new Vector3(20,.2f,20);floor.layer=RoomPhysicsLayers.Scanned;
@@ -72,7 +74,7 @@ namespace Maestro.Quest.Editor
                     if(Environment.GetEnvironmentVariable("MAESTRO_ROOM_PROBE_AUDIO")=="1")Publish("sound-fixture.json",QuestRoomProbeSound.Seed(root));
                     if(Environment.GetEnvironmentVariable("MAESTRO_ROOM_PROBE_LIVE_AUDIO")=="1")Publish("live-sound-fixture.json",QuestRoomProbeLiveSound.Seed());
                     using var process=System.Diagnostics.Process.GetCurrentProcess();
-                    Publish("ready.json",new JObject {["version"]=1,["id"]=id,["boundary"]="Real Unity app in Editor; no Android WebView, headset or real room scan",["syntheticPhysics"]=synthetic,["syntheticScan"]=syntheticScan,["processId"]=process.Id,["processStartedAt"]=new DateTimeOffset(process.StartTime.ToUniversalTime()).ToUnixTimeMilliseconds(),["workspaceDirectory"]=admission.WorkspaceDirectory,["restartOf"]=admission.RestartOf});
+                    Publish("ready.json",new JObject {["version"]=1,["id"]=id,["boundary"]="Real Unity app in Editor; no Android WebView, headset or real room scan",["syntheticPhysics"]=synthetic,["syntheticScan"]=syntheticScan,["processId"]=process.Id,["processStartedAt"]=new DateTimeOffset(process.StartTime.ToUniversalTime()).ToUnixTimeMilliseconds(),["workspaceDirectory"]=admission.WorkspaceDirectory,["restartOf"]=admission.RestartOf,["fullJourneyTimeoutMinutes"]=(int?)owner["fullJourneyTimeoutMinutes"]??0,["sessionTimeoutSeconds"]=timeoutSeconds});
                 }catch(Exception e){Fail(e);}
             }else if(state==PlayModeStateChange.EnteredEditMode){
                 directory=SessionState.GetString(Key,"");if(string.IsNullOrEmpty(directory))return;
@@ -80,6 +82,23 @@ namespace Maestro.Quest.Editor
                 int exit=SessionState.GetInt(Key+".exit",1);SessionState.EraseString(Key);SessionState.EraseInt(Key+".exit");
                 Debug.Log("MAESTRO_PROBE_EXIT_REQUESTED "+exit);EditorApplication.Exit(exit);
             }
+        }
+        /// <summary>Validate the opt-in offline full journey budget without changing dedicated modes.</summary>
+        public static int ResolveTimeoutSeconds(JObject owner,bool interactiveLearner)
+        {
+            var value=owner["fullJourneyTimeoutMinutes"];
+            if(value==null)return interactiveLearner?3600:900; // Legacy and restart child receipts.
+            if(value.Type!=JTokenType.Integer)throw new InvalidDataException("The full journey timeout must be an integer.");
+            long minutes=value.Value<long>();
+            if(minutes==0)return interactiveLearner?3600:900;
+            if(minutes<15||minutes>30)throw new InvalidDataException("The full journey timeout must be between 15 and 30 minutes.");
+            if(interactiveLearner||owner["providerUsed"]?.Type!=JTokenType.Boolean||(bool)owner["providerUsed"]||
+                !string.IsNullOrEmpty((string)owner["providerScenario"])||!string.IsNullOrEmpty((string)owner["resumedFrom"])||owner.Property("restartOf")!=null||
+                ((string)owner["journey"]!="Headless"&&(string)owner["journey"]!="Book")||owner["sparseObjectView"]?.Type!=JTokenType.Boolean)
+                throw new InvalidDataException("The extended timeout requires an explicitly owned ordinary offline Headless or Book journey.");
+            foreach(var flag in new[]{"firstLearner","liveContinuity","nativeRestart","actionInterruption","transportOnly","motionOnly","steeringOnly","identityOnly"})
+                if(owner[flag]?.Type!=JTokenType.Boolean||(bool)owner[flag])throw new InvalidDataException("The extended timeout cannot be used by a dedicated or resumed journey.");
+            return checked((int)minutes*60);
         }
         static void Tick()
         {

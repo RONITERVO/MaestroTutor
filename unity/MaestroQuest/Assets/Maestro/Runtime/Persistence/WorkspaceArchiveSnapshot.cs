@@ -79,13 +79,18 @@ namespace Maestro.Quest.Persistence
             _ when HasHash(path,"program-modules.v1/",".json")=>ProgramModuleLibrary.MaximumBytes,
             _=>throw new InvalidDataException("Unknown or unsafe workspace archive path: "+path)
         };
-        internal static void CheckNames(IEnumerable<string> values)
+        internal static void CheckNames(IEnumerable<string> values,int formatVersion=WorkspaceArchive.FormatVersion)
         {
+            if(formatVersion is not (32 or WorkspaceArchive.FormatVersion))throw new InvalidDataException("Unsupported workspace archive format.");
             var names=new HashSet<string>(StringComparer.Ordinal);foreach(var path in values){if(path==null||!names.Add(path))throw new InvalidDataException("Duplicate archive path.");_=Limit(path);}
             if(names.Count>WorkspaceArchive.MaximumEntries||Required.Any(x=>!names.Contains(x))||names.Count(IsImage)>ImageLibrary.MaximumFiles||names.Count(IsSound)>AudioLibrary.MaximumFiles||names.Count(IsModel)>32||names.Count(IsMotion)>MotionLibrary.MaximumEntries||names.Count(x=>x.StartsWith("program-modules.v1/",StringComparison.Ordinal))>ProgramModuleLibrary.MaximumEntries)throw new InvalidDataException("Missing or excessive workspace entries.");
-            if(names.Any(x=>HasHash(x,"images/",".txt")&&!names.Contains(x.Substring(0,x.Length-4)+".image")))throw new InvalidDataException("Image information has no matching asset.");
-            if(names.Any(x=>HasHash(x,"audio/",".txt")&&!names.Contains(x.Substring(0,x.Length-4)+".wav")))throw new InvalidDataException("Sound information has no matching asset.");
-            if(names.Any(x=>x.StartsWith("models/",StringComparison.Ordinal)&&x.EndsWith(".txt",StringComparison.Ordinal)&&!names.Contains(x.Substring(0,x.Length-4)+".glb")))throw new InvalidDataException("Model information has no matching asset.");
+            // Version 32 required each sidecar to accompany a downloaded payload.
+            // Version 33 preserves metadata after guarded download cleanup as well.
+            if(formatVersion==32){
+                if(names.Any(x=>HasHash(x,"images/",".txt")&&!names.Contains(x.Substring(0,x.Length-4)+".image")))throw new InvalidDataException("Image information has no matching asset.");
+                if(names.Any(x=>HasHash(x,"audio/",".txt")&&!names.Contains(x.Substring(0,x.Length-4)+".wav")))throw new InvalidDataException("Sound information has no matching asset.");
+                if(names.Any(x=>x.StartsWith("models/",StringComparison.Ordinal)&&x.EndsWith(".txt",StringComparison.Ordinal)&&!names.Contains(x.Substring(0,x.Length-4)+".glb")))throw new InvalidDataException("Model information has no matching asset.");
+            }
         }
         static JObject Json(byte[] bytes,int maximum)
         {
@@ -105,9 +110,9 @@ namespace Maestro.Quest.Persistence
             if(result is RoomDocument room)RoomLiquidCodec.Decode(room,json);
             return result;
         }
-        internal static WorkspaceArchiveMetadata Read(Dictionary<string,byte[]> documents,IEnumerable<string> assetNames)
+        internal static WorkspaceArchiveMetadata Read(Dictionary<string,byte[]> documents,IEnumerable<string> assetNames,int formatVersion=WorkspaceArchive.FormatVersion)
         {
-            var assets=assetNames.ToHashSet(StringComparer.Ordinal);CheckNames(documents.Keys.Concat(assets));
+            var assets=assetNames.ToHashSet(StringComparer.Ordinal);CheckNames(documents.Keys.Concat(assets),formatVersion);
             foreach(var pair in documents){if(pair.Value.Length<1||pair.Value.Length>Limit(pair.Key))throw new InvalidDataException("Workspace document exceeds its limit.");}
             if(documents.TryGetValue(ProgramMemoryStore.FileName,out var memory))_=ProgramMemoryDocument.Decode(memory);
             var room=Document<RoomDocument>(documents,RoomStorage.FileName,"version","objects","structures","audioSources","viewpoint","world","environmentProfiles","appearances","visibilityLayers","lighting","worldTime","weather","regions");RoomStorage.Normalize(room);
@@ -123,9 +128,12 @@ namespace Maestro.Quest.Persistence
             foreach(var entry in motions.entries.Where(x=>!x.removed))result.Motions.Add("motions/"+entry.hash+".motion.glb",entry);
             if(!assets.Where(IsMotion).ToHashSet(StringComparer.Ordinal).SetEquals(result.Motions.Keys))throw new InvalidDataException("Motion downloads do not match their catalogue; keep removed entries without payloads.");
             foreach(var pair in documents.Where(x=>x.Key.StartsWith("program-modules.v1/",StringComparison.Ordinal)))ProgramModuleLibrary.ImportDefinition(HashName(pair.Key),Json(pair.Value,Limit(pair.Key)));
-            foreach(var pair in documents.Where(x=>x.Key.StartsWith("models/",StringComparison.Ordinal)))_=Utf8.GetString(pair.Value);
-            foreach(var pair in documents.Where(x=>x.Key.StartsWith("audio/",StringComparison.Ordinal)))_=Utf8.GetString(pair.Value);
-            foreach(var pair in documents.Where(x=>x.Key.StartsWith("images/",StringComparison.Ordinal)))_=Utf8.GetString(pair.Value);
+            foreach(var pair in documents.Where(x=>x.Key.StartsWith("models/",StringComparison.Ordinal)||x.Key.StartsWith("audio/",StringComparison.Ordinal)||x.Key.StartsWith("images/",StringComparison.Ordinal))){
+                if(formatVersion==32){_=Utf8.GetString(pair.Value);continue;}
+                // Match the accepted sidecar reader: strict UTF-8 by default with BOM
+                // detection. Validate the full document without normalizing its bytes.
+                using var reader=new StreamReader(new MemoryStream(pair.Value,false),Utf8,true);reader.ReadToEnd();
+            }
             result.SoundReferences=room.audioSources.Where(s=>s.kind=="clip").ToArray();
             // Includes literal source definitions captured in construction/program modules;
             // dynamically computed identities cannot be predicted, so capture all private clips.
