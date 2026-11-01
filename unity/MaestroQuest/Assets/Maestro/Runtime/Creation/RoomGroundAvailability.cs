@@ -41,8 +41,8 @@ namespace Maestro.Quest.Creation
         {
             var result=new JArray();if(journal==null)return result;
             SelectGroundCandidates(envelope);
-            foreach(var index in groundMatches){
-                var candidate=groundEntries[index];
+            foreach(var selected in groundMatches){
+                var candidate=selected.Value;
                 if(MissingGround(candidate,envelope,out var state,out var known))
                     result.Add(new JObject{["target"]=candidate.Definition.target,["state"]=state,["boundsKnown"]=known});
             }
@@ -55,8 +55,8 @@ namespace Maestro.Quest.Creation
         {
             if(journal==null)return false;
             SelectGroundCandidates(envelope);
-            foreach(var index in groundMatches)
-                if(MissingGround(groundEntries[index],envelope,out _,out _))return false;
+            foreach(var selected in groundMatches)
+                if(MissingGround(selected.Value,envelope,out _,out _))return false;
             return true;
         }
         bool MissingGround(GroundCandidate selected,Bounds envelope,out string state,out bool known)

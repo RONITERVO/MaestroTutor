@@ -11,19 +11,7 @@ namespace Maestro.Quest.Creation
     }
     public sealed partial class RoomEditor
     {
-        sealed class MovementDirectoryCursor {
-            internal readonly RoomJournal Journal;internal readonly RoomSpatialIndex Metadata;
-            internal readonly long Authored,Placements,Publication,Membership;internal readonly int Reset;
-            internal bool MatchesCurrent(RoomJournal journal,RoomSpatialIndex metadata,RoomSpatialChanges membership,int reset)=>
-                ReferenceEquals(Journal,journal)&&ReferenceEquals(Metadata,metadata)&&Reset==reset&&
-                Authored==journal.SpatialAuthoredVersion&&Placements==journal.SpatialPlacementVersion&&
-                Publication==(metadata?.Generation??0)&&Membership==membership.Version;
-            internal MovementDirectoryCursor(RoomJournal journal,RoomSpatialIndex metadata,RoomSpatialChanges membership,int reset){
-                Journal=journal;Metadata=metadata;Reset=reset;Authored=journal.SpatialAuthoredVersion;
-                Placements=journal.SpatialPlacementVersion;Publication=metadata?.Generation??0;Membership=membership.Version;
-            }
-        }
-        MovementDirectoryCursor movementDirectoryState;
+        RoomSpatialDirectoryCursor movementDirectoryState;
         int collisionResidencyVersion,movementResidencyReset;
         readonly RoomSpatialChanges collisionResidencyChanges=new();
         MovementCandidates.Set movementDormant;
@@ -33,21 +21,6 @@ namespace Maestro.Quest.Creation
             if(id==null)movementResidencyReset++;else collisionResidencyChanges.Record(id);
         }
         void ClearMovementDirectory(){movementDirectoryState=null;movementDormant=null;movementDynamic=Array.Empty<(string,bool)>();}
-        bool MovementChanges(MovementDirectoryCursor cursor,out HashSet<string> dirty){
-            dirty=new(StringComparer.Ordinal);
-            if(cursor==null||!ReferenceEquals(cursor.Journal,journal)||!ReferenceEquals(cursor.Metadata,spatialIndex)||cursor.Reset!=movementResidencyReset)return false;
-            // Validate all complete windows before filtering by the old stable
-            // set. Authored/membership insertions may not be in that set at all.
-            if(!journal.TrySpatialAuthoredChanges(cursor.Authored,out var authored,out _)||
-                !collisionResidencyChanges.TryCollect(cursor.Membership,out var membership,out _)||
-                !journal.TrySpatialPlacementChanges(cursor.Placements,out var placements,out _))return false;
-            string[] publication=Array.Empty<string>();
-            if(spatialIndex!=null&&!spatialIndex.TryChanges(cursor.Publication,out publication,out _))return false;
-            dirty.UnionWith(authored);dirty.UnionWith(membership);
-            foreach(var id in placements)if(movementDormant.Contains(id))dirty.Add(id);
-            foreach(var id in publication)if(movementDormant.Contains(id))dirty.Add(id);
-            return true;
-        }
         void RefreshMovementDirectory(out int dormantReads,out int dormantBuild,out int overlayUpdates,out int compactions)
         {
             dormantReads=dormantBuild=overlayUpdates=compactions=0;
@@ -57,9 +30,9 @@ namespace Maestro.Quest.Creation
             if(movementDirectoryState?.MatchesCurrent(journal,spatialIndex,collisionResidencyChanges,movementResidencyReset)==true)return;
             // Capture end cursors before any projection. Publish them only with
             // the fully constructed next snapshot; exceptions consume no changes.
-            var state=new MovementDirectoryCursor(journal,spatialIndex,collisionResidencyChanges,movementResidencyReset);
+            var state=new RoomSpatialDirectoryCursor(journal,spatialIndex,collisionResidencyChanges,movementResidencyReset);
             MovementCandidates.Set snapshot; (string id,bool ground)[] liveEntries;
-            if(MovementChanges(movementDirectoryState,out var dirty)){
+            if(movementDirectoryState!=null&&movementDirectoryState.TryChanges(journal,spatialIndex,collisionResidencyChanges,movementResidencyReset,movementDormant.Contains,out var dirty)){
                 if(dirty.Count==0){movementDirectoryState=state;return;}
                 var live=movementDynamic.ToDictionary(value=>value.id,value=>value.ground,StringComparer.Ordinal);
                 var changes=new List<RoomSpatialOverlay<MovementCandidates.Candidate>.Change>();

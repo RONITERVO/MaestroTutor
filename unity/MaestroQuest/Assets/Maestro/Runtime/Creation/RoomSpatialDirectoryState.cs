@@ -3,8 +3,9 @@
 using System;
 using System.Collections.Generic;
 namespace Maestro.Quest.Creation {
-    // Shared invalidation contract for immutable dormant collision, visual and
-    // ground partitions. Live native/anchor poses never enter these snapshots.
+    // Conservative invalidation for the visual directory. Movement and ground
+    // use RoomSpatialDirectoryCursor for exact identity updates. Live native
+    // and anchor poses never enter these dormant snapshots.
     internal sealed class RoomSpatialDirectoryState {
         readonly RoomJournal journal;readonly RoomSpatialIndex metadata;
         readonly (int revision,int count) catalog;readonly int residency;
