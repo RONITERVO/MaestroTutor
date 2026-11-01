@@ -46,9 +46,9 @@ jobs:
           npm audit --omit=dev --json > app-audit.json || test "$?" -eq 1
           node scripts/verify-app-audit.mjs app-audit.json
       - name: Audit shipped Functions dependencies
-        run: npm --prefix functions audit --omit=dev --audit-level=high
+        run: npm --prefix functions audit --omit=dev
       - name: Audit shipped Live gateway dependencies
-        run: npm --prefix live-gateway audit --omit=dev --audit-level=high
+        run: npm --prefix live-gateway audit --omit=dev
 
       - name: Verify generated behaviour catalog sources
         run: npm run verify:behaviour-catalog

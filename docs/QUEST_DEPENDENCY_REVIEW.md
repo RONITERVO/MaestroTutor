@@ -218,3 +218,58 @@ audits, exact package baselines, public tarball comparisons, compatibility logs,
 full app report, `independent-root-repair-review.json` and
 `dependency-payload-review.json`. All sixteen unrelated protected files remain
 unchanged. Device, provider, signing, deployment and Meta holds remain in force.
+
+
+## Backend production dependency repair — 2026-11-01
+
+The remaining Functions five and Live gateway four moderate production findings
+are repaired. Both fresh production lock audits now report **zero findings**.
+The release gate now rejects backend findings at every severity, matching the
+existing strict gateway staging gate. No advisory exception or relaxed threshold
+was added. Development tooling is outside this clean-production claim.
+
+Functions selects **@hono/node-server 2.1.5** within its existing MCP parent range,
+covering the [static-path decoding advisory](https://github.com/advisories/GHSA-rmxm-3fg6-px4f).
+Both backends narrowly override **glob 14.0.3** only below
+`google-gax@5.0.8 -> rimraf@5.0.10`; its resolved minimatch is **11.0.3**.
+These versions cover the [glob cancellation](https://github.com/advisories/GHSA-3g3m-2fjr-6pw4)
+and [minimatch amplification](https://github.com/advisories/GHSA-g3hv-75wg-m249)
+findings. This deliberately crosses rimraf's declared glob major: it is a tested
+local compatibility repair, not a claim of upstream support. Current compatible
+gax/Firestore parent releases do not remove the old chain. Remove the exact
+version-scoped override when a supported parent selects a patched dependency;
+review the compatibility tests at that time instead of silently skipping them.
+
+The installed gax runtime does not import rimraf, but source reachability alone
+was not used to accept vulnerable versions. A shared offline compatibility suite
+resolves each backend's actual Firebase/Firestore/gax/rimraf branch and passes
+**16 cases per backend unchanged before and after** on Node **22.23.4**. It
+exercises real CommonJS and ESM exports, absolute glob results, literal and glob
+sync/async deletion, preserved nonmatches, names with spaces and cancellation.
+Its temporary files stay inside uniquely owned backend-local directories; a
+missing or incorrectly resolved dependency branch fails instead of skipping.
+These API checks do not claim exhaustive glob security regression coverage.
+
+Verification also passes **118 Functions unit tests**, the complete five-part
+Firestore emulator command (billing, Live gateway, **57 managed Gemini cases**,
+Quest attestation and account linking), **31 gateway unit tests**, its added
+16 compatibility cases, both TypeScript builds and app lint. No real provider
+or database request, deployment, device operation or release-key use occurred.
+Root browser dependencies and product code did not change in this backend slice.
+
+Independent lock review found no SDK version change, unrelated version change
+or local file dependency. **379 files across 13 installed package paths** match
+seven official package tarballs after both lockfile and registry integrity
+verification. Functions retains the old glob closure only for development tools;
+gateway removes 32 obsolete descendants. Official glob/minimatch license metadata
+changes from ISC to BlueOak-1.0.0 and remains recorded with the package evidence.
+
+Evidence: `.quest-evidence/backend-repair-20261101/` and the before-update
+compatibility runs in `.quest-evidence/backend-dependency-repair-20261101/`.
+The first gateway resolution unexpectedly added a local parent dependency; it
+was rejected before installation, preserved as evidence and rerun from the
+actual gateway directory. The final reviewed lock contains no such reference.
+A local test-wrapper argument error was likewise corrected before the successful
+full Functions run; failed receipts remain preserved. All sixteen unrelated
+protected files are unchanged. CI for this checkpoint is recorded separately;
+these backend results do not substitute for Unity or headset acceptance.

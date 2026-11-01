@@ -19288,3 +19288,21 @@ Evidence: `.quest-evidence/fact-read-20261101/`. These offline desktop results d
 not establish headset readability, real-provider quality, device performance or
 Store acceptance. Incremental spatial invalidation, remaining world/audio
 limits, backend audit findings and the existing operational holds remain open.
+
+
+### Backend dependency follow-up completed locally — 2026-11-01
+
+The remaining backend findings recorded above are now repaired by a compatible
+Hono patch and a narrowly scoped, before/after-tested glob override. Both backend
+production audits are clean, and release CI now rejects all backend severities.
+See [the dependency review](QUEST_DEPENDENCY_REVIEW.md#backend-production-dependency-repair--2026-11-01)
+for the explicit cross-major compatibility boundary and upstream removal criteria.
+
+Node 22 validation passes 118 Functions units, all five Firestore emulator groups,
+31 gateway units plus 16 dependency compatibility cases, backend builds and lint.
+The same 16 compatibility cases passed each backend before the update. Independent
+review verifies 379 installed package files against official integrity-checked
+bytes. Development tooling and native acceptance remain separate. The next native
+slice is incremental dormant movement/collision invalidation; its source is being
+verified independently. Device/provider/signing/deployment/Meta holds are unchanged.
+Evidence: `.quest-evidence/backend-repair-20261101/local-checkpoint.json`.
