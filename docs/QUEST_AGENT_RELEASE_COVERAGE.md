@@ -1,5 +1,10 @@
 # Quest agent release coverage
 
+The [current release checklist and proof](QUEST_STATUS.md) is authoritative for
+current status and operational holds. This page defines the required coverage
+and retains dated implementations/provider runs; its older current-proof labels
+refer to those checkpoints, not fresh acceptance of today's runtime.
+
 Release requirement confirmed by the owner on 2026-10-06: extend the existing
 headless/provider checks to the new agentic Unity paths. Old first-lesson coverage,
 direct planner calls and scripted book responses alone cannot satisfy this gate.

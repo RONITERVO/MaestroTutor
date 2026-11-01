@@ -1,5 +1,9 @@
 # Included Maestro avatar and offline identity
 
+See [current release status](QUEST_STATUS.md) for candidate identities, operational
+holds and remaining physical acceptance. The contract below describes included
+content and its preserved user choices.
+
 The current default is the user-selected Meshy Azure Violet Doll export from
 `Meshy_AI_Azure_Violet_Doll_biped.zip`, specifically the Walking GLB. The binary
 is preserved unchanged, SHA-256
@@ -89,8 +93,8 @@ rig. Fresh libraries install the collection once; existing libraries add missing
 content only through an explicit shared operation. Clips compile on demand. See
 QUEST_ANIMATION_LIBRARY.md for add/restore, storage and recovery behavior.
 
-**Remaining:** visual/semantic curation, default tutor-state assignments, original
-versus navigation-adjusted motion fidelity, real multi-clip exports from the new
+**Remaining:** further visual/semantic curation and default tutor-state tuning,
+original versus navigation-adjusted motion fidelity, real multi-clip exports from the new
 rig and Quest performance/comfort acceptance. Cross-rig
 retargeting of imported motions is not implemented; canonical gestures/poses
 already retarget through the existing humanoid path. Hundreds of old-rig motions

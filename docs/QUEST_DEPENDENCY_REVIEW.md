@@ -1,5 +1,11 @@
 # Root application dependency review — 2026-10-02
 
+Current production-audit status is in [Quest delivery status](QUEST_STATUS.md).
+The [November root repair](#root-audit-exception-removed--2026-11-01) and
+[backend repair](#backend-production-dependency-repair--2026-11-01) supersede the
+older findings/exception below. Dated entries retain their original evidence;
+they do not authorize an expired exception for current builds.
+
 Updated Transformers.js 4.2.0 to 4.3.0 (ONNX Node 1.30.0 / web
 1.31.0-dev.20260914-8d85527a0), sharp to 0.35.5, adm-zip to 0.6.1 through
 ONNX's supported dependency, and brace-expansion to compatible patched versions.

@@ -1,5 +1,11 @@
 # Quest release packaging
 
+Use [current delivery status](QUEST_STATUS.md) for active holds and the distinct
+installed, packaged, compile-only and private Meta records. The packaging
+narrative below retains dated attempts; the owner's later Alpha-current
+observation is linked from the status page. Procedures and historical approvals
+do not lift current signing, deployment or Meta holds.
+
 This is a packaging path, not Store acceptance. A dedicated release key has been
 prepared locally at the owner's request, with a verified encrypted USB copy.
 Independent paper-password recovery is verified. The public release profile now

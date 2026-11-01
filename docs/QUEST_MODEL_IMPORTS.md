@@ -1,5 +1,12 @@
 # Quest runtime model import development checkpoint
 
+This page retains early import checkpoints and their then-remaining work.
+Use the [current shared import workflow](QUEST_MODEL_IMPORT.md),
+[implemented motion library](QUEST_ANIMATION_LIBRARY.md),
+[included avatar contract](QUEST_INCLUDED_AVATAR.md) and
+[current release status](QUEST_STATUS.md) for current capabilities and acceptance.
+The early future-work lists below are historical, not a second current backlog.
+
 The solid import tray opens Android's document picker, validates a self-contained
 GLB/VRM file, shows a preview and the model's embedded attribution, then adds a
 private content-addressed copy to the room after Add. A room record stores the

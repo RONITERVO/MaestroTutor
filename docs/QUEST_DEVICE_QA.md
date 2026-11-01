@@ -1,8 +1,9 @@
 # Quest 3 development verification — updated 2026-10-06
 
-For the current installed version and active device holds, use the
-[delivery record](QUEST_V1_PLAN.md). Dated entries below describe their own builds;
-they do not establish acceptance of later source.
+For the last verified installed version and active device holds, use
+[current Quest status](QUEST_STATUS.md). Dated entries below describe their own
+builds and authorizations; they do not establish acceptance of later source or
+lift the current holds.
 
 Historical 2026-10-06 installed checkpoint: **D522191F**, with the shared animated
 icons and optional physical authoring trays hidden at startup. Exact installed

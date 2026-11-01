@@ -1,5 +1,10 @@
 # Maestro Quest development client
 
+Start with [current Quest status and operational holds](../docs/QUEST_STATUS.md)
+and [accepted v1 scope](../docs/QUEST_V1_SCOPE.md). Commands below describe build
+procedures; dated verification or authorization does not establish current
+release readiness or lift an active hold.
+
 This is an additional Unity client for the shared Maestro runtime. It is under
 active development. A development APK runs on Quest 3; it is not store ready.
 

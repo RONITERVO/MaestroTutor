@@ -1,5 +1,9 @@
 # Quest v1 privacy and audience data map
 
+Use [current delivery status](QUEST_STATUS.md) for deployment holds and release
+acceptance. The data map below must match the chosen production candidate;
+dated implementation and source reviews are not provider or Store approval.
+
 Owner decision on 2026-10-02: Quest v1 targets adults 18+. This is implementation
 and release evidence, not a statement that Meta or Google has approved the app.
 `public/privacy.html` is the prepared public disclosure; deployment remains separate.
@@ -29,12 +33,18 @@ provider's audience conditions still require final review.
 | Chat, attachments, settings and task journals | Original app's local browser storage. Source context and eligible Live handoff media are in the task journal. | Pruned with source history; chat exports include journals. Previously exported or provider-held copies remain separate. |
 | Models, animations, drawings, authored objects and programs | Native headset app storage, with explicit file import/export. | Workspace/library deletion and app-data clearing; external backups are separate. Chat backup is not a native-room backup. |
 | Meta scene meshes and continuous head/hand/controller tracking | Local collision, interaction and navigation. | Raw mesh and continuous tracking are not sent. Room status and authored object state/positions can be sent for tasks. Explicit `room.scan` queries can send bounded room/anchor IDs, semantic labels, poses and rectangle/box bounds through the existing AI connection and retain them in task history/backups. They reveal room layout even without images. No automatic layout broadcast. Meta's stored scan is controlled by the system, not chat deletion. |
-| Microphone / enabled camera input | Existing speech and visual-context paths to Gemini. Live delegation can resend that turn's audio/frames for planning and final narration. | Permissions and camera controls stay separate. Current Quest passthrough is display-only and the APK has no camera permission. Delegated media is retained with task history, not only in transient Live buffers. |
+| Microphone / selected visual input | Existing speech and visual-context paths to Gemini. Current source distinguishes virtual-only capture, the physical headset camera and mixed-view screen sharing in the familiar camera selector. Live delegation can resend that turn's audio/frames for planning and final narration. | Selection, headset-camera permission and screen-share consent remain separate. Granting permission alone does not start capture; interrupted capture requires a fresh selection. Mixed-view sharing can include visible app content, including book/chat; its exact compositor coverage remains a headset acceptance check. Delegated media is retained with task history, not only in transient Live buffers. |
 | Virtual-room snapshots | On-demand native images of authored objects, Maestro and user buttons; excludes book/chat, tool trays, scanned geometry and physical camera. Explicitly capturing tasks send the same pixels through the existing AI route and save them in task details. | Native images expire after two minutes/session change; task copies follow task-history deletion and backup retention. Manual/background captures are not automatically sent to AI. |
 | AI task requests/results | Original managed Firebase/Cloud service then Gemini, or direct BYOK Gemini. | Same provider terms, spend and upload cleanup as original app. Relevant scene/program/context data may be included; the policy does not promise provider deletion when local history is removed. |
 | Meta entitlement / integrity | SDK checks, short-lived challenge and provider verification, then Firebase App Check. | No optional Meta profile/friends/avatar APIs or retained Meta device ID/token. Challenge hash expires in five minutes, consumed challenges deleted immediately. |
 | Quest account pairing | Hashed code/secret, times, state and approved Maestro UID. | Five-minute expiry/TTL; consume/cancel removes UID and secret hash. Account deletion removes outstanding approvals. |
 | Rate limits | Hashed ingress IP and, for approval, UID subjects. | Two-minute scheduled deletion; expiry enforced independently of asynchronous TTL. |
+
+These camera paths describe current source. Their actual field of view, included
+compositor layers, consent lifecycle and sustained performance are not yet accepted
+on the selected Quest release candidate. Virtual-only capture remains separate and
+excludes physical-camera pixels. See [camera acceptance](QUEST_DEVICE_QA.md) and
+[the shared camera sources](../shared/bookCamera.ts).
 
 Source owners: `src/core-sdk/room`, `docs/QUEST_UNIFIED_AGENT.md`,
 `docs/QUEST_ROOM_ENVIRONMENT.md`, `functions/src/questAttestationStore.ts`,
@@ -55,7 +65,9 @@ files. OS backups and other installations can retain independent copies.
 - Complete truthful privacy/data-use disclosures for the actual production services
   and provide an appropriate private support/deletion contact before launch.
 - Exercise real Meta integrity and Google/Firebase linking after owner configuration.
-  They remain disabled/undeployed; simulated acceptance is not provider acceptance.
+  The two Quest bootstrap endpoints are deployed but disabled; real Meta/Firebase
+  linking and provider acceptance remain open. Simulated acceptance is not provider
+  acceptance. See the [rollout record](QUEST_MANAGED_ACCESS.md#scoped-backend-rollout--2026-10-06).
 
 Sources checked 2026-10-02:
 [Gemini terms](https://ai.google.dev/gemini-api/terms),

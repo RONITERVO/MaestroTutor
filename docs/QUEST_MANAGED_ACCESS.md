@@ -1,5 +1,10 @@
 # Quest managed access and release integration
 
+Use [current delivery status](QUEST_STATUS.md) for active operational holds and
+release gates. Deployment and provider observations below describe their named
+source and date; simulated acceptance or an older approval does not enable the
+currently disabled Quest services.
+
 Status: attestation, account-link backend, browser approval and book sign-in client
 implemented. The two Quest endpoints are now **deployed but disabled** following
 the owner's scoped approval. The temporary private diagnostic is removed.

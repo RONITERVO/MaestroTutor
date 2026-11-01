@@ -1,183 +1,24 @@
 # Maestro Quest 1.0 delivery record
 
-Status: active implementation. Nothing in this document claims store readiness.
+This file preserves dated development evidence. Start with
+[**current delivery status and release gates**](QUEST_STATUS.md) and the
+[**accepted v1 scope**](QUEST_V1_SCOPE.md). The goal remains active; no historical
+checkpoint, approval or test result establishes acceptance of later source.
+Current operational holds and source/candidate distinctions live on the status
+page. Earlier authorizations below apply only to their recorded operations.
 
-The latest [incremental dormant movement directory](#incremental-dormant-movement-directory--2026-11-01)
-updates changed dormant collision candidates without rebuilding every unchanged
-neighbor. Exact collision readiness and existing world limits are unchanged.
-Fresh verification passes 2,252 EditMode cases with 13 documented Windows
-privilege skips and all 48 selected PlayMode cases. The native catalog keeps
-149 actions, 252 facts, 19 events and 11 guides. The full offline Headless journey
-and unsigned Android compilation pass independent review; see the
-[integration checkpoint](#incremental-movement-integration-checkpoint--2026-11-01).
-No new headset or release acceptance is claimed.
-
-The preceding [exact asset choices and passive fact recovery](#exact-asset-choices-and-passive-fact-recovery--2026-11-01)
-and [guarded model download maintenance](#guarded-model-download-maintenance-and-portable-metadata--2026-11-01)
-have completed their recorded native, offline Headless/Book and unsigned Android
-checks. They preserve exact asset identities, full attribution and historical
-receipts. The separate [backend dependency repair](QUEST_DEPENDENCY_REVIEW.md#backend-production-dependency-repair--2026-11-01)
-has passed release and native-echo CI at `ff39b08e`; bounded echo checks retain
-their documented quality limits.
-
-The preceding [model source ownership and retained-reference increment](#model-source-ownership-and-retained-references--2026-10-30)
-protects source files through reads, previews, native imports, background geometry
-checks and workspace closure. Saved avatar preferences and dormant/temporary
-room history retain exact model identities. At that ownership-only checkpoint,
-no model-removal action was exposed; the later model-maintenance checkpoint
-supplies the guarded action.
-
-The preceding [guarded finite sound cleanup](#shared-finite-sound-reclamation--2026-10-30)
-extends the shared inspection/removal path to imported audio, including exact
-workspace admission and actual decoder/stream closure. Canonical sound identity,
-retained references and historical receipts are preserved. Native, full offline
-Headless/Book and unsigned Android checks pass. Physical acceptance remains
-separate; model payload cleanup was added in the later model-maintenance checkpoint.
-
-The preceding [guarded image payload cleanup](#shared-image-payload-reclamation--2026-10-30)
-adds an explicit shared user/agent inspection and removal path, fresh retained
-reference checks and per-image lifetime protection. Exact reimport restores the
-identity; historical requests cannot remove its restored bytes. At that image-only
-checkpoint, sound and model payload cleanup remained separate work.
-
-The preceding [shared partial asset discovery](#shared-partial-imported-asset-discovery--2026-10-29)
-keeps healthy models, pictures and sounds discoverable when a sibling import is
-damaged. Ordinary book/agent actions carry explicit completeness evidence while
-retaining existing saved-receipt and program field contracts. It does not repair,
-reclaim or infer free capacity from incomplete results.
-
-The preceding [explicit image and sound recovery](#explicit-image-and-sound-metadata-recovery--2026-10-29)
-repairs unusable private metadata through the existing verified import/Accept
-path. Healthy metadata, payload identities and existing bindings remain intact;
-passive reads never repair files. Native regressions and unsigned Android integration pass, with two unsupported
-symlink fixtures explicitly skipped.
-
-The preceding [shared animation maintenance and audio guidance](#shared-animation-maintenance-and-quest-audio-guidance--2026-10-29)
-uses the same guarded native edits, facts and receipts from the library, generated
-book forms and agent/program interface. The full offline Headless and Book
-journeys pass, including exact entry restoration. Quest headphone guidance now
-shares one welcome/help/tutor source. Candidate device/provider acceptance is
-still separate from these checks.
-
-The preceding [authored finite-water audio](#authored-finite-water-audio--2026-10-29)
-uses shared finite-water paths for optional spatial speech/world-sound treatment.
-User controls and agent programs edit the same saved settings. The complete offline
-baseline passes, followed by focused native checks for a discovered pause/resume
-repair. Final unsigned Android compilation passes. Physical sound quality,
-echo interaction and Quest performance remain open.
-
-The preceding [shared liquid-path query](#shared-liquid-path-observations--2026-10-29)
-exposes current finite water geometry to the same user/program/agent catalog.
-It preserves dry gaps and assigns overlapping water once, with explicit missing
-geometry states; it supplies the geometry used by the new sound treatment.
-
-The preceding [authored underwater view](#authored-underwater-view--2026-10-28)
-adds opt-in finite-distance shading through shared user/agent settings. Its
-full native tests, actual Headless/Book/first-learner journeys, text-to-Live
-with native restart, and unsigned Android compilation pass. Physical Quest
-acceptance remains open.
-
-The preceding [finite-water geometry increment](#shared-finite-water-segments--2026-10-28)
-measures wet ray lengths through the existing water geometry and bounds terrain
-traversal to crossed cells. It also serves the existing rain-contact path.
-The preceding [native liquid appearance increment](#independent-liquid-appearance-and-back-face-rendering--2026-10-28)
-adds shared surface/stream styling and fixes transparent back-face outlines.
-The preceding [viewer immersion increment](#shared-viewer-water-contact--2026-10-28)
-supplies the tracked viewpoint's finite-water contacts. These do not complete
-underwater presentation or replace the candidate/device release gates.
-
-Start with the [accepted product scope](#accepted-product-scope) and
-[release evidence checklist](#release-evidence-still-required), then the current
-[movement increment](#incremental-dormant-movement-directory--2026-11-01) and
-[asset-read checkpoint](#exact-asset-choices-and-passive-fact-recovery--2026-11-01).
-Earlier evidence includes the [complete integration checkpoint](#complete-native-and-android-checkpoint--2026-10-28) and
-[production text-to-Live increment](#production-text-to-live-continuity--2026-10-26) and
-[checkpointed native restart](#checkpointed-native-process-restart--2026-10-28) and
-[lost action acknowledgement](#lost-running-action-acknowledgement--2026-10-28) and
-[running-action process termination](#process-termination-during-a-running-action--2026-10-28). The current
-[pointer and solid geometry checkpoint](#shared-pointer-and-solid-geometry--2026-10-25) separates book interaction from physical queries. The preceding
-[collision availability checkpoint](#shared-passive-collision-availability--2026-10-25) adds explicit user/program/agent inspection. The preceding
-[saved-world rain checkpoint](#passive-saved-world-rain-cover--2026-10-25) extends exposure readiness;
-its native, rendered Book and headless checks are recorded below. The preceding
-[outlet and recovery checkpoint](#liquid-outlet-clearance-and-live-recovery-holds--2026-10-25) hardens the
-[terrain-overflow checkpoint](#explicit-terrain-overflow-and-exact-liquid-persistence--2026-10-24), which builds on the
-[whole-world collision checkpoint](#shared-collision-policies-across-the-saved-world--2026-10-24) and follows the [shared visual metadata checkpoint](#shared-visual-metadata-across-unloaded-world-objects-2026-10-24). The [saved-world capacity checkpoint](#saved-world-capacity-and-deferred-creation--2026-10-23) records its
-creation and residency foundation. The preceding
-[restoration](#restoring-unloaded-objects--2026-10-23),
-[physical discovery](#linear-physical-discovery--2026-10-23),
-[area loading](#independent-area-loading) and [shared movement](#shared-locomotion-lifetime)
-checkpoints remain separately verified. The
-[world authoring guide](QUEST_WORLD_AUTHORING.md) describes the reusable user/agent
-contract; dated entries below retain the development evidence.
-
-The [audio verification checkpoint](#native-audio-quality-regression-gates--2026-10-25)
-strengthens offline evidence without changing the selected audio path.
-The [whole-utterance investigation](#whole-utterance-speech-and-rejected-echo-controls--2026-10-25)
-now separates residual echo from speech loss in selected offline cases; both
-follow-up DSP settings were rejected for regressions.
-
-The installed development checkpoint remains **D85F3CB7 / f58dab48**. The latest
-packaged development APK is **5899972E / 5100f612**, not installed. Current desktop
-source is later than both. Device and paid-provider testing remain on hold; no
-new physical or acoustic acceptance is claimed. Historical packaging diagnostics
-and their stricter successor gates remain recorded below.
+The [checkpoint index](quest/checkpoints/README.md) links this retained history
+and new dated records. Existing headings and links remain stable. Future work
+should update the canonical status and add a dated checkpoint, rather than grow
+another list of current/preceding claims here.
 
 ## Accepted product scope
 
-- Native Unity mixed-reality app for a long-term Meta Quest Store release.
-- Current priority: actual Unity interaction and Quest mixed reality. Keep the
-  current draft artwork; further visual iterations can follow functional work.
-- The same Maestro tutor implementation and managed services, with a versioned
-  native bridge. Preserve the familiar language, chat, suggestions, audio and
-  artifact behavior; do not fork prompts or implement a second tutor in C#.
-- Pencil contours and opaque watercolor based on the user's Scetch-War project.
-  All included models and user creations share this Penzil-inspired spatial
-  drawing style; see QUEST_ART_DIRECTION.md (user steering 2026-09-25).
-- Animated physical book with two selectable layouts using the same components
-  and session. Default conversation layout: familiar phone chat on the right,
-  preceding chat on the left, artifacts inline, older history on earlier pages.
-  Optional practice layout: chat left, selected/latest artifact right, clickable
-  artifact previews in chat. Retain the message-identity bookmark as a ribbon.
-- Both page surfaces are filled with content. Add no book headers, counters,
-  toolbars or layout menus to the page image. New interactions outside the pages
-  must be physical 3D objects, not floating flat panels (user steering 2026-09-25).
-- Included full-body animated Maestro, based on the existing Maestro persona.
-  Support idle, attentive listening, speaking, greeting and pointing; page turns
-  and appearance animations respect reduced-motion settings.
-  On 2026-09-26 the user selected their forthcoming Meshy character as the future
-  included default and expects a library of several hundred animations. Keep the
-  current included draft until the final model/motions are supplied and verified.
-  Add separate animation packs, bounded on-demand loading and per-avatar clip
-  assignments for locomotion, tutor states and visual rules. The current 32-clip
-  per-model importer and common retargeted gestures do not fulfill that library.
-- User-created room items: in-app editor and GLB/VRM imports first, as selected
-  by the user on 2026-09-25. Include playback of compatible imported animations.
-  External AI mesh-generation services and public content sharing remain outside
-  this first release. The newer agent-first scope includes native procedural
-  creation from validated recipes, including simple animated characters.
-- In-app animation authoring: record object movement, save/edit keyframes, choose
-  avatar gestures, and pose arms, legs and head with 3D handles. Joint posing is
-  explicitly included by the user (2026-09-25). Playables supplies playback;
-  authoring, validation, persistence and physical controls belong to this app.
-- Custom Maestro avatars and visual event/condition/action rules. Support tutor
-  activity gestures, gaze/head turn and following/walking for compatible rigs.
-  User locomotion and avatar movement have independent editable bindings; user
-  locomotion is opt-in. Solid user-created action buttons can attach to a
-  controller and be operated by the opposite controller. Preserve system input
-  reservations and an accessible recovery path. User chose both movement modes
-  and visual rules first (2026-09-25); arbitrary user code is outside v1.
-  Reusable action sequences may have multiple triggers: a controller-mounted
-  button, a web tutor state transition or a VR interaction. Recorded animations
-  are actions in the same system. Define once/loop and interruption behaviour;
-  future event sources join the same catalog without duplicating user sequences.
-- Default book and avatar are included and usable without downloading assets.
-- MR physics: loose rigid items obey gravity, react to grabs/throws and collide
-  with scanned floors, walls and furniture. Include animation-to-physics release
-  actions and scan/permission/tracking lifecycle handling. The user explicitly
-  excluded hair and cloth interaction physics in their later steering on
-  2026-09-25. See QUEST_MODEL_IMPORTS.md for the implementation boundaries.
-- Hand/controller interaction, comfortable seated/standing placement, save/load,
-  recovery, bounded content/resource use, import validation, and accessible text.
+The canonical [accepted v1 scope](QUEST_V1_SCOPE.md) reconciles the original
+requirements with later accepted world, agent and release decisions. It keeps
+requirements separate from current implementation limits and outstanding
+acceptance. The [original scope at the last runtime checkpoint](https://github.com/RONITERVO/MaestroTutor/blob/f7a252feafcea470ddffe78df62512cd63a04de7/docs/QUEST_V1_PLAN.md#accepted-product-scope)
+and the dated checkpoints below remain provenance, not a second current scope.
 
 ## Repository and development ownership
 
@@ -209,37 +50,11 @@ hardware checks. A scaffold or editor demonstration does not complete the goal.
 
 ## Release evidence still required
 
-The table below is the current release checklist. Historical checkpoints later
-in this file establish only their recorded source/device versions. An implemented
-path or a passing desktop suite does not complete a release row. The goal stays
-open until every required row has matching release-candidate evidence.
-
-| Requirement | Current evidence | Remaining work and acceptance limits |
-| --- | --- | --- |
-| Familiar language-learning chat and full-page book | Original web components, both book layouts, inline artifacts and ribbon bookmark; recorded offline Headless and visible Book journeys against their named desktop Unity sources. A separate production-entry offline English/Spanish lesson covers onboarding, proactive artifact plus image, chat/native/Live composition and a native restart after completed saves. These use scripted provider responses and synthetic microphone input; the focused Book fixture alone does not cover every Live/media controller. | Fresh first-lesson, smalltalk, proactive artifact/tool combinations, image, weather, room actions and text-to-Live continuation on the chosen Quest candidate, through both managed and BYOK providers. See [coverage](QUEST_AGENT_RELEASE_COVERAGE.md) and [device QA](QUEST_DEVICE_QA.md). |
-| Language-first, shared user/agent actions | Shared capability catalog, generated user controls, event-driven programs, traces, cancellation and ownership; deterministic and actual Unity integration coverage. | Real-provider multi-step completion, recovery and understandable learner feedback on the release candidate. Offline execution cannot establish model reliability. |
-| Creation, import and reusable authored worlds | Primitive/recipe/drawing/template creation, GLB/VRM models and motion collections, materials/images, editable constructions and shared saved completion. | Candidate import/rendering, memory pressure, interrupted work and restore acceptance with representative user content. Validate the declared capacity; the current 256 saved creations, 128 native roots, 16 liquid containers, 25-metre bounds and four height fields are not a city-scale promise. See [world authoring](QUEST_WORLD_AUTHORING.md) and [model imports](QUEST_MODEL_IMPORTS.md). |
-| Default Maestro, custom avatars and animation | Included avatar/motions, exact compatible motion IDs, activity/gait bindings, joint posing, recording, shared walk/follow and attention paths; optional exact-model foot fitting through the shared catalog. | Current-candidate motion fidelity, humanoid variety, hands-on posing, transitions and sustained performance. Bounded foot fitting uses a rest-bound shoe-plane estimate with explicit trims; visual calibration, real-headset acceptance and general crowd/interior planning remain unfinished. See [animation authoring](QUEST_ANIMATION_AUTHORING.md) and [library](QUEST_ANIMATION_LIBRARY.md). |
-| One world with adjustable reality | Per-entity real-room collision participation, accepted virtual ground, swept movement, saved visual layers, passthrough windows and separate camera-source paths have desktop evidence. Older physical depth-occlusion/alignment checks are retained. | Same-candidate physical alignment, independent collision/visibility/audio policy, virtual movement, camera permission/source lifecycle, hand/controller occlusion and recovery. An actor opting out of the real floor still needs valid virtual support. |
-| Living terrain, water, weather and objects | Bounded local physics, contact events, terrain, lighting/weather/time, live water quantities, shared grounded policies and owned submerged travel; surface swimming, shore transitions and continuous following have complete desktop and unsigned Android compilation evidence. Observation-driven residency/scheduling remains shared. See the [current movement evidence](#surface-swimming). | Mixed-scene long-session behavior, allocation/thermal/frame budgets and physical input acceptance. Named areas support independent or together loading. Explicit terrain-edge overflow now shares the bounded stream and liquid journal. Broader region streaming, river/landscape flow, underwater interaction and candidate headset acceptance remain open; retain them as explicit unfinished scope rather than silently claiming a complete living-world system. |
-| Speech and reusable world audio | Shared output/source ownership, object/joint emitters, finite imports and a bounded live MP3 adapter; direct obstruction is active. | Intelligible simultaneous user speech and world playback, actual audibility/latency, focus/route recovery and Quest performance. The native echo candidate still has 31 aligned quality failures. Reflection rendering/map scheduling remain disabled pending the retained crash/deadline and capture issues. See [audio](../unity/AUDIO.md). |
-| Durable user work and recovery | Ordered accepted edits, captured identities/revisions, save completion, undo boundaries, lifecycle checkpoints, backup/restore and failure-injection checks; full offline journeys include confirmed storage checkpoints. | Current Android suspend/process-loss, low-space, interrupted import/save and recovery acceptance. A checkpoint observed during a desktop journey is not end-of-process durability or headset evidence. |
-| Hands/controllers, accessibility and sustained use | Prior owner device confirmations plus current physical-control PlayMode tests and shared native handlers. | Recheck current controls, recall, binding conflicts, seated/standing use, text, reduced motion, comfort and sustained mixed-scene performance on Quest. Desktop timing and a short older device session do not satisfy this gate. |
-| Identity, managed access, signing and Store review | Meta app 1763835394893209 / package com.maestro.quest; dedicated signing-key USB/paper recovery verified; private Alpha build 1767008267909255 passed malware/security checks. Two Quest bootstrap endpoints are deployed but disabled. | Enable and verify only through the approved rollout process; production account/entitlement/provider access, current signed candidate, privacy/audience/listing/purchase requirements, VRC review and submission evidence remain separate gates. See [release build](QUEST_RELEASE_BUILD.md), [managed access](QUEST_MANAGED_ACCESS.md) and [privacy](QUEST_PRIVACY.md). |
-
-Device and paid-provider work, signing, deployments and Meta changes remain on
-hold. Continue unblocked implementation and offline verification; do not request
-those held actions simply to turn a checklist row green. Preserve the chosen
-18+ audience and the original backend's credit authority. Chat storage remains
-local IndexedDB; a shared backend does not by itself provide cross-device chat
-sync. Hair/cloth interaction physics and arbitrary executable user scripts remain
-outside the accepted v1 scope.
-
-The supported build toolchain remains Unity 6000.3.24f1 with Android support.
-The owned short-path mirror avoids the documented nested-path package failures.
-New Android compile evidence must identify exact source inputs, distinguish
-reused tests from freshly executed compilation, and retain its warnings. Final
-APK filtering, signing, installation and physical acceptance are separate results.
+The single current checklist, operational holds, source/candidate identities and
+latest verified proof are in [Quest delivery status](QUEST_STATUS.md#release-evidence-still-required).
+Every required gate needs matching release-candidate evidence before v1 can be
+complete. Topic guides and the historical checkpoints below supply evidence;
+they do not independently close a release gate or lift a current operational hold.
 
 ### Larger-world capacity implementation gate
 

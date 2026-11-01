@@ -1,5 +1,10 @@
 # Full-app native room probe
 
+Use [current delivery status](QUEST_STATUS.md) for active holds, candidate
+identities and the latest verified proof. This page describes probe contracts
+and retains dated execution records; a successful older run is not acceptance
+of later source.
+
 Development integration boundary, 2026-10-02. The book and local headless adapter
 now use the same RoomAgentClient in core-sdk. The platform module retains browser
 registration only. The adapter exchanges the production version-2 requests and
