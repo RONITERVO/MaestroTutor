@@ -3,41 +3,39 @@
 import { readFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 
-const parentEdges = {
-  '@capacitor-firebase/app-check': ['firebase'],
-  '@capacitor-firebase/authentication': ['firebase'],
-  'firebase': ['@firebase/firestore', '@firebase/firestore-compat'],
-  '@firebase/firestore-compat': ['@firebase/firestore'],
-  '@firebase/firestore': ['@grpc/grpc-js'],
-  '@grpc/grpc-js': [],
-};
-const reviewed = new Set([
-  'https://github.com/advisories/GHSA-m9gg-hp2v-232j',
-  'https://github.com/advisories/GHSA-f596-whhp-79r4',
-]);
+const severities = ['info', 'low', 'moderate', 'high', 'critical'];
+const isRecord = value => value !== null && typeof value === 'object'
+  && [Object.prototype, null].includes(Object.getPrototypeOf(value));
 
-/** This exception is only for the unused root Firebase Node gRPC server path.
- * Functions and Live gateway are audited separately without this exception. */
-export function verifyAppAudit(report, now = new Date()) {
-  if (report?.auditReportVersion !== 2 || report.error || !report.vulnerabilities
-    || !Number.isInteger(report.metadata?.vulnerabilities?.total)) throw new Error('Missing/invalid npm audit report');
-  const entries = Object.entries(report.vulnerabilities);
-  if (entries.length !== report.metadata.vulnerabilities.total) throw new Error('Incomplete npm audit report');
-  if (!entries.length) return { clean: true, reviewedPackages: [] };
-  if (!Number.isFinite(now.getTime()) || now >= new Date('2026-11-01T00:00:00Z')) throw new Error('Review the temporary Firebase gRPC exception again; it expired');
-  for (const [name, value] of entries) {
-    if (!Object.hasOwn(parentEdges, name) || value.name !== name || value.severity === 'critical'
-      || !Array.isArray(value.via) || !value.via.length || !Array.isArray(value.nodes)
-      || value.nodes.length !== 1 || value.nodes[0] !== `node_modules/${name}`) throw new Error(`Unreviewed dependency finding: ${name}`);
-    for (const via of value.via) {
-      if (typeof via === 'string') {
-        if (!parentEdges[name].includes(via) || !report.vulnerabilities[via]) throw new Error(`Unreviewed advisory path: ${name}`);
-      } else if (name !== '@grpc/grpc-js' || via?.name !== name || via.dependency !== name
-        || !reviewed.has(via.url) || !['low', 'high'].includes(via.severity)) throw new Error(`Unreviewed advisory: ${name}`);
-    }
-    if (name === '@grpc/grpc-js' && value.via.some(via => typeof via === 'string')) throw new Error('Missing direct gRPC advisory');
+/** Shipped app dependencies must have a complete, clean npm audit v2 report. */
+export function verifyAppAudit(report) {
+  if (!isRecord(report) || !Object.hasOwn(report, 'auditReportVersion')
+    || report.auditReportVersion !== 2 || Object.hasOwn(report, 'error')
+    || !isRecord(report.vulnerabilities) || !isRecord(report.metadata)
+    || !isRecord(report.metadata.vulnerabilities)) throw new Error('Missing/invalid npm audit report');
+  const counters = report.metadata.vulnerabilities;
+  const counterNames = [...severities, 'total'];
+  if (Object.keys(counters).length !== counterNames.length
+    || counterNames.some(name => !Object.hasOwn(counters, name)
+      || !Number.isSafeInteger(counters[name]) || counters[name] < 0)) {
+    throw new Error('Missing/invalid npm audit severity counters');
   }
-  return { clean: false, reviewedPackages: entries.map(([name]) => name), expires: '2026-11-01', reason: 'Root app imports Firebase Auth/App Check only, no Firestore or gRPC server. See docs/QUEST_DEPENDENCY_REVIEW.md.' };
+  const entries = Object.entries(report.vulnerabilities);
+  const observed = Object.fromEntries(severities.map(name => [name, 0]));
+  for (const [name, finding] of entries) {
+    if (!isRecord(finding) || finding.name !== name || !severities.includes(finding.severity)) {
+      throw new Error('Missing/invalid npm audit finding');
+    }
+    observed[finding.severity] += 1;
+  }
+  if (entries.length !== counters.total
+    || severities.some(name => observed[name] !== counters[name])) {
+    throw new Error('Incomplete or inconsistent npm audit report');
+  }
+  if (entries.length) {
+    throw new Error(`App dependency audit found ${entries.length} vulnerable package(s); no exceptions are allowed`);
+  }
+  return { clean: true, reviewedPackages: [] };
 }
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   if (!process.argv[2]) throw new Error('Pass the npm audit --omit=dev --json report path');

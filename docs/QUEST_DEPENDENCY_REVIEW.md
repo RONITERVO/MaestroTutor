@@ -144,3 +144,77 @@ This confirms the CI dependency, web, backend and harness gates; it does not
 resolve the separately recorded native audio-quality failures or establish
 headset/provider acceptance. Full current-source Unity and Android integration
 verification was still running when this dependency checkpoint was recorded.
+
+
+## Root audit exception removed — 2026-11-01
+
+Release gate [41261435896](https://github.com/RONITERVO/MaestroTutor/actions/runs/41261435896)
+on `6332efd7` stopped at the expired root Firebase exception, before its test,
+lint, build and backend steps. A fresh production lock audit also found the
+new glob/minimatch path through gaxios; renewing the old deadline would not have
+resolved that finding. The separate native-echo workflow passed on that commit.
+
+The root now selects gaxios **7.1.4** within all three existing parents' `^7.0.0`
+ranges. Its [upstream patch](https://github.com/googleapis/google-cloud-node-core/releases/tag/gaxios-v7.1.4)
+removes the unused production rimraf dependency. All shipped CJS/ESM runtime
+code and declarations are byte-identical to 7.1.3. This removes the production
+[glob cancellation](https://github.com/advisories/GHSA-3g3m-2fjr-6pw4) and
+[minimatch amplification](https://github.com/advisories/GHSA-g3hv-75wg-m249)
+chain without adding gaxios as a direct app dependency.
+
+One deliberately narrow override selects **@grpc/grpc-js 1.14.7** only below
+**@firebase/firestore 4.8.0**. It crosses Firestore's declared `~1.9.0` range;
+this is a locally reviewed compatibility override, not a claim of upstream
+support for that combination. Current Firebase major upgrades still retain the
+old gRPC range, so a major Firebase/Capacitor migration would not solve it.
+The selected release is newer than the primary advisories' fixed versions for
+[certificate authorization](https://github.com/grpc/grpc-node/security/advisories/GHSA-m9gg-hp2v-232j)
+and [handler-error disclosure](https://github.com/grpc/grpc-node/security/advisories/GHSA-f596-whhp-79r4).
+Revisit this exact-version override when the owning Firebase dependency updates;
+remove it when the supported parent selects a patched release. Any future
+Firestore use needs its own integration assessment.
+
+The lock delta has two existing version changes, two new gRPC dependencies,
+26 removed unused dependencies and thirteen retained packages now used only by
+development tooling. No Firebase, Capacitor or GenAI SDK major changed, and no
+package moved from development-only to production. Independent review verifies
+the installed gRPC/gaxios files against their integrity-checked public tarballs.
+
+The production root audit now reports **zero findings**. `verify-app-audit.mjs`
+requires a complete clean npm v2 report with consistent severity counters;
+registry errors, partial reports and every severity of finding fail. There are
+no advisory URL or time-based exceptions. The gate's 55 regression cases pass.
+Development-only dependencies and backend trees are separate; this does not
+claim that every installed dependency is free of advisories.
+
+Verification used Node **22.23.4**: **3,908 app tests across 392 files**, app
+lint and the production TypeScript/Vite build pass. The new three-case gRPC
+compatibility test passes unchanged before and after the override: actual
+Firestore CJS/ESM client construction/offline termination, and generated-client
+unary/streaming/cancellation over bounded loopback connections. It resolves
+Firestore's own proto-loader 0.7.15 separately from gRPC's new 0.8.1 child.
+External fetch and non-loopback HTTP/2 are rejected. This is client compatibility
+coverage, not an exhaustive upstream gRPC or remote database test.
+
+All **152** rebuilt browser payloads are byte-identical to the saved baseline,
+Unity mirror and prior Android export. The actual configured browser Firebase
+and GenAI dependency closures are also unchanged and exclude Firestore/gRPC
+and Google Auth/gaxios respectively. The root Node headless path does load
+gaxios; its runtime byte identity and full app tests matter for that path.
+Prior Unity/Android browser-payload evidence therefore still applies exactly.
+There was no new Unity build, native journey, APK, provider call or device run.
+The old full-source freeze is not described as unchanged after this lock edit.
+
+Functions still reports five moderate production entries and Live gateway four,
+with no high/critical findings. Existing release-gate backend thresholds pass,
+but the strict gateway staging audit would fail. The gax5 filesystem dependency
+is unused by its shipped code, yet no supported in-range parent repair currently
+removes it. A backend repair needs separate dependency review and emulator/gateway
+verification; no audit threshold was relaxed. Functions also has an independently
+available compatible Hono patch. These remain explicit follow-up work.
+
+Evidence: `.quest-evidence/dependency-review-20261101/`, including the before/after
+audits, exact package baselines, public tarball comparisons, compatibility logs,
+full app report, `independent-root-repair-review.json` and
+`dependency-payload-review.json`. All sixteen unrelated protected files remain
+unchanged. Device, provider, signing, deployment and Meta holds remain in force.

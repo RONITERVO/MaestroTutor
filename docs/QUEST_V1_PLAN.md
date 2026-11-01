@@ -19181,3 +19181,30 @@ spatial-cache optimization; neither is completed by this checkpoint.
 The existing device/provider/signing/deployment/Meta holds remain. This slice
 does not raise saved/native object, distance, terrain or liquid limits, establish
 Quest performance, or close the remaining world-scale, audio and Store gates.
+
+
+### Root dependency gate repaired — 2026-11-01
+
+The model-maintenance commit `6332efd7` passed native-echo CI, but release CI
+stopped before its tests at the existing Firebase audit exception's expiry.
+The [dependency review](QUEST_DEPENDENCY_REVIEW.md#root-audit-exception-removed--2026-11-01)
+records the scoped gRPC 1.14.7 override and compatible gaxios 7.1.4 patch,
+which produce a clean root production audit. The audit gate now requires a
+complete clean report with no date/advisory exceptions.
+
+Local verification passes 3,908 app tests, lint and production build. All 152
+emitted web files are byte-identical to the prior verified Unity/Android
+payloads; all sixteen protected files are unchanged. The three new loopback
+Firestore/gRPC compatibility cases pass on both old and patched versions.
+The previous complete native source and Android evidence retain their stated
+scope; this dependency checkpoint does not claim a new Unity or headset run.
+
+The separate backend trees retain moderate findings: release-gate thresholds
+currently permit them, while the strict gateway staging audit would fail.
+They need a separately verified repair, not a threshold relaxation. Root
+release CI must be rerun on this repair before being reported green.
+
+Cost-aware fact paging and visible passive catalog-read failure remain the
+next native reliability task, ahead of incremental spatial invalidation.
+Device/provider/signing/deployment/Meta holds and the remaining v1 gates stay
+unchanged. Evidence: `.quest-evidence/dependency-review-20261101/`.

@@ -40,8 +40,7 @@ jobs:
       - name: Install Live gateway dependencies
         run: npm --prefix live-gateway ci
 
-      # Exact, expiring exception for the unused root Firebase Node server path.
-      # New advisories (including new findings on that package) fail this check.
+      # Require a complete, clean production audit report; no advisory exceptions.
       - name: Audit shipped app dependencies
         run: |
           npm audit --omit=dev --json > app-audit.json || test "$?" -eq 1
