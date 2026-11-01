@@ -1,7 +1,11 @@
 // Copyright 2025 Roni Tervo
 //
 // SPDX-License-Identifier: Apache-2.0
+import { isImageOrigin } from '../../../shared/imageOrigin';
+import {validateInlineImages,type InlineImage} from '../../../shared/inlineImages';
 
+import type { ChatFilePart } from '../../core/types';
+import { imageOriginContext } from '../../../shared/prompts/context';
 import { buildTranslationPrompt } from '../../core/config/prompts';
 import { ThinkingLevel } from '@google/genai';
 import { debugLogService } from '../diagnostics';
@@ -9,6 +13,8 @@ import { getGeminiModels } from '../modelRegistry';
 import { collapseGeminiContents } from '../../shared/utils/conversationTurns';
 import { ApiError } from '../errors';
 import type { GeminiClientSource } from './clientSource';
+import { validateLiveInputMedia, type LiveInputMedia } from '../media/liveInputContext';
+import { LIVE_INPUT_CONTEXT_INSTRUCTION, buildLiveInputTiming, buildLiveInputFrameLabel } from '../../../shared/prompts';
 
 const DEFAULT_TIMEOUT_MS = 600_000; // 10 minutes
 const HIGH_DEMAND_MAX_RETRIES = 10;
@@ -17,7 +23,13 @@ const HIGH_DEMAND_RETRY_MAX_DELAY_MS = 8_000;
 const PROCESSING_PROGRESS_INTERVAL_MS = 4_000;
 const NO_MODEL_OUTPUT_FALLBACK_AFTER_MS = 24_000;
 
-export type GeminiRetryReason = 'server-high-demand' | 'no-output-timeout';
+export type GeminiRetryReason = 'server-high-demand' | 'no-output-timeout' | 'incomplete-stream';
+
+// Only the streaming transport can create this marker, before any text/thought
+// reaches a consumer. Model JSON validation and native actions never enter this path.
+class BufferedStreamInterruptedError extends Error {
+  readonly code = 'INCOMPLETE_RESPONSE_STREAM';
+}
 
 export type GeminiProgressPhase =
   | 'attempt-start'
@@ -46,10 +58,13 @@ export interface GeminiRequestLifecycleHooks {
 
 export type GenerateGeminiResponseOptions = GeminiClientSource & {
   systemInstruction?: string;
-  currentFileParts?: Array<{ fileUri: string; mimeType: string }>;
+  currentFileParts?: ChatFilePart[];
+  liveInputMedia?: LiveInputMedia;
+  currentImages?:InlineImage[];
   useGoogleSearch?: boolean;
   configOverrides?: any;
   timeoutMs?: number;
+  signal?: AbortSignal;
   lifecycleHooks?: GeminiRequestLifecycleHooks;
   onGoogleSearchUnavailable?: () => void;
 }
@@ -62,7 +77,27 @@ const withTimeout = <T>(promise: Promise<T>, ms: number): Promise<T> => {
   return Promise.race([promise, timeout]).finally(() => clearTimeout(timeoutId));
 };
 
-const sleep = (ms: number): Promise<void> => new Promise(resolve => setTimeout(resolve, ms));
+const cancellationError = () => new DOMException('The model request was cancelled.', 'AbortError');
+const checkCancellation = (signal?: AbortSignal) => { if (signal?.aborted) throw cancellationError(); };
+
+/** Release the caller promptly even if a provider ignores cancellation. The
+ * transport also receives the signal; late results can never trigger a retry. */
+const withCancellation = <T>(run: () => Promise<T>, signal?: AbortSignal): Promise<T> => {
+  if (!signal) return run();
+  if (signal.aborted) return Promise.reject(cancellationError());
+  return new Promise<T>((resolve, reject) => {
+    const abort = () => { signal.removeEventListener('abort', abort); reject(cancellationError()); };
+    signal.addEventListener('abort', abort, { once: true });
+    Promise.resolve().then(() => { checkCancellation(signal); return run(); }).then(resolve, reject)
+      .finally(() => signal.removeEventListener('abort', abort));
+  });
+};
+const sleep = (ms: number, signal?: AbortSignal): Promise<void> => new Promise((resolve, reject) => {
+  if (signal?.aborted) { reject(cancellationError()); return; }
+  const abort = () => { clearTimeout(timer); reject(cancellationError()); };
+  const timer = setTimeout(() => { signal?.removeEventListener('abort', abort); resolve(); }, ms);
+  signal?.addEventListener('abort', abort, { once: true });
+});
 
 const appendChunkWithPrefixDiff = (
   accumulated: string,
@@ -211,14 +246,16 @@ const buildRetryMeta = (attempt: number, retryInMs?: number) => ({
   ...(typeof retryInMs === 'number' ? { retryInMs } : {}),
 });
 
-const withHighDemandRetry = async <T>(opts: {
+const withModelRequestRetry = async <T>(opts: {
   operation: string;
   model: string;
   fallbackModel?: string;
   requestPayload: any | ((model: string) => any);
   run: (model: string) => Promise<T>;
   mapSuccess: (result: T) => any;
+  signal?: AbortSignal;
   onProgress?: (event: GeminiProgressEvent) => void;
+  streamRetryBudget?: { remaining: number };
 }): Promise<{ value: T; modelUsed: string }> => {
   let lastError: any;
   let activeModel = normalizeModelName(opts.model);
@@ -229,6 +266,7 @@ const withHighDemandRetry = async <T>(opts: {
   let hasSwitchedToFallback = false;
 
   for (let attempt = 0; attempt <= HIGH_DEMAND_MAX_RETRIES; attempt++) {
+    checkCancellation(opts.signal);
     const attemptNumber = attempt + 1;
     const totalAttempts = HIGH_DEMAND_MAX_RETRIES + 1;
     opts.onProgress?.({
@@ -266,6 +304,7 @@ const withHighDemandRetry = async <T>(opts: {
     try {
       const result = await opts.run(activeModel);
       clearInterval(processingTimer);
+      checkCancellation(opts.signal);
       opts.onProgress?.({
         phase: 'success',
         operation: opts.operation,
@@ -279,15 +318,30 @@ const withHighDemandRetry = async <T>(opts: {
     } catch (error: any) {
       clearInterval(processingTimer);
       lastError = error;
+      if (opts.signal?.aborted) {
+        attemptLog.error({ message: 'Request cancelled.', retry: buildRetryMeta(attemptNumber) });
+        throw cancellationError();
+      }
 
-      const canRetry = attempt < HIGH_DEMAND_MAX_RETRIES && isHighDemandError(error);
-      const retryReason: GeminiRetryReason =
+      const interruptedStream = error instanceof BufferedStreamInterruptedError;
+      const canRetry = attempt < HIGH_DEMAND_MAX_RETRIES && (interruptedStream
+        ? (opts.streamRetryBudget?.remaining ?? 0) > 0
+        : isHighDemandError(error));
+      const retryReason: GeminiRetryReason = interruptedStream ? 'incomplete-stream' :
         error?.syntheticHighDemandReason === 'no-output-timeout'
           ? 'no-output-timeout'
           : 'server-high-demand';
       let retryInMs: number | undefined;
       let switchedToFallbackForRetry = false;
-      if (canRetry) {
+      if (canRetry && interruptedStream) {
+        opts.streamRetryBudget!.remaining--;
+        retryInMs = HIGH_DEMAND_RETRY_BASE_DELAY_MS;
+        opts.onProgress?.({
+          phase: 'retry-scheduled', operation: opts.operation, model: activeModel,
+          attempt: attemptNumber, totalAttempts, retryInMs,
+          elapsedMs: Date.now() - attemptStartedAt, reason: retryReason,
+        });
+      } else if (canRetry) {
         opts.onProgress?.({
           phase: 'high-demand',
           operation: opts.operation,
@@ -332,7 +386,7 @@ const withHighDemandRetry = async <T>(opts: {
         status: getErrorStatus(error),
         code: getErrorCode(error),
         message: getNestedErrorMessage(error) || error?.message || 'Gemini API failed',
-        retry: buildRetryMeta(attemptNumber, retryInMs),
+        retry: { ...buildRetryMeta(attemptNumber, retryInMs), ...(canRetry ? { reason: retryReason } : {}) },
         ...(switchedToFallbackForRetry ? { switchedToFallbackModel: activeModel } : {}),
       });
 
@@ -340,7 +394,9 @@ const withHighDemandRetry = async <T>(opts: {
         throw error;
       }
 
-      if (switchedToFallbackForRetry) {
+      if (interruptedStream) {
+        console.warn(`[Gemini] ${opts.operation} response stream ended early; retrying the buffered request once in ${retryInMs}ms with model ${activeModel}.`);
+      } else if (switchedToFallbackForRetry) {
         console.warn(
           `[Gemini] ${opts.operation} hit high-demand/unavailable response ` +
           `(attempt ${attempt + 1}/${HIGH_DEMAND_MAX_RETRIES + 1}), retrying immediately with fallback model ${activeModel}.`
@@ -353,7 +409,7 @@ const withHighDemandRetry = async <T>(opts: {
       }
 
       if (retryInMs && retryInMs > 0) {
-        await sleep(retryInMs);
+        await sleep(retryInMs, opts.signal);
       }
     }
   }
@@ -376,20 +432,26 @@ export const generateGeminiResponse = async (
     lifecycleHooks,
     onGoogleSearchUnavailable,
   } = options;
-  const ai = options.aiClient || await options.resolveAiClient();
+  checkCancellation(options.signal);
+  if (options.liveInputMedia) validateLiveInputMedia(options.liveInputMedia);
+  const liveInputMedia = options.liveInputMedia ? structuredClone(options.liveInputMedia) : undefined;
+  if(options.currentImages)validateInlineImages(options.currentImages);
+  const currentImages=options.currentImages?structuredClone(options.currentImages):undefined;
+  const ai = options.aiClient || await withCancellation(() => options.resolveAiClient!(), options.signal);
+  checkCancellation(options.signal);
   const rawContents: any[] = [];
 
-  const normalizeFileParts = (parts: unknown): Array<{ fileUri: string; mimeType: string }> => {
+  const normalizeFileParts = (parts: unknown): ChatFilePart[] => {
     if (!Array.isArray(parts)) return [];
     return parts
       .map((part) => {
-        const candidate = part as { fileUri?: string; mimeType?: string } | null | undefined;
+        const candidate = part as { fileUri?: string; mimeType?: string; origin?: unknown } | null | undefined;
         const fileUri = typeof candidate?.fileUri === 'string' ? candidate.fileUri.trim() : '';
         const mimeType = typeof candidate?.mimeType === 'string' ? candidate.mimeType.trim() : '';
         if (!fileUri || !mimeType) return null;
-        return { fileUri, mimeType };
+        return { fileUri, mimeType, ...(isImageOrigin(candidate?.origin) && mimeType.startsWith('image/') ? { origin: candidate.origin } : {}) };
       })
-      .filter((part): part is { fileUri: string; mimeType: string } => Boolean(part));
+      .filter((part): part is ChatFilePart => Boolean(part));
   };
 
   // Build a lossless "raw" payload first, then collapse adjacent user/model
@@ -402,6 +464,7 @@ export const generateGeminiResponse = async (
 
     const historyFileParts = normalizeFileParts(h.fileParts);
     historyFileParts.forEach((part) => {
+      if (imageOriginContext(part.origin)) parts.push({ text: imageOriginContext(part.origin) });
       parts.push({ fileData: { fileUri: part.fileUri, mimeType: part.mimeType } });
     });
 
@@ -418,9 +481,20 @@ export const generateGeminiResponse = async (
   const currentParts: any[] = [{ text: userPrompt }];
   const normalizedCurrentFileParts = normalizeFileParts(currentFileParts);
   normalizedCurrentFileParts.forEach((part) => {
+    if (imageOriginContext(part.origin)) currentParts.push({ text: imageOriginContext(part.origin) });
     currentParts.push({ fileData: { fileUri: part.fileUri, mimeType: part.mimeType } });
   });
 
+  if (liveInputMedia) {
+    const media = liveInputMedia;
+    currentParts.push({ text: LIVE_INPUT_CONTEXT_INSTRUCTION }, { text: buildLiveInputTiming(media.packets) },
+      { inlineData: { mimeType: media.audio!.mimeType, data: media.audio!.data } });
+    media.frames.forEach((frame, index) => currentParts.push(
+      { text: buildLiveInputFrameLabel(index, frame.atMs, frame.audioOffsetSamples) + (frame.origin ? `\n${imageOriginContext(frame.origin)}` : '') },
+      { inlineData: { mimeType: frame.mimeType, data: frame.data } },
+    ));
+  }
+  for(const image of currentImages??[])currentParts.push({text:image.label},{inlineData:{mimeType:image.mimeType,data:image.data}});
   rawContents.push({ role: 'user', parts: currentParts });
   // Collapse only for this request. We do not mutate the source history because
   // the UI/persistence layer still needs the original message granularity.
@@ -477,17 +551,23 @@ export const generateGeminiResponse = async (
     };
   };
 
-  const runWithConfig = (requestConfig: any) => withHighDemandRetry(
+  // Shared across model/search fallback attempts: at most one transport recovery
+  // for this caller, and never after a consumer has observed a partial response.
+  const streamRetryBudget = { remaining: 1 };
+  let hasDeliveredOutput = false;
+  const runWithConfig = (requestConfig: any) => withModelRequestRetry(
     {
         operation: 'generateContent',
+        signal: options.signal,
         model: modelName,
         fallbackModel,
+        streamRetryBudget,
         requestPayload: (activeModel: string) => ({
           contents: redactedContents,
           config: configForModel(requestConfig, activeModel),
         }),
         run: activeModel => withTimeout(
-          (async () => {
+          withCancellation(async () => {
             const abortController = new AbortController();
             let latestChunk: any | undefined;
             let resolvedModelVersion: string | undefined;
@@ -511,6 +591,8 @@ export const generateGeminiResponse = async (
               };
             })();
 
+            const forwardCancellation = () => { clearNoOutputTimer(); abortController.abort(); };
+            options.signal?.addEventListener('abort', forwardCancellation, { once: true });
             const markVisibleModelOutput = () => {
               if (hasVisibleModelOutput) return;
               hasVisibleModelOutput = true;
@@ -518,6 +600,7 @@ export const generateGeminiResponse = async (
             };
 
             try {
+              checkCancellation(options.signal);
               const stream = await ai.models.generateContentStream({
                 model: activeModel,
                 contents,
@@ -527,7 +610,9 @@ export const generateGeminiResponse = async (
                 },
               });
 
+              checkCancellation(options.signal);
               for await (const chunk of stream) {
+                checkCancellation(options.signal);
                 latestChunk = chunk;
                 if (typeof chunk?.modelVersion === 'string' && chunk.modelVersion.trim()) {
                   resolvedModelVersion = chunk.modelVersion;
@@ -539,19 +624,22 @@ export const generateGeminiResponse = async (
                   const appended = appendChunkWithPrefixDiff(accumulatedText, previousChunkText, chunkText);
                   accumulatedText = appended.nextAccumulated;
                   previousChunkText = appended.nextPreviousChunk;
-                  if (appended.delta) {
-                    lifecycleHooks?.onTextDelta?.(appended.delta, accumulatedText);
+                  if (appended.delta && lifecycleHooks?.onTextDelta) {
+                    hasDeliveredOutput = true;
+                    lifecycleHooks.onTextDelta(appended.delta, accumulatedText);
                   }
                 }
 
+                checkCancellation(options.signal);
                 const chunkThought = extractThoughtText(chunk);
                 if (chunkThought) {
                   markVisibleModelOutput();
                   const appendedThought = appendChunkWithPrefixDiff(accumulatedThought, previousChunkThought, chunkThought);
                   accumulatedThought = appendedThought.nextAccumulated;
                   previousChunkThought = appendedThought.nextPreviousChunk;
-                  if (appendedThought.delta) {
-                    lifecycleHooks?.onThoughtDelta?.(appendedThought.delta, accumulatedThought);
+                  if (appendedThought.delta && lifecycleHooks?.onThoughtDelta) {
+                    hasDeliveredOutput = true;
+                    lifecycleHooks.onThoughtDelta(appendedThought.delta, accumulatedThought);
                   }
                 }
               }
@@ -563,14 +651,22 @@ export const generateGeminiResponse = async (
                 modelVersion: resolvedModelVersion,
               };
             } catch (error: any) {
+              checkCancellation(options.signal);
               if (!hasVisibleModelOutput && abortController.signal.aborted) {
                 throw createNoOutputHighDemandError(activeModel, Date.now() - attemptStartedAt);
+              }
+              // @google/genai 1.45 throws this exact error when its SSE reader
+              // reaches EOF with an incomplete frame. It is not model JSON.
+              if (!hasDeliveredOutput && error instanceof Error && error.message === 'Incomplete JSON segment at the end'
+                && getErrorStatus(error) === undefined && getErrorCode(error) === undefined) {
+                throw new BufferedStreamInterruptedError(error.message);
               }
               throw error;
             } finally {
               clearNoOutputTimer();
+              options.signal?.removeEventListener('abort', forwardCancellation);
             }
-          })(),
+          }, options.signal),
           timeoutMs
         ),
         mapSuccess: result => ({ text: result.text, usage: result.usageMetadata }),
@@ -601,6 +697,7 @@ export const generateGeminiResponse = async (
       modelUsed: retryResult.modelUsed,
     };
   } catch (e: any) {
+    checkCancellation(options.signal);
     console.error('Gemini API Error:', e);
     throw new ApiError(e.message || 'Gemini API failed', { status: getErrorStatus(e) || 500, code: getErrorCode(e) });
   }
@@ -618,7 +715,7 @@ export const translateText = async (
   const fallbackModel = resolveFallbackTextModel(model);
 
   try {
-    const retryResult = await withHighDemandRetry(
+    const retryResult = await withModelRequestRetry(
       {
         operation: 'translateText',
         model,

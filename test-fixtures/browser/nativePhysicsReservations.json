@@ -1,0 +1,89 @@
+{
+  "budget": {
+    "bodies": 128,
+    "joints": 32,
+    "preparing": 155,
+    "ready": 5,
+    "retiring": 0,
+    "bodyLimit": 128,
+    "jointLimit": 32
+  },
+  "preparing": [
+    {
+      "reservationId": "ba32be0a397e43b3bd62190dd9a43e51",
+      "worldId": "e7fe99b800b84803b8e0b75bd7344ae5",
+      "regionId": "412b1a1d186f4c6f8cff1988bf97518d",
+      "target": "a85b98051cbd45538bcfbc05b71af0bc",
+      "kind": "body",
+      "phase": "preparing",
+      "active": false,
+      "allocated": false
+    },
+    {
+      "reservationId": "aa7cb6cd2fcf49a283e73434751b3a5e",
+      "worldId": "e7fe99b800b84803b8e0b75bd7344ae5",
+      "regionId": "412b1a1d186f4c6f8cff1988bf97518d",
+      "target": "a85b98051cbd45538bcfbc05b71af0bc",
+      "kind": "joint",
+      "phase": "preparing",
+      "active": false,
+      "allocated": false
+    }
+  ],
+  "ready": [
+    {
+      "reservationId": "ba32be0a397e43b3bd62190dd9a43e51",
+      "worldId": "e7fe99b800b84803b8e0b75bd7344ae5",
+      "regionId": "412b1a1d186f4c6f8cff1988bf97518d",
+      "target": "a85b98051cbd45538bcfbc05b71af0bc",
+      "kind": "body",
+      "phase": "ready",
+      "active": true,
+      "allocated": true
+    },
+    {
+      "reservationId": "aa7cb6cd2fcf49a283e73434751b3a5e",
+      "worldId": "e7fe99b800b84803b8e0b75bd7344ae5",
+      "regionId": "412b1a1d186f4c6f8cff1988bf97518d",
+      "target": "a85b98051cbd45538bcfbc05b71af0bc",
+      "kind": "joint",
+      "phase": "ready",
+      "active": true,
+      "allocated": false
+    }
+  ],
+  "disabled": [
+    {
+      "reservationId": "ba32be0a397e43b3bd62190dd9a43e51",
+      "worldId": "e7fe99b800b84803b8e0b75bd7344ae5",
+      "regionId": "412b1a1d186f4c6f8cff1988bf97518d",
+      "target": "a85b98051cbd45538bcfbc05b71af0bc",
+      "kind": "body",
+      "phase": "ready",
+      "active": false,
+      "allocated": true
+    },
+    {
+      "reservationId": "aa7cb6cd2fcf49a283e73434751b3a5e",
+      "worldId": "e7fe99b800b84803b8e0b75bd7344ae5",
+      "regionId": "412b1a1d186f4c6f8cff1988bf97518d",
+      "target": "a85b98051cbd45538bcfbc05b71af0bc",
+      "kind": "joint",
+      "phase": "ready",
+      "active": false,
+      "allocated": false
+    }
+  ],
+  "retiring": [
+    {
+      "reservationId": "ba32be0a397e43b3bd62190dd9a43e51",
+      "worldId": "e7fe99b800b84803b8e0b75bd7344ae5",
+      "regionId": "412b1a1d186f4c6f8cff1988bf97518d",
+      "target": "a85b98051cbd45538bcfbc05b71af0bc",
+      "kind": "body",
+      "phase": "retiring",
+      "active": false,
+      "allocated": true
+    }
+  ]
+}

@@ -1,37 +1,48 @@
 // Copyright 2025 Roni Tervo
 //
 // SPDX-License-Identifier: Apache-2.0
-import { openDB, STORE_NAME, META_STORE, GLOBAL_PROFILE_STORE } from '../../../core/db/index';
+import { openDB, STORE_NAME, META_STORE, GLOBAL_PROFILE_STORE, AGENT_TASK_STORE, AGENT_TASK_SUMMARY_STORE } from '../../../core/db/index';
 import { ChatMessage, ChatMeta } from '../../../core/types';
+import { hasRoomTaskSources, projectRoomTaskSummaries } from '../../../core-sdk/room/roomTaskProjection';
+import { readRoomTaskSummaries, clearRoomTaskVisibility } from './roomTaskSummaries';
 import { sanitizeForPersistence } from '../utils/persistence';
 export { deriveHistoryForApi } from '../../../core-sdk/chat/history';
 
 export const getChatHistoryDB = async (pairId: string): Promise<ChatMessage[]> => {
   const db = await openDB();
   return new Promise((resolve, reject) => {
-    const transaction = db.transaction(STORE_NAME, "readonly");
-    const store = transaction.objectStore(STORE_NAME);
-    const request = store.get(pairId);
-
-    request.onerror = () => reject(new Error("Error fetching history from DB"));
+    const tx = db.transaction([STORE_NAME, AGENT_TASK_SUMMARY_STORE], 'readonly');
+    let messages: ChatMessage[] = [];
+    tx.oncomplete = () => { db.close(); resolve(messages); };
+    tx.onabort = tx.onerror = () => { db.close(); reject(tx.error || new Error('Error fetching history from DB')); };
+    const request = tx.objectStore(STORE_NAME).get(pairId);
     request.onsuccess = () => {
-      resolve(request.result ? request.result.messages : []);
+      readRoomTaskSummaries(tx, pairId, summaries => {
+        messages = projectRoomTaskSummaries(request.result?.messages || [], summaries, pairId);
+      });
     };
   });
 };
 export const saveChatHistoryDB = async (pairId: string, messages: ChatMessage[]): Promise<void> => {
   if (!pairId) return;
-  const messagesToSave = messages
-    .filter(msg => msg.role !== 'system_selection')
-    .map(sanitizeForPersistence);
+  const messagesToSave = messages.filter(msg => msg.role !== 'system_selection').map(sanitizeForPersistence);
   const db = await openDB();
   return new Promise((resolve, reject) => {
-    const transaction = db.transaction(STORE_NAME, "readwrite");
-    const store = transaction.objectStore(STORE_NAME);
-    const request = store.put({ pairId, messages: messagesToSave });
-
-    request.onerror = () => reject(new Error("Error saving history to DB"));
-    request.onsuccess = () => resolve();
+    const tx = db.transaction([STORE_NAME, AGENT_TASK_STORE, AGENT_TASK_SUMMARY_STORE], 'readwrite');
+    tx.oncomplete = () => { db.close(); resolve(); };
+    tx.onabort = tx.onerror = () => { db.close(); reject(tx.error || new Error('History transaction was aborted')); };
+    readRoomTaskSummaries(tx, pairId, summaries => {
+      for (const summary of summaries) {
+        if (!hasRoomTaskSources(messagesToSave, summary)) {
+          tx.objectStore(AGENT_TASK_STORE).delete(summary.id);
+          tx.objectStore(AGENT_TASK_SUMMARY_STORE).delete(summary.id);
+        }
+      }
+      // An old autosave cannot overwrite a newer durable task result. Source
+      // deletion still wins, removing both the journal and its chat projection.
+      tx.objectStore(STORE_NAME).put({ pairId,
+        messages: projectRoomTaskSummaries(messagesToSave, summaries, pairId).map(sanitizeForPersistence) });
+    });
   });
 };
 
@@ -50,45 +61,9 @@ export const safeSaveChatHistoryDB = async (pairId: string, messages: ChatMessag
 };
 
 export const getAllChatHistoriesDB = async (): Promise<Record<string, ChatMessage[]>> => {
-  const db = await openDB();
-  const tryGetAll = (): Promise<any[]> => new Promise((resolve, reject) => {
-    const transaction = db.transaction(STORE_NAME, "readonly");
-    const store = transaction.objectStore(STORE_NAME) as IDBObjectStore & { getAll?: () => IDBRequest<any[]> };
-    if (typeof store.getAll === 'function') {
-      const req = store.getAll!();
-      req.onsuccess = () => resolve(req.result || []);
-      req.onerror = () => reject(req.error || new Error("getAll() failed"));
-    } else {
-      reject(new Error('getAll not supported'));
-    }
-  });
-
-  try {
-    const rows = await tryGetAll();
-    const allChats: Record<string, ChatMessage[]> = {};
-    rows.forEach((item: any) => { allChats[item.pairId] = item.messages; });
-    return allChats;
-  } catch {
-    return await new Promise((resolve, reject) => {
-      const transaction = db.transaction(STORE_NAME, "readonly");
-      const store = transaction.objectStore(STORE_NAME);
-      const result: Record<string, ChatMessage[]> = {};
-      const cursorReq = store.openCursor();
-      cursorReq.onerror = () => reject(new Error("Error fetching all histories from DB"));
-      cursorReq.onsuccess = (ev) => {
-        const cursor = (ev.target as IDBRequest<IDBCursorWithValue>).result;
-        if (cursor) {
-          const val: any = cursor.value;
-          if (val && typeof val.pairId === 'string') {
-            result[val.pairId] = val.messages;
-          }
-          cursor.continue();
-        } else {
-          resolve(result);
-        }
-      };
-    });
-  }
+  const histories: Record<string, ChatMessage[]> = {};
+  await iterateChatHistoriesDB((pairId, messages) => { histories[pairId] = messages; });
+  return histories;
 };
 
 export const hasAnyChatHistoriesDB = async (): Promise<boolean> => {
@@ -112,12 +87,14 @@ export const iterateChatHistoriesDB = async (
   return new Promise((resolve, reject) => {
     const transaction = db.transaction(STORE_NAME, "readonly");
     const store = transaction.objectStore(STORE_NAME);
-    const cursorReq = store.openCursor();
+    transaction.oncomplete = () => db.close();
+    transaction.onabort = transaction.onerror = () => { db.close(); reject(transaction.error || new Error("Error iterating histories")); };
+    const cursorReq = store.openKeyCursor();
     let chain: Promise<void> = Promise.resolve();
     let settled = false;
     cursorReq.onerror = () => reject(new Error("Error iterating chat histories"));
     cursorReq.onsuccess = (ev) => {
-      const cursor = (ev.target as IDBRequest<IDBCursorWithValue>).result;
+      const cursor = (ev.target as IDBRequest<IDBCursor>).result;
       if (!cursor) {
         chain.then(() => {
           if (!settled) {
@@ -132,10 +109,8 @@ export const iterateChatHistoriesDB = async (
         });
         return;
       }
-      const val: any = cursor.value || {};
-      const pairId = typeof val.pairId === 'string' ? val.pairId : '';
-      const messages = Array.isArray(val.messages) ? val.messages : [];
-      chain = chain.then(() => onRow(pairId, messages));
+      const pairId = typeof cursor.primaryKey === 'string' ? cursor.primaryKey : '';
+      chain = chain.then(async () => { await onRow(pairId, await getChatHistoryDB(pairId)); });
       cursor.continue();
     };
   });
@@ -148,17 +123,19 @@ export const clearAndSaveAllHistoriesDB = async (
 ): Promise<void> => {
     const db = await openDB();
     return new Promise((resolve, reject) => {
-  const transaction = db.transaction([STORE_NAME, META_STORE, GLOBAL_PROFILE_STORE], "readwrite");
+  const transaction = db.transaction([STORE_NAME, META_STORE, GLOBAL_PROFILE_STORE, AGENT_TASK_STORE, AGENT_TASK_SUMMARY_STORE], "readwrite");
   const store = transaction.objectStore(STORE_NAME);
   const metaStore = transaction.objectStore(META_STORE);
   const profileStore = transaction.objectStore(GLOBAL_PROFILE_STORE);
 
-        transaction.oncomplete = () => resolve();
-        transaction.onerror = () => reject(new Error("Transaction error during bulk save"));
+        transaction.oncomplete = () => { clearRoomTaskVisibility(); db.close(); resolve(); };
+        transaction.onabort = transaction.onerror = () => { db.close(); reject(new Error("Transaction error during bulk save")); };
         
         const clearRequest = store.clear();
         const clearMetaReq = metaStore.clear();
   const clearProfileReq = profileStore.clear();
+        transaction.objectStore(AGENT_TASK_STORE).clear();
+        transaction.objectStore(AGENT_TASK_SUMMARY_STORE).clear();
         clearRequest.onerror = () => reject(new Error("Error clearing store before bulk save"));
         clearMetaReq.onerror = () => reject(new Error("Error clearing meta store before bulk save"));
         clearProfileReq.onerror = () => reject(new Error("Error clearing profile store before bulk save"));

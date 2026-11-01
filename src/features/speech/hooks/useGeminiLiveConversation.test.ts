@@ -11,6 +11,8 @@ const ports = vi.hoisted(() => ({
   trackUsage: vi.fn(), flushUsage: vi.fn(), completeLog: vi.fn(), errorLog: vi.fn(),
   tokens: new Set<string>(),
   cameraConsent: true,
+  captureFactory: null as null | ((...args: any[]) => Promise<any>),
+  outputFactory: null as null | ((...args: any[]) => Promise<any>),
 }));
 vi.mock('../../../api/gemini/client', () => ({ getAi: ports.getAi }));
 vi.mock('../../../store', () => ({ useMaestroStore: Object.assign((selector: (state: unknown) => unknown) => selector({
@@ -27,9 +29,17 @@ vi.mock('../utils/audioCodecWorkerClient', () => ({ AudioCodecWorkerClient: clas
 vi.mock('../utils/captureWorkletMessaging', () => ({ flushCaptureWorkletNode: ports.flushCapture }));
 vi.mock('../utils/localWhisperClient', () => ({ acquireLocalWhisperClient: ports.acquireWhisper, releaseLocalWhisperClient: ports.releaseWhisper }));
 vi.mock('../utils/localSpeechTrigger', () => ({ waitForLocalSpeechTrigger: ports.trigger }));
+vi.mock('../live/browserRuntime', async importOriginal => {
+  const actual = await importOriginal<typeof import('../live/browserRuntime')>();
+  return { ...actual, createBrowserLiveRuntime: (activity: Parameters<typeof actual.createBrowserLiveRuntime>[0]) => {
+    const runtime = actual.createBrowserLiveRuntime(activity);
+    return { ...runtime, openPcmCapture: ports.captureFactory ?? runtime.openPcmCapture, createSpeechOutput: ports.outputFactory ?? runtime.createSpeechOutput };
+  } };
+});
 
 import { useGeminiLiveConversation, type UseGeminiLiveConversationCallbacks } from './useGeminiLiveConversation';
 import { LIVE_OPEN_TRIGGER } from '../../../../shared/liveOpenReason';
+import { sessionActivity } from '../../../platform/browser/sessionActivity';
 
 const deferred = <T,>() => {
   let resolve!: (value: T) => void;
@@ -41,7 +51,7 @@ let contexts: FakeAudioContext[];
 let nodes: FakeWorklet[];
 let connections: any[];
 let sessions: ReturnType<typeof makeSession>[];
-let stopTrack: ReturnType<typeof vi.fn>;
+let stopTrack: ReturnType<typeof vi.fn<() => void>>;
 const makeSession = () => ({ close: vi.fn(() => { order.push('session.close'); }), sendRealtimeInput: vi.fn() });
 class FakeAudioContext {
   state = 'running'; sampleRate: number; destination = {}; baseLatency = 0; outputLatency = 0;
@@ -68,6 +78,7 @@ function harness() {
 beforeEach(() => {
   vi.resetAllMocks(); vi.useFakeTimers(); vi.setSystemTime(new Date('2026-09-23T12:00:00Z'));
   order = []; contexts = []; nodes = []; connections = []; sessions = []; ports.tokens.clear(); ports.cameraConsent = true;
+  ports.outputFactory = null; ports.captureFactory = null;
   stopTrack = vi.fn(() => { order.push('track.stop'); });
   vi.stubGlobal('AudioContext', FakeAudioContext); vi.stubGlobal('AudioWorkletNode', FakeWorklet);
   Object.defineProperty(navigator, 'mediaDevices', { configurable: true, value: { getUserMedia: ports.getUserMedia } });
@@ -82,6 +93,155 @@ beforeEach(() => {
 afterEach(async () => { cleanup(); await flush(); vi.useRealTimers(); vi.unstubAllGlobals(); });
 
 describe('actual Live hook lifecycle before session-controller extraction', () => {
+  it('routes an injected microphone through the original Live packetizer and closes its exact owner', async () => {
+    let input!: (pcm: Int16Array) => void;
+    const capture = { sampleRate: 16000 as const, start: vi.fn(sink => { input = sink; }),
+      flush: vi.fn(async () => {}), close: vi.fn(async () => {}) };
+    ports.captureFactory = vi.fn(async () => capture);
+    const h = harness(); await h.start();
+    expect(contexts).toHaveLength(0); expect(nodes).toHaveLength(0);
+    expect(ports.getUserMedia).not.toHaveBeenCalled(); expect(capture.start).toHaveBeenCalledOnce();
+    input(new Int16Array(1600).fill(800)); await flush(); await advance(120);
+    expect(ports.encode).toHaveBeenCalled();
+    expect(sessions[0].sendRealtimeInput).toHaveBeenCalledWith({ audio: { data: 'AQID', mimeType: 'audio/pcm;rate=16000' } });
+    await act(async () => { await h.result.current.stop(); });
+    expect(capture.flush).toHaveBeenCalledOnce(); expect(capture.close).toHaveBeenCalledOnce();
+    const sent = sessions[0].sendRealtimeInput.mock.calls.length;
+    input(new Int16Array(1600).fill(700)); await flush(); await advance(120);
+    expect(sessions[0].sendRealtimeInput).toHaveBeenCalledTimes(sent);
+    expect(sessions[0].close).toHaveBeenCalledOnce();
+  });
+
+  it('uses the same capture factory for local detection and closes a stale injected owner', async () => {
+    const late = deferred<any>();
+    const old = { start: vi.fn(), flush: vi.fn(), close: vi.fn(async () => {}) };
+    const current = { sampleRate: 16000 as const, start: vi.fn(), flush: vi.fn(), close: vi.fn(async () => {}) };
+    const open = vi.fn().mockReturnValueOnce(late.promise).mockResolvedValue(current);
+    ports.captureFactory = open;
+    const h = harness(); let starting!: Promise<void>;
+    act(() => { starting = h.result.current.start({ liveOpenTrigger: LIVE_OPEN_TRIGGER.USER_CAMERA_LIVE, playModelAudio: false }); });
+    await flush(); await h.start();
+    expect(open.mock.calls[0][0].signal.aborted).toBe(true);
+    late.resolve(old); await act(async () => { await starting; });
+    expect(old.close).toHaveBeenCalledOnce(); expect(old.start).not.toHaveBeenCalled();
+    expect(current.close).not.toHaveBeenCalled();
+    const triggerCapture = { transferTo: vi.fn(() => ({ bufferedPackets: 0, bufferedSamples: 0 })), flush: vi.fn(), close: vi.fn(async () => {}) };
+    ports.trigger.mockResolvedValueOnce({ pcm: new Int16Array(1600), transcript: 'hi', capture: triggerCapture });
+    await act(async () => { await h.result.current.start({ liveOpenTrigger: LIVE_OPEN_TRIGGER.WHISPER_OBSERVER, gateInputOnSpeech: true, playModelAudio: false }); });
+    expect(ports.trigger.mock.calls[0][0].openCapture).toBe(open);
+    expect(open).toHaveBeenCalledTimes(2);
+    await act(async () => { await h.result.current.stop(); });
+    expect(triggerCapture.close).toHaveBeenCalledOnce(); expect(current.close).toHaveBeenCalledOnce();
+  });
+
+  it('uses one injected output without a dry browser copy and waits for its native completion', async () => {
+    const done = deferred<'drained' | 'cancelled'>();
+    const output = { sampleRate: 24000, write: vi.fn(), reset: vi.fn(), dispose: vi.fn(), read: vi.fn(), drain: vi.fn(async () => 'drained'), finish: vi.fn(() => done.promise) };
+    ports.outputFactory = async () => output;
+    const h = harness(); await h.start(true);
+    expect(nodes.map(node => node.name)).toEqual(['capture']);
+    expect(ports.connect).toHaveBeenCalledOnce();
+    connections[0].callbacks.onmessage({ serverContent: { modelTurn: { parts: [{ inlineData: { data: 'AQID' } }] },
+      inputTranscription: { text: 'Hi' }, outputTranscription: { text: 'Hola' }, turnComplete: true } });
+    await flush(); expect(output.write).toHaveBeenCalledWith(new Int16Array([100, 200, 300]));
+    connections[0].callbacks.onclose(); await flush();
+    expect(output.finish).toHaveBeenCalledOnce(); expect(output.dispose).not.toHaveBeenCalled();
+    await advance(2000); expect(output.dispose).not.toHaveBeenCalled(); expect(ports.flushUsage).not.toHaveBeenCalled();
+    expect(h.callbacks.onTurnComplete).not.toHaveBeenCalled();
+    done.resolve('drained'); await flush();
+    expect(output.dispose).toHaveBeenCalledOnce(); expect(ports.flushUsage).toHaveBeenCalledOnce();
+    expect(h.callbacks.onStateChange).toHaveBeenLastCalledWith('idle');
+    expect(h.callbacks.onTurnComplete).toHaveBeenCalledExactlyOnceWith('Hi', 'Hola', new Int16Array(), [new Int16Array([100, 200, 300])]);
+  });
+
+  it.each(['complete', 'early close', 'interrupt', 'stop'] as const)('owns accepted decoding and final audio tail through %s', async terminal => {
+    const tail = deferred<'drained' | 'cancelled'>(), decode = deferred<ArrayBuffer>();
+    const output = { sampleRate: 24000, write: vi.fn(), read: vi.fn(),
+      drain: vi.fn(async () => 'drained'), finish: vi.fn(() => tail.promise),
+      reset: vi.fn(() => tail.resolve('cancelled')), dispose: vi.fn() };
+    ports.outputFactory = async () => output; ports.decode.mockReturnValueOnce(decode.promise);
+    const h = harness(); await h.start(true);
+    const callbacks = connections[0].callbacks;
+    callbacks.onmessage({ serverContent: { modelTurn: { parts: [{ inlineData: { data: 'accepted' } }] },
+      inputTranscription: { text: 'Hi' }, outputTranscription: { text: 'Hola' }, turnComplete: true } });
+    if (terminal === 'early close') callbacks.onclose();
+    await flush(); if (terminal !== 'early close') callbacks.onclose(); await flush();
+    expect(output.finish).not.toHaveBeenCalled(); expect(output.dispose).not.toHaveBeenCalled();
+    decode.resolve(new Int16Array([3, 5, 7]).buffer); await flush();
+    expect(output.write).toHaveBeenCalledExactlyOnceWith(new Int16Array([3, 5, 7]));
+    expect(output.finish).toHaveBeenCalledOnce();
+    callbacks.onmessage({ usageMetadata: { totalTokenCount: 42 }, serverContent: {
+      modelTurn: { parts: [{ inlineData: { data: 'too late' } }] }, outputTranscription: { text: 'Ignore this' } } });
+    await flush(); expect(ports.decode).toHaveBeenCalledOnce(); expect(h.callbacks.onTurnComplete).not.toHaveBeenCalled();
+    if (terminal === 'interrupt') { callbacks.onmessage({ serverContent: { interrupted: true } }); await flush(); }
+    else if (terminal === 'stop') await act(async () => { await h.result.current.stop(); });
+    else { tail.resolve('drained'); await flush(); }
+    if (terminal === 'complete' || terminal === 'early close') {
+      expect(h.callbacks.onTurnComplete).toHaveBeenCalledExactlyOnceWith('Hi', 'Hola', new Int16Array(), [new Int16Array([3, 5, 7])]);
+      expect(output.finish).toHaveBeenCalledOnce();
+    } else expect(h.callbacks.onTurnComplete).not.toHaveBeenCalled();
+    expect(output.dispose).toHaveBeenCalledOnce(); expect(ports.flushUsage).toHaveBeenCalledOnce();
+    expect(ports.trackUsage).toHaveBeenCalledWith({ totalTokenCount: 42 });
+    expect(h.callbacks.onError).not.toHaveBeenCalled();
+    expect(output.finish).toHaveBeenCalledOnce();
+  });
+
+  it('disposes a late output after Stop during renderer initialization before connecting the provider', async () => {
+    const ready = deferred<any>(); ports.outputFactory = () => ready.promise;
+    const h = harness(); let starting!: Promise<void>;
+    act(() => { starting = h.result.current.start({ liveOpenTrigger: LIVE_OPEN_TRIGGER.USER_CAMERA_LIVE, playModelAudio: true }); });
+    await flush(); await act(async () => { await h.result.current.stop(); });
+    const output = { sampleRate: 24000, dispose: vi.fn() };
+    ready.resolve(output); await act(async () => { await starting; });
+    expect(output.dispose).toHaveBeenCalledOnce(); expect(ports.connect).not.toHaveBeenCalled();
+    expect(contexts.every(context => context.state === 'closed')).toBe(true);
+  });
+
+  it('silences output immediately while microphone cleanup is pending and refuses late provider audio', async () => {
+    const output = { sampleRate: 24000, write: vi.fn(), reset: vi.fn(), dispose: vi.fn(), read: vi.fn(), drain: vi.fn(), finish: vi.fn() };
+    ports.outputFactory = async () => output;
+    const h = harness(); await h.start(true); const closing = deferred<void>();
+    ports.flushCapture.mockReturnValueOnce(closing.promise);
+    let stopped!: Promise<void>;
+    act(() => { stopped = h.result.current.stop(); });
+    expect(output.reset).toHaveBeenCalledOnce(); expect(output.dispose).not.toHaveBeenCalled();
+    connections[0].callbacks.onmessage({ serverContent: { modelTurn: { parts: [{ inlineData: { data: 'AQID' } }] } } });
+    await flush(); expect(ports.decode).not.toHaveBeenCalled(); expect(output.write).not.toHaveBeenCalled();
+    closing.resolve(); await act(async () => { await stopped; });
+    expect(output.dispose).toHaveBeenCalledOnce(); expect(sessions[0].close).toHaveBeenCalledOnce();
+  });
+
+  it.each(['write', 'drain', 'cancelled', 'processor', 'decode'] as const)('closes failed %s playback without reporting a completed Live turn', async failure => {
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    let onError!: () => void;
+    const output = { sampleRate: 24000, write: vi.fn(), reset: vi.fn(), dispose: vi.fn(), read: vi.fn(),
+      drain: vi.fn(async () => failure === 'cancelled' ? 'cancelled' : 'drained'), finish: vi.fn(async () => failure === 'cancelled' ? 'cancelled' : 'drained') };
+    if (failure === 'write') output.write.mockImplementation(() => { throw new Error('Queue full'); });
+    if (failure === 'drain') output.drain.mockRejectedValue(new Error('Renderer unavailable'));
+    if (failure === 'decode') ports.decode.mockRejectedValue(new Error('Invalid PCM'));
+    ports.outputFactory = async (_context, events) => { onError = events.onError; return output; };
+    const h = harness(); await h.start(true);
+    connections[0].callbacks.onmessage({ serverContent: { modelTurn: { parts: [{ inlineData: { data: 'AQID' } }] }, outputTranscription: { text: 'Hello' }, turnComplete: true } });
+    await flush();
+    if (failure === 'processor') { onError(); await flush(); }
+    await advance(2000); await flush();
+    expect(h.callbacks.onError).toHaveBeenCalledOnce();
+    expect(h.callbacks.onTurnComplete).not.toHaveBeenCalled();
+    expect(output.dispose).toHaveBeenCalledOnce();
+    expect(sessions[0].close).toHaveBeenCalledOnce();
+    expect(h.callbacks.onStateChange).toHaveBeenLastCalledWith('error');
+  });
+
+  it('closes capture and the provider on host interruption and requires explicit resume', async () => {
+    const h = harness(); await h.start(true);
+    await act(async () => { sessionActivity.setSuspended(true); }); await flush();
+    expect(sessions[0].close).toHaveBeenCalledOnce();
+    expect(contexts.every(context => context.state === 'closed')).toBe(true);
+    expect(sessionActivity.status().settled).toBe(true);
+    sessionActivity.setSuspended(false);
+    await h.start(); expect(ports.connect).toHaveBeenCalledTimes(1);
+    sessionActivity.resume(); await h.start(); expect(ports.connect).toHaveBeenCalledTimes(2);
+  });
   it('remains usable after React StrictMode rehearses effect cleanup', async () => {
     const hook = renderHook(() => useGeminiLiveConversation(), {
       wrapper: ({ children }) => createElement(StrictMode, null, children),
@@ -232,7 +392,7 @@ describe('actual Live hook lifecycle before session-controller extraction', () =
     const request = playback.port.postMessage.mock.calls.find(([message]) => message.type === 'request-drain')![0];
     expect(contexts[1].close).not.toHaveBeenCalled();
     expect(ports.flushUsage).not.toHaveBeenCalled();
-    playback.port.onmessage!({ data: { type: 'drained', requestId: request.requestId } }); await flush();
+    playback.port.onmessage!({ data: { type: 'drained', generation: request.generation, renderedSamples: 3, requestId: request.requestId } }); await flush();
     await advance(119); expect(contexts[1].close).not.toHaveBeenCalled();
     await advance(1);
     expect(contexts[1].close).toHaveBeenCalledOnce();
@@ -269,7 +429,7 @@ describe('actual Live hook lifecycle before session-controller extraction', () =
   it('transfers confirmed pre-connect capture once and keeps the same microphone graph', async () => {
     const input = new FakeAudioContext({ sampleRate: 16000 }); const node = new FakeWorklet(input, 'capture');
     const transfer = vi.fn(() => ({ bufferedPackets: 1, bufferedSamples: 1600 }));
-    ports.trigger.mockResolvedValue({ transcript: 'Local words', pcm: new Int16Array(1600).fill(500), microphoneStream: { getTracks: () => [{ stop: stopTrack }] }, capture: { audioContext: input, workletNode: node, transferTo: transfer } });
+    ports.trigger.mockResolvedValue({ transcript: 'Local words', pcm: new Int16Array(1600).fill(500), capture: { transferTo: transfer, flush: ports.flushCapture, close: async () => { node.port.onmessage = null; node.disconnect(); stopTrack(); await input.close(); } } });
     const h = harness();
     await act(async () => { await h.result.current.start({ liveOpenTrigger: LIVE_OPEN_TRIGGER.WHISPER_OBSERVER, gateInputOnSpeech: true, playModelAudio: false }); });
     expect(ports.getUserMedia).not.toHaveBeenCalled();
@@ -323,4 +483,68 @@ describe('actual Live hook lifecycle before session-controller extraction', () =
     expect(sessions[0].close).not.toHaveBeenCalled();
     expect(stopTrack).not.toHaveBeenCalled();
   });
+});
+
+it('captures prepared context from the exact connection and forwards it with the completed turn', async () => {
+  const h = harness();
+  const prepareTurnContext = vi.fn(async (instruction?: string) => ({ systemInstruction: instruction + ' Room capability.', handoffId: 'owned-connection' }));
+  await act(async () => { await h.result.current.start({ liveOpenTrigger: LIVE_OPEN_TRIGGER.USER_CAMERA_LIVE,
+    systemInstruction: 'Stale preflight instruction', buildSystemInstruction: async () => 'Fresh context', prepareTurnContext, playModelAudio: false }); });
+  expect(prepareTurnContext).toHaveBeenCalledExactlyOnceWith('Fresh context');
+  expect(connections[0].config.systemInstruction).toBe('Fresh context Room capability.');
+  expect(connections[0].config).not.toHaveProperty('handoffId');
+  connections[0].callbacks.onmessage({ serverContent: { inputTranscription: { text: 'Make a robot' }, outputTranscription: { text: 'I will ask the agent.' }, turnComplete: true } });
+  await flush(); await advance(1500);
+  expect(h.callbacks.onTurnComplete).toHaveBeenCalledExactlyOnceWith('Make a robot', 'I will ask the agent.', new Int16Array(), [], {
+    systemInstruction: 'Fresh context Room capability.', handoffId: 'owned-connection',
+    liveInputMedia: { version: 1, complete: false, issue: 'missing', frames: [], packets: [] },
+  });
+});
+
+it('does not connect after Stop while context preparation is pending', async () => {
+  const pending = deferred<{ systemInstruction: string; handoffId: string }>();
+  const h = harness(); let starting!: Promise<void>;
+  act(() => { starting = h.result.current.start({ liveOpenTrigger: LIVE_OPEN_TRIGGER.USER_CAMERA_LIVE, playModelAudio: false,
+    prepareTurnContext: () => pending.promise }); });
+  await flush(); await act(async () => { await h.result.current.stop(); });
+  await act(async () => { pending.resolve({ systemInstruction: 'Late context', handoffId: 'stale' }); await starting; });
+  expect(ports.connect).not.toHaveBeenCalled(); expect(h.callbacks.onTurnComplete).not.toHaveBeenCalled();
+});
+
+it.each([false, true])('preserves actual sent audio through completion; interrupted=%s', async interrupted => {
+  const h = harness(); ports.encode.mockResolvedValue('AAD/fwCA//8=');
+  await act(async () => { await h.result.current.start({ liveOpenTrigger: LIVE_OPEN_TRIGGER.USER_CAMERA_LIVE,
+    prepareTurnContext: async () => ({ systemInstruction: 'Original context', handoffId: 'owned-media' }), playModelAudio: false }); });
+  const capture = nodes.find(node => node.name === 'capture')!;
+  capture.port.onmessage!({ data: new Int16Array(1600).fill(200) }); await flush(); await advance(120);
+  expect(sessions[0].sendRealtimeInput).toHaveBeenCalledWith({ audio: { data: 'AAD/fwCA//8=', mimeType: 'audio/pcm;rate=16000' } });
+  if (interrupted) { connections[0].callbacks.onmessage({ serverContent: { interrupted: true } }); await flush(); }
+  connections[0].callbacks.onmessage({ serverContent: { inputTranscription: { text: 'Make this' }, outputTranscription: { text: 'I will ask the agent.' }, turnComplete: true } });
+  await flush();
+  const count = sessions[0].sendRealtimeInput.mock.calls.length;
+  capture.port.onmessage!({ data: new Int16Array(1600).fill(900) }); await flush(); await advance(1500);
+  expect(sessions[0].sendRealtimeInput).toHaveBeenCalledTimes(count);
+  const media = h.callbacks.onTurnComplete.mock.calls[0][4].liveInputMedia;
+  if (interrupted) expect(media).toMatchObject({ complete: false, issue: 'interrupted', packets: [] });
+  else {
+    expect(media.complete).toBe(true); expect(atob(media.audio.data).slice(44)).toBe(atob('AAD/fwCA//8='));
+    expect(media.packets).toEqual([{ atMs: 0, sampleOffset: 0, samples: 4 }]);
+  }
+  expect(capture.port.onmessage).toBeNull();
+});
+
+
+it('keeps the conversation captured before async connection even without a room handoff', async () => {
+  const h = harness(), pending = deferred<string>();
+  const options = { liveOpenTrigger: LIVE_OPEN_TRIGGER.USER_CAMERA_LIVE, conversationId: 'original-pair',
+    buildSystemInstruction: () => pending.promise, playModelAudio: false };
+  let starting!: Promise<void>;
+  act(() => { starting = h.result.current.start(options); }); await flush();
+  options.conversationId = 'new-pair';
+  await act(async () => { pending.resolve('Original instruction'); await starting; });
+  expect(connections[0].config).not.toHaveProperty('conversationId');
+  expect(connections[0].config.systemInstruction).toBe('Original instruction');
+  connections[0].callbacks.onmessage({ serverContent: { outputTranscription: { text: 'Old answer' }, turnComplete: true } });
+  await flush(); await advance(1500);
+  expect(h.callbacks.onTurnComplete.mock.calls[0][4]).toEqual({ conversationId: 'original-pair', systemInstruction: 'Original instruction' });
 });

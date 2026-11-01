@@ -380,3 +380,84 @@ fallback: fail closed if the gateway is unavailable.
 
 Always preserve the JSON result and Actions logs as release evidence. They contain
 public metadata and hashes, not API keys or raw payment data.
+
+
+## Quest conversational agent coverage
+
+Quest adds a release requirement alongside the original web journey:
+[Quest agent release coverage](QUEST_AGENT_RELEASE_COVERAGE.md). Protocol 1.9
+connects the ordinary headless chat and verifier to the same task handoff, provider,
+journal and native handlers used by the book. Text, Live and observer paths must
+retain original context and return task state/results into that conversation.
+
+The optional native provider probe now exercises the conversational delegation
+instead of invoking the planner directly. A passed basic creation journey is
+only that scenario's evidence. Paired Live/observer visual runs and an EventProgram
+scenario now add exact media handoff and native event/function/branch/state/timer,
+completion/restart/Stop evidence. AvatarAnimation adds exact library discovery,
+editable save-only source and later full-duration playback, with actual displayed
+skin-joint observations from the Editor. Its duplicate-start gate exposed a real
+planner replay and now checks the shared accepted-start reconciliation. The current
+run IDs, billing and scope limits are in the Quest agent coverage matrix. Broader
+programs, avatar motion/ownership and recovery still need semantic assertions and
+real-provider runs in both modes. Deterministic fixtures, native receipts and provider usage
+are recorded separately; none implies unobserved headset or Store acceptance.
+
+
+`CompositeModule` adds paired real-provider save/start journeys for a pinned
+included construction, two independent parallel event branches, native geometry,
+collisions, hinges and atomic construction Undo/Redo. Agent drafts can reference
+an exact module inspected in the same task; shared authoring expands and validates
+the full definition before journaling or dispatch. Bounded local source correction
+never retries native effects or turns rejected source into success. The release
+matrix records original failures, final paired results and scope limits.
+
+The native probe also has real `LiveVisual` and `ObserverVisual` scenarios for both
+access modes. They require the original transmitted audio/frame hashes in the
+planner, current conversation ownership, spoken output without tool JSON, verified
+delegation, native object semantics and reconciled usage. The shared managed
+WebSocket client allows a bounded 60-second gateway startup, cleans failed
+connections and drains queued final data/billing before closing a ready session.
+Synthetic fixture passes remain separate from physical input/rendered acceptance;
+current evidence and outstanding scenarios are in the Quest matrix above.
+
+
+The real-provider book runner (`-Journey Book -ProviderScenario ContextCreateEdit`)
+adds the original rendered chat controls, browser provider adapter, task status and
+result, native workshop Undo/Redo and IndexedDB reload without replay to the Unity
+checks. It uses supplied test credentials; sign-in, attestation, Android texture
+and physical input remain separate gates. The offline book runner still verifies
+deterministic concurrent user edits and refused stale agent commands.
+
+`PhysicsLaunch` adds a provider-authored simulation-start/throw/pause journey.
+Live native transform samples must show gravity, actual flight, approach to the
+requested point, collision support at a synthetic floor, a fixed wall and
+settling. Duplicate launch receipts cannot cause another throw, and a real agent pause must stop
+simulation. Fixture placement/settings are labelled setup, not agent work.
+This does not substitute for real scan/wall alignment, physical controller or Quest
+performance checks. Run evidence is recorded in QUEST_AGENT_RELEASE_COVERAGE.md.
+
+`TaskSteering` adds real-provider Stop/Revise/Continue coverage against Unity. It
+stops at a real acknowledged edit, changes the object through manual handlers,
+requires exact parent-task resolution and retained manual placement, and reopens
+the task host/store without replay. The negative stopped outcome still reconciles
+managed billing. Physical input and crash/unknown-receipt recovery remain separate.
+
+
+`WaterTraversal` extends the fresh managed/BYOK native scenarios to independent
+actor water policies, ordinary-language revision of a prior preference, and
+preservation of placement, collision settings and physics state. The deterministic
+native journey and original-book generated form exercise the same capability.
+Real movement/geometry checks remain separate native tests; none of these desktop
+runs establishes physical headset performance or swimming support. Run IDs,
+failures and provider accounting belong in QUEST_AGENT_RELEASE_COVERAGE.md.
+
+
+`ImportedAudio` extends fresh managed/BYOK chat coverage to exact private WAV
+assets: discover, attach silently, play once with native consumption evidence,
+and detach while keeping the source. `Book -SyntheticSound` exercises the same
+library/source/emitter contracts through the original rendered forms and a muted
+native playback. These checks use an explicit synthetic asset; they do not claim
+Android file-picker interaction, physical audibility, live-stream support or
+headset acceptance. Setup and evidence boundaries are in
+[QUEST_NATIVE_ROOM_PROBE.md](QUEST_NATIVE_ROOM_PROBE.md).

@@ -29,7 +29,8 @@ import {
 import { getGlobalProfileDB, setGlobalProfileDB } from '../services/globalProfile';
 import { getMaestroProfileImageDB, setMaestroProfileImageDB, clearMaestroProfileImageDB, MaestroProfileAsset } from '../../../core/db/assets';
 import { uploadMediaToFiles, deleteFileByNameOrUri } from '../../../api/gemini/files';
-import { DB_NAME } from '../../../core/db/index';
+import { resetLocalData } from '../services/resetLocalData';
+import { resetRoomAgentTasks } from '../../chat/services/roomAgentTasks';
 import { useMaestroStore } from '../../../store';
 import { TOKEN_CATEGORY, TOKEN_SUBTYPE } from '../../../core/config/activityTokens';
 import { useAppTranslations } from '../../../shared/hooks/useAppTranslations';
@@ -40,7 +41,7 @@ import { ThemeCustomizerPanel } from '../../theme';
 
 const SessionControls: React.FC = () => {
   const { t } = useAppTranslations();
-  const { handleSaveAllChats, handleLoadAllChats, handleSaveCurrentChat, handleAppendToCurrentChat, handleTrimBeforeBookmark } = useDataBackup({ t });
+  const { exportStatus, handleSaveAllChats, handleLoadAllChats, handleSaveCurrentChat, handleAppendToCurrentChat, handleTrimBeforeBookmark } = useDataBackup({ t });
 
   const settings = useMaestroStore(selectSettings);
   const updateSetting = useMaestroStore(state => state.updateSetting);
@@ -71,6 +72,8 @@ const SessionControls: React.FC = () => {
   // Unified pending action confirmation system
   type PendingActionType = 'none' | 'saveAll' | 'loadAll' | 'reset' | 'saveThis' | 'combine' | 'trim';
   const [pendingAction, setPendingAction] = useState<PendingActionType>('none');
+  const actionRunning=useRef(false);
+  const [actionWorking,setActionWorking]=useState(false),[actionError,setActionError]=useState('');
   const [confirmInput, setConfirmInput] = useState('');
   const [pendingFile, setPendingFile] = useState<File | null>(null);
   
@@ -166,21 +169,6 @@ const SessionControls: React.FC = () => {
       setIsEditingProfile(false);
     }
   };
-
-  const wipeLocalMemoryAndDb = useCallback(async () => {
-    try {
-      await new Promise<void>((resolve) => {
-        let settled = false;
-        try {
-          const req = indexedDB.deleteDatabase(DB_NAME);
-          req.onsuccess = () => { settled = true; resolve(); };
-          req.onerror = () => { resolve(); };
-          req.onblocked = () => { resolve(); };
-        } catch { resolve(); }
-        setTimeout(() => { if (!settled) resolve(); }, 1500);
-      });
-    } catch { }
-  }, []);
 
   const handleSwapAvatarClick = async () => {
     try {
@@ -328,7 +316,8 @@ const SessionControls: React.FC = () => {
 
   const executePendingAction = async () => {
     const config = ACTION_CONFIG[pendingAction];
-    if (confirmInput.toUpperCase() !== config.keyword) return;
+    if (confirmInput.toUpperCase() !== config.keyword || actionRunning.current) return;
+    actionRunning.current=true;setActionWorking(true);setActionError('');
     
     try {
       switch (pendingAction) {
@@ -352,7 +341,7 @@ const SessionControls: React.FC = () => {
               loadTokenRef.current = createUiToken(TOKEN_SUBTYPE.LOAD_POPUP);
             }
             try {
-              await handleLoadAllChats(pendingFile);
+              if(!await handleLoadAllChats(pendingFile))return;
             } finally {
               if (loadTokenRef.current) {
                 endUiTask(loadTokenRef.current);
@@ -364,9 +353,14 @@ const SessionControls: React.FC = () => {
           
         case 'reset': {
           const safe = `backup-before-reset-${new Date().toISOString().slice(0, 10)}`;
-          if (handleSaveAllChats) await handleSaveAllChats({ filename: `${safe}.ndjson`, auto: true });
-          await new Promise(r => setTimeout(r, 500));
-          await wipeLocalMemoryAndDb();
+          // Settle delegated chat writes before taking the recovery copy.
+          await resetRoomAgentTasks();
+          const source=useMaestroStore.getState();
+          const backup=await handleSaveAllChats({filename:`${safe}.ndjson`,auto:true});
+          if(backup.status!=='saved'){setActionError(t('sessionControls.backupRequired'));return;}
+          const current=useMaestroStore.getState();
+          if(current.messages!==source.messages||current.settings!==source.settings){setActionError(t('sessionControls.backupChanged'));return;}
+          await resetLocalData({unchanged:()=>{const value=useMaestroStore.getState();return value.messages===source.messages&&value.settings===source.settings;},subscribe:listener=>useMaestroStore.subscribe(listener)});
           window.location.reload();
           return; // Don't clear state - page reloads
         }
@@ -416,8 +410,8 @@ const SessionControls: React.FC = () => {
           break;
       }
     } catch (err) {
-      console.error('Action failed:', err);
-    }
+      console.error('Action failed:', err);setActionError(err instanceof Error?err.message:String(err));return;
+    } finally {actionRunning.current=false;setActionWorking(false);}
     
     cancelPendingAction();
   };
@@ -572,7 +566,7 @@ const SessionControls: React.FC = () => {
 
   return (
     <>
-    <div className="w-full py-3 px-4 min-h-[64px] flex items-center justify-between gap-2">
+    <div inert={actionWorking} aria-busy={actionWorking} className="w-full py-3 px-4 min-h-[64px] flex items-center justify-between gap-2">
 
       {/* --- Mode: Pending Action Confirmation --- */}
       {pendingAction !== 'none' ? (
@@ -591,12 +585,16 @@ const SessionControls: React.FC = () => {
             />
             <span className="text-xs text-ctrl-muted-text break-words">
               {ACTION_CONFIG[pendingAction].description}
+              {['saveAll', 'saveThis', 'loadAll', 'combine', 'reset'].includes(pendingAction) && (
+                <span className="block mt-1">{t('sessionControls.taskBackupDetails')}</span>
+              )}
             </span>
           </div>
           <div className="flex items-center gap-1 flex-shrink-0">
             <button
               type="button"
               onClick={executePendingAction}
+              aria-label={t('sessionControls.confirmAction')}
               disabled={confirmInput.toUpperCase() !== ACTION_CONFIG[pendingAction].keyword}
               className={`p-2 ${ACTION_CONFIG[pendingAction].btnClass} rounded-full ${ACTION_CONFIG[pendingAction].textClass} disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-lg ${ACTION_CONFIG[pendingAction].shadowClass}`}
             >
@@ -605,6 +603,7 @@ const SessionControls: React.FC = () => {
             <button
               type="button"
               onClick={cancelPendingAction}
+              aria-label={t('sessionControls.cancelAction')}
               className="p-2 bg-profile-btn-bg/50 hover:bg-profile-btn-bg/70 rounded-full text-profile-btn-text/70 transition-colors"
             >
               <IconUndo className="w-4 h-4" />
@@ -808,6 +807,9 @@ const SessionControls: React.FC = () => {
         </>
       )}
     </div>
+    {actionWorking&&<p role="status" className="px-3 py-1 text-sm text-mode-toggle-text">{t('sessionControls.actionWorking')}</p>}
+    {actionError&&<p role="alert" className="px-3 py-1 text-sm text-mode-toggle-text">{actionError}</p>}
+    {exportStatus && <p role="status" className="px-3 py-1 text-sm text-mode-toggle-text" style={{overflowWrap:'anywhere'}}>{exportStatus}</p>}
     {isThemeCustomizerOpen && (
       <ThemeCustomizerPanel onClose={() => setIsThemeCustomizerOpen(false)} />
     )}

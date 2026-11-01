@@ -50,6 +50,7 @@ export const runHeadlessImageGeneration = async (
     if (!message) throw new Error('The requested assistant message does not exist in the selected chat.');
     message.imageUrl = result.base64Image;
     message.imageMimeType = result.mimeType;
+    message.imageOrigin = 'generated';
     message.attachmentName = 'assistant-generated.jpg';
     message.maestroToolKind = 'image';
     if (uploaded) {
@@ -59,6 +60,7 @@ export const runHeadlessImageGeneration = async (
         mimeType: uploaded.mimeType,
         targets: ['chat', 'image-generation'],
         source: 'original',
+        origin: 'generated',
         order: 10,
       }];
     }
@@ -68,6 +70,7 @@ export const runHeadlessImageGeneration = async (
     operationId: result.operationId,
     attempts: result.attempts,
     mimeType: result.mimeType,
+    origin: 'generated' as const,
     dataUrlLength: result.base64Image.length,
     ...(input.includeDataUrl ? { dataUrl: result.base64Image } : {}),
     uploaded,

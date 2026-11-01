@@ -1,0 +1,121 @@
+{
+  "environment": {
+    "stateId": "a1314e058b054cf8bfbbabef08e75568",
+    "requestId": "",
+    "phase": "idle",
+    "busy": false,
+    "status": "Load a saved room or request a new scan",
+    "reason": "",
+    "availability": {
+      "supported": true,
+      "active": true,
+      "virtualView": false,
+      "canLoad": true,
+      "canScan": true,
+      "canCancel": false
+    },
+    "surfaces": {
+      "showing": false,
+      "visible": false,
+      "ready": true,
+      "physicsRunning": false
+    }
+  },
+  "request": {
+    "operation": "start",
+    "runId": "dac068685a2c41328f8825f61af96981",
+    "call": {
+      "id": "object.surface.place",
+      "version": 1,
+      "arguments": {
+        "target": "efe82f377a854d4095557b0a9af4d205",
+        "stateId": "a1314e058b054cf8bfbbabef08e75568",
+        "direction": "below"
+      }
+    }
+  },
+  "receipt": {
+    "selected": {
+      "id": "dac068685a2c41328f8825f61af96981",
+      "capability": "object.surface.place",
+      "version": 1,
+      "resources": [
+        "efe82f377a854d4095557b0a9af4d205"
+      ],
+      "phase": "completed",
+      "status": "Action completed",
+      "output": {
+        "target": "efe82f377a854d4095557b0a9af4d205",
+        "revision": 7,
+        "position": {
+          "x": 1.0,
+          "y": 0.0750000551,
+          "z": 1.0
+        },
+        "point": {
+          "x": 1.0,
+          "y": 0.0,
+          "z": 1.0
+        },
+        "normal": {
+          "x": 0.0,
+          "y": 1.0,
+          "z": 0.0
+        },
+        "temporary": false
+      },
+      "call": {
+        "id": "object.surface.place",
+        "version": 1,
+        "arguments": {
+          "target": "efe82f377a854d4095557b0a9af4d205",
+          "stateId": "a1314e058b054cf8bfbbabef08e75568",
+          "direction": "below"
+        }
+      }
+    },
+    "running": [],
+    "outcomes": [
+      {
+        "id": "dac068685a2c41328f8825f61af96981",
+        "capability": "object.surface.place",
+        "version": 1,
+        "resources": [
+          "efe82f377a854d4095557b0a9af4d205"
+        ],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "target": "efe82f377a854d4095557b0a9af4d205",
+          "revision": 7,
+          "position": {
+            "x": 1.0,
+            "y": 0.0750000551,
+            "z": 1.0
+          },
+          "point": {
+            "x": 1.0,
+            "y": 0.0,
+            "z": 1.0
+          },
+          "normal": {
+            "x": 0.0,
+            "y": 1.0,
+            "z": 0.0
+          },
+          "temporary": false
+        }
+      }
+    ],
+    "nextRunId": "680cc74430474a0391726f925cba8593",
+    "storageError": null,
+    "recovery": null
+  },
+  "before": {
+    "x": 1.0,
+    "y": 1.2,
+    "z": 1.0
+  },
+  "beforeRevision": 6,
+  "boundary": "synthetic surface provider; real native placement, journal and receipt"
+}

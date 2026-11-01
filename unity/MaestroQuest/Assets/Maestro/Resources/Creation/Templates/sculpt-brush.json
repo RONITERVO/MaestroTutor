@@ -1,0 +1,178 @@
+{
+  "format": "maestro-creation-template",
+  "version": 1,
+  "id": "sculpt-brush",
+  "name": "Sculpt brush",
+  "description": "A held sculpt tool for snow and height surfaces. Sweep its head, then lift to save one editable path. Change mode and size.",
+  "tags": [
+    "sculpt",
+    "tool",
+    "snow"
+  ],
+  "author": "Roni Tervo / Maestro",
+  "license": "Apache-2.0",
+  "definition": {
+    "version": 1,
+    "recipe": {
+      "version": 1,
+      "parts": [
+        {
+          "id": "Handle",
+          "shape": "cylinder",
+          "parent": "",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": -0.03
+          },
+          "size": {
+            "x": 0.015,
+            "y": 0.15,
+            "z": 0.015
+          },
+          "rotation": {
+            "x": 0.70710677,
+            "y": 0,
+            "z": 0,
+            "w": 0.70710677
+          },
+          "color": {
+            "r": 0.16,
+            "g": 0.55,
+            "b": 0.53,
+            "a": 1
+          }
+        },
+        {
+          "id": "Ferrule",
+          "shape": "box",
+          "parent": "",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0.0575
+          },
+          "size": {
+            "x": 0.034,
+            "y": 0.014,
+            "z": 0.025
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "color": {
+            "r": 0.65,
+            "g": 0.68,
+            "b": 0.7,
+            "a": 1
+          }
+        },
+        {
+          "id": "Bristles",
+          "shape": "box",
+          "parent": "",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0.09
+          },
+          "size": {
+            "x": 0.12,
+            "y": 0.012,
+            "z": 0.04
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "color": {
+            "r": 0.85,
+            "g": 0.69,
+            "b": 0.36,
+            "a": 1
+          }
+        }
+      ],
+      "tracks": [],
+      "duration": 1,
+      "loop": false,
+      "playing": false
+    },
+    "collision": {
+      "version": 1,
+      "shapes": [
+        {
+          "id": "Body",
+          "shape": "box",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": -0.0175
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "size": {
+            "x": 0.035,
+            "y": 0.015,
+            "z": 0.175
+          }
+        },
+        {
+          "id": "Head",
+          "shape": "box",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0.09
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "size": {
+            "x": 0.12,
+            "y": 0.012,
+            "z": 0.04
+          }
+        }
+      ]
+    },
+    "physics": {
+      "mode": "solid",
+      "shape": "automatic",
+      "mass": 0.06
+    },
+    "sculptTips": [
+      {
+        "version": 1,
+        "part": "",
+        "position": {
+          "x": 0,
+          "y": 0,
+          "z": 0.11
+        },
+        "rotation": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1
+        },
+        "mode": "lower",
+        "radius": 0.08,
+        "height": 0.03,
+        "enabled": true
+      }
+    ]
+  }
+}

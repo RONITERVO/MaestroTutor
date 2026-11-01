@@ -6,6 +6,7 @@ import { act, cleanup, render } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import MiniGameViewer from './MiniGameViewer';
 import { embedActivation } from '../embeds/embedActivation';
+import { sessionActivity } from '../../../platform/browser/sessionActivity';
 
 vi.mock('../../../shared/hooks/useAppTranslations', () => ({
   useAppTranslations: () => ({ t: (key: string) => key }),
@@ -84,6 +85,7 @@ const settle = () => act(() => {
 
 describe('MiniGameViewer embed budget', () => {
   beforeEach(() => {
+    sessionActivity.setSuspended(false); sessionActivity.resume();
     vi.useFakeTimers();
     MockIntersectionObserver.instances = [];
     vi.stubGlobal('IntersectionObserver', MockIntersectionObserver);
@@ -96,6 +98,43 @@ describe('MiniGameViewer embed budget', () => {
     embedActivation.reset();
     vi.unstubAllGlobals();
     vi.useRealTimers();
+  });
+
+  it.each([false, true])('plays a deliberately opened game after cold-start media gating (dedicated book surface: %s)', (activeOnBook) => {
+    sessionActivity.requireResume();
+    const { container, getByRole } = render(<MiniGameViewer embedId="resume-game" sourceCode={GAME_SOURCE} variant="assistant" activeOnBook={activeOnBook} />);
+    if (!activeOnBook) {
+      act(() => { MockIntersectionObserver.latest().emit([{ target: container.querySelector('.embed-box')!, ratio: 1 }]); });
+      settle();
+    }
+    expect(container.querySelector('iframe')).toBeNull();
+    act(() => { getByRole('button', { name: 'Resume and play' }).click(); });
+    expect(sessionActivity.isActive()).toBe(true);
+    expect(container.querySelectorAll('iframe')).toHaveLength(1);
+  });
+
+  it('does not bypass native suspension or incomplete media shutdown when a game is opened', async () => {
+    let finish!: () => void;
+    const pending = new Promise<void>(resolve => { finish = resolve; });
+    const unregister = sessionActivity.onSuspend(() => pending);
+    const { container, getByRole } = render(<MiniGameViewer embedId="suspended-game" sourceCode={GAME_SOURCE} variant="assistant" activeOnBook />);
+    try {
+      act(() => { sessionActivity.setSuspended(true); });
+      act(() => { getByRole('button', { name: 'Resume and play' }).click(); });
+      expect(container.querySelector('iframe')).toBeNull();
+      act(() => { sessionActivity.setSuspended(false); });
+      act(() => { getByRole('button', { name: 'Resume and play' }).click(); });
+      expect(sessionActivity.isActive()).toBe(false);
+      expect(container.querySelector('iframe')).toBeNull();
+      await act(async () => { finish(); await pending; });
+      expect(sessionActivity.isActive()).toBe(false);
+      act(() => { getByRole('button', { name: 'Resume and play' }).click(); });
+      expect(container.querySelectorAll('iframe')).toHaveLength(1);
+    } finally {
+      unregister();
+      await act(async () => { finish(); await pending; sessionActivity.setSuspended(false); });
+      sessionActivity.resume();
+    }
   });
 
   it('mounts no iframe at all until an embed wins the live slot', () => {

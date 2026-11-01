@@ -1,0 +1,5963 @@
+{
+  "boundary": "Actual native template creation, shared mode configuration/readback and Undo. Held contact and failed saves have separate native interaction tests.",
+  "name": "pencil",
+  "hash": "69c83dbd4e28aeb4bb3f21f9f02263c21e24067f8df60464a2f8e48aecbc7f22",
+  "before": {
+    "version": 1,
+    "revision": 320,
+    "sceneRevision": 58,
+    "ack": 129,
+    "session": "f0299e7b03c048e59f9d43a5144d488e",
+    "status": "Action completed",
+    "selectedId": "10d4a7c230344df0bc5727a2aca01167",
+    "ok": true,
+    "canUndo": true,
+    "canRedo": false,
+    "physicsRunning": false,
+    "visible": false,
+    "inspection": null,
+    "constructionSelection": {
+      "stateId": "c04bf7c5b8df40f19febd4d768f1452f",
+      "collecting": false,
+      "members": []
+    },
+    "constructionManipulation": {
+      "stateId": "c04bf7c5b8df40f19febd4d768f1452f",
+      "error": "",
+      "visible": false,
+      "holding": false
+    },
+    "workspaceView": "objects",
+    "rules": {
+      "revision": 1,
+      "bindingPage": 0,
+      "bindingCount": 0,
+      "queued": 0,
+      "eventQueue": 0,
+      "eventsDropped": 0,
+      "canUndo": false,
+      "canRedo": false,
+      "readOnly": false,
+      "status": "Create an action sequence, then add triggers or buttons",
+      "selectedError": "",
+      "sequences": [],
+      "selected": null,
+      "memory": null,
+      "bindings": [],
+      "buttons": [],
+      "running": [],
+      "outcomes": []
+    },
+    "motions": null,
+    "capabilities": [
+      "physicsSettings.v1",
+      "avatarSettings.v1",
+      "physicsRun.v1",
+      "avatarMotion.v1",
+      "avatarWalk.v1",
+      "motions.v1",
+      "avatarActivities.v1",
+      "catalog.v1",
+      "catalogVocabulary.v1",
+      "roomOwnership.v1",
+      "behaviourPrograms.v3",
+      "eventPrograms.v1",
+      "eventFields.v1",
+      "eventSubscriptions.v1",
+      "factQueries.v1",
+      "conditionWaits.v1",
+      "parallelPrograms.v1",
+      "rememberedVariables.v1",
+      "temporaryMemory.v1",
+      "structuredValues.v1",
+      "programModules.v1",
+      "moduleLibrary.v1",
+      "moduleLibraryFiles.v1",
+      "execution.v1",
+      "executionReceipts.v1",
+      "actionResults.v1",
+      "recipeCreation.v1",
+      "creationComponents.v1",
+      "creationTemplates.v1",
+      "layoutEdits.v1",
+      "structures.v1",
+      "batchCreation.v1",
+      "structuredResults.v1",
+      "structuredInputs.v1",
+      "indexedInputs.v1",
+      "constructionSelection.v1",
+      "groupTransforms.v1",
+      "constructionManipulation.v1",
+      "constructionSnapping.v1",
+      "objectEdits.v1",
+      "objectCopy.v1",
+      "drawingEdits.v1",
+      "drawingSurfaces.v1",
+      "curvedDrawingSurfaces.v1",
+      "drawingTips.v1",
+      "drawingErasers.v1",
+      "containers.v1",
+      "containerPouring.v1",
+      "containerScooping.v1",
+      "physicalConnections.v1",
+      "physicalSliders.v1",
+      "snapPoints.v1",
+      "connectedBlueprints.v2",
+      "creationPrototypes.v1",
+      "constructionCapture.v1",
+      "recipeEdits.v1",
+      "latheGeometry.v1",
+      "extrusionGeometry.v1",
+      "sweepGeometry.v1",
+      "recipePatterns.v1",
+      "roomViewCapture.v1",
+      "collisionShapes.v1",
+      "recipePartPlayback.v1",
+      "objectAttachments.v1",
+      "anchorZones.v1",
+      "channelWaits.v1",
+      "objectLaunch.v1",
+      "calendarSchedules.v1",
+      "animationAuthoring.v1",
+      "animationRecording.v1",
+      "animationPosing.v1",
+      "avatarModels.v1",
+      "modelImport.v1",
+      "modelArchiveImport.v1",
+      "motionBatchImport.v1",
+      "includedMotions.v1",
+      "authoredMotion.v1",
+      "unavailablePrograms.v1",
+      "actionRecovery.v1",
+      "temporaryRoom.v1",
+      "spatialSettings.v1",
+      "physicsSimulation.v1",
+      "roomEnvironment.v1",
+      "surfacePlacement.v1",
+      "controllerConfiguration.v1",
+      "controllerModes.v1",
+      "runtimeDiagnostics.v1",
+      "workspaceMaintenance.v1",
+      "workspaceArchiveActivation.v1",
+      "workspaceReview.v1",
+      "workspacePrevious.v1",
+      "workspaceRecovery.v1",
+      "workspaceSavedRecovery.v1",
+      "workspaceHistory.v1",
+      "workspaceEvidence.v1",
+      "workspaceRetention.v1",
+      "workspaceDisposal.v1"
+    ],
+    "physics": {
+      "ready": false,
+      "running": false,
+      "status": "Load or scan your room to use gravity"
+    },
+    "temporaryRoom": {
+      "active": false,
+      "pending": false,
+      "id": "e3fd8f9ad43140cdb26fa91642552d54",
+      "saveId": "",
+      "phase": "idle",
+      "error": "",
+      "savedRevision": 0
+    },
+    "ownership": {
+      "suspended": false,
+      "error": "",
+      "owners": [
+        {
+          "id": "ambient:maestro",
+          "label": "Maestro tutor activity",
+          "role": "ambient",
+          "allowsGrab": false,
+          "claims": [
+            {
+              "target": "maestro",
+              "channel": "wholeTarget"
+            }
+          ]
+        }
+      ]
+    },
+    "avatar": {
+      "active": false,
+      "canLook": true,
+      "canFollow": false,
+      "mode": "stopped",
+      "status": "Choose Look at me or Follow me",
+      "lookReason": "",
+      "followReason": "Load the room, check its alignment, then Start physics before walking",
+      "distance": 1.3,
+      "speed": 0.65
+    },
+    "walk": {
+      "source": "embedded",
+      "motionId": "",
+      "modelHash": "dcd59fb02d378322b656c2cfbe9851d08229ac3a618e90ad5aa06eac7c88759c",
+      "name": "Walking",
+      "status": "Embedded walking clip is available",
+      "playbackStatus": "",
+      "clipIndex": 0,
+      "available": true
+    },
+    "activityProfile": {
+      "modelHash": "dcd59fb02d378322b656c2cfbe9851d08229ac3a618e90ad5aa06eac7c88759c",
+      "status": "Uses included animations where no state motion is assigned",
+      "revision": 1,
+      "canAssign": true,
+      "readOnly": false,
+      "canUndo": false,
+      "canRedo": false,
+      "roles": [
+        {
+          "role": 0,
+          "choices": [
+            {
+              "motionId": "21da54acb5c38d147ad297bf7ef22977",
+              "name": "Idle_4",
+              "weight": 1,
+              "speed": 1,
+              "cooldown": 0,
+              "loop": true,
+              "available": true
+            }
+          ]
+        },
+        {
+          "role": 1,
+          "choices": [
+            {
+              "motionId": "bd0bf1a849d86d785e00c3a392639359",
+              "name": "Listening_Gesture",
+              "weight": 1,
+              "speed": 1,
+              "cooldown": 0,
+              "loop": true,
+              "available": true
+            }
+          ]
+        },
+        {
+          "role": 2,
+          "choices": [
+            {
+              "motionId": "9a66ea13d9ba08b954b9a0cbdc7d89dc",
+              "name": "Idle_12",
+              "weight": 1,
+              "speed": 1,
+              "cooldown": 0,
+              "loop": true,
+              "available": true
+            }
+          ]
+        },
+        {
+          "role": 3,
+          "choices": [
+            {
+              "motionId": "b56ece79da8e21bac89927310921d734",
+              "name": "Talk_with_Hands_Open",
+              "weight": 1,
+              "speed": 1,
+              "cooldown": 2,
+              "loop": false,
+              "available": true
+            },
+            {
+              "motionId": "852ac885964d693deb8d3d3ba835acec",
+              "name": "Talk_with_Right_Hand_Open",
+              "weight": 1,
+              "speed": 1,
+              "cooldown": 2,
+              "loop": false,
+              "available": true
+            }
+          ]
+        }
+      ]
+    },
+    "objects": [
+      {
+        "id": "6395fdba3fd448818e0db9cb72b74470",
+        "name": "Block",
+        "kind": "Block",
+        "objectRevision": 3,
+        "position": {
+          "x": 0.5199999809265137,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1,
+        "color": {
+          "r": 0.45098039507865906,
+          "g": 0.32549020648002625,
+          "b": 0.30588236451148987,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "97482e27f08b4fcca0a0ca7691c04771",
+        "name": "Cylinder",
+        "kind": "Cylinder",
+        "objectRevision": 5,
+        "position": {
+          "x": 0.8600000143051147,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1,
+        "color": {
+          "r": 0.16862745583057404,
+          "g": 0.5529412031173706,
+          "b": 0.5333333611488342,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "a454a7680201495185792eec7eb0d376",
+        "name": "Ball",
+        "kind": "Ball",
+        "objectRevision": 4,
+        "position": {
+          "x": 0.6899999976158142,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1,
+        "color": {
+          "r": 0.7647058963775635,
+          "g": 0.6000000238418579,
+          "b": 0.3137255012989044,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "b4ace2c0a2024b0cbbc681510f49e117",
+        "name": "Pencil",
+        "kind": "Assembly",
+        "objectRevision": 51,
+        "position": {
+          "x": 0.4000000059604645,
+          "y": 1,
+          "z": 0.6000000238418579
+        },
+        "scale": 1,
+        "color": {
+          "r": 1,
+          "g": 1,
+          "b": 1,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "solid",
+          "shape": "automatic",
+          "mass": 0.05999999865889549
+        },
+        "movement": null
+      },
+      {
+        "id": "book",
+        "name": "Book",
+        "kind": "Book",
+        "objectRevision": 1,
+        "position": {
+          "x": 0,
+          "y": 1.159999966621399,
+          "z": 0.6499999761581421
+        },
+        "scale": 1,
+        "color": {
+          "r": 1,
+          "g": 1,
+          "b": 1,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "maestro",
+        "name": "Maestro",
+        "kind": "Maestro",
+        "objectRevision": 2,
+        "position": {
+          "x": -0.7799999713897705,
+          "y": 0,
+          "z": 1.399999976158142
+        },
+        "scale": 1,
+        "color": {
+          "r": 1,
+          "g": 1,
+          "b": 1,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": {
+          "distance": 1.3,
+          "speed": 0.65
+        }
+      }
+    ],
+    "created": [],
+    "capture": {
+      "captureId": "30cd4ed53b3b476d9f092b596d56fe4a",
+      "sha256": "852cbebf2a4ec97b57803a674051a85b1ab82710377fc801e2406c67f608b993",
+      "mimeType": "image/jpeg",
+      "width": 512,
+      "height": 384,
+      "capturedAt": "2026-10-04T06:07:37.2155527Z",
+      "sceneRevision": 3,
+      "verticalFov": 60,
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 1
+      }
+    },
+    "catalog": {
+      "operation": "inspect",
+      "capability": "object.drawingTip",
+      "version": 1,
+      "definition": {
+        "id": "object.drawingTip",
+        "version": 1,
+        "type": {
+          "record": {
+            "revision": "number",
+            "configured": "boolean",
+            "definition": {
+              "record": {
+                "part": "text",
+                "position": {
+                  "record": {
+                    "x": "number",
+                    "y": "number",
+                    "z": "number"
+                  }
+                },
+                "rotation": {
+                  "record": {
+                    "x": "number",
+                    "y": "number",
+                    "z": "number",
+                    "w": "number"
+                  }
+                },
+                "color": {
+                  "record": {
+                    "r": "number",
+                    "g": "number",
+                    "b": "number",
+                    "a": "number"
+                  }
+                },
+                "radius": "number",
+                "enabled": "boolean",
+                "mode": "text"
+              }
+            }
+          }
+        },
+        "label": "Object drawing tip",
+        "description": "Saved tip configuration and current object revision. configured=false returns inert default fields for editing; it does not add a component. Reads do not draw. Use object.drawing.capture for the shared active/retained capture.",
+        "input": {
+          "type": "object",
+          "properties": {
+            "target": {
+              "type": "string",
+              "pattern": "^[a-fA-F0-9]{32}$",
+              "maxLength": 32,
+              "x-resource": "object"
+            }
+          },
+          "required": [
+            "target"
+          ],
+          "additionalProperties": false
+        },
+        "example": {
+          "target": "00000000000000000000000000000000"
+        },
+        "features": [
+          "factQueries.v1",
+          "drawingTips.v1"
+        ]
+      },
+      "status": "Fact value is currently unavailable; do not treat it as false or zero.",
+      "category": "facts",
+      "arguments": {
+        "target": "6c44d54c1c5c4e19b021336f9a086825"
+      },
+      "available": false,
+      "value": null
+    },
+    "execution": {
+      "selected": {
+        "id": "a4d7164069c94b738d9a5f236a8e828c",
+        "capability": "object.create",
+        "version": 1,
+        "resources": [],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "objectId": "b4ace2c0a2024b0cbbc681510f49e117"
+        },
+        "call": {
+          "id": "object.create",
+          "version": 1,
+          "arguments": {
+            "kind": "template",
+            "templateHash": "69c83dbd4e28aeb4bb3f21f9f02263c21e24067f8df60464a2f8e48aecbc7f22",
+            "name": "",
+            "x": 0.4,
+            "y": 1,
+            "z": 0.6,
+            "scale": 1
+          }
+        }
+      },
+      "running": [],
+      "outcomes": [
+        {
+          "id": "b697d32df1be4aa3806354d2c68f9a68",
+          "capability": "object.container.transfer",
+          "version": 1,
+          "resources": [
+            "79cffbc68e5f4d85af01411db45bb4a5",
+            "0c98c1501e154b88a35114fffeca69c5"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "transferredMl": 125
+          }
+        },
+        {
+          "id": "e3095f70b3ef40f8b5bbf41ded516ac8",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "470224b5d7804039b54d7e4ffbb386a1"
+          }
+        },
+        {
+          "id": "ca571c6ddc0c452ba336c65901245797",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "f1a0ae20bd7f4cc29395044ef63ae811"
+          }
+        },
+        {
+          "id": "f5c13a7ae98c4750a149982897d1a023",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "a41eebcb796544adae6d3985142033a1"
+          }
+        },
+        {
+          "id": "2224086730974e17819a7fe086016b5f",
+          "capability": "drawing.tool.set",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed"
+        },
+        {
+          "id": "38bffb3159bb4f3ba2b578629d3598d9",
+          "capability": "object.surface.edit",
+          "version": 1,
+          "resources": [
+            "a41eebcb796544adae6d3985142033a1"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "target": "a41eebcb796544adae6d3985142033a1",
+            "revision": 35,
+            "surface": "Front",
+            "stroke": "7f99022c15824ea7b61ec542724e0029"
+          }
+        },
+        {
+          "id": "6da1904adaf14d24a698a5b29035f019",
+          "capability": "object.surface.edit",
+          "version": 1,
+          "resources": [
+            "a41eebcb796544adae6d3985142033a1"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "target": "a41eebcb796544adae6d3985142033a1",
+            "revision": 36,
+            "surface": "Front",
+            "stroke": "7f99022c15824ea7b61ec542724e0029"
+          }
+        },
+        {
+          "id": "2fd5508daed944dd9d396919aba7739d",
+          "capability": "drawing.tool.set",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed"
+        },
+        {
+          "id": "6718c49eedb047a88948a461b0dc2098",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "dd6deeb4830b4ffd8ccbbd2f52911258"
+          }
+        },
+        {
+          "id": "6b66a6ec6e69450088a3294da6200336",
+          "capability": "object.surface.edit",
+          "version": 1,
+          "resources": [
+            "dd6deeb4830b4ffd8ccbbd2f52911258"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "target": "dd6deeb4830b4ffd8ccbbd2f52911258",
+            "revision": 40,
+            "surface": "Front",
+            "stroke": ""
+          }
+        },
+        {
+          "id": "e90f59516fd3491787f5f1c08725d796",
+          "capability": "object.surface.edit",
+          "version": 1,
+          "resources": [
+            "dd6deeb4830b4ffd8ccbbd2f52911258"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "target": "dd6deeb4830b4ffd8ccbbd2f52911258",
+            "revision": 41,
+            "surface": "Front",
+            "stroke": "237d1b1a7b5048419d962166e6ba3e33"
+          }
+        },
+        {
+          "id": "a69f8a2dcec54339a09f5c5ae33fe413",
+          "capability": "object.surface.edit",
+          "version": 1,
+          "resources": [
+            "dd6deeb4830b4ffd8ccbbd2f52911258"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "target": "dd6deeb4830b4ffd8ccbbd2f52911258",
+            "revision": 42,
+            "surface": "Front",
+            "stroke": "fda5b64e5e124df8bb36a7e6640ec394"
+          }
+        },
+        {
+          "id": "a48671770a854e058b40b645e220993b",
+          "capability": "object.surface.edit",
+          "version": 1,
+          "resources": [
+            "dd6deeb4830b4ffd8ccbbd2f52911258"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "target": "dd6deeb4830b4ffd8ccbbd2f52911258",
+            "revision": 43,
+            "surface": "Front",
+            "stroke": ""
+          }
+        },
+        {
+          "id": "1c9c989710454e86aa0163028f26b394",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "6c44d54c1c5c4e19b021336f9a086825"
+          }
+        },
+        {
+          "id": "1d60d00aad284521bcc993d56ba316ed",
+          "capability": "object.drawingTip.edit",
+          "version": 1,
+          "resources": [
+            "6c44d54c1c5c4e19b021336f9a086825"
+          ],
+          "phase": "completed",
+          "status": "Action completed"
+        },
+        {
+          "id": "a4d7164069c94b738d9a5f236a8e828c",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "b4ace2c0a2024b0cbbc681510f49e117"
+          }
+        }
+      ],
+      "nextRunId": "d66df6488e964d4e9e465920892fe796",
+      "storageError": null,
+      "recovery": null,
+      "workspace": {
+        "selected": null,
+        "running": [],
+        "outcomes": [],
+        "nextRunId": "53a8d0b0fa7e43d6991e6240fe7f58b3",
+        "storageError": null,
+        "recovery": null
+      }
+    }
+  },
+  "current": {
+    "version": 1,
+    "revision": 323,
+    "sceneRevision": 58,
+    "ack": 130,
+    "session": "f0299e7b03c048e59f9d43a5144d488e",
+    "status": "Current fact value. Reading does not change the room.",
+    "selectedId": "10d4a7c230344df0bc5727a2aca01167",
+    "ok": true,
+    "canUndo": true,
+    "canRedo": false,
+    "physicsRunning": false,
+    "visible": false,
+    "inspection": null,
+    "constructionSelection": {
+      "stateId": "c04bf7c5b8df40f19febd4d768f1452f",
+      "collecting": false,
+      "members": []
+    },
+    "constructionManipulation": {
+      "stateId": "c04bf7c5b8df40f19febd4d768f1452f",
+      "error": "",
+      "visible": false,
+      "holding": false
+    },
+    "workspaceView": "objects",
+    "rules": {
+      "revision": 1,
+      "bindingPage": 0,
+      "bindingCount": 0,
+      "queued": 0,
+      "eventQueue": 0,
+      "eventsDropped": 0,
+      "canUndo": false,
+      "canRedo": false,
+      "readOnly": false,
+      "status": "Create an action sequence, then add triggers or buttons",
+      "selectedError": "",
+      "sequences": [],
+      "selected": null,
+      "memory": null,
+      "bindings": [],
+      "buttons": [],
+      "running": [],
+      "outcomes": []
+    },
+    "motions": null,
+    "capabilities": [
+      "physicsSettings.v1",
+      "avatarSettings.v1",
+      "physicsRun.v1",
+      "avatarMotion.v1",
+      "avatarWalk.v1",
+      "motions.v1",
+      "avatarActivities.v1",
+      "catalog.v1",
+      "catalogVocabulary.v1",
+      "roomOwnership.v1",
+      "behaviourPrograms.v3",
+      "eventPrograms.v1",
+      "eventFields.v1",
+      "eventSubscriptions.v1",
+      "factQueries.v1",
+      "conditionWaits.v1",
+      "parallelPrograms.v1",
+      "rememberedVariables.v1",
+      "temporaryMemory.v1",
+      "structuredValues.v1",
+      "programModules.v1",
+      "moduleLibrary.v1",
+      "moduleLibraryFiles.v1",
+      "execution.v1",
+      "executionReceipts.v1",
+      "actionResults.v1",
+      "recipeCreation.v1",
+      "creationComponents.v1",
+      "creationTemplates.v1",
+      "layoutEdits.v1",
+      "structures.v1",
+      "batchCreation.v1",
+      "structuredResults.v1",
+      "structuredInputs.v1",
+      "indexedInputs.v1",
+      "constructionSelection.v1",
+      "groupTransforms.v1",
+      "constructionManipulation.v1",
+      "constructionSnapping.v1",
+      "objectEdits.v1",
+      "objectCopy.v1",
+      "drawingEdits.v1",
+      "drawingSurfaces.v1",
+      "curvedDrawingSurfaces.v1",
+      "drawingTips.v1",
+      "drawingErasers.v1",
+      "containers.v1",
+      "containerPouring.v1",
+      "containerScooping.v1",
+      "physicalConnections.v1",
+      "physicalSliders.v1",
+      "snapPoints.v1",
+      "connectedBlueprints.v2",
+      "creationPrototypes.v1",
+      "constructionCapture.v1",
+      "recipeEdits.v1",
+      "latheGeometry.v1",
+      "extrusionGeometry.v1",
+      "sweepGeometry.v1",
+      "recipePatterns.v1",
+      "roomViewCapture.v1",
+      "collisionShapes.v1",
+      "recipePartPlayback.v1",
+      "objectAttachments.v1",
+      "anchorZones.v1",
+      "channelWaits.v1",
+      "objectLaunch.v1",
+      "calendarSchedules.v1",
+      "animationAuthoring.v1",
+      "animationRecording.v1",
+      "animationPosing.v1",
+      "avatarModels.v1",
+      "modelImport.v1",
+      "modelArchiveImport.v1",
+      "motionBatchImport.v1",
+      "includedMotions.v1",
+      "authoredMotion.v1",
+      "unavailablePrograms.v1",
+      "actionRecovery.v1",
+      "temporaryRoom.v1",
+      "spatialSettings.v1",
+      "physicsSimulation.v1",
+      "roomEnvironment.v1",
+      "surfacePlacement.v1",
+      "controllerConfiguration.v1",
+      "controllerModes.v1",
+      "runtimeDiagnostics.v1",
+      "workspaceMaintenance.v1",
+      "workspaceArchiveActivation.v1",
+      "workspaceReview.v1",
+      "workspacePrevious.v1",
+      "workspaceRecovery.v1",
+      "workspaceSavedRecovery.v1",
+      "workspaceHistory.v1",
+      "workspaceEvidence.v1",
+      "workspaceRetention.v1",
+      "workspaceDisposal.v1"
+    ],
+    "physics": {
+      "ready": false,
+      "running": false,
+      "status": "Load or scan your room to use gravity"
+    },
+    "temporaryRoom": {
+      "active": false,
+      "pending": false,
+      "id": "e3fd8f9ad43140cdb26fa91642552d54",
+      "saveId": "",
+      "phase": "idle",
+      "error": "",
+      "savedRevision": 0
+    },
+    "ownership": {
+      "suspended": false,
+      "error": "",
+      "owners": [
+        {
+          "id": "ambient:maestro",
+          "label": "Maestro tutor activity",
+          "role": "ambient",
+          "allowsGrab": false,
+          "claims": [
+            {
+              "target": "maestro",
+              "channel": "wholeTarget"
+            }
+          ]
+        }
+      ]
+    },
+    "avatar": {
+      "active": false,
+      "canLook": true,
+      "canFollow": false,
+      "mode": "stopped",
+      "status": "Choose Look at me or Follow me",
+      "lookReason": "",
+      "followReason": "Load the room, check its alignment, then Start physics before walking",
+      "distance": 1.3,
+      "speed": 0.65
+    },
+    "walk": {
+      "source": "embedded",
+      "motionId": "",
+      "modelHash": "dcd59fb02d378322b656c2cfbe9851d08229ac3a618e90ad5aa06eac7c88759c",
+      "name": "Walking",
+      "status": "Embedded walking clip is available",
+      "playbackStatus": "",
+      "clipIndex": 0,
+      "available": true
+    },
+    "activityProfile": {
+      "modelHash": "dcd59fb02d378322b656c2cfbe9851d08229ac3a618e90ad5aa06eac7c88759c",
+      "status": "Uses included animations where no state motion is assigned",
+      "revision": 1,
+      "canAssign": true,
+      "readOnly": false,
+      "canUndo": false,
+      "canRedo": false,
+      "roles": [
+        {
+          "role": 0,
+          "choices": [
+            {
+              "motionId": "21da54acb5c38d147ad297bf7ef22977",
+              "name": "Idle_4",
+              "weight": 1,
+              "speed": 1,
+              "cooldown": 0,
+              "loop": true,
+              "available": true
+            }
+          ]
+        },
+        {
+          "role": 1,
+          "choices": [
+            {
+              "motionId": "bd0bf1a849d86d785e00c3a392639359",
+              "name": "Listening_Gesture",
+              "weight": 1,
+              "speed": 1,
+              "cooldown": 0,
+              "loop": true,
+              "available": true
+            }
+          ]
+        },
+        {
+          "role": 2,
+          "choices": [
+            {
+              "motionId": "9a66ea13d9ba08b954b9a0cbdc7d89dc",
+              "name": "Idle_12",
+              "weight": 1,
+              "speed": 1,
+              "cooldown": 0,
+              "loop": true,
+              "available": true
+            }
+          ]
+        },
+        {
+          "role": 3,
+          "choices": [
+            {
+              "motionId": "b56ece79da8e21bac89927310921d734",
+              "name": "Talk_with_Hands_Open",
+              "weight": 1,
+              "speed": 1,
+              "cooldown": 2,
+              "loop": false,
+              "available": true
+            },
+            {
+              "motionId": "852ac885964d693deb8d3d3ba835acec",
+              "name": "Talk_with_Right_Hand_Open",
+              "weight": 1,
+              "speed": 1,
+              "cooldown": 2,
+              "loop": false,
+              "available": true
+            }
+          ]
+        }
+      ]
+    },
+    "objects": [
+      {
+        "id": "6395fdba3fd448818e0db9cb72b74470",
+        "name": "Block",
+        "kind": "Block",
+        "objectRevision": 3,
+        "position": {
+          "x": 0.5199999809265137,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1,
+        "color": {
+          "r": 0.45098039507865906,
+          "g": 0.32549020648002625,
+          "b": 0.30588236451148987,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "97482e27f08b4fcca0a0ca7691c04771",
+        "name": "Cylinder",
+        "kind": "Cylinder",
+        "objectRevision": 5,
+        "position": {
+          "x": 0.8600000143051147,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1,
+        "color": {
+          "r": 0.16862745583057404,
+          "g": 0.5529412031173706,
+          "b": 0.5333333611488342,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "a454a7680201495185792eec7eb0d376",
+        "name": "Ball",
+        "kind": "Ball",
+        "objectRevision": 4,
+        "position": {
+          "x": 0.6899999976158142,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1,
+        "color": {
+          "r": 0.7647058963775635,
+          "g": 0.6000000238418579,
+          "b": 0.3137255012989044,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "b4ace2c0a2024b0cbbc681510f49e117",
+        "name": "Pencil",
+        "kind": "Assembly",
+        "objectRevision": 51,
+        "position": {
+          "x": 0.4000000059604645,
+          "y": 1,
+          "z": 0.6000000238418579
+        },
+        "scale": 1,
+        "color": {
+          "r": 1,
+          "g": 1,
+          "b": 1,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "solid",
+          "shape": "automatic",
+          "mass": 0.05999999865889549
+        },
+        "movement": null
+      },
+      {
+        "id": "book",
+        "name": "Book",
+        "kind": "Book",
+        "objectRevision": 1,
+        "position": {
+          "x": 0,
+          "y": 1.159999966621399,
+          "z": 0.6499999761581421
+        },
+        "scale": 1,
+        "color": {
+          "r": 1,
+          "g": 1,
+          "b": 1,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "maestro",
+        "name": "Maestro",
+        "kind": "Maestro",
+        "objectRevision": 2,
+        "position": {
+          "x": -0.7799999713897705,
+          "y": 0,
+          "z": 1.399999976158142
+        },
+        "scale": 1,
+        "color": {
+          "r": 1,
+          "g": 1,
+          "b": 1,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": {
+          "distance": 1.3,
+          "speed": 0.65
+        }
+      }
+    ],
+    "created": [],
+    "capture": {
+      "captureId": "30cd4ed53b3b476d9f092b596d56fe4a",
+      "sha256": "852cbebf2a4ec97b57803a674051a85b1ab82710377fc801e2406c67f608b993",
+      "mimeType": "image/jpeg",
+      "width": 512,
+      "height": 384,
+      "capturedAt": "2026-10-04T06:07:37.2155527Z",
+      "sceneRevision": 3,
+      "verticalFov": 60,
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 1
+      }
+    },
+    "catalog": {
+      "operation": "inspect",
+      "capability": "object.drawingTip",
+      "version": 1,
+      "definition": {
+        "id": "object.drawingTip",
+        "version": 1,
+        "type": {
+          "record": {
+            "revision": "number",
+            "configured": "boolean",
+            "definition": {
+              "record": {
+                "part": "text",
+                "position": {
+                  "record": {
+                    "x": "number",
+                    "y": "number",
+                    "z": "number"
+                  }
+                },
+                "rotation": {
+                  "record": {
+                    "x": "number",
+                    "y": "number",
+                    "z": "number",
+                    "w": "number"
+                  }
+                },
+                "color": {
+                  "record": {
+                    "r": "number",
+                    "g": "number",
+                    "b": "number",
+                    "a": "number"
+                  }
+                },
+                "radius": "number",
+                "enabled": "boolean",
+                "mode": "text"
+              }
+            }
+          }
+        },
+        "label": "Object drawing tip",
+        "description": "Saved tip configuration and current object revision. configured=false returns inert default fields for editing; it does not add a component. Reads do not draw. Use object.drawing.capture for the shared active/retained capture.",
+        "input": {
+          "type": "object",
+          "properties": {
+            "target": {
+              "type": "string",
+              "pattern": "^[a-fA-F0-9]{32}$",
+              "maxLength": 32,
+              "x-resource": "object"
+            }
+          },
+          "required": [
+            "target"
+          ],
+          "additionalProperties": false
+        },
+        "example": {
+          "target": "00000000000000000000000000000000"
+        },
+        "features": [
+          "factQueries.v1",
+          "drawingTips.v1"
+        ]
+      },
+      "status": "Current fact value. Reading does not change the room.",
+      "category": "facts",
+      "arguments": {
+        "target": "b4ace2c0a2024b0cbbc681510f49e117"
+      },
+      "available": true,
+      "value": {
+        "revision": 51,
+        "configured": true,
+        "definition": {
+          "part": "",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0.0925000011920929
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "color": {
+            "r": 0.11999999731779099,
+            "g": 0.12999999523162842,
+            "b": 0.1899999976158142,
+            "a": 1
+          },
+          "radius": 0.0020000000949949026,
+          "enabled": true,
+          "mode": "draw"
+        }
+      }
+    },
+    "execution": {
+      "selected": {
+        "id": "a4d7164069c94b738d9a5f236a8e828c",
+        "capability": "object.create",
+        "version": 1,
+        "resources": [],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "objectId": "b4ace2c0a2024b0cbbc681510f49e117"
+        },
+        "call": {
+          "id": "object.create",
+          "version": 1,
+          "arguments": {
+            "kind": "template",
+            "templateHash": "69c83dbd4e28aeb4bb3f21f9f02263c21e24067f8df60464a2f8e48aecbc7f22",
+            "name": "",
+            "x": 0.4,
+            "y": 1,
+            "z": 0.6,
+            "scale": 1
+          }
+        }
+      },
+      "running": [],
+      "outcomes": [
+        {
+          "id": "b697d32df1be4aa3806354d2c68f9a68",
+          "capability": "object.container.transfer",
+          "version": 1,
+          "resources": [
+            "79cffbc68e5f4d85af01411db45bb4a5",
+            "0c98c1501e154b88a35114fffeca69c5"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "transferredMl": 125
+          }
+        },
+        {
+          "id": "e3095f70b3ef40f8b5bbf41ded516ac8",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "470224b5d7804039b54d7e4ffbb386a1"
+          }
+        },
+        {
+          "id": "ca571c6ddc0c452ba336c65901245797",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "f1a0ae20bd7f4cc29395044ef63ae811"
+          }
+        },
+        {
+          "id": "f5c13a7ae98c4750a149982897d1a023",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "a41eebcb796544adae6d3985142033a1"
+          }
+        },
+        {
+          "id": "2224086730974e17819a7fe086016b5f",
+          "capability": "drawing.tool.set",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed"
+        },
+        {
+          "id": "38bffb3159bb4f3ba2b578629d3598d9",
+          "capability": "object.surface.edit",
+          "version": 1,
+          "resources": [
+            "a41eebcb796544adae6d3985142033a1"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "target": "a41eebcb796544adae6d3985142033a1",
+            "revision": 35,
+            "surface": "Front",
+            "stroke": "7f99022c15824ea7b61ec542724e0029"
+          }
+        },
+        {
+          "id": "6da1904adaf14d24a698a5b29035f019",
+          "capability": "object.surface.edit",
+          "version": 1,
+          "resources": [
+            "a41eebcb796544adae6d3985142033a1"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "target": "a41eebcb796544adae6d3985142033a1",
+            "revision": 36,
+            "surface": "Front",
+            "stroke": "7f99022c15824ea7b61ec542724e0029"
+          }
+        },
+        {
+          "id": "2fd5508daed944dd9d396919aba7739d",
+          "capability": "drawing.tool.set",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed"
+        },
+        {
+          "id": "6718c49eedb047a88948a461b0dc2098",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "dd6deeb4830b4ffd8ccbbd2f52911258"
+          }
+        },
+        {
+          "id": "6b66a6ec6e69450088a3294da6200336",
+          "capability": "object.surface.edit",
+          "version": 1,
+          "resources": [
+            "dd6deeb4830b4ffd8ccbbd2f52911258"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "target": "dd6deeb4830b4ffd8ccbbd2f52911258",
+            "revision": 40,
+            "surface": "Front",
+            "stroke": ""
+          }
+        },
+        {
+          "id": "e90f59516fd3491787f5f1c08725d796",
+          "capability": "object.surface.edit",
+          "version": 1,
+          "resources": [
+            "dd6deeb4830b4ffd8ccbbd2f52911258"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "target": "dd6deeb4830b4ffd8ccbbd2f52911258",
+            "revision": 41,
+            "surface": "Front",
+            "stroke": "237d1b1a7b5048419d962166e6ba3e33"
+          }
+        },
+        {
+          "id": "a69f8a2dcec54339a09f5c5ae33fe413",
+          "capability": "object.surface.edit",
+          "version": 1,
+          "resources": [
+            "dd6deeb4830b4ffd8ccbbd2f52911258"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "target": "dd6deeb4830b4ffd8ccbbd2f52911258",
+            "revision": 42,
+            "surface": "Front",
+            "stroke": "fda5b64e5e124df8bb36a7e6640ec394"
+          }
+        },
+        {
+          "id": "a48671770a854e058b40b645e220993b",
+          "capability": "object.surface.edit",
+          "version": 1,
+          "resources": [
+            "dd6deeb4830b4ffd8ccbbd2f52911258"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "target": "dd6deeb4830b4ffd8ccbbd2f52911258",
+            "revision": 43,
+            "surface": "Front",
+            "stroke": ""
+          }
+        },
+        {
+          "id": "1c9c989710454e86aa0163028f26b394",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "6c44d54c1c5c4e19b021336f9a086825"
+          }
+        },
+        {
+          "id": "1d60d00aad284521bcc993d56ba316ed",
+          "capability": "object.drawingTip.edit",
+          "version": 1,
+          "resources": [
+            "6c44d54c1c5c4e19b021336f9a086825"
+          ],
+          "phase": "completed",
+          "status": "Action completed"
+        },
+        {
+          "id": "a4d7164069c94b738d9a5f236a8e828c",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "b4ace2c0a2024b0cbbc681510f49e117"
+          }
+        }
+      ],
+      "nextRunId": "d66df6488e964d4e9e465920892fe796",
+      "storageError": null,
+      "recovery": null,
+      "workspace": {
+        "selected": null,
+        "running": [],
+        "outcomes": [],
+        "nextRunId": "53a8d0b0fa7e43d6991e6240fe7f58b3",
+        "storageError": null,
+        "recovery": null
+      }
+    }
+  },
+  "search": {
+    "version": 1,
+    "revision": 325,
+    "sceneRevision": 58,
+    "ack": 131,
+    "session": "f0299e7b03c048e59f9d43a5144d488e",
+    "status": "Found 1 actions. Search does not run or enable anything.",
+    "selectedId": "10d4a7c230344df0bc5727a2aca01167",
+    "ok": true,
+    "canUndo": true,
+    "canRedo": false,
+    "physicsRunning": false,
+    "visible": false,
+    "inspection": null,
+    "constructionSelection": {
+      "stateId": "c04bf7c5b8df40f19febd4d768f1452f",
+      "collecting": false,
+      "members": []
+    },
+    "constructionManipulation": {
+      "stateId": "c04bf7c5b8df40f19febd4d768f1452f",
+      "error": "",
+      "visible": false,
+      "holding": false
+    },
+    "workspaceView": "objects",
+    "rules": {
+      "revision": 1,
+      "bindingPage": 0,
+      "bindingCount": 0,
+      "queued": 0,
+      "eventQueue": 0,
+      "eventsDropped": 0,
+      "canUndo": false,
+      "canRedo": false,
+      "readOnly": false,
+      "status": "Create an action sequence, then add triggers or buttons",
+      "selectedError": "",
+      "sequences": [],
+      "selected": null,
+      "memory": null,
+      "bindings": [],
+      "buttons": [],
+      "running": [],
+      "outcomes": []
+    },
+    "motions": null,
+    "capabilities": [
+      "physicsSettings.v1",
+      "avatarSettings.v1",
+      "physicsRun.v1",
+      "avatarMotion.v1",
+      "avatarWalk.v1",
+      "motions.v1",
+      "avatarActivities.v1",
+      "catalog.v1",
+      "catalogVocabulary.v1",
+      "roomOwnership.v1",
+      "behaviourPrograms.v3",
+      "eventPrograms.v1",
+      "eventFields.v1",
+      "eventSubscriptions.v1",
+      "factQueries.v1",
+      "conditionWaits.v1",
+      "parallelPrograms.v1",
+      "rememberedVariables.v1",
+      "temporaryMemory.v1",
+      "structuredValues.v1",
+      "programModules.v1",
+      "moduleLibrary.v1",
+      "moduleLibraryFiles.v1",
+      "execution.v1",
+      "executionReceipts.v1",
+      "actionResults.v1",
+      "recipeCreation.v1",
+      "creationComponents.v1",
+      "creationTemplates.v1",
+      "layoutEdits.v1",
+      "structures.v1",
+      "batchCreation.v1",
+      "structuredResults.v1",
+      "structuredInputs.v1",
+      "indexedInputs.v1",
+      "constructionSelection.v1",
+      "groupTransforms.v1",
+      "constructionManipulation.v1",
+      "constructionSnapping.v1",
+      "objectEdits.v1",
+      "objectCopy.v1",
+      "drawingEdits.v1",
+      "drawingSurfaces.v1",
+      "curvedDrawingSurfaces.v1",
+      "drawingTips.v1",
+      "drawingErasers.v1",
+      "containers.v1",
+      "containerPouring.v1",
+      "containerScooping.v1",
+      "physicalConnections.v1",
+      "physicalSliders.v1",
+      "snapPoints.v1",
+      "connectedBlueprints.v2",
+      "creationPrototypes.v1",
+      "constructionCapture.v1",
+      "recipeEdits.v1",
+      "latheGeometry.v1",
+      "extrusionGeometry.v1",
+      "sweepGeometry.v1",
+      "recipePatterns.v1",
+      "roomViewCapture.v1",
+      "collisionShapes.v1",
+      "recipePartPlayback.v1",
+      "objectAttachments.v1",
+      "anchorZones.v1",
+      "channelWaits.v1",
+      "objectLaunch.v1",
+      "calendarSchedules.v1",
+      "animationAuthoring.v1",
+      "animationRecording.v1",
+      "animationPosing.v1",
+      "avatarModels.v1",
+      "modelImport.v1",
+      "modelArchiveImport.v1",
+      "motionBatchImport.v1",
+      "includedMotions.v1",
+      "authoredMotion.v1",
+      "unavailablePrograms.v1",
+      "actionRecovery.v1",
+      "temporaryRoom.v1",
+      "spatialSettings.v1",
+      "physicsSimulation.v1",
+      "roomEnvironment.v1",
+      "surfacePlacement.v1",
+      "controllerConfiguration.v1",
+      "controllerModes.v1",
+      "runtimeDiagnostics.v1",
+      "workspaceMaintenance.v1",
+      "workspaceArchiveActivation.v1",
+      "workspaceReview.v1",
+      "workspacePrevious.v1",
+      "workspaceRecovery.v1",
+      "workspaceSavedRecovery.v1",
+      "workspaceHistory.v1",
+      "workspaceEvidence.v1",
+      "workspaceRetention.v1",
+      "workspaceDisposal.v1"
+    ],
+    "physics": {
+      "ready": false,
+      "running": false,
+      "status": "Load or scan your room to use gravity"
+    },
+    "temporaryRoom": {
+      "active": false,
+      "pending": false,
+      "id": "e3fd8f9ad43140cdb26fa91642552d54",
+      "saveId": "",
+      "phase": "idle",
+      "error": "",
+      "savedRevision": 0
+    },
+    "ownership": {
+      "suspended": false,
+      "error": "",
+      "owners": [
+        {
+          "id": "ambient:maestro",
+          "label": "Maestro tutor activity",
+          "role": "ambient",
+          "allowsGrab": false,
+          "claims": [
+            {
+              "target": "maestro",
+              "channel": "wholeTarget"
+            }
+          ]
+        }
+      ]
+    },
+    "avatar": {
+      "active": false,
+      "canLook": true,
+      "canFollow": false,
+      "mode": "stopped",
+      "status": "Choose Look at me or Follow me",
+      "lookReason": "",
+      "followReason": "Load the room, check its alignment, then Start physics before walking",
+      "distance": 1.3,
+      "speed": 0.65
+    },
+    "walk": {
+      "source": "embedded",
+      "motionId": "",
+      "modelHash": "dcd59fb02d378322b656c2cfbe9851d08229ac3a618e90ad5aa06eac7c88759c",
+      "name": "Walking",
+      "status": "Embedded walking clip is available",
+      "playbackStatus": "",
+      "clipIndex": 0,
+      "available": true
+    },
+    "activityProfile": {
+      "modelHash": "dcd59fb02d378322b656c2cfbe9851d08229ac3a618e90ad5aa06eac7c88759c",
+      "status": "Uses included animations where no state motion is assigned",
+      "revision": 1,
+      "canAssign": true,
+      "readOnly": false,
+      "canUndo": false,
+      "canRedo": false,
+      "roles": [
+        {
+          "role": 0,
+          "choices": [
+            {
+              "motionId": "21da54acb5c38d147ad297bf7ef22977",
+              "name": "Idle_4",
+              "weight": 1,
+              "speed": 1,
+              "cooldown": 0,
+              "loop": true,
+              "available": true
+            }
+          ]
+        },
+        {
+          "role": 1,
+          "choices": [
+            {
+              "motionId": "bd0bf1a849d86d785e00c3a392639359",
+              "name": "Listening_Gesture",
+              "weight": 1,
+              "speed": 1,
+              "cooldown": 0,
+              "loop": true,
+              "available": true
+            }
+          ]
+        },
+        {
+          "role": 2,
+          "choices": [
+            {
+              "motionId": "9a66ea13d9ba08b954b9a0cbdc7d89dc",
+              "name": "Idle_12",
+              "weight": 1,
+              "speed": 1,
+              "cooldown": 0,
+              "loop": true,
+              "available": true
+            }
+          ]
+        },
+        {
+          "role": 3,
+          "choices": [
+            {
+              "motionId": "b56ece79da8e21bac89927310921d734",
+              "name": "Talk_with_Hands_Open",
+              "weight": 1,
+              "speed": 1,
+              "cooldown": 2,
+              "loop": false,
+              "available": true
+            },
+            {
+              "motionId": "852ac885964d693deb8d3d3ba835acec",
+              "name": "Talk_with_Right_Hand_Open",
+              "weight": 1,
+              "speed": 1,
+              "cooldown": 2,
+              "loop": false,
+              "available": true
+            }
+          ]
+        }
+      ]
+    },
+    "objects": [
+      {
+        "id": "6395fdba3fd448818e0db9cb72b74470",
+        "name": "Block",
+        "kind": "Block",
+        "objectRevision": 3,
+        "position": {
+          "x": 0.5199999809265137,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1,
+        "color": {
+          "r": 0.45098039507865906,
+          "g": 0.32549020648002625,
+          "b": 0.30588236451148987,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "97482e27f08b4fcca0a0ca7691c04771",
+        "name": "Cylinder",
+        "kind": "Cylinder",
+        "objectRevision": 5,
+        "position": {
+          "x": 0.8600000143051147,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1,
+        "color": {
+          "r": 0.16862745583057404,
+          "g": 0.5529412031173706,
+          "b": 0.5333333611488342,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "a454a7680201495185792eec7eb0d376",
+        "name": "Ball",
+        "kind": "Ball",
+        "objectRevision": 4,
+        "position": {
+          "x": 0.6899999976158142,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1,
+        "color": {
+          "r": 0.7647058963775635,
+          "g": 0.6000000238418579,
+          "b": 0.3137255012989044,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "b4ace2c0a2024b0cbbc681510f49e117",
+        "name": "Pencil",
+        "kind": "Assembly",
+        "objectRevision": 51,
+        "position": {
+          "x": 0.4000000059604645,
+          "y": 1,
+          "z": 0.6000000238418579
+        },
+        "scale": 1,
+        "color": {
+          "r": 1,
+          "g": 1,
+          "b": 1,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "solid",
+          "shape": "automatic",
+          "mass": 0.05999999865889549
+        },
+        "movement": null
+      },
+      {
+        "id": "book",
+        "name": "Book",
+        "kind": "Book",
+        "objectRevision": 1,
+        "position": {
+          "x": 0,
+          "y": 1.159999966621399,
+          "z": 0.6499999761581421
+        },
+        "scale": 1,
+        "color": {
+          "r": 1,
+          "g": 1,
+          "b": 1,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "maestro",
+        "name": "Maestro",
+        "kind": "Maestro",
+        "objectRevision": 2,
+        "position": {
+          "x": -0.7799999713897705,
+          "y": 0,
+          "z": 1.399999976158142
+        },
+        "scale": 1,
+        "color": {
+          "r": 1,
+          "g": 1,
+          "b": 1,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": {
+          "distance": 1.3,
+          "speed": 0.65
+        }
+      }
+    ],
+    "created": [],
+    "capture": {
+      "captureId": "30cd4ed53b3b476d9f092b596d56fe4a",
+      "sha256": "852cbebf2a4ec97b57803a674051a85b1ab82710377fc801e2406c67f608b993",
+      "mimeType": "image/jpeg",
+      "width": 512,
+      "height": 384,
+      "capturedAt": "2026-10-04T06:07:37.2155527Z",
+      "sceneRevision": 3,
+      "verticalFov": 60,
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 1
+      }
+    },
+    "catalog": {
+      "operation": "search",
+      "query": "Configure an object's drawing tip",
+      "offset": 0,
+      "pageSize": 6,
+      "total": 1,
+      "entries": [
+        {
+          "id": "object.drawingTip.edit",
+          "version": 1,
+          "label": "Configure an object's drawing tip"
+        }
+      ],
+      "status": "Found 1 actions. Search does not run or enable anything."
+    },
+    "execution": {
+      "selected": {
+        "id": "a4d7164069c94b738d9a5f236a8e828c",
+        "capability": "object.create",
+        "version": 1,
+        "resources": [],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "objectId": "b4ace2c0a2024b0cbbc681510f49e117"
+        },
+        "call": {
+          "id": "object.create",
+          "version": 1,
+          "arguments": {
+            "kind": "template",
+            "templateHash": "69c83dbd4e28aeb4bb3f21f9f02263c21e24067f8df60464a2f8e48aecbc7f22",
+            "name": "",
+            "x": 0.4,
+            "y": 1,
+            "z": 0.6,
+            "scale": 1
+          }
+        }
+      },
+      "running": [],
+      "outcomes": [
+        {
+          "id": "b697d32df1be4aa3806354d2c68f9a68",
+          "capability": "object.container.transfer",
+          "version": 1,
+          "resources": [
+            "79cffbc68e5f4d85af01411db45bb4a5",
+            "0c98c1501e154b88a35114fffeca69c5"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "transferredMl": 125
+          }
+        },
+        {
+          "id": "e3095f70b3ef40f8b5bbf41ded516ac8",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "470224b5d7804039b54d7e4ffbb386a1"
+          }
+        },
+        {
+          "id": "ca571c6ddc0c452ba336c65901245797",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "f1a0ae20bd7f4cc29395044ef63ae811"
+          }
+        },
+        {
+          "id": "f5c13a7ae98c4750a149982897d1a023",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "a41eebcb796544adae6d3985142033a1"
+          }
+        },
+        {
+          "id": "2224086730974e17819a7fe086016b5f",
+          "capability": "drawing.tool.set",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed"
+        },
+        {
+          "id": "38bffb3159bb4f3ba2b578629d3598d9",
+          "capability": "object.surface.edit",
+          "version": 1,
+          "resources": [
+            "a41eebcb796544adae6d3985142033a1"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "target": "a41eebcb796544adae6d3985142033a1",
+            "revision": 35,
+            "surface": "Front",
+            "stroke": "7f99022c15824ea7b61ec542724e0029"
+          }
+        },
+        {
+          "id": "6da1904adaf14d24a698a5b29035f019",
+          "capability": "object.surface.edit",
+          "version": 1,
+          "resources": [
+            "a41eebcb796544adae6d3985142033a1"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "target": "a41eebcb796544adae6d3985142033a1",
+            "revision": 36,
+            "surface": "Front",
+            "stroke": "7f99022c15824ea7b61ec542724e0029"
+          }
+        },
+        {
+          "id": "2fd5508daed944dd9d396919aba7739d",
+          "capability": "drawing.tool.set",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed"
+        },
+        {
+          "id": "6718c49eedb047a88948a461b0dc2098",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "dd6deeb4830b4ffd8ccbbd2f52911258"
+          }
+        },
+        {
+          "id": "6b66a6ec6e69450088a3294da6200336",
+          "capability": "object.surface.edit",
+          "version": 1,
+          "resources": [
+            "dd6deeb4830b4ffd8ccbbd2f52911258"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "target": "dd6deeb4830b4ffd8ccbbd2f52911258",
+            "revision": 40,
+            "surface": "Front",
+            "stroke": ""
+          }
+        },
+        {
+          "id": "e90f59516fd3491787f5f1c08725d796",
+          "capability": "object.surface.edit",
+          "version": 1,
+          "resources": [
+            "dd6deeb4830b4ffd8ccbbd2f52911258"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "target": "dd6deeb4830b4ffd8ccbbd2f52911258",
+            "revision": 41,
+            "surface": "Front",
+            "stroke": "237d1b1a7b5048419d962166e6ba3e33"
+          }
+        },
+        {
+          "id": "a69f8a2dcec54339a09f5c5ae33fe413",
+          "capability": "object.surface.edit",
+          "version": 1,
+          "resources": [
+            "dd6deeb4830b4ffd8ccbbd2f52911258"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "target": "dd6deeb4830b4ffd8ccbbd2f52911258",
+            "revision": 42,
+            "surface": "Front",
+            "stroke": "fda5b64e5e124df8bb36a7e6640ec394"
+          }
+        },
+        {
+          "id": "a48671770a854e058b40b645e220993b",
+          "capability": "object.surface.edit",
+          "version": 1,
+          "resources": [
+            "dd6deeb4830b4ffd8ccbbd2f52911258"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "target": "dd6deeb4830b4ffd8ccbbd2f52911258",
+            "revision": 43,
+            "surface": "Front",
+            "stroke": ""
+          }
+        },
+        {
+          "id": "1c9c989710454e86aa0163028f26b394",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "6c44d54c1c5c4e19b021336f9a086825"
+          }
+        },
+        {
+          "id": "1d60d00aad284521bcc993d56ba316ed",
+          "capability": "object.drawingTip.edit",
+          "version": 1,
+          "resources": [
+            "6c44d54c1c5c4e19b021336f9a086825"
+          ],
+          "phase": "completed",
+          "status": "Action completed"
+        },
+        {
+          "id": "a4d7164069c94b738d9a5f236a8e828c",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "b4ace2c0a2024b0cbbc681510f49e117"
+          }
+        }
+      ],
+      "nextRunId": "d66df6488e964d4e9e465920892fe796",
+      "storageError": null,
+      "recovery": null,
+      "workspace": {
+        "selected": null,
+        "running": [],
+        "outcomes": [],
+        "nextRunId": "53a8d0b0fa7e43d6991e6240fe7f58b3",
+        "storageError": null,
+        "recovery": null
+      }
+    }
+  },
+  "definition": {
+    "version": 1,
+    "revision": 327,
+    "sceneRevision": 58,
+    "ack": 132,
+    "session": "f0299e7b03c048e59f9d43a5144d488e",
+    "status": "Action definition. Check concrete arguments before running it.",
+    "selectedId": "10d4a7c230344df0bc5727a2aca01167",
+    "ok": true,
+    "canUndo": true,
+    "canRedo": false,
+    "physicsRunning": false,
+    "visible": false,
+    "inspection": null,
+    "constructionSelection": {
+      "stateId": "c04bf7c5b8df40f19febd4d768f1452f",
+      "collecting": false,
+      "members": []
+    },
+    "constructionManipulation": {
+      "stateId": "c04bf7c5b8df40f19febd4d768f1452f",
+      "error": "",
+      "visible": false,
+      "holding": false
+    },
+    "workspaceView": "objects",
+    "rules": {
+      "revision": 1,
+      "bindingPage": 0,
+      "bindingCount": 0,
+      "queued": 0,
+      "eventQueue": 0,
+      "eventsDropped": 0,
+      "canUndo": false,
+      "canRedo": false,
+      "readOnly": false,
+      "status": "Create an action sequence, then add triggers or buttons",
+      "selectedError": "",
+      "sequences": [],
+      "selected": null,
+      "memory": null,
+      "bindings": [],
+      "buttons": [],
+      "running": [],
+      "outcomes": []
+    },
+    "motions": null,
+    "capabilities": [
+      "physicsSettings.v1",
+      "avatarSettings.v1",
+      "physicsRun.v1",
+      "avatarMotion.v1",
+      "avatarWalk.v1",
+      "motions.v1",
+      "avatarActivities.v1",
+      "catalog.v1",
+      "catalogVocabulary.v1",
+      "roomOwnership.v1",
+      "behaviourPrograms.v3",
+      "eventPrograms.v1",
+      "eventFields.v1",
+      "eventSubscriptions.v1",
+      "factQueries.v1",
+      "conditionWaits.v1",
+      "parallelPrograms.v1",
+      "rememberedVariables.v1",
+      "temporaryMemory.v1",
+      "structuredValues.v1",
+      "programModules.v1",
+      "moduleLibrary.v1",
+      "moduleLibraryFiles.v1",
+      "execution.v1",
+      "executionReceipts.v1",
+      "actionResults.v1",
+      "recipeCreation.v1",
+      "creationComponents.v1",
+      "creationTemplates.v1",
+      "layoutEdits.v1",
+      "structures.v1",
+      "batchCreation.v1",
+      "structuredResults.v1",
+      "structuredInputs.v1",
+      "indexedInputs.v1",
+      "constructionSelection.v1",
+      "groupTransforms.v1",
+      "constructionManipulation.v1",
+      "constructionSnapping.v1",
+      "objectEdits.v1",
+      "objectCopy.v1",
+      "drawingEdits.v1",
+      "drawingSurfaces.v1",
+      "curvedDrawingSurfaces.v1",
+      "drawingTips.v1",
+      "drawingErasers.v1",
+      "containers.v1",
+      "containerPouring.v1",
+      "containerScooping.v1",
+      "physicalConnections.v1",
+      "physicalSliders.v1",
+      "snapPoints.v1",
+      "connectedBlueprints.v2",
+      "creationPrototypes.v1",
+      "constructionCapture.v1",
+      "recipeEdits.v1",
+      "latheGeometry.v1",
+      "extrusionGeometry.v1",
+      "sweepGeometry.v1",
+      "recipePatterns.v1",
+      "roomViewCapture.v1",
+      "collisionShapes.v1",
+      "recipePartPlayback.v1",
+      "objectAttachments.v1",
+      "anchorZones.v1",
+      "channelWaits.v1",
+      "objectLaunch.v1",
+      "calendarSchedules.v1",
+      "animationAuthoring.v1",
+      "animationRecording.v1",
+      "animationPosing.v1",
+      "avatarModels.v1",
+      "modelImport.v1",
+      "modelArchiveImport.v1",
+      "motionBatchImport.v1",
+      "includedMotions.v1",
+      "authoredMotion.v1",
+      "unavailablePrograms.v1",
+      "actionRecovery.v1",
+      "temporaryRoom.v1",
+      "spatialSettings.v1",
+      "physicsSimulation.v1",
+      "roomEnvironment.v1",
+      "surfacePlacement.v1",
+      "controllerConfiguration.v1",
+      "controllerModes.v1",
+      "runtimeDiagnostics.v1",
+      "workspaceMaintenance.v1",
+      "workspaceArchiveActivation.v1",
+      "workspaceReview.v1",
+      "workspacePrevious.v1",
+      "workspaceRecovery.v1",
+      "workspaceSavedRecovery.v1",
+      "workspaceHistory.v1",
+      "workspaceEvidence.v1",
+      "workspaceRetention.v1",
+      "workspaceDisposal.v1"
+    ],
+    "physics": {
+      "ready": false,
+      "running": false,
+      "status": "Load or scan your room to use gravity"
+    },
+    "temporaryRoom": {
+      "active": false,
+      "pending": false,
+      "id": "e3fd8f9ad43140cdb26fa91642552d54",
+      "saveId": "",
+      "phase": "idle",
+      "error": "",
+      "savedRevision": 0
+    },
+    "ownership": {
+      "suspended": false,
+      "error": "",
+      "owners": [
+        {
+          "id": "ambient:maestro",
+          "label": "Maestro tutor activity",
+          "role": "ambient",
+          "allowsGrab": false,
+          "claims": [
+            {
+              "target": "maestro",
+              "channel": "wholeTarget"
+            }
+          ]
+        }
+      ]
+    },
+    "avatar": {
+      "active": false,
+      "canLook": true,
+      "canFollow": false,
+      "mode": "stopped",
+      "status": "Choose Look at me or Follow me",
+      "lookReason": "",
+      "followReason": "Load the room, check its alignment, then Start physics before walking",
+      "distance": 1.3,
+      "speed": 0.65
+    },
+    "walk": {
+      "source": "embedded",
+      "motionId": "",
+      "modelHash": "dcd59fb02d378322b656c2cfbe9851d08229ac3a618e90ad5aa06eac7c88759c",
+      "name": "Walking",
+      "status": "Embedded walking clip is available",
+      "playbackStatus": "",
+      "clipIndex": 0,
+      "available": true
+    },
+    "activityProfile": {
+      "modelHash": "dcd59fb02d378322b656c2cfbe9851d08229ac3a618e90ad5aa06eac7c88759c",
+      "status": "Uses included animations where no state motion is assigned",
+      "revision": 1,
+      "canAssign": true,
+      "readOnly": false,
+      "canUndo": false,
+      "canRedo": false,
+      "roles": [
+        {
+          "role": 0,
+          "choices": [
+            {
+              "motionId": "21da54acb5c38d147ad297bf7ef22977",
+              "name": "Idle_4",
+              "weight": 1,
+              "speed": 1,
+              "cooldown": 0,
+              "loop": true,
+              "available": true
+            }
+          ]
+        },
+        {
+          "role": 1,
+          "choices": [
+            {
+              "motionId": "bd0bf1a849d86d785e00c3a392639359",
+              "name": "Listening_Gesture",
+              "weight": 1,
+              "speed": 1,
+              "cooldown": 0,
+              "loop": true,
+              "available": true
+            }
+          ]
+        },
+        {
+          "role": 2,
+          "choices": [
+            {
+              "motionId": "9a66ea13d9ba08b954b9a0cbdc7d89dc",
+              "name": "Idle_12",
+              "weight": 1,
+              "speed": 1,
+              "cooldown": 0,
+              "loop": true,
+              "available": true
+            }
+          ]
+        },
+        {
+          "role": 3,
+          "choices": [
+            {
+              "motionId": "b56ece79da8e21bac89927310921d734",
+              "name": "Talk_with_Hands_Open",
+              "weight": 1,
+              "speed": 1,
+              "cooldown": 2,
+              "loop": false,
+              "available": true
+            },
+            {
+              "motionId": "852ac885964d693deb8d3d3ba835acec",
+              "name": "Talk_with_Right_Hand_Open",
+              "weight": 1,
+              "speed": 1,
+              "cooldown": 2,
+              "loop": false,
+              "available": true
+            }
+          ]
+        }
+      ]
+    },
+    "objects": [
+      {
+        "id": "6395fdba3fd448818e0db9cb72b74470",
+        "name": "Block",
+        "kind": "Block",
+        "objectRevision": 3,
+        "position": {
+          "x": 0.5199999809265137,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1,
+        "color": {
+          "r": 0.45098039507865906,
+          "g": 0.32549020648002625,
+          "b": 0.30588236451148987,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "97482e27f08b4fcca0a0ca7691c04771",
+        "name": "Cylinder",
+        "kind": "Cylinder",
+        "objectRevision": 5,
+        "position": {
+          "x": 0.8600000143051147,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1,
+        "color": {
+          "r": 0.16862745583057404,
+          "g": 0.5529412031173706,
+          "b": 0.5333333611488342,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "a454a7680201495185792eec7eb0d376",
+        "name": "Ball",
+        "kind": "Ball",
+        "objectRevision": 4,
+        "position": {
+          "x": 0.6899999976158142,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1,
+        "color": {
+          "r": 0.7647058963775635,
+          "g": 0.6000000238418579,
+          "b": 0.3137255012989044,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "b4ace2c0a2024b0cbbc681510f49e117",
+        "name": "Pencil",
+        "kind": "Assembly",
+        "objectRevision": 51,
+        "position": {
+          "x": 0.4000000059604645,
+          "y": 1,
+          "z": 0.6000000238418579
+        },
+        "scale": 1,
+        "color": {
+          "r": 1,
+          "g": 1,
+          "b": 1,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "solid",
+          "shape": "automatic",
+          "mass": 0.05999999865889549
+        },
+        "movement": null
+      },
+      {
+        "id": "book",
+        "name": "Book",
+        "kind": "Book",
+        "objectRevision": 1,
+        "position": {
+          "x": 0,
+          "y": 1.159999966621399,
+          "z": 0.6499999761581421
+        },
+        "scale": 1,
+        "color": {
+          "r": 1,
+          "g": 1,
+          "b": 1,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "maestro",
+        "name": "Maestro",
+        "kind": "Maestro",
+        "objectRevision": 2,
+        "position": {
+          "x": -0.7799999713897705,
+          "y": 0,
+          "z": 1.399999976158142
+        },
+        "scale": 1,
+        "color": {
+          "r": 1,
+          "g": 1,
+          "b": 1,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": {
+          "distance": 1.3,
+          "speed": 0.65
+        }
+      }
+    ],
+    "created": [],
+    "capture": {
+      "captureId": "30cd4ed53b3b476d9f092b596d56fe4a",
+      "sha256": "852cbebf2a4ec97b57803a674051a85b1ab82710377fc801e2406c67f608b993",
+      "mimeType": "image/jpeg",
+      "width": 512,
+      "height": 384,
+      "capturedAt": "2026-10-04T06:07:37.2155527Z",
+      "sceneRevision": 3,
+      "verticalFov": 60,
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 1
+      }
+    },
+    "catalog": {
+      "operation": "inspect",
+      "capability": "object.drawingTip.edit",
+      "version": 1,
+      "definition": {
+        "id": "object.drawingTip.edit",
+        "version": 1,
+        "label": "Configure an object's drawing tip",
+        "input": {
+          "type": "object",
+          "x-discriminators": [
+            "operation"
+          ],
+          "oneOf": [
+            {
+              "type": "object",
+              "properties": {
+                "operation": {
+                  "type": "string",
+                  "enum": [
+                    "configure"
+                  ],
+                  "x-static": true
+                },
+                "target": {
+                  "type": "string",
+                  "pattern": "^[a-fA-F0-9]{32}$",
+                  "maxLength": 32,
+                  "x-resource": "object"
+                },
+                "revision": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 2147483647
+                },
+                "definition": {
+                  "type": "object",
+                  "properties": {
+                    "part": {
+                      "type": "string",
+                      "pattern": "^[a-zA-Z0-9_]{0,32}$",
+                      "maxLength": 32
+                    },
+                    "position": {
+                      "type": "object",
+                      "properties": {
+                        "x": {
+                          "type": "number",
+                          "minimum": -10,
+                          "maximum": 10
+                        },
+                        "y": {
+                          "type": "number",
+                          "minimum": -10,
+                          "maximum": 10
+                        },
+                        "z": {
+                          "type": "number",
+                          "minimum": -10,
+                          "maximum": 10
+                        }
+                      },
+                      "required": [
+                        "x",
+                        "y",
+                        "z"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "rotation": {
+                      "type": "object",
+                      "properties": {
+                        "x": {
+                          "type": "number",
+                          "minimum": -1,
+                          "maximum": 1
+                        },
+                        "y": {
+                          "type": "number",
+                          "minimum": -1,
+                          "maximum": 1
+                        },
+                        "z": {
+                          "type": "number",
+                          "minimum": -1,
+                          "maximum": 1
+                        },
+                        "w": {
+                          "type": "number",
+                          "minimum": -1,
+                          "maximum": 1
+                        }
+                      },
+                      "required": [
+                        "x",
+                        "y",
+                        "z",
+                        "w"
+                      ],
+                      "additionalProperties": false,
+                      "format": "unitQuaternion"
+                    },
+                    "color": {
+                      "type": "object",
+                      "properties": {
+                        "r": {
+                          "type": "number",
+                          "minimum": 0,
+                          "maximum": 1
+                        },
+                        "g": {
+                          "type": "number",
+                          "minimum": 0,
+                          "maximum": 1
+                        },
+                        "b": {
+                          "type": "number",
+                          "minimum": 0,
+                          "maximum": 1
+                        },
+                        "a": {
+                          "type": "number",
+                          "minimum": 1,
+                          "maximum": 1
+                        }
+                      },
+                      "required": [
+                        "r",
+                        "g",
+                        "b",
+                        "a"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "radius": {
+                      "type": "number",
+                      "minimum": 0.001,
+                      "maximum": 0.02
+                    },
+                    "enabled": {
+                      "type": "boolean"
+                    },
+                    "mode": {
+                      "type": "string",
+                      "enum": [
+                        "draw",
+                        "erase"
+                      ],
+                      "x-features": [
+                        "drawingErasers.v1"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "part",
+                    "position",
+                    "rotation",
+                    "color",
+                    "radius",
+                    "enabled"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "required": [
+                "operation",
+                "target",
+                "revision",
+                "definition"
+              ],
+              "additionalProperties": false,
+              "x-current": {
+                "fact": "object.drawingTip",
+                "version": 1,
+                "arguments": {
+                  "target": "target"
+                },
+                "fields": {
+                  "revision": [
+                    "revision"
+                  ]
+                },
+                "guards": [
+                  "revision"
+                ]
+              },
+              "title": "Configure the drawing tip",
+              "x-features": [
+                "drawingTips.v1"
+              ]
+            },
+            {
+              "type": "object",
+              "properties": {
+                "operation": {
+                  "type": "string",
+                  "enum": [
+                    "remove"
+                  ],
+                  "x-static": true
+                },
+                "target": {
+                  "type": "string",
+                  "pattern": "^[a-fA-F0-9]{32}$",
+                  "maxLength": 32,
+                  "x-resource": "object"
+                },
+                "revision": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 2147483647
+                }
+              },
+              "required": [
+                "operation",
+                "target",
+                "revision"
+              ],
+              "additionalProperties": false,
+              "x-current": {
+                "fact": "object.drawingTip",
+                "version": 1,
+                "arguments": {
+                  "target": "target"
+                },
+                "fields": {
+                  "revision": [
+                    "revision"
+                  ]
+                },
+                "guards": [
+                  "revision"
+                ]
+              },
+              "title": "Remove the drawing tip",
+              "x-features": [
+                "drawingTips.v1"
+              ]
+            }
+          ]
+        },
+        "duration": "instant",
+        "ownership": "exclusiveTargetAndProp",
+        "channels": [
+          "wholeTarget"
+        ],
+        "requirements": [
+          "target.created",
+          "target.unheld",
+          "source.revision.current",
+          "storage.writable"
+        ],
+        "description": "Give any created/imported object one saved drawing tip, or remove it. Empty part means its root; otherwise use a stable recipe part. Local +Z points toward the drawing patch. Ink colour and radius are independent of object paint and tray pencil preferences. Radius uses the receiving patch's local metres. The enabled tip draws only while a user or Maestro holds the tool and its tip is within one world centimetre of an enabled plane/cylinder/sphere patch. Optional mode is draw (default) or erase. A held eraser sweeps complete strokes within twice its radius (minimum 1 cm) plus ink thickness; contact loss or release saves the selected IDs with one Undo. The preview hides selected ink while accepted source remains unchanged until save. Interrupted or failed erasing is retained for the same explicit retry/discard; no automatic deletion retry. Loose tools do not draw or erase. No arbitrary-mesh, skin or scanned-wall painting. One room capture at a time; loss of contact ends one saved stroke/Undo. After interruption or a busy/failed capture, separate the tip before starting again. Failed saves retain the draft for explicit retry/discard. Manual holding uses control priority; Maestro holding uses program priority and cannot interrupt a user. Configuration does not itself create ink or move objects. Copy, Undo, temporary rooms and portable workspaces retain the same tip data.",
+        "example": {
+          "operation": "configure",
+          "target": "00000000000000000000000000000000",
+          "revision": 1,
+          "definition": {
+            "part": "",
+            "position": {
+              "x": 0,
+              "y": 0,
+              "z": 0.06499999761581421
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0,
+              "w": 1
+            },
+            "color": {
+              "r": 1,
+              "g": 1,
+              "b": 1,
+              "a": 1
+            },
+            "radius": 0.003000000026077032,
+            "enabled": true
+          }
+        }
+      },
+      "status": "Action definition. Check concrete arguments before running it."
+    },
+    "execution": {
+      "selected": {
+        "id": "a4d7164069c94b738d9a5f236a8e828c",
+        "capability": "object.create",
+        "version": 1,
+        "resources": [],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "objectId": "b4ace2c0a2024b0cbbc681510f49e117"
+        },
+        "call": {
+          "id": "object.create",
+          "version": 1,
+          "arguments": {
+            "kind": "template",
+            "templateHash": "69c83dbd4e28aeb4bb3f21f9f02263c21e24067f8df60464a2f8e48aecbc7f22",
+            "name": "",
+            "x": 0.4,
+            "y": 1,
+            "z": 0.6,
+            "scale": 1
+          }
+        }
+      },
+      "running": [],
+      "outcomes": [
+        {
+          "id": "b697d32df1be4aa3806354d2c68f9a68",
+          "capability": "object.container.transfer",
+          "version": 1,
+          "resources": [
+            "79cffbc68e5f4d85af01411db45bb4a5",
+            "0c98c1501e154b88a35114fffeca69c5"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "transferredMl": 125
+          }
+        },
+        {
+          "id": "e3095f70b3ef40f8b5bbf41ded516ac8",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "470224b5d7804039b54d7e4ffbb386a1"
+          }
+        },
+        {
+          "id": "ca571c6ddc0c452ba336c65901245797",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "f1a0ae20bd7f4cc29395044ef63ae811"
+          }
+        },
+        {
+          "id": "f5c13a7ae98c4750a149982897d1a023",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "a41eebcb796544adae6d3985142033a1"
+          }
+        },
+        {
+          "id": "2224086730974e17819a7fe086016b5f",
+          "capability": "drawing.tool.set",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed"
+        },
+        {
+          "id": "38bffb3159bb4f3ba2b578629d3598d9",
+          "capability": "object.surface.edit",
+          "version": 1,
+          "resources": [
+            "a41eebcb796544adae6d3985142033a1"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "target": "a41eebcb796544adae6d3985142033a1",
+            "revision": 35,
+            "surface": "Front",
+            "stroke": "7f99022c15824ea7b61ec542724e0029"
+          }
+        },
+        {
+          "id": "6da1904adaf14d24a698a5b29035f019",
+          "capability": "object.surface.edit",
+          "version": 1,
+          "resources": [
+            "a41eebcb796544adae6d3985142033a1"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "target": "a41eebcb796544adae6d3985142033a1",
+            "revision": 36,
+            "surface": "Front",
+            "stroke": "7f99022c15824ea7b61ec542724e0029"
+          }
+        },
+        {
+          "id": "2fd5508daed944dd9d396919aba7739d",
+          "capability": "drawing.tool.set",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed"
+        },
+        {
+          "id": "6718c49eedb047a88948a461b0dc2098",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "dd6deeb4830b4ffd8ccbbd2f52911258"
+          }
+        },
+        {
+          "id": "6b66a6ec6e69450088a3294da6200336",
+          "capability": "object.surface.edit",
+          "version": 1,
+          "resources": [
+            "dd6deeb4830b4ffd8ccbbd2f52911258"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "target": "dd6deeb4830b4ffd8ccbbd2f52911258",
+            "revision": 40,
+            "surface": "Front",
+            "stroke": ""
+          }
+        },
+        {
+          "id": "e90f59516fd3491787f5f1c08725d796",
+          "capability": "object.surface.edit",
+          "version": 1,
+          "resources": [
+            "dd6deeb4830b4ffd8ccbbd2f52911258"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "target": "dd6deeb4830b4ffd8ccbbd2f52911258",
+            "revision": 41,
+            "surface": "Front",
+            "stroke": "237d1b1a7b5048419d962166e6ba3e33"
+          }
+        },
+        {
+          "id": "a69f8a2dcec54339a09f5c5ae33fe413",
+          "capability": "object.surface.edit",
+          "version": 1,
+          "resources": [
+            "dd6deeb4830b4ffd8ccbbd2f52911258"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "target": "dd6deeb4830b4ffd8ccbbd2f52911258",
+            "revision": 42,
+            "surface": "Front",
+            "stroke": "fda5b64e5e124df8bb36a7e6640ec394"
+          }
+        },
+        {
+          "id": "a48671770a854e058b40b645e220993b",
+          "capability": "object.surface.edit",
+          "version": 1,
+          "resources": [
+            "dd6deeb4830b4ffd8ccbbd2f52911258"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "target": "dd6deeb4830b4ffd8ccbbd2f52911258",
+            "revision": 43,
+            "surface": "Front",
+            "stroke": ""
+          }
+        },
+        {
+          "id": "1c9c989710454e86aa0163028f26b394",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "6c44d54c1c5c4e19b021336f9a086825"
+          }
+        },
+        {
+          "id": "1d60d00aad284521bcc993d56ba316ed",
+          "capability": "object.drawingTip.edit",
+          "version": 1,
+          "resources": [
+            "6c44d54c1c5c4e19b021336f9a086825"
+          ],
+          "phase": "completed",
+          "status": "Action completed"
+        },
+        {
+          "id": "a4d7164069c94b738d9a5f236a8e828c",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "b4ace2c0a2024b0cbbc681510f49e117"
+          }
+        }
+      ],
+      "nextRunId": "d66df6488e964d4e9e465920892fe796",
+      "storageError": null,
+      "recovery": null,
+      "workspace": {
+        "selected": null,
+        "running": [],
+        "outcomes": [],
+        "nextRunId": "53a8d0b0fa7e43d6991e6240fe7f58b3",
+        "storageError": null,
+        "recovery": null
+      }
+    }
+  },
+  "after": {
+    "version": 1,
+    "revision": 329,
+    "sceneRevision": 59,
+    "ack": 133,
+    "session": "f0299e7b03c048e59f9d43a5144d488e",
+    "status": "Action completed",
+    "selectedId": "10d4a7c230344df0bc5727a2aca01167",
+    "ok": true,
+    "canUndo": true,
+    "canRedo": false,
+    "physicsRunning": false,
+    "visible": false,
+    "inspection": null,
+    "constructionSelection": {
+      "stateId": "c04bf7c5b8df40f19febd4d768f1452f",
+      "collecting": false,
+      "members": []
+    },
+    "constructionManipulation": {
+      "stateId": "c04bf7c5b8df40f19febd4d768f1452f",
+      "error": "",
+      "visible": false,
+      "holding": false
+    },
+    "workspaceView": "objects",
+    "rules": {
+      "revision": 1,
+      "bindingPage": 0,
+      "bindingCount": 0,
+      "queued": 0,
+      "eventQueue": 0,
+      "eventsDropped": 0,
+      "canUndo": false,
+      "canRedo": false,
+      "readOnly": false,
+      "status": "Create an action sequence, then add triggers or buttons",
+      "selectedError": "",
+      "sequences": [],
+      "selected": null,
+      "memory": null,
+      "bindings": [],
+      "buttons": [],
+      "running": [],
+      "outcomes": []
+    },
+    "motions": null,
+    "capabilities": [
+      "physicsSettings.v1",
+      "avatarSettings.v1",
+      "physicsRun.v1",
+      "avatarMotion.v1",
+      "avatarWalk.v1",
+      "motions.v1",
+      "avatarActivities.v1",
+      "catalog.v1",
+      "catalogVocabulary.v1",
+      "roomOwnership.v1",
+      "behaviourPrograms.v3",
+      "eventPrograms.v1",
+      "eventFields.v1",
+      "eventSubscriptions.v1",
+      "factQueries.v1",
+      "conditionWaits.v1",
+      "parallelPrograms.v1",
+      "rememberedVariables.v1",
+      "temporaryMemory.v1",
+      "structuredValues.v1",
+      "programModules.v1",
+      "moduleLibrary.v1",
+      "moduleLibraryFiles.v1",
+      "execution.v1",
+      "executionReceipts.v1",
+      "actionResults.v1",
+      "recipeCreation.v1",
+      "creationComponents.v1",
+      "creationTemplates.v1",
+      "layoutEdits.v1",
+      "structures.v1",
+      "batchCreation.v1",
+      "structuredResults.v1",
+      "structuredInputs.v1",
+      "indexedInputs.v1",
+      "constructionSelection.v1",
+      "groupTransforms.v1",
+      "constructionManipulation.v1",
+      "constructionSnapping.v1",
+      "objectEdits.v1",
+      "objectCopy.v1",
+      "drawingEdits.v1",
+      "drawingSurfaces.v1",
+      "curvedDrawingSurfaces.v1",
+      "drawingTips.v1",
+      "drawingErasers.v1",
+      "containers.v1",
+      "containerPouring.v1",
+      "containerScooping.v1",
+      "physicalConnections.v1",
+      "physicalSliders.v1",
+      "snapPoints.v1",
+      "connectedBlueprints.v2",
+      "creationPrototypes.v1",
+      "constructionCapture.v1",
+      "recipeEdits.v1",
+      "latheGeometry.v1",
+      "extrusionGeometry.v1",
+      "sweepGeometry.v1",
+      "recipePatterns.v1",
+      "roomViewCapture.v1",
+      "collisionShapes.v1",
+      "recipePartPlayback.v1",
+      "objectAttachments.v1",
+      "anchorZones.v1",
+      "channelWaits.v1",
+      "objectLaunch.v1",
+      "calendarSchedules.v1",
+      "animationAuthoring.v1",
+      "animationRecording.v1",
+      "animationPosing.v1",
+      "avatarModels.v1",
+      "modelImport.v1",
+      "modelArchiveImport.v1",
+      "motionBatchImport.v1",
+      "includedMotions.v1",
+      "authoredMotion.v1",
+      "unavailablePrograms.v1",
+      "actionRecovery.v1",
+      "temporaryRoom.v1",
+      "spatialSettings.v1",
+      "physicsSimulation.v1",
+      "roomEnvironment.v1",
+      "surfacePlacement.v1",
+      "controllerConfiguration.v1",
+      "controllerModes.v1",
+      "runtimeDiagnostics.v1",
+      "workspaceMaintenance.v1",
+      "workspaceArchiveActivation.v1",
+      "workspaceReview.v1",
+      "workspacePrevious.v1",
+      "workspaceRecovery.v1",
+      "workspaceSavedRecovery.v1",
+      "workspaceHistory.v1",
+      "workspaceEvidence.v1",
+      "workspaceRetention.v1",
+      "workspaceDisposal.v1"
+    ],
+    "physics": {
+      "ready": false,
+      "running": false,
+      "status": "Load or scan your room to use gravity"
+    },
+    "temporaryRoom": {
+      "active": false,
+      "pending": false,
+      "id": "e3fd8f9ad43140cdb26fa91642552d54",
+      "saveId": "",
+      "phase": "idle",
+      "error": "",
+      "savedRevision": 0
+    },
+    "ownership": {
+      "suspended": false,
+      "error": "",
+      "owners": [
+        {
+          "id": "ambient:maestro",
+          "label": "Maestro tutor activity",
+          "role": "ambient",
+          "allowsGrab": false,
+          "claims": [
+            {
+              "target": "maestro",
+              "channel": "wholeTarget"
+            }
+          ]
+        }
+      ]
+    },
+    "avatar": {
+      "active": false,
+      "canLook": true,
+      "canFollow": false,
+      "mode": "stopped",
+      "status": "Choose Look at me or Follow me",
+      "lookReason": "",
+      "followReason": "Load the room, check its alignment, then Start physics before walking",
+      "distance": 1.3,
+      "speed": 0.65
+    },
+    "walk": {
+      "source": "embedded",
+      "motionId": "",
+      "modelHash": "dcd59fb02d378322b656c2cfbe9851d08229ac3a618e90ad5aa06eac7c88759c",
+      "name": "Walking",
+      "status": "Embedded walking clip is available",
+      "playbackStatus": "",
+      "clipIndex": 0,
+      "available": true
+    },
+    "activityProfile": {
+      "modelHash": "dcd59fb02d378322b656c2cfbe9851d08229ac3a618e90ad5aa06eac7c88759c",
+      "status": "Uses included animations where no state motion is assigned",
+      "revision": 1,
+      "canAssign": true,
+      "readOnly": false,
+      "canUndo": false,
+      "canRedo": false,
+      "roles": [
+        {
+          "role": 0,
+          "choices": [
+            {
+              "motionId": "21da54acb5c38d147ad297bf7ef22977",
+              "name": "Idle_4",
+              "weight": 1,
+              "speed": 1,
+              "cooldown": 0,
+              "loop": true,
+              "available": true
+            }
+          ]
+        },
+        {
+          "role": 1,
+          "choices": [
+            {
+              "motionId": "bd0bf1a849d86d785e00c3a392639359",
+              "name": "Listening_Gesture",
+              "weight": 1,
+              "speed": 1,
+              "cooldown": 0,
+              "loop": true,
+              "available": true
+            }
+          ]
+        },
+        {
+          "role": 2,
+          "choices": [
+            {
+              "motionId": "9a66ea13d9ba08b954b9a0cbdc7d89dc",
+              "name": "Idle_12",
+              "weight": 1,
+              "speed": 1,
+              "cooldown": 0,
+              "loop": true,
+              "available": true
+            }
+          ]
+        },
+        {
+          "role": 3,
+          "choices": [
+            {
+              "motionId": "b56ece79da8e21bac89927310921d734",
+              "name": "Talk_with_Hands_Open",
+              "weight": 1,
+              "speed": 1,
+              "cooldown": 2,
+              "loop": false,
+              "available": true
+            },
+            {
+              "motionId": "852ac885964d693deb8d3d3ba835acec",
+              "name": "Talk_with_Right_Hand_Open",
+              "weight": 1,
+              "speed": 1,
+              "cooldown": 2,
+              "loop": false,
+              "available": true
+            }
+          ]
+        }
+      ]
+    },
+    "objects": [
+      {
+        "id": "6395fdba3fd448818e0db9cb72b74470",
+        "name": "Block",
+        "kind": "Block",
+        "objectRevision": 3,
+        "position": {
+          "x": 0.5199999809265137,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1,
+        "color": {
+          "r": 0.45098039507865906,
+          "g": 0.32549020648002625,
+          "b": 0.30588236451148987,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "97482e27f08b4fcca0a0ca7691c04771",
+        "name": "Cylinder",
+        "kind": "Cylinder",
+        "objectRevision": 5,
+        "position": {
+          "x": 0.8600000143051147,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1,
+        "color": {
+          "r": 0.16862745583057404,
+          "g": 0.5529412031173706,
+          "b": 0.5333333611488342,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "a454a7680201495185792eec7eb0d376",
+        "name": "Ball",
+        "kind": "Ball",
+        "objectRevision": 4,
+        "position": {
+          "x": 0.6899999976158142,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1,
+        "color": {
+          "r": 0.7647058963775635,
+          "g": 0.6000000238418579,
+          "b": 0.3137255012989044,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "b4ace2c0a2024b0cbbc681510f49e117",
+        "name": "Pencil",
+        "kind": "Assembly",
+        "objectRevision": 52,
+        "position": {
+          "x": 0.4000000059604645,
+          "y": 1,
+          "z": 0.6000000238418579
+        },
+        "scale": 1,
+        "color": {
+          "r": 1,
+          "g": 1,
+          "b": 1,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "solid",
+          "shape": "automatic",
+          "mass": 0.05999999865889549
+        },
+        "movement": null
+      },
+      {
+        "id": "book",
+        "name": "Book",
+        "kind": "Book",
+        "objectRevision": 1,
+        "position": {
+          "x": 0,
+          "y": 1.159999966621399,
+          "z": 0.6499999761581421
+        },
+        "scale": 1,
+        "color": {
+          "r": 1,
+          "g": 1,
+          "b": 1,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "maestro",
+        "name": "Maestro",
+        "kind": "Maestro",
+        "objectRevision": 2,
+        "position": {
+          "x": -0.7799999713897705,
+          "y": 0,
+          "z": 1.399999976158142
+        },
+        "scale": 1,
+        "color": {
+          "r": 1,
+          "g": 1,
+          "b": 1,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": {
+          "distance": 1.3,
+          "speed": 0.65
+        }
+      }
+    ],
+    "created": [],
+    "capture": {
+      "captureId": "30cd4ed53b3b476d9f092b596d56fe4a",
+      "sha256": "852cbebf2a4ec97b57803a674051a85b1ab82710377fc801e2406c67f608b993",
+      "mimeType": "image/jpeg",
+      "width": 512,
+      "height": 384,
+      "capturedAt": "2026-10-04T06:07:37.2155527Z",
+      "sceneRevision": 3,
+      "verticalFov": 60,
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 1
+      }
+    },
+    "catalog": {
+      "operation": "inspect",
+      "capability": "object.drawingTip.edit",
+      "version": 1,
+      "definition": {
+        "id": "object.drawingTip.edit",
+        "version": 1,
+        "label": "Configure an object's drawing tip",
+        "input": {
+          "type": "object",
+          "x-discriminators": [
+            "operation"
+          ],
+          "oneOf": [
+            {
+              "type": "object",
+              "properties": {
+                "operation": {
+                  "type": "string",
+                  "enum": [
+                    "configure"
+                  ],
+                  "x-static": true
+                },
+                "target": {
+                  "type": "string",
+                  "pattern": "^[a-fA-F0-9]{32}$",
+                  "maxLength": 32,
+                  "x-resource": "object"
+                },
+                "revision": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 2147483647
+                },
+                "definition": {
+                  "type": "object",
+                  "properties": {
+                    "part": {
+                      "type": "string",
+                      "pattern": "^[a-zA-Z0-9_]{0,32}$",
+                      "maxLength": 32
+                    },
+                    "position": {
+                      "type": "object",
+                      "properties": {
+                        "x": {
+                          "type": "number",
+                          "minimum": -10,
+                          "maximum": 10
+                        },
+                        "y": {
+                          "type": "number",
+                          "minimum": -10,
+                          "maximum": 10
+                        },
+                        "z": {
+                          "type": "number",
+                          "minimum": -10,
+                          "maximum": 10
+                        }
+                      },
+                      "required": [
+                        "x",
+                        "y",
+                        "z"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "rotation": {
+                      "type": "object",
+                      "properties": {
+                        "x": {
+                          "type": "number",
+                          "minimum": -1,
+                          "maximum": 1
+                        },
+                        "y": {
+                          "type": "number",
+                          "minimum": -1,
+                          "maximum": 1
+                        },
+                        "z": {
+                          "type": "number",
+                          "minimum": -1,
+                          "maximum": 1
+                        },
+                        "w": {
+                          "type": "number",
+                          "minimum": -1,
+                          "maximum": 1
+                        }
+                      },
+                      "required": [
+                        "x",
+                        "y",
+                        "z",
+                        "w"
+                      ],
+                      "additionalProperties": false,
+                      "format": "unitQuaternion"
+                    },
+                    "color": {
+                      "type": "object",
+                      "properties": {
+                        "r": {
+                          "type": "number",
+                          "minimum": 0,
+                          "maximum": 1
+                        },
+                        "g": {
+                          "type": "number",
+                          "minimum": 0,
+                          "maximum": 1
+                        },
+                        "b": {
+                          "type": "number",
+                          "minimum": 0,
+                          "maximum": 1
+                        },
+                        "a": {
+                          "type": "number",
+                          "minimum": 1,
+                          "maximum": 1
+                        }
+                      },
+                      "required": [
+                        "r",
+                        "g",
+                        "b",
+                        "a"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "radius": {
+                      "type": "number",
+                      "minimum": 0.001,
+                      "maximum": 0.02
+                    },
+                    "enabled": {
+                      "type": "boolean"
+                    },
+                    "mode": {
+                      "type": "string",
+                      "enum": [
+                        "draw",
+                        "erase"
+                      ],
+                      "x-features": [
+                        "drawingErasers.v1"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "part",
+                    "position",
+                    "rotation",
+                    "color",
+                    "radius",
+                    "enabled"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "required": [
+                "operation",
+                "target",
+                "revision",
+                "definition"
+              ],
+              "additionalProperties": false,
+              "x-current": {
+                "fact": "object.drawingTip",
+                "version": 1,
+                "arguments": {
+                  "target": "target"
+                },
+                "fields": {
+                  "revision": [
+                    "revision"
+                  ]
+                },
+                "guards": [
+                  "revision"
+                ]
+              },
+              "title": "Configure the drawing tip",
+              "x-features": [
+                "drawingTips.v1"
+              ]
+            },
+            {
+              "type": "object",
+              "properties": {
+                "operation": {
+                  "type": "string",
+                  "enum": [
+                    "remove"
+                  ],
+                  "x-static": true
+                },
+                "target": {
+                  "type": "string",
+                  "pattern": "^[a-fA-F0-9]{32}$",
+                  "maxLength": 32,
+                  "x-resource": "object"
+                },
+                "revision": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 2147483647
+                }
+              },
+              "required": [
+                "operation",
+                "target",
+                "revision"
+              ],
+              "additionalProperties": false,
+              "x-current": {
+                "fact": "object.drawingTip",
+                "version": 1,
+                "arguments": {
+                  "target": "target"
+                },
+                "fields": {
+                  "revision": [
+                    "revision"
+                  ]
+                },
+                "guards": [
+                  "revision"
+                ]
+              },
+              "title": "Remove the drawing tip",
+              "x-features": [
+                "drawingTips.v1"
+              ]
+            }
+          ]
+        },
+        "duration": "instant",
+        "ownership": "exclusiveTargetAndProp",
+        "channels": [
+          "wholeTarget"
+        ],
+        "requirements": [
+          "target.created",
+          "target.unheld",
+          "source.revision.current",
+          "storage.writable"
+        ],
+        "description": "Give any created/imported object one saved drawing tip, or remove it. Empty part means its root; otherwise use a stable recipe part. Local +Z points toward the drawing patch. Ink colour and radius are independent of object paint and tray pencil preferences. Radius uses the receiving patch's local metres. The enabled tip draws only while a user or Maestro holds the tool and its tip is within one world centimetre of an enabled plane/cylinder/sphere patch. Optional mode is draw (default) or erase. A held eraser sweeps complete strokes within twice its radius (minimum 1 cm) plus ink thickness; contact loss or release saves the selected IDs with one Undo. The preview hides selected ink while accepted source remains unchanged until save. Interrupted or failed erasing is retained for the same explicit retry/discard; no automatic deletion retry. Loose tools do not draw or erase. No arbitrary-mesh, skin or scanned-wall painting. One room capture at a time; loss of contact ends one saved stroke/Undo. After interruption or a busy/failed capture, separate the tip before starting again. Failed saves retain the draft for explicit retry/discard. Manual holding uses control priority; Maestro holding uses program priority and cannot interrupt a user. Configuration does not itself create ink or move objects. Copy, Undo, temporary rooms and portable workspaces retain the same tip data.",
+        "example": {
+          "operation": "configure",
+          "target": "00000000000000000000000000000000",
+          "revision": 1,
+          "definition": {
+            "part": "",
+            "position": {
+              "x": 0,
+              "y": 0,
+              "z": 0.06499999761581421
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0,
+              "w": 1
+            },
+            "color": {
+              "r": 1,
+              "g": 1,
+              "b": 1,
+              "a": 1
+            },
+            "radius": 0.003000000026077032,
+            "enabled": true
+          }
+        }
+      },
+      "status": "Action definition. Check concrete arguments before running it."
+    },
+    "execution": {
+      "selected": {
+        "id": "d66df6488e964d4e9e465920892fe796",
+        "capability": "object.drawingTip.edit",
+        "version": 1,
+        "resources": [
+          "b4ace2c0a2024b0cbbc681510f49e117"
+        ],
+        "phase": "completed",
+        "status": "Action completed",
+        "call": {
+          "id": "object.drawingTip.edit",
+          "version": 1,
+          "arguments": {
+            "operation": "configure",
+            "target": "b4ace2c0a2024b0cbbc681510f49e117",
+            "revision": 51,
+            "definition": {
+              "part": "",
+              "position": {
+                "x": 0,
+                "y": 0,
+                "z": 0.0925000011920929
+              },
+              "rotation": {
+                "x": 0,
+                "y": 0,
+                "z": 0,
+                "w": 1
+              },
+              "color": {
+                "r": 0.11999999731779099,
+                "g": 0.12999999523162842,
+                "b": 0.1899999976158142,
+                "a": 1
+              },
+              "radius": 0.0020000000949949026,
+              "enabled": true,
+              "mode": "erase"
+            }
+          }
+        }
+      },
+      "running": [],
+      "outcomes": [
+        {
+          "id": "e3095f70b3ef40f8b5bbf41ded516ac8",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "470224b5d7804039b54d7e4ffbb386a1"
+          }
+        },
+        {
+          "id": "ca571c6ddc0c452ba336c65901245797",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "f1a0ae20bd7f4cc29395044ef63ae811"
+          }
+        },
+        {
+          "id": "f5c13a7ae98c4750a149982897d1a023",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "a41eebcb796544adae6d3985142033a1"
+          }
+        },
+        {
+          "id": "2224086730974e17819a7fe086016b5f",
+          "capability": "drawing.tool.set",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed"
+        },
+        {
+          "id": "38bffb3159bb4f3ba2b578629d3598d9",
+          "capability": "object.surface.edit",
+          "version": 1,
+          "resources": [
+            "a41eebcb796544adae6d3985142033a1"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "target": "a41eebcb796544adae6d3985142033a1",
+            "revision": 35,
+            "surface": "Front",
+            "stroke": "7f99022c15824ea7b61ec542724e0029"
+          }
+        },
+        {
+          "id": "6da1904adaf14d24a698a5b29035f019",
+          "capability": "object.surface.edit",
+          "version": 1,
+          "resources": [
+            "a41eebcb796544adae6d3985142033a1"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "target": "a41eebcb796544adae6d3985142033a1",
+            "revision": 36,
+            "surface": "Front",
+            "stroke": "7f99022c15824ea7b61ec542724e0029"
+          }
+        },
+        {
+          "id": "2fd5508daed944dd9d396919aba7739d",
+          "capability": "drawing.tool.set",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed"
+        },
+        {
+          "id": "6718c49eedb047a88948a461b0dc2098",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "dd6deeb4830b4ffd8ccbbd2f52911258"
+          }
+        },
+        {
+          "id": "6b66a6ec6e69450088a3294da6200336",
+          "capability": "object.surface.edit",
+          "version": 1,
+          "resources": [
+            "dd6deeb4830b4ffd8ccbbd2f52911258"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "target": "dd6deeb4830b4ffd8ccbbd2f52911258",
+            "revision": 40,
+            "surface": "Front",
+            "stroke": ""
+          }
+        },
+        {
+          "id": "e90f59516fd3491787f5f1c08725d796",
+          "capability": "object.surface.edit",
+          "version": 1,
+          "resources": [
+            "dd6deeb4830b4ffd8ccbbd2f52911258"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "target": "dd6deeb4830b4ffd8ccbbd2f52911258",
+            "revision": 41,
+            "surface": "Front",
+            "stroke": "237d1b1a7b5048419d962166e6ba3e33"
+          }
+        },
+        {
+          "id": "a69f8a2dcec54339a09f5c5ae33fe413",
+          "capability": "object.surface.edit",
+          "version": 1,
+          "resources": [
+            "dd6deeb4830b4ffd8ccbbd2f52911258"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "target": "dd6deeb4830b4ffd8ccbbd2f52911258",
+            "revision": 42,
+            "surface": "Front",
+            "stroke": "fda5b64e5e124df8bb36a7e6640ec394"
+          }
+        },
+        {
+          "id": "a48671770a854e058b40b645e220993b",
+          "capability": "object.surface.edit",
+          "version": 1,
+          "resources": [
+            "dd6deeb4830b4ffd8ccbbd2f52911258"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "target": "dd6deeb4830b4ffd8ccbbd2f52911258",
+            "revision": 43,
+            "surface": "Front",
+            "stroke": ""
+          }
+        },
+        {
+          "id": "1c9c989710454e86aa0163028f26b394",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "6c44d54c1c5c4e19b021336f9a086825"
+          }
+        },
+        {
+          "id": "1d60d00aad284521bcc993d56ba316ed",
+          "capability": "object.drawingTip.edit",
+          "version": 1,
+          "resources": [
+            "6c44d54c1c5c4e19b021336f9a086825"
+          ],
+          "phase": "completed",
+          "status": "Action completed"
+        },
+        {
+          "id": "a4d7164069c94b738d9a5f236a8e828c",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "b4ace2c0a2024b0cbbc681510f49e117"
+          }
+        },
+        {
+          "id": "d66df6488e964d4e9e465920892fe796",
+          "capability": "object.drawingTip.edit",
+          "version": 1,
+          "resources": [
+            "b4ace2c0a2024b0cbbc681510f49e117"
+          ],
+          "phase": "completed",
+          "status": "Action completed"
+        }
+      ],
+      "nextRunId": "cec3502f4deb4c53a9131133a87e40f0",
+      "storageError": null,
+      "recovery": null,
+      "workspace": {
+        "selected": null,
+        "running": [],
+        "outcomes": [],
+        "nextRunId": "53a8d0b0fa7e43d6991e6240fe7f58b3",
+        "storageError": null,
+        "recovery": null
+      }
+    }
+  },
+  "read": {
+    "version": 1,
+    "revision": 331,
+    "sceneRevision": 59,
+    "ack": 134,
+    "session": "f0299e7b03c048e59f9d43a5144d488e",
+    "status": "Current fact value. Reading does not change the room.",
+    "selectedId": "10d4a7c230344df0bc5727a2aca01167",
+    "ok": true,
+    "canUndo": true,
+    "canRedo": false,
+    "physicsRunning": false,
+    "visible": false,
+    "inspection": null,
+    "constructionSelection": {
+      "stateId": "c04bf7c5b8df40f19febd4d768f1452f",
+      "collecting": false,
+      "members": []
+    },
+    "constructionManipulation": {
+      "stateId": "c04bf7c5b8df40f19febd4d768f1452f",
+      "error": "",
+      "visible": false,
+      "holding": false
+    },
+    "workspaceView": "objects",
+    "rules": {
+      "revision": 1,
+      "bindingPage": 0,
+      "bindingCount": 0,
+      "queued": 0,
+      "eventQueue": 0,
+      "eventsDropped": 0,
+      "canUndo": false,
+      "canRedo": false,
+      "readOnly": false,
+      "status": "Create an action sequence, then add triggers or buttons",
+      "selectedError": "",
+      "sequences": [],
+      "selected": null,
+      "memory": null,
+      "bindings": [],
+      "buttons": [],
+      "running": [],
+      "outcomes": []
+    },
+    "motions": null,
+    "capabilities": [
+      "physicsSettings.v1",
+      "avatarSettings.v1",
+      "physicsRun.v1",
+      "avatarMotion.v1",
+      "avatarWalk.v1",
+      "motions.v1",
+      "avatarActivities.v1",
+      "catalog.v1",
+      "catalogVocabulary.v1",
+      "roomOwnership.v1",
+      "behaviourPrograms.v3",
+      "eventPrograms.v1",
+      "eventFields.v1",
+      "eventSubscriptions.v1",
+      "factQueries.v1",
+      "conditionWaits.v1",
+      "parallelPrograms.v1",
+      "rememberedVariables.v1",
+      "temporaryMemory.v1",
+      "structuredValues.v1",
+      "programModules.v1",
+      "moduleLibrary.v1",
+      "moduleLibraryFiles.v1",
+      "execution.v1",
+      "executionReceipts.v1",
+      "actionResults.v1",
+      "recipeCreation.v1",
+      "creationComponents.v1",
+      "creationTemplates.v1",
+      "layoutEdits.v1",
+      "structures.v1",
+      "batchCreation.v1",
+      "structuredResults.v1",
+      "structuredInputs.v1",
+      "indexedInputs.v1",
+      "constructionSelection.v1",
+      "groupTransforms.v1",
+      "constructionManipulation.v1",
+      "constructionSnapping.v1",
+      "objectEdits.v1",
+      "objectCopy.v1",
+      "drawingEdits.v1",
+      "drawingSurfaces.v1",
+      "curvedDrawingSurfaces.v1",
+      "drawingTips.v1",
+      "drawingErasers.v1",
+      "containers.v1",
+      "containerPouring.v1",
+      "containerScooping.v1",
+      "physicalConnections.v1",
+      "physicalSliders.v1",
+      "snapPoints.v1",
+      "connectedBlueprints.v2",
+      "creationPrototypes.v1",
+      "constructionCapture.v1",
+      "recipeEdits.v1",
+      "latheGeometry.v1",
+      "extrusionGeometry.v1",
+      "sweepGeometry.v1",
+      "recipePatterns.v1",
+      "roomViewCapture.v1",
+      "collisionShapes.v1",
+      "recipePartPlayback.v1",
+      "objectAttachments.v1",
+      "anchorZones.v1",
+      "channelWaits.v1",
+      "objectLaunch.v1",
+      "calendarSchedules.v1",
+      "animationAuthoring.v1",
+      "animationRecording.v1",
+      "animationPosing.v1",
+      "avatarModels.v1",
+      "modelImport.v1",
+      "modelArchiveImport.v1",
+      "motionBatchImport.v1",
+      "includedMotions.v1",
+      "authoredMotion.v1",
+      "unavailablePrograms.v1",
+      "actionRecovery.v1",
+      "temporaryRoom.v1",
+      "spatialSettings.v1",
+      "physicsSimulation.v1",
+      "roomEnvironment.v1",
+      "surfacePlacement.v1",
+      "controllerConfiguration.v1",
+      "controllerModes.v1",
+      "runtimeDiagnostics.v1",
+      "workspaceMaintenance.v1",
+      "workspaceArchiveActivation.v1",
+      "workspaceReview.v1",
+      "workspacePrevious.v1",
+      "workspaceRecovery.v1",
+      "workspaceSavedRecovery.v1",
+      "workspaceHistory.v1",
+      "workspaceEvidence.v1",
+      "workspaceRetention.v1",
+      "workspaceDisposal.v1"
+    ],
+    "physics": {
+      "ready": false,
+      "running": false,
+      "status": "Load or scan your room to use gravity"
+    },
+    "temporaryRoom": {
+      "active": false,
+      "pending": false,
+      "id": "e3fd8f9ad43140cdb26fa91642552d54",
+      "saveId": "",
+      "phase": "idle",
+      "error": "",
+      "savedRevision": 0
+    },
+    "ownership": {
+      "suspended": false,
+      "error": "",
+      "owners": [
+        {
+          "id": "ambient:maestro",
+          "label": "Maestro tutor activity",
+          "role": "ambient",
+          "allowsGrab": false,
+          "claims": [
+            {
+              "target": "maestro",
+              "channel": "wholeTarget"
+            }
+          ]
+        }
+      ]
+    },
+    "avatar": {
+      "active": false,
+      "canLook": true,
+      "canFollow": false,
+      "mode": "stopped",
+      "status": "Choose Look at me or Follow me",
+      "lookReason": "",
+      "followReason": "Load the room, check its alignment, then Start physics before walking",
+      "distance": 1.3,
+      "speed": 0.65
+    },
+    "walk": {
+      "source": "embedded",
+      "motionId": "",
+      "modelHash": "dcd59fb02d378322b656c2cfbe9851d08229ac3a618e90ad5aa06eac7c88759c",
+      "name": "Walking",
+      "status": "Embedded walking clip is available",
+      "playbackStatus": "",
+      "clipIndex": 0,
+      "available": true
+    },
+    "activityProfile": {
+      "modelHash": "dcd59fb02d378322b656c2cfbe9851d08229ac3a618e90ad5aa06eac7c88759c",
+      "status": "Uses included animations where no state motion is assigned",
+      "revision": 1,
+      "canAssign": true,
+      "readOnly": false,
+      "canUndo": false,
+      "canRedo": false,
+      "roles": [
+        {
+          "role": 0,
+          "choices": [
+            {
+              "motionId": "21da54acb5c38d147ad297bf7ef22977",
+              "name": "Idle_4",
+              "weight": 1,
+              "speed": 1,
+              "cooldown": 0,
+              "loop": true,
+              "available": true
+            }
+          ]
+        },
+        {
+          "role": 1,
+          "choices": [
+            {
+              "motionId": "bd0bf1a849d86d785e00c3a392639359",
+              "name": "Listening_Gesture",
+              "weight": 1,
+              "speed": 1,
+              "cooldown": 0,
+              "loop": true,
+              "available": true
+            }
+          ]
+        },
+        {
+          "role": 2,
+          "choices": [
+            {
+              "motionId": "9a66ea13d9ba08b954b9a0cbdc7d89dc",
+              "name": "Idle_12",
+              "weight": 1,
+              "speed": 1,
+              "cooldown": 0,
+              "loop": true,
+              "available": true
+            }
+          ]
+        },
+        {
+          "role": 3,
+          "choices": [
+            {
+              "motionId": "b56ece79da8e21bac89927310921d734",
+              "name": "Talk_with_Hands_Open",
+              "weight": 1,
+              "speed": 1,
+              "cooldown": 2,
+              "loop": false,
+              "available": true
+            },
+            {
+              "motionId": "852ac885964d693deb8d3d3ba835acec",
+              "name": "Talk_with_Right_Hand_Open",
+              "weight": 1,
+              "speed": 1,
+              "cooldown": 2,
+              "loop": false,
+              "available": true
+            }
+          ]
+        }
+      ]
+    },
+    "objects": [
+      {
+        "id": "6395fdba3fd448818e0db9cb72b74470",
+        "name": "Block",
+        "kind": "Block",
+        "objectRevision": 3,
+        "position": {
+          "x": 0.5199999809265137,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1,
+        "color": {
+          "r": 0.45098039507865906,
+          "g": 0.32549020648002625,
+          "b": 0.30588236451148987,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "97482e27f08b4fcca0a0ca7691c04771",
+        "name": "Cylinder",
+        "kind": "Cylinder",
+        "objectRevision": 5,
+        "position": {
+          "x": 0.8600000143051147,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1,
+        "color": {
+          "r": 0.16862745583057404,
+          "g": 0.5529412031173706,
+          "b": 0.5333333611488342,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "a454a7680201495185792eec7eb0d376",
+        "name": "Ball",
+        "kind": "Ball",
+        "objectRevision": 4,
+        "position": {
+          "x": 0.6899999976158142,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1,
+        "color": {
+          "r": 0.7647058963775635,
+          "g": 0.6000000238418579,
+          "b": 0.3137255012989044,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "b4ace2c0a2024b0cbbc681510f49e117",
+        "name": "Pencil",
+        "kind": "Assembly",
+        "objectRevision": 52,
+        "position": {
+          "x": 0.4000000059604645,
+          "y": 1,
+          "z": 0.6000000238418579
+        },
+        "scale": 1,
+        "color": {
+          "r": 1,
+          "g": 1,
+          "b": 1,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "solid",
+          "shape": "automatic",
+          "mass": 0.05999999865889549
+        },
+        "movement": null
+      },
+      {
+        "id": "book",
+        "name": "Book",
+        "kind": "Book",
+        "objectRevision": 1,
+        "position": {
+          "x": 0,
+          "y": 1.159999966621399,
+          "z": 0.6499999761581421
+        },
+        "scale": 1,
+        "color": {
+          "r": 1,
+          "g": 1,
+          "b": 1,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "maestro",
+        "name": "Maestro",
+        "kind": "Maestro",
+        "objectRevision": 2,
+        "position": {
+          "x": -0.7799999713897705,
+          "y": 0,
+          "z": 1.399999976158142
+        },
+        "scale": 1,
+        "color": {
+          "r": 1,
+          "g": 1,
+          "b": 1,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": {
+          "distance": 1.3,
+          "speed": 0.65
+        }
+      }
+    ],
+    "created": [],
+    "capture": {
+      "captureId": "30cd4ed53b3b476d9f092b596d56fe4a",
+      "sha256": "852cbebf2a4ec97b57803a674051a85b1ab82710377fc801e2406c67f608b993",
+      "mimeType": "image/jpeg",
+      "width": 512,
+      "height": 384,
+      "capturedAt": "2026-10-04T06:07:37.2155527Z",
+      "sceneRevision": 3,
+      "verticalFov": 60,
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 1
+      }
+    },
+    "catalog": {
+      "operation": "inspect",
+      "capability": "object.drawingTip",
+      "version": 1,
+      "definition": {
+        "id": "object.drawingTip",
+        "version": 1,
+        "type": {
+          "record": {
+            "revision": "number",
+            "configured": "boolean",
+            "definition": {
+              "record": {
+                "part": "text",
+                "position": {
+                  "record": {
+                    "x": "number",
+                    "y": "number",
+                    "z": "number"
+                  }
+                },
+                "rotation": {
+                  "record": {
+                    "x": "number",
+                    "y": "number",
+                    "z": "number",
+                    "w": "number"
+                  }
+                },
+                "color": {
+                  "record": {
+                    "r": "number",
+                    "g": "number",
+                    "b": "number",
+                    "a": "number"
+                  }
+                },
+                "radius": "number",
+                "enabled": "boolean",
+                "mode": "text"
+              }
+            }
+          }
+        },
+        "label": "Object drawing tip",
+        "description": "Saved tip configuration and current object revision. configured=false returns inert default fields for editing; it does not add a component. Reads do not draw. Use object.drawing.capture for the shared active/retained capture.",
+        "input": {
+          "type": "object",
+          "properties": {
+            "target": {
+              "type": "string",
+              "pattern": "^[a-fA-F0-9]{32}$",
+              "maxLength": 32,
+              "x-resource": "object"
+            }
+          },
+          "required": [
+            "target"
+          ],
+          "additionalProperties": false
+        },
+        "example": {
+          "target": "00000000000000000000000000000000"
+        },
+        "features": [
+          "factQueries.v1",
+          "drawingTips.v1"
+        ]
+      },
+      "status": "Current fact value. Reading does not change the room.",
+      "category": "facts",
+      "arguments": {
+        "target": "b4ace2c0a2024b0cbbc681510f49e117"
+      },
+      "available": true,
+      "value": {
+        "revision": 52,
+        "configured": true,
+        "definition": {
+          "part": "",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0.0925000011920929
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "color": {
+            "r": 0.11999999731779099,
+            "g": 0.12999999523162842,
+            "b": 0.1899999976158142,
+            "a": 1
+          },
+          "radius": 0.0020000000949949026,
+          "enabled": true,
+          "mode": "erase"
+        }
+      }
+    },
+    "execution": {
+      "selected": {
+        "id": "d66df6488e964d4e9e465920892fe796",
+        "capability": "object.drawingTip.edit",
+        "version": 1,
+        "resources": [
+          "b4ace2c0a2024b0cbbc681510f49e117"
+        ],
+        "phase": "completed",
+        "status": "Action completed",
+        "call": {
+          "id": "object.drawingTip.edit",
+          "version": 1,
+          "arguments": {
+            "operation": "configure",
+            "target": "b4ace2c0a2024b0cbbc681510f49e117",
+            "revision": 51,
+            "definition": {
+              "part": "",
+              "position": {
+                "x": 0,
+                "y": 0,
+                "z": 0.0925000011920929
+              },
+              "rotation": {
+                "x": 0,
+                "y": 0,
+                "z": 0,
+                "w": 1
+              },
+              "color": {
+                "r": 0.11999999731779099,
+                "g": 0.12999999523162842,
+                "b": 0.1899999976158142,
+                "a": 1
+              },
+              "radius": 0.0020000000949949026,
+              "enabled": true,
+              "mode": "erase"
+            }
+          }
+        }
+      },
+      "running": [],
+      "outcomes": [
+        {
+          "id": "e3095f70b3ef40f8b5bbf41ded516ac8",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "470224b5d7804039b54d7e4ffbb386a1"
+          }
+        },
+        {
+          "id": "ca571c6ddc0c452ba336c65901245797",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "f1a0ae20bd7f4cc29395044ef63ae811"
+          }
+        },
+        {
+          "id": "f5c13a7ae98c4750a149982897d1a023",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "a41eebcb796544adae6d3985142033a1"
+          }
+        },
+        {
+          "id": "2224086730974e17819a7fe086016b5f",
+          "capability": "drawing.tool.set",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed"
+        },
+        {
+          "id": "38bffb3159bb4f3ba2b578629d3598d9",
+          "capability": "object.surface.edit",
+          "version": 1,
+          "resources": [
+            "a41eebcb796544adae6d3985142033a1"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "target": "a41eebcb796544adae6d3985142033a1",
+            "revision": 35,
+            "surface": "Front",
+            "stroke": "7f99022c15824ea7b61ec542724e0029"
+          }
+        },
+        {
+          "id": "6da1904adaf14d24a698a5b29035f019",
+          "capability": "object.surface.edit",
+          "version": 1,
+          "resources": [
+            "a41eebcb796544adae6d3985142033a1"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "target": "a41eebcb796544adae6d3985142033a1",
+            "revision": 36,
+            "surface": "Front",
+            "stroke": "7f99022c15824ea7b61ec542724e0029"
+          }
+        },
+        {
+          "id": "2fd5508daed944dd9d396919aba7739d",
+          "capability": "drawing.tool.set",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed"
+        },
+        {
+          "id": "6718c49eedb047a88948a461b0dc2098",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "dd6deeb4830b4ffd8ccbbd2f52911258"
+          }
+        },
+        {
+          "id": "6b66a6ec6e69450088a3294da6200336",
+          "capability": "object.surface.edit",
+          "version": 1,
+          "resources": [
+            "dd6deeb4830b4ffd8ccbbd2f52911258"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "target": "dd6deeb4830b4ffd8ccbbd2f52911258",
+            "revision": 40,
+            "surface": "Front",
+            "stroke": ""
+          }
+        },
+        {
+          "id": "e90f59516fd3491787f5f1c08725d796",
+          "capability": "object.surface.edit",
+          "version": 1,
+          "resources": [
+            "dd6deeb4830b4ffd8ccbbd2f52911258"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "target": "dd6deeb4830b4ffd8ccbbd2f52911258",
+            "revision": 41,
+            "surface": "Front",
+            "stroke": "237d1b1a7b5048419d962166e6ba3e33"
+          }
+        },
+        {
+          "id": "a69f8a2dcec54339a09f5c5ae33fe413",
+          "capability": "object.surface.edit",
+          "version": 1,
+          "resources": [
+            "dd6deeb4830b4ffd8ccbbd2f52911258"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "target": "dd6deeb4830b4ffd8ccbbd2f52911258",
+            "revision": 42,
+            "surface": "Front",
+            "stroke": "fda5b64e5e124df8bb36a7e6640ec394"
+          }
+        },
+        {
+          "id": "a48671770a854e058b40b645e220993b",
+          "capability": "object.surface.edit",
+          "version": 1,
+          "resources": [
+            "dd6deeb4830b4ffd8ccbbd2f52911258"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "target": "dd6deeb4830b4ffd8ccbbd2f52911258",
+            "revision": 43,
+            "surface": "Front",
+            "stroke": ""
+          }
+        },
+        {
+          "id": "1c9c989710454e86aa0163028f26b394",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "6c44d54c1c5c4e19b021336f9a086825"
+          }
+        },
+        {
+          "id": "1d60d00aad284521bcc993d56ba316ed",
+          "capability": "object.drawingTip.edit",
+          "version": 1,
+          "resources": [
+            "6c44d54c1c5c4e19b021336f9a086825"
+          ],
+          "phase": "completed",
+          "status": "Action completed"
+        },
+        {
+          "id": "a4d7164069c94b738d9a5f236a8e828c",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "b4ace2c0a2024b0cbbc681510f49e117"
+          }
+        },
+        {
+          "id": "d66df6488e964d4e9e465920892fe796",
+          "capability": "object.drawingTip.edit",
+          "version": 1,
+          "resources": [
+            "b4ace2c0a2024b0cbbc681510f49e117"
+          ],
+          "phase": "completed",
+          "status": "Action completed"
+        }
+      ],
+      "nextRunId": "cec3502f4deb4c53a9131133a87e40f0",
+      "storageError": null,
+      "recovery": null,
+      "workspace": {
+        "selected": null,
+        "running": [],
+        "outcomes": [],
+        "nextRunId": "53a8d0b0fa7e43d6991e6240fe7f58b3",
+        "storageError": null,
+        "recovery": null
+      }
+    }
+  },
+  "undone": {
+    "version": 1,
+    "revision": 337,
+    "sceneRevision": 60,
+    "ack": 136,
+    "session": "f0299e7b03c048e59f9d43a5144d488e",
+    "status": "Current fact value. Reading does not change the room.",
+    "selectedId": "10d4a7c230344df0bc5727a2aca01167",
+    "ok": true,
+    "canUndo": true,
+    "canRedo": true,
+    "physicsRunning": false,
+    "visible": false,
+    "inspection": null,
+    "constructionSelection": {
+      "stateId": "c04bf7c5b8df40f19febd4d768f1452f",
+      "collecting": false,
+      "members": []
+    },
+    "constructionManipulation": {
+      "stateId": "c04bf7c5b8df40f19febd4d768f1452f",
+      "error": "",
+      "visible": false,
+      "holding": false
+    },
+    "workspaceView": "objects",
+    "rules": {
+      "revision": 1,
+      "bindingPage": 0,
+      "bindingCount": 0,
+      "queued": 0,
+      "eventQueue": 0,
+      "eventsDropped": 0,
+      "canUndo": false,
+      "canRedo": false,
+      "readOnly": false,
+      "status": "Create an action sequence, then add triggers or buttons",
+      "selectedError": "",
+      "sequences": [],
+      "selected": null,
+      "memory": null,
+      "bindings": [],
+      "buttons": [],
+      "running": [],
+      "outcomes": []
+    },
+    "motions": null,
+    "capabilities": [
+      "physicsSettings.v1",
+      "avatarSettings.v1",
+      "physicsRun.v1",
+      "avatarMotion.v1",
+      "avatarWalk.v1",
+      "motions.v1",
+      "avatarActivities.v1",
+      "catalog.v1",
+      "catalogVocabulary.v1",
+      "roomOwnership.v1",
+      "behaviourPrograms.v3",
+      "eventPrograms.v1",
+      "eventFields.v1",
+      "eventSubscriptions.v1",
+      "factQueries.v1",
+      "conditionWaits.v1",
+      "parallelPrograms.v1",
+      "rememberedVariables.v1",
+      "temporaryMemory.v1",
+      "structuredValues.v1",
+      "programModules.v1",
+      "moduleLibrary.v1",
+      "moduleLibraryFiles.v1",
+      "execution.v1",
+      "executionReceipts.v1",
+      "actionResults.v1",
+      "recipeCreation.v1",
+      "creationComponents.v1",
+      "creationTemplates.v1",
+      "layoutEdits.v1",
+      "structures.v1",
+      "batchCreation.v1",
+      "structuredResults.v1",
+      "structuredInputs.v1",
+      "indexedInputs.v1",
+      "constructionSelection.v1",
+      "groupTransforms.v1",
+      "constructionManipulation.v1",
+      "constructionSnapping.v1",
+      "objectEdits.v1",
+      "objectCopy.v1",
+      "drawingEdits.v1",
+      "drawingSurfaces.v1",
+      "curvedDrawingSurfaces.v1",
+      "drawingTips.v1",
+      "drawingErasers.v1",
+      "containers.v1",
+      "containerPouring.v1",
+      "containerScooping.v1",
+      "physicalConnections.v1",
+      "physicalSliders.v1",
+      "snapPoints.v1",
+      "connectedBlueprints.v2",
+      "creationPrototypes.v1",
+      "constructionCapture.v1",
+      "recipeEdits.v1",
+      "latheGeometry.v1",
+      "extrusionGeometry.v1",
+      "sweepGeometry.v1",
+      "recipePatterns.v1",
+      "roomViewCapture.v1",
+      "collisionShapes.v1",
+      "recipePartPlayback.v1",
+      "objectAttachments.v1",
+      "anchorZones.v1",
+      "channelWaits.v1",
+      "objectLaunch.v1",
+      "calendarSchedules.v1",
+      "animationAuthoring.v1",
+      "animationRecording.v1",
+      "animationPosing.v1",
+      "avatarModels.v1",
+      "modelImport.v1",
+      "modelArchiveImport.v1",
+      "motionBatchImport.v1",
+      "includedMotions.v1",
+      "authoredMotion.v1",
+      "unavailablePrograms.v1",
+      "actionRecovery.v1",
+      "temporaryRoom.v1",
+      "spatialSettings.v1",
+      "physicsSimulation.v1",
+      "roomEnvironment.v1",
+      "surfacePlacement.v1",
+      "controllerConfiguration.v1",
+      "controllerModes.v1",
+      "runtimeDiagnostics.v1",
+      "workspaceMaintenance.v1",
+      "workspaceArchiveActivation.v1",
+      "workspaceReview.v1",
+      "workspacePrevious.v1",
+      "workspaceRecovery.v1",
+      "workspaceSavedRecovery.v1",
+      "workspaceHistory.v1",
+      "workspaceEvidence.v1",
+      "workspaceRetention.v1",
+      "workspaceDisposal.v1"
+    ],
+    "physics": {
+      "ready": false,
+      "running": false,
+      "status": "Load or scan your room to use gravity"
+    },
+    "temporaryRoom": {
+      "active": false,
+      "pending": false,
+      "id": "e3fd8f9ad43140cdb26fa91642552d54",
+      "saveId": "",
+      "phase": "idle",
+      "error": "",
+      "savedRevision": 0
+    },
+    "ownership": {
+      "suspended": false,
+      "error": "",
+      "owners": [
+        {
+          "id": "ambient:maestro",
+          "label": "Maestro tutor activity",
+          "role": "ambient",
+          "allowsGrab": false,
+          "claims": [
+            {
+              "target": "maestro",
+              "channel": "wholeTarget"
+            }
+          ]
+        }
+      ]
+    },
+    "avatar": {
+      "active": false,
+      "canLook": true,
+      "canFollow": false,
+      "mode": "stopped",
+      "status": "Choose Look at me or Follow me",
+      "lookReason": "",
+      "followReason": "Load the room, check its alignment, then Start physics before walking",
+      "distance": 1.3,
+      "speed": 0.65
+    },
+    "walk": {
+      "source": "embedded",
+      "motionId": "",
+      "modelHash": "dcd59fb02d378322b656c2cfbe9851d08229ac3a618e90ad5aa06eac7c88759c",
+      "name": "Walking",
+      "status": "Embedded walking clip is available",
+      "playbackStatus": "",
+      "clipIndex": 0,
+      "available": true
+    },
+    "activityProfile": {
+      "modelHash": "dcd59fb02d378322b656c2cfbe9851d08229ac3a618e90ad5aa06eac7c88759c",
+      "status": "Uses included animations where no state motion is assigned",
+      "revision": 1,
+      "canAssign": true,
+      "readOnly": false,
+      "canUndo": false,
+      "canRedo": false,
+      "roles": [
+        {
+          "role": 0,
+          "choices": [
+            {
+              "motionId": "21da54acb5c38d147ad297bf7ef22977",
+              "name": "Idle_4",
+              "weight": 1,
+              "speed": 1,
+              "cooldown": 0,
+              "loop": true,
+              "available": true
+            }
+          ]
+        },
+        {
+          "role": 1,
+          "choices": [
+            {
+              "motionId": "bd0bf1a849d86d785e00c3a392639359",
+              "name": "Listening_Gesture",
+              "weight": 1,
+              "speed": 1,
+              "cooldown": 0,
+              "loop": true,
+              "available": true
+            }
+          ]
+        },
+        {
+          "role": 2,
+          "choices": [
+            {
+              "motionId": "9a66ea13d9ba08b954b9a0cbdc7d89dc",
+              "name": "Idle_12",
+              "weight": 1,
+              "speed": 1,
+              "cooldown": 0,
+              "loop": true,
+              "available": true
+            }
+          ]
+        },
+        {
+          "role": 3,
+          "choices": [
+            {
+              "motionId": "b56ece79da8e21bac89927310921d734",
+              "name": "Talk_with_Hands_Open",
+              "weight": 1,
+              "speed": 1,
+              "cooldown": 2,
+              "loop": false,
+              "available": true
+            },
+            {
+              "motionId": "852ac885964d693deb8d3d3ba835acec",
+              "name": "Talk_with_Right_Hand_Open",
+              "weight": 1,
+              "speed": 1,
+              "cooldown": 2,
+              "loop": false,
+              "available": true
+            }
+          ]
+        }
+      ]
+    },
+    "objects": [
+      {
+        "id": "6395fdba3fd448818e0db9cb72b74470",
+        "name": "Block",
+        "kind": "Block",
+        "objectRevision": 3,
+        "position": {
+          "x": 0.5199999809265137,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1,
+        "color": {
+          "r": 0.45098039507865906,
+          "g": 0.32549020648002625,
+          "b": 0.30588236451148987,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "97482e27f08b4fcca0a0ca7691c04771",
+        "name": "Cylinder",
+        "kind": "Cylinder",
+        "objectRevision": 5,
+        "position": {
+          "x": 0.8600000143051147,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1,
+        "color": {
+          "r": 0.16862745583057404,
+          "g": 0.5529412031173706,
+          "b": 0.5333333611488342,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "a454a7680201495185792eec7eb0d376",
+        "name": "Ball",
+        "kind": "Ball",
+        "objectRevision": 4,
+        "position": {
+          "x": 0.6899999976158142,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1,
+        "color": {
+          "r": 0.7647058963775635,
+          "g": 0.6000000238418579,
+          "b": 0.3137255012989044,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "b4ace2c0a2024b0cbbc681510f49e117",
+        "name": "Pencil",
+        "kind": "Assembly",
+        "objectRevision": 53,
+        "position": {
+          "x": 0.4000000059604645,
+          "y": 1,
+          "z": 0.6000000238418579
+        },
+        "scale": 1,
+        "color": {
+          "r": 1,
+          "g": 1,
+          "b": 1,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "solid",
+          "shape": "automatic",
+          "mass": 0.05999999865889549
+        },
+        "movement": null
+      },
+      {
+        "id": "book",
+        "name": "Book",
+        "kind": "Book",
+        "objectRevision": 1,
+        "position": {
+          "x": 0,
+          "y": 1.159999966621399,
+          "z": 0.6499999761581421
+        },
+        "scale": 1,
+        "color": {
+          "r": 1,
+          "g": 1,
+          "b": 1,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "maestro",
+        "name": "Maestro",
+        "kind": "Maestro",
+        "objectRevision": 2,
+        "position": {
+          "x": -0.7799999713897705,
+          "y": 0,
+          "z": 1.399999976158142
+        },
+        "scale": 1,
+        "color": {
+          "r": 1,
+          "g": 1,
+          "b": 1,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": {
+          "distance": 1.3,
+          "speed": 0.65
+        }
+      }
+    ],
+    "created": [],
+    "capture": {
+      "captureId": "30cd4ed53b3b476d9f092b596d56fe4a",
+      "sha256": "852cbebf2a4ec97b57803a674051a85b1ab82710377fc801e2406c67f608b993",
+      "mimeType": "image/jpeg",
+      "width": 512,
+      "height": 384,
+      "capturedAt": "2026-10-04T06:07:37.2155527Z",
+      "sceneRevision": 3,
+      "verticalFov": 60,
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 1
+      }
+    },
+    "catalog": {
+      "operation": "inspect",
+      "capability": "object.drawingTip",
+      "version": 1,
+      "definition": {
+        "id": "object.drawingTip",
+        "version": 1,
+        "type": {
+          "record": {
+            "revision": "number",
+            "configured": "boolean",
+            "definition": {
+              "record": {
+                "part": "text",
+                "position": {
+                  "record": {
+                    "x": "number",
+                    "y": "number",
+                    "z": "number"
+                  }
+                },
+                "rotation": {
+                  "record": {
+                    "x": "number",
+                    "y": "number",
+                    "z": "number",
+                    "w": "number"
+                  }
+                },
+                "color": {
+                  "record": {
+                    "r": "number",
+                    "g": "number",
+                    "b": "number",
+                    "a": "number"
+                  }
+                },
+                "radius": "number",
+                "enabled": "boolean",
+                "mode": "text"
+              }
+            }
+          }
+        },
+        "label": "Object drawing tip",
+        "description": "Saved tip configuration and current object revision. configured=false returns inert default fields for editing; it does not add a component. Reads do not draw. Use object.drawing.capture for the shared active/retained capture.",
+        "input": {
+          "type": "object",
+          "properties": {
+            "target": {
+              "type": "string",
+              "pattern": "^[a-fA-F0-9]{32}$",
+              "maxLength": 32,
+              "x-resource": "object"
+            }
+          },
+          "required": [
+            "target"
+          ],
+          "additionalProperties": false
+        },
+        "example": {
+          "target": "00000000000000000000000000000000"
+        },
+        "features": [
+          "factQueries.v1",
+          "drawingTips.v1"
+        ]
+      },
+      "status": "Current fact value. Reading does not change the room.",
+      "category": "facts",
+      "arguments": {
+        "target": "b4ace2c0a2024b0cbbc681510f49e117"
+      },
+      "available": true,
+      "value": {
+        "revision": 53,
+        "configured": true,
+        "definition": {
+          "part": "",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0.0925000011920929
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "color": {
+            "r": 0.11999999731779099,
+            "g": 0.12999999523162842,
+            "b": 0.1899999976158142,
+            "a": 1
+          },
+          "radius": 0.0020000000949949026,
+          "enabled": true,
+          "mode": "draw"
+        }
+      }
+    },
+    "execution": {
+      "selected": {
+        "id": "d66df6488e964d4e9e465920892fe796",
+        "capability": "object.drawingTip.edit",
+        "version": 1,
+        "resources": [
+          "b4ace2c0a2024b0cbbc681510f49e117"
+        ],
+        "phase": "completed",
+        "status": "Action completed",
+        "call": {
+          "id": "object.drawingTip.edit",
+          "version": 1,
+          "arguments": {
+            "operation": "configure",
+            "target": "b4ace2c0a2024b0cbbc681510f49e117",
+            "revision": 51,
+            "definition": {
+              "part": "",
+              "position": {
+                "x": 0,
+                "y": 0,
+                "z": 0.0925000011920929
+              },
+              "rotation": {
+                "x": 0,
+                "y": 0,
+                "z": 0,
+                "w": 1
+              },
+              "color": {
+                "r": 0.11999999731779099,
+                "g": 0.12999999523162842,
+                "b": 0.1899999976158142,
+                "a": 1
+              },
+              "radius": 0.0020000000949949026,
+              "enabled": true,
+              "mode": "erase"
+            }
+          }
+        }
+      },
+      "running": [],
+      "outcomes": [
+        {
+          "id": "e3095f70b3ef40f8b5bbf41ded516ac8",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "470224b5d7804039b54d7e4ffbb386a1"
+          }
+        },
+        {
+          "id": "ca571c6ddc0c452ba336c65901245797",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "f1a0ae20bd7f4cc29395044ef63ae811"
+          }
+        },
+        {
+          "id": "f5c13a7ae98c4750a149982897d1a023",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "a41eebcb796544adae6d3985142033a1"
+          }
+        },
+        {
+          "id": "2224086730974e17819a7fe086016b5f",
+          "capability": "drawing.tool.set",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed"
+        },
+        {
+          "id": "38bffb3159bb4f3ba2b578629d3598d9",
+          "capability": "object.surface.edit",
+          "version": 1,
+          "resources": [
+            "a41eebcb796544adae6d3985142033a1"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "target": "a41eebcb796544adae6d3985142033a1",
+            "revision": 35,
+            "surface": "Front",
+            "stroke": "7f99022c15824ea7b61ec542724e0029"
+          }
+        },
+        {
+          "id": "6da1904adaf14d24a698a5b29035f019",
+          "capability": "object.surface.edit",
+          "version": 1,
+          "resources": [
+            "a41eebcb796544adae6d3985142033a1"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "target": "a41eebcb796544adae6d3985142033a1",
+            "revision": 36,
+            "surface": "Front",
+            "stroke": "7f99022c15824ea7b61ec542724e0029"
+          }
+        },
+        {
+          "id": "2fd5508daed944dd9d396919aba7739d",
+          "capability": "drawing.tool.set",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed"
+        },
+        {
+          "id": "6718c49eedb047a88948a461b0dc2098",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "dd6deeb4830b4ffd8ccbbd2f52911258"
+          }
+        },
+        {
+          "id": "6b66a6ec6e69450088a3294da6200336",
+          "capability": "object.surface.edit",
+          "version": 1,
+          "resources": [
+            "dd6deeb4830b4ffd8ccbbd2f52911258"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "target": "dd6deeb4830b4ffd8ccbbd2f52911258",
+            "revision": 40,
+            "surface": "Front",
+            "stroke": ""
+          }
+        },
+        {
+          "id": "e90f59516fd3491787f5f1c08725d796",
+          "capability": "object.surface.edit",
+          "version": 1,
+          "resources": [
+            "dd6deeb4830b4ffd8ccbbd2f52911258"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "target": "dd6deeb4830b4ffd8ccbbd2f52911258",
+            "revision": 41,
+            "surface": "Front",
+            "stroke": "237d1b1a7b5048419d962166e6ba3e33"
+          }
+        },
+        {
+          "id": "a69f8a2dcec54339a09f5c5ae33fe413",
+          "capability": "object.surface.edit",
+          "version": 1,
+          "resources": [
+            "dd6deeb4830b4ffd8ccbbd2f52911258"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "target": "dd6deeb4830b4ffd8ccbbd2f52911258",
+            "revision": 42,
+            "surface": "Front",
+            "stroke": "fda5b64e5e124df8bb36a7e6640ec394"
+          }
+        },
+        {
+          "id": "a48671770a854e058b40b645e220993b",
+          "capability": "object.surface.edit",
+          "version": 1,
+          "resources": [
+            "dd6deeb4830b4ffd8ccbbd2f52911258"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "target": "dd6deeb4830b4ffd8ccbbd2f52911258",
+            "revision": 43,
+            "surface": "Front",
+            "stroke": ""
+          }
+        },
+        {
+          "id": "1c9c989710454e86aa0163028f26b394",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "6c44d54c1c5c4e19b021336f9a086825"
+          }
+        },
+        {
+          "id": "1d60d00aad284521bcc993d56ba316ed",
+          "capability": "object.drawingTip.edit",
+          "version": 1,
+          "resources": [
+            "6c44d54c1c5c4e19b021336f9a086825"
+          ],
+          "phase": "completed",
+          "status": "Action completed"
+        },
+        {
+          "id": "a4d7164069c94b738d9a5f236a8e828c",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "b4ace2c0a2024b0cbbc681510f49e117"
+          }
+        },
+        {
+          "id": "d66df6488e964d4e9e465920892fe796",
+          "capability": "object.drawingTip.edit",
+          "version": 1,
+          "resources": [
+            "b4ace2c0a2024b0cbbc681510f49e117"
+          ],
+          "phase": "completed",
+          "status": "Action completed"
+        }
+      ],
+      "nextRunId": "cec3502f4deb4c53a9131133a87e40f0",
+      "storageError": null,
+      "recovery": null,
+      "workspace": {
+        "selected": null,
+        "running": [],
+        "outcomes": [],
+        "nextRunId": "53a8d0b0fa7e43d6991e6240fe7f58b3",
+        "storageError": null,
+        "recovery": null
+      }
+    }
+  }
+}

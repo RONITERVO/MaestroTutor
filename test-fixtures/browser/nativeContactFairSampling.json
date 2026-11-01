@@ -1,0 +1,122 @@
+{
+  "competitors": 12,
+  "trace": [
+    {
+      "schedule": {
+        "step": 160,
+        "executions": 12,
+        "executionLimit": 32,
+        "queued": 1,
+        "queueLimit": 64,
+        "units": 524160,
+        "unitLimit": 524288
+      },
+      "flowStep": 160,
+      "physicsStep": 160,
+      "budget": {
+        "reservations": 13,
+        "units": 524160,
+        "reservationLimit": 64,
+        "unitLimit": 524288,
+        "samplesPerBody": 64,
+        "collidersPerBody": 64,
+        "avatarSamples": 6,
+        "inputSamples": 2
+      },
+      "contact": {
+        "known": false,
+        "immersed": false,
+        "bodyId": "",
+        "kind": "hand",
+        "liquid": "",
+        "depthMetres": 0.0,
+        "sampleSpeedMetresPerSecond": 0.0,
+        "surface": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "reason": "Water contacts are waiting for sampling capacity. Complete room passes take turns; missed events are never replayed."
+      },
+      "events": 0
+    },
+    {
+      "schedule": {
+        "step": 161,
+        "executions": 12,
+        "executionLimit": 32,
+        "queued": 1,
+        "queueLimit": 64,
+        "units": 524160,
+        "unitLimit": 524288
+      },
+      "flowStep": 161,
+      "physicsStep": 161,
+      "budget": {
+        "reservations": 13,
+        "units": 524160,
+        "reservationLimit": 64,
+        "unitLimit": 524288,
+        "samplesPerBody": 64,
+        "collidersPerBody": 64,
+        "avatarSamples": 6,
+        "inputSamples": 2
+      },
+      "contact": {
+        "known": false,
+        "immersed": false,
+        "bodyId": "",
+        "kind": "hand",
+        "liquid": "",
+        "depthMetres": 0.0,
+        "sampleSpeedMetresPerSecond": 0.0,
+        "surface": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "reason": "Water contacts are waiting for sampling capacity. Complete room passes take turns; missed events are never replayed."
+      },
+      "events": 0
+    },
+    {
+      "schedule": {
+        "step": 162,
+        "executions": 12,
+        "executionLimit": 32,
+        "queued": 1,
+        "queueLimit": 64,
+        "units": 524160,
+        "unitLimit": 524288
+      },
+      "flowStep": 162,
+      "physicsStep": 162,
+      "budget": {
+        "reservations": 13,
+        "units": 524160,
+        "reservationLimit": 64,
+        "unitLimit": 524288,
+        "samplesPerBody": 64,
+        "collidersPerBody": 64,
+        "avatarSamples": 6,
+        "inputSamples": 2
+      },
+      "contact": {
+        "known": true,
+        "immersed": true,
+        "bodyId": "f170465d16cc45b9ae1e373875894050",
+        "kind": "hand",
+        "liquid": "Water",
+        "depthMetres": 0.200000048,
+        "sampleSpeedMetresPerSecond": 0.0,
+        "surface": {
+          "x": 4.0,
+          "y": 1.6,
+          "z": 0.0
+        },
+        "reason": ""
+      },
+      "events": 0
+    }
+  ]
+}

@@ -1,0 +1,564 @@
+{
+  "version": 3,
+  "dataVersion": 1,
+  "moduleVersion": 1,
+  "imports": [
+    {
+      "alias": "leverKit",
+      "hash": "26693f5460acb81b524a441341bc58bc54d93aab8d3c75fdf5fa656d6942dd9b",
+      "module": {
+        "version": 1,
+        "name": "Spring lever",
+        "exports": [
+          "create"
+        ],
+        "program": {
+          "version": 3,
+          "dataVersion": 1,
+          "entry": "main",
+          "resources": [],
+          "state": [],
+          "events": [],
+          "functions": [
+            {
+              "name": "main",
+              "returns": "void",
+              "parameters": [],
+              "locals": [],
+              "body": []
+            },
+            {
+              "name": "create",
+              "returns": {
+                "list": "text"
+              },
+              "parameters": [
+                {
+                  "name": "position",
+                  "type": {
+                    "record": {
+                      "x": "number",
+                      "y": "number",
+                      "z": "number"
+                    }
+                  }
+                },
+                {
+                  "name": "rotation",
+                  "type": {
+                    "record": {
+                      "x": "number",
+                      "y": "number",
+                      "z": "number",
+                      "w": "number"
+                    }
+                  }
+                },
+                {
+                  "name": "scale",
+                  "type": "number"
+                }
+              ],
+              "locals": [
+                {
+                  "name": "pieces",
+                  "type": {
+                    "list": "text"
+                  },
+                  "initial": []
+                }
+              ],
+              "body": [
+                {
+                  "id": "build",
+                  "op": "invoke",
+                  "capability": "object.batch.create",
+                  "version": 1,
+                  "arguments": {
+                    "blueprint": {
+                      "version": 3,
+                      "pieces": [
+                        {
+                          "slot": "mount",
+                          "name": "Lever mount",
+                          "position": {
+                            "x": 0,
+                            "y": 0,
+                            "z": 0
+                          },
+                          "rotation": {
+                            "x": 0,
+                            "y": 0,
+                            "z": 0,
+                            "w": 1
+                          },
+                          "scale": 1,
+                          "source": {
+                            "kind": "recipe",
+                            "recipe": {
+                              "version": 1,
+                              "parts": [
+                                {
+                                  "id": "Base",
+                                  "parent": null,
+                                  "shape": "box",
+                                  "position": {
+                                    "x": 0,
+                                    "y": -0.105,
+                                    "z": 0
+                                  },
+                                  "size": {
+                                    "x": 0.25,
+                                    "y": 0.035,
+                                    "z": 0.19
+                                  },
+                                  "rotation": {
+                                    "x": 0,
+                                    "y": 0,
+                                    "z": 0,
+                                    "w": 1
+                                  },
+                                  "color": {
+                                    "r": 0.7,
+                                    "g": 0.49,
+                                    "b": 0.27,
+                                    "a": 1
+                                  }
+                                },
+                                {
+                                  "id": "LeftSupport",
+                                  "parent": null,
+                                  "shape": "box",
+                                  "position": {
+                                    "x": -0.08,
+                                    "y": -0.045,
+                                    "z": 0
+                                  },
+                                  "size": {
+                                    "x": 0.035,
+                                    "y": 0.11,
+                                    "z": 0.08
+                                  },
+                                  "rotation": {
+                                    "x": 0,
+                                    "y": 0,
+                                    "z": 0,
+                                    "w": 1
+                                  },
+                                  "color": {
+                                    "r": 0.12,
+                                    "g": 0.5,
+                                    "b": 0.48,
+                                    "a": 1
+                                  }
+                                },
+                                {
+                                  "id": "RightSupport",
+                                  "parent": null,
+                                  "shape": "box",
+                                  "position": {
+                                    "x": 0.08,
+                                    "y": -0.045,
+                                    "z": 0
+                                  },
+                                  "size": {
+                                    "x": 0.035,
+                                    "y": 0.11,
+                                    "z": 0.08
+                                  },
+                                  "rotation": {
+                                    "x": 0,
+                                    "y": 0,
+                                    "z": 0,
+                                    "w": 1
+                                  },
+                                  "color": {
+                                    "r": 0.12,
+                                    "g": 0.5,
+                                    "b": 0.48,
+                                    "a": 1
+                                  }
+                                },
+                                {
+                                  "id": "Axle",
+                                  "parent": null,
+                                  "shape": "cylinder",
+                                  "position": {
+                                    "x": 0,
+                                    "y": 0,
+                                    "z": 0
+                                  },
+                                  "size": {
+                                    "x": 0.025,
+                                    "y": 0.21,
+                                    "z": 0.025
+                                  },
+                                  "rotation": {
+                                    "x": 0,
+                                    "y": 0,
+                                    "z": 0.7071067811865476,
+                                    "w": 0.7071067811865476
+                                  },
+                                  "color": {
+                                    "r": 0.2,
+                                    "g": 0.23,
+                                    "b": 0.25,
+                                    "a": 1
+                                  }
+                                }
+                              ],
+                              "tracks": [],
+                              "duration": 2,
+                              "playing": false,
+                              "loop": false
+                            },
+                            "collision": {
+                              "version": 1,
+                              "shapes": [
+                                {
+                                  "id": "Base",
+                                  "shape": "box",
+                                  "position": {
+                                    "x": 0,
+                                    "y": -0.105,
+                                    "z": 0
+                                  },
+                                  "rotation": {
+                                    "x": 0,
+                                    "y": 0,
+                                    "z": 0,
+                                    "w": 1
+                                  },
+                                  "size": {
+                                    "x": 0.25,
+                                    "y": 0.035,
+                                    "z": 0.19
+                                  }
+                                },
+                                {
+                                  "id": "LeftSupport",
+                                  "shape": "box",
+                                  "position": {
+                                    "x": -0.08,
+                                    "y": -0.045,
+                                    "z": 0
+                                  },
+                                  "rotation": {
+                                    "x": 0,
+                                    "y": 0,
+                                    "z": 0,
+                                    "w": 1
+                                  },
+                                  "size": {
+                                    "x": 0.035,
+                                    "y": 0.11,
+                                    "z": 0.08
+                                  }
+                                },
+                                {
+                                  "id": "RightSupport",
+                                  "shape": "box",
+                                  "position": {
+                                    "x": 0.08,
+                                    "y": -0.045,
+                                    "z": 0
+                                  },
+                                  "rotation": {
+                                    "x": 0,
+                                    "y": 0,
+                                    "z": 0,
+                                    "w": 1
+                                  },
+                                  "size": {
+                                    "x": 0.035,
+                                    "y": 0.11,
+                                    "z": 0.08
+                                  }
+                                }
+                              ]
+                            },
+                            "physics": {
+                              "mode": "fixed",
+                              "shape": "automatic",
+                              "mass": 1
+                            }
+                          }
+                        },
+                        {
+                          "slot": "handle",
+                          "name": "Spring lever",
+                          "position": {
+                            "x": 0,
+                            "y": 0,
+                            "z": 0
+                          },
+                          "rotation": {
+                            "x": 0,
+                            "y": 0,
+                            "z": 0,
+                            "w": 1
+                          },
+                          "scale": 1,
+                          "source": {
+                            "kind": "recipe",
+                            "recipe": {
+                              "version": 1,
+                              "parts": [
+                                {
+                                  "id": "Handle",
+                                  "parent": null,
+                                  "shape": "box",
+                                  "position": {
+                                    "x": 0,
+                                    "y": 0.075,
+                                    "z": 0
+                                  },
+                                  "size": {
+                                    "x": 0.035,
+                                    "y": 0.15,
+                                    "z": 0.035
+                                  },
+                                  "rotation": {
+                                    "x": 0,
+                                    "y": 0,
+                                    "z": 0,
+                                    "w": 1
+                                  },
+                                  "color": {
+                                    "r": 0.12,
+                                    "g": 0.5,
+                                    "b": 0.48,
+                                    "a": 1
+                                  }
+                                },
+                                {
+                                  "id": "Grip",
+                                  "parent": null,
+                                  "shape": "sphere",
+                                  "position": {
+                                    "x": 0,
+                                    "y": 0.17,
+                                    "z": 0
+                                  },
+                                  "size": {
+                                    "x": 0.075,
+                                    "y": 0.075,
+                                    "z": 0.075
+                                  },
+                                  "rotation": {
+                                    "x": 0,
+                                    "y": 0,
+                                    "z": 0,
+                                    "w": 1
+                                  },
+                                  "color": {
+                                    "r": 0.96,
+                                    "g": 0.67,
+                                    "b": 0.15,
+                                    "a": 1
+                                  }
+                                }
+                              ],
+                              "tracks": [],
+                              "duration": 2,
+                              "playing": false,
+                              "loop": false
+                            },
+                            "collision": {
+                              "version": 1,
+                              "shapes": [
+                                {
+                                  "id": "Handle",
+                                  "shape": "box",
+                                  "position": {
+                                    "x": 0,
+                                    "y": 0.075,
+                                    "z": 0
+                                  },
+                                  "rotation": {
+                                    "x": 0,
+                                    "y": 0,
+                                    "z": 0,
+                                    "w": 1
+                                  },
+                                  "size": {
+                                    "x": 0.035,
+                                    "y": 0.15,
+                                    "z": 0.035
+                                  }
+                                },
+                                {
+                                  "id": "Grip",
+                                  "shape": "sphere",
+                                  "position": {
+                                    "x": 0,
+                                    "y": 0.17,
+                                    "z": 0
+                                  },
+                                  "rotation": {
+                                    "x": 0,
+                                    "y": 0,
+                                    "z": 0,
+                                    "w": 1
+                                  },
+                                  "size": {
+                                    "x": 0.075,
+                                    "y": 0.075,
+                                    "z": 0.075
+                                  }
+                                }
+                              ]
+                            },
+                            "physics": {
+                              "mode": "solid",
+                              "shape": "automatic",
+                              "mass": 0.15
+                            }
+                          }
+                        }
+                      ],
+                      "connections": [
+                        {
+                          "owner": "handle",
+                          "connected": "mount",
+                          "definition": {
+                            "enabled": true,
+                            "ownerFrame": {
+                              "position": {
+                                "x": 0,
+                                "y": 0,
+                                "z": 0
+                              },
+                              "rotation": {
+                                "x": 0,
+                                "y": 0,
+                                "z": 0,
+                                "w": 1
+                              }
+                            },
+                            "connectedFrame": {
+                              "position": {
+                                "x": 0,
+                                "y": 0,
+                                "z": 0
+                              },
+                              "rotation": {
+                                "x": 0,
+                                "y": 0,
+                                "z": 0,
+                                "w": 1
+                              }
+                            },
+                            "limits": {
+                              "enabled": true,
+                              "minimum": -50,
+                              "maximum": 50
+                            },
+                            "drive": {
+                              "mode": "spring",
+                              "target": 0,
+                              "spring": 8,
+                              "damper": 0.8,
+                              "speed": 0,
+                              "force": 1
+                            },
+                            "kind": "hinge",
+                            "breakForce": 0,
+                            "breakTorque": 0
+                          }
+                        }
+                      ]
+                    },
+                    "position": {
+                      "x": 0.4,
+                      "y": 1,
+                      "z": 0.7
+                    },
+                    "rotation": {
+                      "x": 0,
+                      "y": 0,
+                      "z": 0,
+                      "w": 1
+                    },
+                    "scale": 1
+                  },
+                  "bindings": {
+                    "position": {
+                      "var": "position"
+                    },
+                    "rotation": {
+                      "var": "rotation"
+                    },
+                    "scale": {
+                      "var": "scale"
+                    }
+                  },
+                  "results": {
+                    "objectIds": "pieces"
+                  }
+                },
+                {
+                  "id": "created",
+                  "op": "return",
+                  "value": {
+                    "var": "pieces"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "signals": {}
+    }
+  ],
+  "entry": "main",
+  "resources": [],
+  "state": [],
+  "events": [],
+  "functions": [
+    {
+      "name": "main",
+      "returns": "void",
+      "parameters": [],
+      "locals": [
+        {
+          "name": "pieces",
+          "type": {
+            "list": "text"
+          },
+          "initial": []
+        }
+      ],
+      "body": [
+        {
+          "id": "buildLever",
+          "op": "call",
+          "module": "leverKit",
+          "function": "create",
+          "args": [
+            {
+              "value": {
+                "x": 0.4,
+                "y": 1,
+                "z": 0.7
+              }
+            },
+            {
+              "value": {
+                "x": 0,
+                "y": 0,
+                "z": 0,
+                "w": 1
+              }
+            },
+            {
+              "value": 1
+            }
+          ],
+          "result": "pieces"
+        }
+      ]
+    }
+  ]
+}

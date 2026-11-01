@@ -1,0 +1,222 @@
+{
+  "format": "maestro-creation-template",
+  "version": 1,
+  "id": "rook",
+  "name": "Rook",
+  "description": "Editable chess rook. Grip to move; Foot aligns with board squares. Game rules are optional programs.",
+  "tags": [
+    "game",
+    "chess",
+    "lathe"
+  ],
+  "author": "Roni Tervo / Maestro",
+  "license": "Apache-2.0",
+  "definition": {
+    "version": 1,
+    "recipe": {
+      "version": 1,
+      "parts": [
+        {
+          "id": "Body",
+          "shape": "lathe",
+          "position": {
+            "x": 0,
+            "y": 0.0385,
+            "z": 0
+          },
+          "size": {
+            "x": 0.052,
+            "y": 0.077,
+            "z": 0.052
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "parent": null,
+          "color": {
+            "r": 1,
+            "g": 1,
+            "b": 1,
+            "a": 1
+          },
+          "profile": [
+            {
+              "x": 0,
+              "y": -0.5
+            },
+            {
+              "x": 0.5,
+              "y": -0.5
+            },
+            {
+              "x": 0.5,
+              "y": -0.4
+            },
+            {
+              "x": 0.4,
+              "y": -0.3
+            },
+            {
+              "x": 0.28,
+              "y": -0.22
+            },
+            {
+              "x": 0.2,
+              "y": 0.28
+            },
+            {
+              "x": 0.32,
+              "y": 0.38
+            },
+            {
+              "x": 0.32,
+              "y": 0.5
+            },
+            {
+              "x": 0,
+              "y": 0.5
+            }
+          ],
+          "segments": 24
+        },
+        {
+          "id": "Crown",
+          "shape": "extrude",
+          "position": {
+            "x": 0,
+            "y": 0.082,
+            "z": 0
+          },
+          "size": {
+            "x": 0.042,
+            "y": 0.018,
+            "z": 0.028
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "parent": null,
+          "color": {
+            "r": 1,
+            "g": 1,
+            "b": 1,
+            "a": 1
+          },
+          "profile": [
+            {
+              "x": -0.5,
+              "y": -0.5
+            },
+            {
+              "x": 0.5,
+              "y": -0.5
+            },
+            {
+              "x": 0.5,
+              "y": 0.5
+            },
+            {
+              "x": 0.25,
+              "y": 0.5
+            },
+            {
+              "x": 0.25,
+              "y": 0
+            },
+            {
+              "x": 0.1,
+              "y": 0
+            },
+            {
+              "x": 0.1,
+              "y": 0.5
+            },
+            {
+              "x": -0.1,
+              "y": 0.5
+            },
+            {
+              "x": -0.1,
+              "y": 0
+            },
+            {
+              "x": -0.25,
+              "y": 0
+            },
+            {
+              "x": -0.25,
+              "y": 0.5
+            },
+            {
+              "x": -0.5,
+              "y": 0.5
+            }
+          ],
+          "segments": 0
+        }
+      ],
+      "tracks": [],
+      "duration": 2,
+      "playing": false,
+      "loop": true
+    },
+    "collision": {
+      "version": 1,
+      "shapes": [
+        {
+          "id": "Body",
+          "shape": "cylinder",
+          "position": {
+            "x": 0,
+            "y": 0.0455,
+            "z": 0
+          },
+          "size": {
+            "x": 0.052,
+            "y": 0.091,
+            "z": 0.052
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "segments": 12
+        }
+      ]
+    },
+    "physics": {
+      "mode": "solid",
+      "shape": "automatic",
+      "mass": 0.06
+    },
+    "snapPoints": [
+      {
+        "version": 1,
+        "id": "Foot",
+        "name": "Foot",
+        "family": "ChessSquare",
+        "frame": {
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        }
+      }
+    ]
+  }
+}

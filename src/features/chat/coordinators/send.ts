@@ -1,5 +1,6 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
+import type { CameraImageOrigin } from '../../../../shared/imageOrigin';
 import type { ConversationDiagnostics } from './conversationContracts';
 import { createSendRequestPreparer } from './sendRequest';
 import type { sanitizeHistoryWithVerifiedUris as sanitizeHistory } from '../../../api/gemini/files';
@@ -79,7 +80,7 @@ export function createSendCoordinator(ports: SendCoordinatorPorts) {
     passedImageBase64?: string,
     passedImageMimeType?: string,
     messageType: 'user' | 'conversational-reengagement' | 'image-reengagement' = 'user',
-    options?: { triggeredByStt?: boolean }
+    options?: { triggeredByStt?: boolean; imageOrigin?: CameraImageOrigin }
   ): Promise<boolean> => {
     let sendStage = 'send.enter';
     const markSendStage = (stage: string, details?: Record<string, unknown>) => {
@@ -272,6 +273,7 @@ export function createSendCoordinator(ports: SendCoordinatorPorts) {
         messageType,
         shouldGenerateUserImage,
         currentSettingsVal,
+        imageOrigin: options?.imageOrigin,
         triggeredByStt: options?.triggeredByStt === true,
       });
       markSendStage('send.createUserMessage.done', {
@@ -306,6 +308,7 @@ export function createSendCoordinator(ports: SendCoordinatorPorts) {
         });
         const { finalMessageUpdates } = await handleGeminiResponse({
           thinkingMessageId,
+          sourceUserId: messageType === 'user' ? userMessageContext.userMessageId || undefined : undefined,
           geminiPromptText,
           sanitizedDerivedHistory,
           systemInstructionForGemini,

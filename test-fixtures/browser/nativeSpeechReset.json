@@ -1,0 +1,348 @@
+{
+  "initial": {
+    "status": {
+      "version": 3,
+      "host": "757137f844b84531909352283d5ed4c5",
+      "session": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "revision": 0,
+      "status": "ready",
+      "acceptedSequence": 0,
+      "submittedSamples": 0,
+      "playedSamples": 0,
+      "inputComplete": false,
+      "rendererDrained": false,
+      "microphoneSuppressed": false
+    },
+    "voice": {
+      "generation": 2,
+      "acceptedSequence": 0,
+      "submittedSamples": 0,
+      "playedSamples": 0,
+      "sampleRate": 0,
+      "started": false,
+      "inputComplete": false,
+      "rendererDrained": false
+    },
+    "geometry": 1,
+    "ready": true,
+    "audio": {
+      "count": 0,
+      "events": []
+    }
+  },
+  "beforeReset": {
+    "status": {
+      "version": 3,
+      "host": "757137f844b84531909352283d5ed4c5",
+      "session": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "revision": 1,
+      "status": "playing",
+      "acceptedSequence": 4,
+      "submittedSamples": 19200,
+      "playedSamples": 2751,
+      "inputComplete": false,
+      "rendererDrained": false,
+      "microphoneSuppressed": false
+    },
+    "voice": {
+      "generation": 4,
+      "acceptedSequence": 4,
+      "submittedSamples": 19200,
+      "playedSamples": 2751,
+      "sampleRate": 24000,
+      "started": true,
+      "inputComplete": false,
+      "rendererDrained": false
+    },
+    "geometry": 1,
+    "ready": true,
+    "audio": {
+      "count": 0,
+      "events": []
+    }
+  },
+  "afterReset": {
+    "status": {
+      "version": 3,
+      "host": "757137f844b84531909352283d5ed4c5",
+      "session": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "revision": 1,
+      "status": "failed",
+      "acceptedSequence": 0,
+      "submittedSamples": 0,
+      "playedSamples": 0,
+      "inputComplete": false,
+      "rendererDrained": false,
+      "microphoneSuppressed": true
+    },
+    "voice": {
+      "generation": 6,
+      "acceptedSequence": 0,
+      "submittedSamples": 0,
+      "playedSamples": 0,
+      "sampleRate": 24000,
+      "started": false,
+      "inputComplete": false,
+      "rendererDrained": false
+    },
+    "geometry": 0,
+    "ready": true,
+    "audio": {
+      "count": 1,
+      "events": [
+        {
+          "ordinal": 1,
+          "deviceChanged": false,
+          "realtime": 7.439896906349208,
+          "dsp": 22.421333333333333,
+          "sampleRate": 48000,
+          "buffer": 1024
+        }
+      ]
+    }
+  },
+  "lateRequest": {
+    "status": {
+      "version": 3,
+      "host": "757137f844b84531909352283d5ed4c5",
+      "session": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "revision": 1,
+      "status": "failed",
+      "acceptedSequence": 0,
+      "submittedSamples": 0,
+      "playedSamples": 0,
+      "inputComplete": false,
+      "rendererDrained": false,
+      "microphoneSuppressed": true
+    },
+    "voice": {
+      "generation": 6,
+      "acceptedSequence": 0,
+      "submittedSamples": 0,
+      "playedSamples": 0,
+      "sampleRate": 24000,
+      "started": false,
+      "inputComplete": false,
+      "rendererDrained": false
+    },
+    "geometry": 0,
+    "ready": true,
+    "audio": {
+      "count": 1,
+      "events": [
+        {
+          "ordinal": 1,
+          "deviceChanged": false,
+          "realtime": 7.439896906349208,
+          "dsp": 22.421333333333333,
+          "sampleRate": 48000,
+          "buffer": 1024
+        }
+      ]
+    }
+  },
+  "closed": {
+    "status": {
+      "version": 3,
+      "host": "757137f844b84531909352283d5ed4c5",
+      "session": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "revision": 3,
+      "status": "ready",
+      "acceptedSequence": 0,
+      "submittedSamples": 0,
+      "playedSamples": 0,
+      "inputComplete": false,
+      "rendererDrained": false,
+      "microphoneSuppressed": false
+    },
+    "voice": {
+      "generation": 7,
+      "acceptedSequence": 0,
+      "submittedSamples": 0,
+      "playedSamples": 0,
+      "sampleRate": 24000,
+      "started": false,
+      "inputComplete": false,
+      "rendererDrained": false
+    },
+    "geometry": 1,
+    "ready": true,
+    "audio": {
+      "count": 1,
+      "events": [
+        {
+          "ordinal": 1,
+          "deviceChanged": false,
+          "realtime": 7.439896906349208,
+          "dsp": 22.421333333333333,
+          "sampleRate": 48000,
+          "buffer": 1024
+        }
+      ]
+    }
+  },
+  "recoveredAccepted": {
+    "status": {
+      "version": 3,
+      "host": "757137f844b84531909352283d5ed4c5",
+      "session": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "revision": 4,
+      "status": "playing",
+      "acceptedSequence": 4,
+      "submittedSamples": 19200,
+      "playedSamples": 0,
+      "inputComplete": false,
+      "rendererDrained": false,
+      "microphoneSuppressed": false
+    },
+    "voice": {
+      "generation": 9,
+      "acceptedSequence": 4,
+      "submittedSamples": 19200,
+      "playedSamples": 0,
+      "sampleRate": 24000,
+      "started": false,
+      "inputComplete": false,
+      "rendererDrained": false
+    },
+    "geometry": 1,
+    "ready": true,
+    "audio": {
+      "count": 1,
+      "events": [
+        {
+          "ordinal": 1,
+          "deviceChanged": false,
+          "realtime": 7.439896906349208,
+          "dsp": 22.421333333333333,
+          "sampleRate": 48000,
+          "buffer": 1024
+        }
+      ]
+    }
+  },
+  "recoveredDrained": {
+    "status": {
+      "version": 3,
+      "host": "757137f844b84531909352283d5ed4c5",
+      "session": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "revision": 4,
+      "status": "playing",
+      "acceptedSequence": 4,
+      "submittedSamples": 19200,
+      "playedSamples": 19200,
+      "inputComplete": true,
+      "rendererDrained": true,
+      "microphoneSuppressed": false
+    },
+    "voice": {
+      "generation": 9,
+      "acceptedSequence": 4,
+      "submittedSamples": 19200,
+      "playedSamples": 19200,
+      "sampleRate": 24000,
+      "started": true,
+      "inputComplete": true,
+      "rendererDrained": true
+    },
+    "geometry": 1,
+    "ready": true,
+    "audio": {
+      "count": 1,
+      "events": [
+        {
+          "ordinal": 1,
+          "deviceChanged": false,
+          "realtime": 7.439896906349208,
+          "dsp": 22.421333333333333,
+          "sampleRate": 48000,
+          "buffer": 1024
+        }
+      ]
+    }
+  },
+  "clearAccepted": {
+    "status": {
+      "version": 3,
+      "host": "757137f844b84531909352283d5ed4c5",
+      "session": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "revision": 7,
+      "status": "playing",
+      "acceptedSequence": 4,
+      "submittedSamples": 19200,
+      "playedSamples": 0,
+      "inputComplete": false,
+      "rendererDrained": false,
+      "microphoneSuppressed": false
+    },
+    "voice": {
+      "generation": 11,
+      "acceptedSequence": 4,
+      "submittedSamples": 19200,
+      "playedSamples": 0,
+      "sampleRate": 24000,
+      "started": false,
+      "inputComplete": false,
+      "rendererDrained": false
+    },
+    "geometry": 0,
+    "ready": true,
+    "audio": {
+      "count": 1,
+      "events": [
+        {
+          "ordinal": 1,
+          "deviceChanged": false,
+          "realtime": 7.439896906349208,
+          "dsp": 22.421333333333333,
+          "sampleRate": 48000,
+          "buffer": 1024
+        }
+      ]
+    }
+  },
+  "clearDrained": {
+    "status": {
+      "version": 3,
+      "host": "757137f844b84531909352283d5ed4c5",
+      "session": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "revision": 7,
+      "status": "playing",
+      "acceptedSequence": 4,
+      "submittedSamples": 19200,
+      "playedSamples": 19200,
+      "inputComplete": true,
+      "rendererDrained": true,
+      "microphoneSuppressed": false
+    },
+    "voice": {
+      "generation": 11,
+      "acceptedSequence": 4,
+      "submittedSamples": 19200,
+      "playedSamples": 19200,
+      "sampleRate": 24000,
+      "started": true,
+      "inputComplete": true,
+      "rendererDrained": true
+    },
+    "geometry": 0,
+    "ready": true,
+    "audio": {
+      "count": 1,
+      "events": [
+        {
+          "ordinal": 1,
+          "deviceChanged": false,
+          "realtime": 7.439896906349208,
+          "dsp": 22.421333333333333,
+          "sampleRate": 48000,
+          "buffer": 1024
+        }
+      ]
+    }
+  },
+  "energy": {
+    "retained": 0.44277225703699685,
+    "clear": 2.2489475376272625
+  }
+}

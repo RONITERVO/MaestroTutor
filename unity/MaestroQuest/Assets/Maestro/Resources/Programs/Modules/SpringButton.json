@@ -1,0 +1,479 @@
+{
+  "version": 1,
+  "name": "Spring button",
+  "exports": [
+    "create",
+    "waitForTravel"
+  ],
+  "program": {
+    "version": 3,
+    "dataVersion": 1,
+    "entry": "main",
+    "resources": [],
+    "state": [],
+    "events": [],
+    "functions": [
+      {
+        "name": "main",
+        "returns": "void",
+        "parameters": [],
+        "locals": [],
+        "body": []
+      },
+      {
+        "name": "create",
+        "returns": {
+          "list": "text"
+        },
+        "parameters": [
+          {
+            "name": "position",
+            "type": {
+              "record": {
+                "x": "number",
+                "y": "number",
+                "z": "number"
+              }
+            }
+          },
+          {
+            "name": "rotation",
+            "type": {
+              "record": {
+                "x": "number",
+                "y": "number",
+                "z": "number",
+                "w": "number"
+              }
+            }
+          },
+          {
+            "name": "scale",
+            "type": "number"
+          }
+        ],
+        "locals": [
+          {
+            "name": "pieces",
+            "type": {
+              "list": "text"
+            },
+            "initial": []
+          }
+        ],
+        "body": [
+          {
+            "id": "build",
+            "op": "invoke",
+            "capability": "object.batch.create",
+            "version": 1,
+            "arguments": {
+              "blueprint": {
+                "version": 3,
+                "pieces": [
+                  {
+                    "slot": "mount",
+                    "name": "Button mount",
+                    "position": {
+                      "x": 0,
+                      "y": 0,
+                      "z": 0
+                    },
+                    "rotation": {
+                      "x": 0,
+                      "y": 0,
+                      "z": 0,
+                      "w": 1
+                    },
+                    "scale": 1,
+                    "source": {
+                      "kind": "recipe",
+                      "recipe": {
+                        "version": 1,
+                        "parts": [
+                          {
+                            "id": "Body",
+                            "parent": null,
+                            "shape": "cylinder",
+                            "position": {
+                              "x": 0,
+                              "y": 0,
+                              "z": 0
+                            },
+                            "size": {
+                              "x": 0.15,
+                              "y": 0.045,
+                              "z": 0.15
+                            },
+                            "rotation": {
+                              "x": 0,
+                              "y": 0,
+                              "z": 0,
+                              "w": 1
+                            },
+                            "color": {
+                              "r": 0.18,
+                              "g": 0.3,
+                              "b": 0.34,
+                              "a": 1
+                            }
+                          }
+                        ],
+                        "tracks": [],
+                        "duration": 2,
+                        "playing": false,
+                        "loop": false
+                      },
+                      "collision": {
+                        "version": 1,
+                        "shapes": [
+                          {
+                            "id": "Body",
+                            "shape": "box",
+                            "position": {
+                              "x": 0,
+                              "y": 0,
+                              "z": 0
+                            },
+                            "size": {
+                              "x": 0.15,
+                              "y": 0.045,
+                              "z": 0.15
+                            },
+                            "rotation": {
+                              "x": 0,
+                              "y": 0,
+                              "z": 0,
+                              "w": 1
+                            }
+                          }
+                        ]
+                      },
+                      "physics": {
+                        "mode": "fixed",
+                        "shape": "automatic",
+                        "mass": 1
+                      }
+                    }
+                  },
+                  {
+                    "slot": "cap",
+                    "name": "Spring button",
+                    "position": {
+                      "x": 0,
+                      "y": 0.07,
+                      "z": 0
+                    },
+                    "rotation": {
+                      "x": 0,
+                      "y": 0,
+                      "z": 0,
+                      "w": 1
+                    },
+                    "scale": 1,
+                    "source": {
+                      "kind": "recipe",
+                      "recipe": {
+                        "version": 1,
+                        "parts": [
+                          {
+                            "id": "Body",
+                            "parent": null,
+                            "shape": "cylinder",
+                            "position": {
+                              "x": 0,
+                              "y": 0,
+                              "z": 0
+                            },
+                            "size": {
+                              "x": 0.12,
+                              "y": 0.03,
+                              "z": 0.12
+                            },
+                            "rotation": {
+                              "x": 0,
+                              "y": 0,
+                              "z": 0,
+                              "w": 1
+                            },
+                            "color": {
+                              "r": 0.12,
+                              "g": 0.65,
+                              "b": 0.58,
+                              "a": 1
+                            }
+                          }
+                        ],
+                        "tracks": [],
+                        "duration": 2,
+                        "playing": false,
+                        "loop": false
+                      },
+                      "collision": {
+                        "version": 1,
+                        "shapes": [
+                          {
+                            "id": "Body",
+                            "shape": "box",
+                            "position": {
+                              "x": 0,
+                              "y": 0,
+                              "z": 0
+                            },
+                            "size": {
+                              "x": 0.12,
+                              "y": 0.03,
+                              "z": 0.12
+                            },
+                            "rotation": {
+                              "x": 0,
+                              "y": 0,
+                              "z": 0,
+                              "w": 1
+                            }
+                          }
+                        ]
+                      },
+                      "physics": {
+                        "mode": "solid",
+                        "shape": "automatic",
+                        "mass": 0.05
+                      }
+                    }
+                  }
+                ],
+                "connections": [
+                  {
+                    "owner": "cap",
+                    "connected": "mount",
+                    "definition": {
+                      "enabled": true,
+                      "ownerFrame": {
+                        "position": {
+                          "x": 0,
+                          "y": 0,
+                          "z": 0
+                        },
+                        "rotation": {
+                          "x": 0,
+                          "y": 0,
+                          "z": -0.7071067811865476,
+                          "w": 0.7071067811865476
+                        }
+                      },
+                      "connectedFrame": {
+                        "position": {
+                          "x": 0,
+                          "y": 0.07,
+                          "z": 0
+                        },
+                        "rotation": {
+                          "x": 0,
+                          "y": 0,
+                          "z": -0.7071067811865476,
+                          "w": 0.7071067811865476
+                        }
+                      },
+                      "kind": "slider",
+                      "breakForce": 0,
+                      "breakTorque": 0,
+                      "slide": {
+                        "minimum": 0,
+                        "maximum": 0.035,
+                        "mode": "spring",
+                        "target": 0,
+                        "spring": 250,
+                        "damper": 3,
+                        "speed": 0,
+                        "force": 20
+                      }
+                    }
+                  }
+                ]
+              },
+              "position": {
+                "x": 0.4,
+                "y": 1,
+                "z": 0.7
+              },
+              "rotation": {
+                "x": 0,
+                "y": 0,
+                "z": 0,
+                "w": 1
+              },
+              "scale": 1
+            },
+            "bindings": {
+              "position": {
+                "var": "position"
+              },
+              "rotation": {
+                "var": "rotation"
+              },
+              "scale": {
+                "var": "scale"
+              }
+            },
+            "results": {
+              "objectIds": "pieces"
+            }
+          },
+          {
+            "id": "created",
+            "op": "return",
+            "value": {
+              "var": "pieces"
+            }
+          }
+        ]
+      },
+      {
+        "name": "waitForTravel",
+        "returns": "boolean",
+        "parameters": [
+          {
+            "name": "target",
+            "type": "text"
+          },
+          {
+            "name": "threshold",
+            "type": "number"
+          },
+          {
+            "name": "above",
+            "type": "boolean"
+          },
+          {
+            "name": "timeout",
+            "type": "number"
+          }
+        ],
+        "locals": [
+          {
+            "name": "received",
+            "initial": false
+          },
+          {
+            "name": "matched",
+            "initial": false
+          }
+        ],
+        "body": [
+          {
+            "id": "wait",
+            "op": "awaitCondition",
+            "test": {
+              "op": "and",
+              "args": [
+                {
+                  "op": "field",
+                  "args": [
+                    {
+                      "fact": "object.connection.state",
+                      "version": 1,
+                      "arguments": {
+                        "target": "00000000000000000000000000000000"
+                      },
+                      "bindings": {
+                        "target": {
+                          "var": "target"
+                        }
+                      }
+                    },
+                    {
+                      "value": "active"
+                    }
+                  ]
+                },
+                {
+                  "op": "or",
+                  "args": [
+                    {
+                      "op": "and",
+                      "args": [
+                        {
+                          "var": "above"
+                        },
+                        {
+                          "op": "ge",
+                          "args": [
+                            {
+                              "fact": "object.connection.travel",
+                              "version": 1,
+                              "arguments": {
+                                "target": "00000000000000000000000000000000"
+                              },
+                              "bindings": {
+                                "target": {
+                                  "var": "target"
+                                }
+                              }
+                            },
+                            {
+                              "var": "threshold"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "op": "and",
+                      "args": [
+                        {
+                          "op": "not",
+                          "args": [
+                            {
+                              "var": "above"
+                            }
+                          ]
+                        },
+                        {
+                          "op": "le",
+                          "args": [
+                            {
+                              "fact": "object.connection.travel",
+                              "version": 1,
+                              "arguments": {
+                                "target": "00000000000000000000000000000000"
+                              },
+                              "bindings": {
+                                "target": {
+                                  "var": "target"
+                                }
+                              }
+                            },
+                            {
+                              "var": "threshold"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "transition": "true",
+            "initial": "report",
+            "stableSeconds": {
+              "value": 0.05
+            },
+            "timeout": {
+              "var": "timeout"
+            },
+            "received": "received",
+            "value": "matched"
+          },
+          {
+            "id": "result",
+            "op": "return",
+            "value": {
+              "var": "received"
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

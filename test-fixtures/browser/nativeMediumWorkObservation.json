@@ -1,0 +1,46 @@
+{
+  "waiting": {
+    "applied": false,
+    "submergedFraction": 0.0,
+    "displacementM3": 0.0,
+    "buoyancyNewtons": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0
+    },
+    "reason": "Physics is waiting for work capacity. Complete groups take turns; saved objects and valid motion are preserved."
+  },
+  "refused": {
+    "applied": false,
+    "submergedFraction": 0.0,
+    "displacementM3": 0.0,
+    "buoyancyNewtons": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0
+    },
+    "reason": "The complete physics/liquid group exceeds work capacity; simplify shapes or containers. Saved objects are unchanged."
+  },
+  "resumed": {
+    "applied": true,
+    "submergedFraction": 1.0,
+    "displacementM3": 0.000274624967,
+    "buoyancyNewtons": {
+      "x": 0.0,
+      "y": 2.694072,
+      "z": 0.0
+    },
+    "reason": ""
+  },
+  "paused": {
+    "applied": false,
+    "submergedFraction": 0.0,
+    "displacementM3": 0.000274624967,
+    "buoyancyNewtons": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0
+    },
+    "reason": "Physics or object ownership is unavailable"
+  }
+}

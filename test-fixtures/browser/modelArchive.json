@@ -1,0 +1,144 @@
+{
+  "ready": {
+    "requestId": "6fdc739092d349379def4c8200cfd5e8",
+    "version": 1,
+    "phase": "archive",
+    "count": 3,
+    "total": 3,
+    "offset": 0,
+    "focusedIndex": 0,
+    "entries": [
+      {
+        "index": 0,
+        "name": "model-0.glb",
+        "kibibytes": 4.0
+      },
+      {
+        "index": 1,
+        "name": "model-1.glb",
+        "kibibytes": 1.0
+      },
+      {
+        "index": 2,
+        "name": "model-2.glb",
+        "kibibytes": 2.0
+      }
+    ]
+  },
+  "receipt": {
+    "selected": {
+      "id": "3d64b184a339445486c32c727d272901",
+      "capability": "model.import",
+      "version": 1,
+      "resources": [],
+      "phase": "completed",
+      "status": "Action completed",
+      "output": {
+        "requestId": "6fdc739092d349379def4c8200cfd5e8",
+        "modelHash": "",
+        "destination": "",
+        "objectId": "",
+        "revision": 0,
+        "temporary": false,
+        "motionIds": []
+      },
+      "call": {
+        "id": "model.import",
+        "version": 1,
+        "arguments": {
+          "operation": "member",
+          "requestId": "6fdc739092d349379def4c8200cfd5e8",
+          "version": 3,
+          "index": 0
+        }
+      }
+    },
+    "running": [],
+    "outcomes": [
+      {
+        "id": "78fa13eabb4c49cab2067e994f5a6318",
+        "capability": "model.import",
+        "version": 1,
+        "resources": [],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "requestId": "6fdc739092d349379def4c8200cfd5e8",
+          "modelHash": "",
+          "destination": "",
+          "objectId": "",
+          "revision": 0,
+          "temporary": false,
+          "motionIds": []
+        }
+      },
+      {
+        "id": "3d64b184a339445486c32c727d272901",
+        "capability": "model.import",
+        "version": 1,
+        "resources": [],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "requestId": "6fdc739092d349379def4c8200cfd5e8",
+          "modelHash": "",
+          "destination": "",
+          "objectId": "",
+          "revision": 0,
+          "temporary": false,
+          "motionIds": []
+        }
+      }
+    ],
+    "nextRunId": "504343e5a01149f5bb178012965a73f0",
+    "storageError": null,
+    "recovery": null
+  },
+  "preview": {
+    "requestId": "6fdc739092d349379def4c8200cfd5e8",
+    "phase": "preview",
+    "error": "",
+    "preview": {
+      "modelHash": "7716642625ffe18842a6eb952b600ec8e5a821d9a0316f827214ca6c07e34356",
+      "name": "model-0.glb",
+      "kibibytes": 4.0,
+      "vertices": 3,
+      "triangles": 1,
+      "clips": 1,
+      "humanoid": true
+    },
+    "accepted": {
+      "destination": "",
+      "objectId": "",
+      "revision": 0,
+      "temporary": false,
+      "motionCount": 0
+    }
+  },
+  "archive": {
+    "requestId": "6fdc739092d349379def4c8200cfd5e8",
+    "version": 4,
+    "phase": "preview",
+    "count": 3,
+    "total": 3,
+    "offset": 0,
+    "focusedIndex": 0,
+    "entries": [
+      {
+        "index": 0,
+        "name": "model-0.glb",
+        "kibibytes": 4.0
+      },
+      {
+        "index": 1,
+        "name": "model-1.glb",
+        "kibibytes": 1.0
+      },
+      {
+        "index": 2,
+        "name": "model-2.glb",
+        "kibibytes": 2.0
+      }
+    ]
+  }
+}

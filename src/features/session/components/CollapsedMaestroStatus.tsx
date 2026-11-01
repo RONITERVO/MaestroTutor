@@ -6,6 +6,7 @@ import { TranslationReplacements } from '../../../core/i18n/index';
 import { MaestroActivityStage } from '../../../core/types';
 import { useMaestroStore } from '../../../store';
 import {
+  AGENT_TOKEN_DISPLAY,
   TOKEN_CATEGORY,
   TOKEN_SUBTYPE,
   getTokenCategory,
@@ -70,6 +71,7 @@ const STAGE_DISPLAY: Record<MaestroActivityStage, { icon: keyof typeof Icons; te
 const getTokenDisplayConfig = (token: string): TokenDisplayConfig | null => {
   if (SPEECH_GATE_TOKEN_DISPLAY[token]) return SPEECH_GATE_TOKEN_DISPLAY[token];
   const category = getTokenCategory(token);
+  if (category === TOKEN_CATEGORY.AGENT) return AGENT_TOKEN_DISPLAY;
   if (category === TOKEN_CATEGORY.LIVE) {
     return LIVE_TOKEN_DISPLAY[getTokenSubtype(token)] || LIVE_TOKEN_DISPLAY[TOKEN_SUBTYPE.SESSION];
   }
@@ -200,7 +202,8 @@ const CollapsedMaestroStatus: React.FC<CollapsedMaestroStatusProps> = ({
     );
   };
 
-  if (stage !== 'idle' && !(stage === 'listening' && hasSpeechGatePhase)) {
+  const hasAgentTask = activeFlagTokens.some(token => getTokenCategory(token) === TOKEN_CATEGORY.AGENT);
+  if (stage !== 'idle' && !(hasAgentTask && stage.startsWith('observing_')) && !(stage === 'listening' && hasSpeechGatePhase)) {
     const config = STAGE_DISPLAY[stage];
     const IconComponent = Icons[config.icon as keyof typeof Icons];
     return (

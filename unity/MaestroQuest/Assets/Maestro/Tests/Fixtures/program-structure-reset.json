@@ -1,0 +1,83 @@
+{
+  "version": 3,
+  "entry": "main",
+  "resources": [
+    "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+  ],
+  "state": [],
+  "events": [],
+  "functions": [
+    {
+      "name": "main",
+      "returns": "void",
+      "parameters": [],
+      "locals": [
+        {
+          "name": "structure",
+          "initial": ""
+        },
+        {
+          "name": "revision",
+          "initial": 0
+        }
+      ],
+      "body": [
+        {
+          "id": "capture",
+          "op": "invoke",
+          "capability": "structure.save",
+          "version": 1,
+          "arguments": {
+            "id": "",
+            "revision": 0,
+            "source": {
+              "kind": "capture",
+              "name": "Castle",
+              "positionTolerance": 0.05,
+              "rotationTolerance": 15,
+              "scaleTolerance": 0.05,
+              "members": [
+                {
+                  "slot": "left",
+                  "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+                },
+                {
+                  "slot": "right",
+                  "target": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+                }
+              ]
+            }
+          },
+          "bindings": {},
+          "results": {
+            "structureId": "structure",
+            "revision": "revision"
+          }
+        },
+        {
+          "id": "reset",
+          "op": "invoke",
+          "capability": "structure.reset",
+          "version": 1,
+          "arguments": {
+            "id": "cccccccccccccccccccccccccccccccc",
+            "revision": 1,
+            "members": [
+              "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            ]
+          },
+          "bindings": {
+            "id": {
+              "var": "structure"
+            },
+            "revision": {
+              "var": "revision"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

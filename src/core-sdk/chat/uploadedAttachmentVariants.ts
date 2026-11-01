@@ -1,8 +1,10 @@
 // Copyright 2025 Roni Tervo
 //
 // SPDX-License-Identifier: Apache-2.0
+import { isImageOrigin } from '../../../shared/imageOrigin';
 import type {
   ChatMessage,
+  ChatFilePart,
   UploadedAttachmentTarget,
   UploadedAttachmentVariant,
 } from '../../core/types';
@@ -61,6 +63,7 @@ const normalizeVariant = (variant: Partial<UploadedAttachmentVariant> | null | u
     mimeType,
     targets: normalizeTargets(variant.targets, mimeType),
     source: variant.source || 'derived',
+    ...(isImageOrigin(variant.origin) ? { origin: variant.origin } : {}),
     order,
   };
 };
@@ -127,15 +130,17 @@ export const selectPrimaryUploadedAttachmentVariant = (
 };
 
 export const selectUploadedAttachmentParts = (
-  message: Pick<ChatMessage, 'uploadedFileVariants'>,
+  message: Pick<ChatMessage, 'uploadedFileVariants' | 'imageOrigin' | 'maestroToolKind'>,
   target: UploadedAttachmentTarget
-): Array<{ fileUri: string; mimeType: string }> => {
+): ChatFilePart[] => {
   const variants = normalizeUploadedAttachmentVariants(message.uploadedFileVariants);
   const parts = variants
     .filter(variant => variant.targets.includes(target))
-    .map(variant => ({ fileUri: variant.uri, mimeType: variant.mimeType }));
+    .map(variant => ({ fileUri: variant.uri, mimeType: variant.mimeType,
+      ...(variant.mimeType.startsWith('image/') && (message.maestroToolKind === 'image' || message.imageOrigin || variant.origin) ? { origin: message.maestroToolKind === 'image' ? 'generated' as const : message.imageOrigin ?? variant.origin } : {}),
+    }));
 
-  const deduped = new Map<string, { fileUri: string; mimeType: string }>();
+  const deduped = new Map<string, ChatFilePart>();
   parts.forEach((part) => {
     const key = `${part.fileUri}::${part.mimeType}`;
     if (!deduped.has(key)) {

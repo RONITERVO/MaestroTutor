@@ -17,12 +17,16 @@
  */
 import { Capacitor } from '@capacitor/core';
 import type { FirebaseApp } from 'firebase/app';
+import type { AppCheck } from 'firebase/app-check';
+import { sessionActivity } from '../../platform/browser/sessionActivity';
+import { isNativeQuestBook } from '../../platform/quest/questIntegrityBridge';
 import type { Auth } from 'firebase/auth';
 import { MAESTRO_INTEGRATION_CONFIG, isFirebaseClientConfigured } from '../../core/config/integrations';
 import { ServiceNotConfiguredError } from '../shared/serviceErrors';
 
 let cachedFirebaseApp: FirebaseApp | null = null;
 let cachedFirebaseAuth: Auth | null = null;
+let questAppCheck: AppCheck | null = null;
 let appCheckInitializationPromise: Promise<boolean> | null = null;
 let hasInitializedAppCheck = false;
 let lastAppCheckFailure: string | null = null;
@@ -37,13 +41,21 @@ const buildFirebaseConfig = () => {
     );
   }
 
+  const questAppId = MAESTRO_INTEGRATION_CONFIG.questFirebaseAppId;
+  const appIdPattern = /^1:([0-9]+):(web|android):[a-f0-9]+$/;
+  if (isNativeQuestBook() && (!appIdPattern.test(questAppId || '')
+    || questAppId === MAESTRO_INTEGRATION_CONFIG.firebaseAppId
+    || questAppId.match(appIdPattern)?.[1] !== MAESTRO_INTEGRATION_CONFIG.firebaseAppId.match(appIdPattern)?.[1])) {
+    throw new ServiceNotConfiguredError('quest-firebase-app', 'A separate Quest Firebase app ID in the same project is required for managed access.');
+  }
+
   return {
     apiKey: MAESTRO_INTEGRATION_CONFIG.firebaseApiKey,
     authDomain: MAESTRO_INTEGRATION_CONFIG.firebaseAuthDomain,
     projectId: MAESTRO_INTEGRATION_CONFIG.firebaseProjectId,
     storageBucket: MAESTRO_INTEGRATION_CONFIG.firebaseStorageBucket || undefined,
     messagingSenderId: MAESTRO_INTEGRATION_CONFIG.firebaseMessagingSenderId || undefined,
-    appId: MAESTRO_INTEGRATION_CONFIG.firebaseAppId,
+    appId: isNativeQuestBook() ? questAppId : MAESTRO_INTEGRATION_CONFIG.firebaseAppId,
     measurementId: MAESTRO_INTEGRATION_CONFIG.firebaseMeasurementId || undefined,
   };
 };
@@ -51,7 +63,16 @@ const buildFirebaseConfig = () => {
 const getFirebaseApp = async (): Promise<FirebaseApp> => {
   if (cachedFirebaseApp) return cachedFirebaseApp;
   const { getApps, initializeApp } = await import('firebase/app');
-  cachedFirebaseApp = getApps()[0] || initializeApp(buildFirebaseConfig());
+  if (isNativeQuestBook()) {
+    const config = buildFirebaseConfig();
+    const existing = getApps().find(app => app.name === 'maestro-quest');
+    if (existing && (existing.options.appId !== config.appId || existing.options.projectId !== config.projectId)) {
+      throw new ServiceNotConfiguredError('quest-firebase-app', 'Quest Firebase configuration changed. Restart the app.');
+    }
+    cachedFirebaseApp = existing || initializeApp(config, 'maestro-quest');
+  } else {
+    cachedFirebaseApp = getApps()[0] || initializeApp(buildFirebaseConfig());
+  }
   return cachedFirebaseApp;
 };
 
@@ -61,7 +82,15 @@ const initializeOptionalAppCheck = async (): Promise<boolean> => {
 
   appCheckInitializationPromise = (async () => {
     try {
-      await getFirebaseApp();
+      const app = await getFirebaseApp();
+      if (isNativeQuestBook()) {
+        const { acquireQuestAppCheckToken, questAttestationBaseUrl } = await import('./questAppCheck');
+        const base = questAttestationBaseUrl(MAESTRO_INTEGRATION_CONFIG.questAttestationUrl);
+        const { initializeAppCheck, CustomProvider } = await import('firebase/app-check');
+        questAppCheck = initializeAppCheck(app, { provider: new CustomProvider({ getToken: () => acquireQuestAppCheckToken(base) }), isTokenAutoRefreshEnabled: true });
+        hasInitializedAppCheck = true;
+        return true;
+      }
       const { FirebaseAppCheck } = await import('@capacitor-firebase/app-check');
 
       if (isNativeAppCheckPlatform) {
@@ -115,12 +144,28 @@ export const maestroFirebaseService = {
   },
 
   getAppCheckToken: async (forceRefresh = false): Promise<string | null> => {
+    if (isNativeQuestBook() && sessionActivity.status().suspended) {
+      lastAppCheckFailure = 'Quest verification was interrupted. Reopen the book and try again.';
+      return null;
+    }
     const isReady = await initializeOptionalAppCheck();
     if (!isReady) {
       lastAppCheckFailure = lastAppCheckFailure || 'App Check is not available in this build.';
       return null;
     }
 
+    if (isNativeQuestBook()) {
+      try {
+        const { getToken } = await import('firebase/app-check');
+        if (!questAppCheck) return null;
+        const result = await getToken(questAppCheck, forceRefresh);
+        lastAppCheckFailure = result.token ? null : 'Quest verification returned an empty token.';
+        return result.token || null;
+      } catch {
+        lastAppCheckFailure = 'Quest verification failed. Check your connection and try again.';
+        return null;
+      }
+    }
     const { FirebaseAppCheck } = await import('@capacitor-firebase/app-check');
     /*
      * Play Integrity's first attestation after a cold start regularly fails

@@ -1,0 +1,78 @@
+{
+  "before": {
+    "sessionId": "f22c642f157042698a2be4fbc3994d66",
+    "phase": "unsaved",
+    "points": 2,
+    "mode": "draw",
+    "strokes": 0,
+    "temporary": false,
+    "error": "Could not save room; the previous save is retained. Check available storage and try again."
+  },
+  "call": {
+    "id": "object.drawing.resolve",
+    "version": 1,
+    "arguments": {
+      "operation": "retry",
+      "sessionId": "f22c642f157042698a2be4fbc3994d66"
+    }
+  },
+  "receipt": {
+    "selected": {
+      "id": "b211ccf5ae444eb49f4b7a0576575373",
+      "capability": "object.drawing.resolve",
+      "version": 1,
+      "resources": [],
+      "phase": "completed",
+      "status": "Action completed",
+      "output": {
+        "sessionId": "f22c642f157042698a2be4fbc3994d66",
+        "phase": "saved",
+        "objectId": "df2345bf10ec43c7b258a1c9a24507b7",
+        "points": 2,
+        "mode": "draw",
+        "strokes": 0,
+        "temporary": false
+      },
+      "call": {
+        "id": "object.drawing.resolve",
+        "version": 1,
+        "arguments": {
+          "operation": "retry",
+          "sessionId": "f22c642f157042698a2be4fbc3994d66"
+        }
+      }
+    },
+    "running": [],
+    "outcomes": [
+      {
+        "id": "b211ccf5ae444eb49f4b7a0576575373",
+        "capability": "object.drawing.resolve",
+        "version": 1,
+        "resources": [],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "sessionId": "f22c642f157042698a2be4fbc3994d66",
+          "phase": "saved",
+          "objectId": "df2345bf10ec43c7b258a1c9a24507b7",
+          "points": 2,
+          "mode": "draw",
+          "strokes": 0,
+          "temporary": false
+        }
+      }
+    ],
+    "nextRunId": "084a1b3d6867401b9c579cd3f47afcbe",
+    "storageError": null,
+    "recovery": null
+  },
+  "after": {
+    "sessionId": "28d5b38e30f541ae84f94b39f141833b",
+    "phase": "idle",
+    "points": 0,
+    "mode": "none",
+    "strokes": 0,
+    "temporary": false,
+    "error": ""
+  }
+}

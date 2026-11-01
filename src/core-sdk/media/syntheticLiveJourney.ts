@@ -1,6 +1,8 @@
 // Copyright 2025 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
+import type { CameraImageOrigin } from '../../../shared/imageOrigin';
 
+import { LiveInputContext } from './liveInputContext';
 import { SYNTHETIC_LIVE_FALLBACK_INSTRUCTION } from '../../core/config/prompts';
 
 import { Modality } from '@google/genai';
@@ -66,15 +68,17 @@ export interface SyntheticLiveJourneyInput {
   semanticSpeech?: boolean;
   timeoutMs?: number;
   includeModelAudio?: boolean;
+  /** Internal handoff snapshot of successful client sends, never raw capture. */
+  captureInputMedia?: boolean;
   /** Begin capture before Live connects, matching browser Whisper/STT ownership. */
   simulateUiSpeechHandoff?: boolean;
   /** Fail unless input capture elapsed at real microphone pace. */
   requireRealtimeInputPacing?: boolean;
   /** Pace the model's 24 kHz PCM through a real-time headless playback sink. */
   playModelAudioRealtime?: boolean;
-  videoFrames?: Array<{ dataBase64: string; mimeType?: string }>;
+  videoFrames?: Array<{ dataBase64: string; mimeType?: string; origin?: CameraImageOrigin }>;
   /** Camera frames to send once for each corresponding microphone turn. */
-  videoFramesByTurn?: Array<Array<{ dataBase64: string; mimeType?: string }>>;
+  videoFramesByTurn?: Array<Array<{ dataBase64: string; mimeType?: string; origin?: CameraImageOrigin }>>;
   thinkingMode?: 'minimal' | 'conversation';
   voiceName?: string;
 }
@@ -106,6 +110,7 @@ export const runSyntheticLiveJourney = async (
   if (simulateUiSpeechHandoff && (!gateEnabled || !semanticSpeech)) {
     throw new Error('UI speech handoff requires the semantic speech gate.');
   }
+  const handoffMedia = input.captureInputMedia ? new LiveInputContext(() => runtime.clock.now()) : null;
   const sentPackets: Int16Array[] = [];
   const modelAudioChunks: string[] = [];
   let inputTranscript = '';
@@ -382,6 +387,8 @@ export const runSyntheticLiveJourney = async (
       const inferredMimeType = /^data:([^;,]+)(?:;[^,]*)?,/i.exec(frame.dataBase64)?.[1];
       const mimeType = frame.mimeType?.trim() || inferredMimeType || 'image/jpeg';
       session.sendRealtimeInput({ video: { data, mimeType } });
+      if (mimeType === 'image/jpeg') handoffMedia?.recordFrame(data, frame.origin);
+      else handoffMedia?.invalidate('invalid');
       sentVideoFrameCount += 1;
       runtime.events.emit({
         operationId, journey: 'live', phase: 'video.input-frame',
@@ -394,9 +401,9 @@ export const runSyntheticLiveJourney = async (
     sendVideoFrames();
     sentPackets.push(pcm.slice());
     audioSentSinceLastStreamEnd = true;
-    session.sendRealtimeInput({
-      audio: { data: encodePcm16LeBase64(pcm), mimeType: `audio/pcm;rate=${INPUT_SAMPLE_RATE}` },
-    });
+    const data = encodePcm16LeBase64(pcm);
+    session.sendRealtimeInput({ audio: { data, mimeType: `audio/pcm;rate=${INPUT_SAMPLE_RATE}` } });
+    handoffMedia?.recordAudio(data);
   };
   const endAudioStream = (reason: 'gate-closed' | 'source-ended') => {
     // A gate close may already have ended the only audio turn. Sending another
@@ -637,6 +644,7 @@ export const runSyntheticLiveJourney = async (
       })}`);
     }
     const result = {
+      ...(handoffMedia ? { liveInputMedia: handoffMedia.finish() } : {}),
       operationId,
       inputTranscript: inputTranscript.trim(),
       outputTranscript: outputTranscript.trim(),
@@ -701,6 +709,7 @@ export const runSyntheticLiveJourney = async (
   } catch (error) {
     throw attachLiveFailureEvidence(error);
   } finally {
+    handoffMedia?.discard();
     await router.stop();
     packetizer.dispose();
     try { session.close(); } catch { /* already closed */ }

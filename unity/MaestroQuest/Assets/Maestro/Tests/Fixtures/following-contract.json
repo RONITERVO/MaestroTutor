@@ -1,0 +1,528 @@
+[
+  {
+    "name": "legacy_ground",
+    "arguments": {
+      "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "leader": {
+        "kind": "object",
+        "objectId": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      },
+      "distance": 0.8,
+      "speed": 1.2,
+      "seconds": 2
+    },
+    "valid": true,
+    "water": false
+  },
+  {
+    "name": "explicit_ground",
+    "arguments": {
+      "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "leader": {
+        "kind": "object",
+        "objectId": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      },
+      "distance": 0.8,
+      "speed": 1.2,
+      "seconds": 2,
+      "mode": "walk"
+    },
+    "valid": true,
+    "water": true
+  },
+  {
+    "name": "swim",
+    "arguments": {
+      "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "leader": {
+        "kind": "object",
+        "objectId": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      },
+      "distance": 0.8,
+      "speed": 1.2,
+      "seconds": 2,
+      "mode": "swim",
+      "habitat": "cccccccccccccccccccccccccccccccc",
+      "facing": "keep"
+    },
+    "valid": true,
+    "water": true
+  },
+  {
+    "name": "swim_user",
+    "arguments": {
+      "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "leader": {
+        "kind": "user"
+      },
+      "distance": 0.8,
+      "speed": 1.2,
+      "seconds": 2,
+      "mode": "swim",
+      "habitat": "cccccccccccccccccccccccccccccccc",
+      "facing": "keep"
+    },
+    "valid": true,
+    "water": true
+  },
+  {
+    "name": "swim_exact_gait",
+    "arguments": {
+      "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "leader": {
+        "kind": "object",
+        "objectId": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      },
+      "distance": 0.8,
+      "speed": 1.2,
+      "seconds": 2,
+      "mode": "swim",
+      "habitat": "cccccccccccccccccccccccccccccccc",
+      "facing": "keep",
+      "gait": {
+        "source": "library",
+        "modelHash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+        "motionId": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+        "anchorNode": 3,
+        "rate": 1.2
+      }
+    },
+    "valid": true,
+    "water": true
+  },
+  {
+    "name": "swim_missing_habitat",
+    "arguments": {
+      "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "leader": {
+        "kind": "object",
+        "objectId": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      },
+      "distance": 0.8,
+      "speed": 1.2,
+      "seconds": 2,
+      "mode": "swim",
+      "facing": "keep"
+    },
+    "valid": false,
+    "water": false
+  },
+  {
+    "name": "swim_missing_facing",
+    "arguments": {
+      "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "leader": {
+        "kind": "object",
+        "objectId": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      },
+      "distance": 0.8,
+      "speed": 1.2,
+      "seconds": 2,
+      "mode": "swim",
+      "habitat": "cccccccccccccccccccccccccccccccc"
+    },
+    "valid": false,
+    "water": false
+  },
+  {
+    "name": "swim_bad_gait",
+    "arguments": {
+      "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "leader": {
+        "kind": "object",
+        "objectId": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      },
+      "distance": 0.8,
+      "speed": 1.2,
+      "seconds": 2,
+      "mode": "swim",
+      "habitat": "cccccccccccccccccccccccccccccccc",
+      "facing": "keep",
+      "gait": {
+        "source": "library",
+        "motionId": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+      }
+    },
+    "valid": false,
+    "water": false
+  },
+  {
+    "name": "surface",
+    "arguments": {
+      "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "leader": {
+        "kind": "object",
+        "objectId": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      },
+      "distance": 0.8,
+      "speed": 1.2,
+      "seconds": 2,
+      "mode": "surface",
+      "habitat": "cccccccccccccccccccccccccccccccc",
+      "facing": "keep",
+      "immersion": 0.6
+    },
+    "valid": true,
+    "water": true
+  },
+  {
+    "name": "surface_user",
+    "arguments": {
+      "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "leader": {
+        "kind": "user"
+      },
+      "distance": 0.8,
+      "speed": 1.2,
+      "seconds": 2,
+      "mode": "surface",
+      "habitat": "cccccccccccccccccccccccccccccccc",
+      "facing": "keep",
+      "immersion": 0.6
+    },
+    "valid": true,
+    "water": true
+  },
+  {
+    "name": "surface_exact_gait",
+    "arguments": {
+      "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "leader": {
+        "kind": "object",
+        "objectId": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      },
+      "distance": 0.8,
+      "speed": 1.2,
+      "seconds": 2,
+      "mode": "surface",
+      "habitat": "cccccccccccccccccccccccccccccccc",
+      "facing": "keep",
+      "immersion": 0.6,
+      "gait": {
+        "source": "library",
+        "modelHash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+        "motionId": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+        "anchorNode": 3,
+        "rate": 1.2
+      }
+    },
+    "valid": true,
+    "water": true
+  },
+  {
+    "name": "surface_missing_habitat",
+    "arguments": {
+      "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "leader": {
+        "kind": "object",
+        "objectId": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      },
+      "distance": 0.8,
+      "speed": 1.2,
+      "seconds": 2,
+      "mode": "surface",
+      "facing": "keep",
+      "immersion": 0.6
+    },
+    "valid": false,
+    "water": false
+  },
+  {
+    "name": "surface_missing_facing",
+    "arguments": {
+      "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "leader": {
+        "kind": "object",
+        "objectId": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      },
+      "distance": 0.8,
+      "speed": 1.2,
+      "seconds": 2,
+      "mode": "surface",
+      "habitat": "cccccccccccccccccccccccccccccccc",
+      "immersion": 0.6
+    },
+    "valid": false,
+    "water": false
+  },
+  {
+    "name": "surface_missing_immersion",
+    "arguments": {
+      "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "leader": {
+        "kind": "object",
+        "objectId": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      },
+      "distance": 0.8,
+      "speed": 1.2,
+      "seconds": 2,
+      "mode": "surface",
+      "habitat": "cccccccccccccccccccccccccccccccc",
+      "facing": "keep"
+    },
+    "valid": false,
+    "water": false
+  },
+  {
+    "name": "surface_bad_gait",
+    "arguments": {
+      "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "leader": {
+        "kind": "object",
+        "objectId": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      },
+      "distance": 0.8,
+      "speed": 1.2,
+      "seconds": 2,
+      "mode": "surface",
+      "habitat": "cccccccccccccccccccccccccccccccc",
+      "facing": "keep",
+      "immersion": 0.6,
+      "gait": {
+        "source": "library",
+        "motionId": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+      }
+    },
+    "valid": false,
+    "water": false
+  },
+  {
+    "name": "shore",
+    "arguments": {
+      "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "leader": {
+        "kind": "object",
+        "objectId": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      },
+      "distance": 0.8,
+      "speed": 1.2,
+      "seconds": 2,
+      "mode": "shore",
+      "habitat": "cccccccccccccccccccccccccccccccc",
+      "facing": "keep",
+      "immersion": 0.6
+    },
+    "valid": true,
+    "water": true
+  },
+  {
+    "name": "shore_user",
+    "arguments": {
+      "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "leader": {
+        "kind": "user"
+      },
+      "distance": 0.8,
+      "speed": 1.2,
+      "seconds": 2,
+      "mode": "shore",
+      "habitat": "cccccccccccccccccccccccccccccccc",
+      "facing": "keep",
+      "immersion": 0.6
+    },
+    "valid": true,
+    "water": true
+  },
+  {
+    "name": "shore_exact_gait",
+    "arguments": {
+      "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "leader": {
+        "kind": "object",
+        "objectId": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      },
+      "distance": 0.8,
+      "speed": 1.2,
+      "seconds": 2,
+      "mode": "shore",
+      "habitat": "cccccccccccccccccccccccccccccccc",
+      "facing": "keep",
+      "immersion": 0.6,
+      "gait": {
+        "source": "library",
+        "modelHash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+        "motionId": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+        "anchorNode": 3,
+        "rate": 1.2
+      }
+    },
+    "valid": true,
+    "water": true
+  },
+  {
+    "name": "shore_missing_habitat",
+    "arguments": {
+      "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "leader": {
+        "kind": "object",
+        "objectId": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      },
+      "distance": 0.8,
+      "speed": 1.2,
+      "seconds": 2,
+      "mode": "shore",
+      "facing": "keep",
+      "immersion": 0.6
+    },
+    "valid": false,
+    "water": false
+  },
+  {
+    "name": "shore_missing_facing",
+    "arguments": {
+      "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "leader": {
+        "kind": "object",
+        "objectId": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      },
+      "distance": 0.8,
+      "speed": 1.2,
+      "seconds": 2,
+      "mode": "shore",
+      "habitat": "cccccccccccccccccccccccccccccccc",
+      "immersion": 0.6
+    },
+    "valid": false,
+    "water": false
+  },
+  {
+    "name": "shore_missing_immersion",
+    "arguments": {
+      "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "leader": {
+        "kind": "object",
+        "objectId": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      },
+      "distance": 0.8,
+      "speed": 1.2,
+      "seconds": 2,
+      "mode": "shore",
+      "habitat": "cccccccccccccccccccccccccccccccc",
+      "facing": "keep"
+    },
+    "valid": false,
+    "water": false
+  },
+  {
+    "name": "shore_bad_gait",
+    "arguments": {
+      "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "leader": {
+        "kind": "object",
+        "objectId": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      },
+      "distance": 0.8,
+      "speed": 1.2,
+      "seconds": 2,
+      "mode": "shore",
+      "habitat": "cccccccccccccccccccccccccccccccc",
+      "facing": "keep",
+      "immersion": 0.6,
+      "gait": {
+        "source": "library",
+        "motionId": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+      }
+    },
+    "valid": false,
+    "water": false
+  },
+  {
+    "name": "bad_mode_None",
+    "arguments": {
+      "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "leader": {
+        "kind": "object",
+        "objectId": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      },
+      "distance": 0.8,
+      "speed": 1.2,
+      "seconds": 2,
+      "mode": null
+    },
+    "valid": false,
+    "water": false
+  },
+  {
+    "name": "bad_mode_fly",
+    "arguments": {
+      "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "leader": {
+        "kind": "object",
+        "objectId": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      },
+      "distance": 0.8,
+      "speed": 1.2,
+      "seconds": 2,
+      "mode": "fly"
+    },
+    "valid": false,
+    "water": false
+  },
+  {
+    "name": "bad_mode_1",
+    "arguments": {
+      "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "leader": {
+        "kind": "object",
+        "objectId": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      },
+      "distance": 0.8,
+      "speed": 1.2,
+      "seconds": 2,
+      "mode": 1
+    },
+    "valid": false,
+    "water": false
+  },
+  {
+    "name": "ground_with_water_args",
+    "arguments": {
+      "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "leader": {
+        "kind": "object",
+        "objectId": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      },
+      "distance": 0.8,
+      "speed": 1.2,
+      "seconds": 2,
+      "habitat": "cccccccccccccccccccccccccccccccc"
+    },
+    "valid": false,
+    "water": false
+  },
+  {
+    "name": "swim_immersion",
+    "arguments": {
+      "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "leader": {
+        "kind": "object",
+        "objectId": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      },
+      "distance": 0.8,
+      "speed": 1.2,
+      "seconds": 2,
+      "mode": "swim",
+      "habitat": "cccccccccccccccccccccccccccccccc",
+      "facing": "keep",
+      "immersion": 0.6
+    },
+    "valid": false,
+    "water": false
+  },
+  {
+    "name": "self_leader",
+    "arguments": {
+      "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "leader": {
+        "kind": "object",
+        "objectId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      "distance": 0.8,
+      "speed": 1.2,
+      "seconds": 2
+    },
+    "valid": false,
+    "water": false,
+    "schemaValid": true
+  }
+]

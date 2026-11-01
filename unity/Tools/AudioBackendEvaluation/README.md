@@ -1,0 +1,607 @@
+# Native audio backend evaluation
+
+This optional Windows C++ probe evaluates a candidate for Maestro's editable
+world acoustics. It does not install a Unity package, change the current spatializer,
+produce speaker output, query a Quest, or call a provider. It is not part of the
+release gate and cannot clear the existing Meta native crash or Quest/Live gates.
+
+Download `steamaudio_4.8.1.zip` from the
+[official pinned release](https://github.com/ValveSoftware/steam-audio/releases/tag/v4.8.1).
+The runner requires that archive's published SHA-256. It uses installed MSVC C++
+build tools and Windows SDK headers; `CompilerRoot` and `WindowsSdkRoot` can override
+discovery. Run from a PowerShell terminal:
+
+```powershell
+./unity/Tools/AudioBackendEvaluation/Run-Probe.ps1 -SdkArchive C:/path/to/steamaudio_4.8.1.zip
+```
+
+Each invocation creates a fresh ignored `.quest-evidence/audio-backend/<id>` folder.
+`result.json` records exact source hashes, the SDK digest, compiler selection,
+terminal result and scope limitations. Failed compilations, native validation
+warnings, abnormal exits and a 30-second process deadline remain failed evidence.
+No previous evidence or installed software is removed. No vendor binary is checked
+into Maestro or included in the app by this tool.
+
+The C API probe uses actual native geometry and output samples, with validation
+enabled, SSE2, one simulation thread, two sources, 1,024 rays, eight bounces,
+first-order Ambisonics and a 0.25-second convolution response at 24 kHz. Across 12
+fresh context/simulator cycles it checks:
+
+- Adding, removing and repositioning a wall changes direct occlusion.
+- A runtime-created enclosed room produces finite nonzero reflected samples.
+- Removing one simulation source preserves the other source's reflected output.
+- Removing the room removes reflections; reconstructing it restores them.
+- A background simulation completes and joins before its inputs are released.
+
+The last check cancels further scheduling and waits for an in-flight call; it is
+not interruption of the native call. The two-source check measures output before
+and after source removal, not concurrent Unity DSP tails. The observed maximum
+call duration is a small desktop diagnostic with validation overhead and other
+host workloads, not a Quest budget, benchmark comparison or worst-case bound.
+
+The evaluation does not cover Unity's audio thread, HRTF perception, stream
+buffering, real microphone echo handling, Android/IL2CPP, suspension/device resets,
+large worlds, runtime imported meshes, instanced moving geometry or headset
+performance. These require adapter-specific tests and real-device acceptance.
+Keep the saved-world and capability contracts described in [AUDIO.md](../../AUDIO.md)
+independent of the chosen backend. Review the SDK's Apache-2.0 license and all
+redistributed dependency notices before any shipping integration.
+
+## Isolated Unity integration evaluation
+
+A separate optional runner tests the official Unity integration without installing
+it into Maestro. It requires PowerShell 7.4+, Python 3.11+ and the licensed Unity
+6000.3.24f1 editor. Download `steamaudio_unity_4.8.1.zip` from the same official
+release; this is a different archive from the C API SDK above.
+
+```powershell
+./unity/Tools/AudioBackendEvaluation/Run-UnityProbe.ps1 `
+  -UnityArchive C:/path/to/steamaudio_unity_4.8.1.zip `
+  -Editor C:/path/to/6000.3.24f1/Editor/Unity.exe `
+  -Python python
+```
+
+The runner checks the published archive digest before extracting the unmodified
+vendor scripts, assets and Windows CPU audio libraries into a fresh ignored
+`.quest-evidence/audio-unity/<id>/project`. It copies the app's audio settings into
+that isolated project and changes only that copy's spatializer. Unity may resolve
+the pinned test-framework package. No existing app or project is overwritten.
+An active Unity Editor blocks the run; it is never killed to make room for the
+probe. Each owned child has a ten-minute deadline, and only the build helper's
+private ADB endpoint is cleaned up. No connected devices are queried.
+
+The fixture measures finite samples at Unity's real listener, then silences them.
+It creates synthetic PCM and runtime room/wall geometry, without microphones,
+user recordings or providers. It checks direct obstruction, reflection-only
+output, destruction of one voice while another continues, room deletion and
+reconstruction, and reset recovery after recreating the ephemeral PCM clip. It
+also requires a changed device sample rate to update the simulation configuration.
+
+**Current result: two passing cases and one failing requirement.** Geometry,
+independent voices and reset with the same format pass. After a real Unity reset
+from 48 kHz to 24 kHz, the candidate manager still reports 48 kHz. Output remains
+nonzero, which alone cannot prove format-correct rendering. The failed case and
+nonzero runner exit are intentional evidence of an unresolved integration gap;
+they are not converted into success or skipped. The runner retains exact fixture,
+preparer, runner and source audio-setting hashes alongside editor exits and XML.
+
+This evaluates the stock package, not a completed Maestro adapter. An integration
+must handle audio-configuration changes through an owned drain/rebuild/rebind
+lifecycle and verify format-correct output, source identities and remaining voices.
+Neither this evaluation nor the C API probe establishes Android/Quest performance,
+Live echo handling or an accepted replacement for the current production renderer.
+
+## Explicit lifetime evaluation
+
+Run the independent ownership experiment with the same pinned archive:
+
+```powershell
+./unity/Tools/AudioBackendEvaluation/Run-UnityProbe.ps1 `
+  -UnityArchive C:/path/to/steamaudio_unity_4.8.1.zip `
+  -Editor C:/path/to/6000.3.24f1/Editor/Unity.exe `
+  -Python python -OwnedLifecycle
+```
+
+This mode extracts only the unmodified C API binding and Windows `phonon.dll`.
+It does not load the stock Unity manager or its global spatializer plugin. The
+original default-mode failure remains independently reproducible.
+`PreparedGraph` owns a native context, room, two simulation sources, convolution
+responses, HRTF decoders and buffers for an exact sample rate and block size.
+Initial preparation runs on one worker before publishing the graph. Audio
+callbacks hold a read lease; retirement forbids new leases and disposal waits for
+existing readers. The control thread polls completion without joining a worker or
+blocking the audio callback. Multiple resets coalesce into one latest request.
+
+The initial six PlayMode cases passed in the isolated Windows project:
+
+- Real Unity resets at 48 kHz / 1,024 samples, 24 kHz / 256 samples and 48 kHz /
+  512 samples rebuild the native format. Listener measurements contain the
+  intended reflected 440 Hz and 660 Hz tones before they are silenced.
+- Stopping one voice leaves the other audible in the measured output. Reset
+  interrupts both and rejects commands from the old generation; only explicit
+  restart produces new audio. Logical voice IDs remain unchanged.
+- A held reader lease prevents disposal and replacement until it is released.
+- Superseded preparation retains its native ownership until the worker finishes,
+  discards that result, and prepares only the latest request.
+- An injected preparation failure releases ownership and permits explicit retry.
+- Close during preparation cannot publish or replay. A superseded worker error
+  remains available as retired evidence without poisoning the newer configuration.
+
+Those six cases include several assertions from the bullets above. Their teardown
+confirmed that all 17 created graphs were closed and that native validation emits no warnings
+or errors. A separate regression first reproduced the stale-error failure, then
+passed after generation-aware error handling. The held-reader check deliberately
+holds the same lease on the test thread; it does not stall Unity's audio device.
+Actual reflected rendering and reset measurement use Unity's real audio thread.
+
+This is a bounded lifecycle prototype, not a second production renderer. The
+moving-response extension below updates the original fixed-pose experiment.
+
+### Moving responses and consumer handoff
+
+The moving-response extension established **13 passing cases**, including the original six.
+The PCM extension below raises the current runner requirement to 22.
+The pinned library has a single-producer/single-consumer convolution response
+handoff. The adapter keeps sample rate, block size, IR duration and channel count
+fixed within a graph. It reads the source-owned IR pointer before concurrent work;
+ordinary native output fields are not reread while the worker writes them.
+
+One leased worker applies the latest immutable listener/emitter/room snapshot.
+The control thread coalesces intermediate requests and waits for an audio callback
+to consume the completed response before scheduling another. No worker or native
+context is created per incoming pose. Head rotation updates the decoder directly.
+A geometry change silences outdated reflected output until its response is ready.
+A reset preserves the latest desired scene, including a deleted room; it does not
+silently rebuild the original fixture room. A failed current update retires its
+graph and requires explicit recovery. Retired failures remain diagnostic evidence.
+
+The added cases measure native output at the real Unity listener while:
+
+- Moving each emitter and the listener out of and back into the enclosed room.
+- Rotating the listener, reversing the measured left/right level difference
+  without rerunning room simulation.
+- Removing and rebuilding the room three times without restarting either voice.
+- Coalescing twenty incoming edits while a worker remains owned; outdated
+  geometry remains silent until the latest response is consumed.
+- Changing the device format while an update worker is retained, then handling
+  its stale failure without resurrecting deleted geometry.
+- Failing an active update, interrupting output and explicitly recovering.
+- Muting a voice through multiple scene updates and resuming its latest response.
+- Holding audio consumption without blocking the audio thread, allowing at most
+  one unconsumed response, then consuming it and applying the latest queued scene.
+
+Skipping muted DSP consumers reproduced a failure in the new restart case.
+Feeding them zero input and consuming their responses without mixing their output
+corrects it. The final 13-case run closes all 26 graphs, with zero native validation
+warnings/errors. The held-worker gates retain ownership after a real simulation;
+they do not claim interruption inside the synchronous SDK call. The consumer hold
+is fixture instrumentation, not physical headset suspension acceptance.
+
+The source review follows the pinned [producer](https://github.com/ValveSoftware/steam-audio/blob/v4.8.1/core/src/core/simulation_manager.cpp),
+[response buffer](https://github.com/ValveSoftware/steam-audio/blob/v4.8.1/core/src/core/triple_buffer.h)
+and [DSP consumer](https://github.com/ValveSoftware/steam-audio/blob/v4.8.1/core/src/core/overlap_save_convolution_effect.cpp).
+
+This still uses two synthetic tones and one procedurally defined room topology.
+Imported/instanced geometry, application PCM/speech/media, perceptual quality,
+continuous-motion latency and budgets, Android/IL2CPP, Quest suspension/performance
+and Live echo cancellation remain integration gates. A future dry-speech path must
+remain separate from the reflected-output readiness gate. Native effect reset and
+voice replacement must not replay old convolution tails or consume a new stream
+before its output is ready. No app schema, catalog, dependency or setting changes.
+
+
+### Application PCM and utterance ownership
+
+`-OwnedLifecycle` now requires **22 passing cases**. The isolated project copies
+`Assets/Maestro/Runtime/Book/SpeechPcmStream.cs` unchanged from the app and hashes
+that input in the receipt. Synthetic PCM16 packets exercise the actual bounded
+24 kHz queue, ordering checks, resampling and rendered-sample receipts. This is
+not generated speech, a provider session or a deployed app integration.
+
+Each emitter can own a fresh `PcmVoice` handle. Replacement, Stop, Close and device
+reset close old handles; late packets and Stop commands cannot affect a newer
+utterance. Direct HRTF output and reflected output mix separately. A pending room
+response suppresses only reflections. The audio consumer resets each utterance's
+native history and acknowledges its serial; a subsequent simulation publishes a
+response for that reset. Until then it consumes responses with zero reflected
+input while the direct PCM path continues. This also avoids relying on native
+convolution reset to preserve its prior IR, which it does not.
+
+The last output boundary rechecks room validity and each voice identity. Stop
+between processing and submission discards only that voice; room edits discard
+only outdated reflections. Audio already handed to the device remains subject to
+its ordinary buffer latency. Natural queue exhaustion feeds zeros to drain the
+native tail, without adding reflected samples to the source playback cursor.
+Stream completion and explicit Stop are therefore different operations.
+
+Nine new cases cover measured stereo PCM and receipt advancement, late packets,
+dry output during pending geometry, wet-only replacement and another continuing
+voice, actual 24/48 kHz resets, rejected callback sizes, Close, the first silent
+replacement block, edits/Stop at submission, and natural tail completion. The
+boundary and natural-tail probes first suspend the fixture consumer, then invoke
+the same native render method with controlled DSP times; other cases measure
+Unity's real audio callback at the listener. A negative run omitting the direct
+history reset failed the first-buffer silence check (sample -0.0153901838). The
+corrected 22-case run closes all 37 graphs with no native validation diagnostics.
+The older stochastic reflection test now checks exchanged ear levels against
+unchanged orientation, instead of requiring an arbitrary absolute imbalance.
+
+No provider credentials, microphone, headset or physical playback is used. No
+shipping dependency, app renderer, schema or catalog is changed. Imported scene
+integration, propagation/obstruction parity, production speech/media lifecycle,
+Android/IL2CPP, sustained cost, perceptual output and Live echo handling still
+require verification. That checkpoint used fixed procedural topology and two sources. The bounded
+admission checks below extend the source count; world geometry remains separate.
+
+
+### Shared pause and completion contract
+
+The preceding `-OwnedLifecycle` checkpoint required **24 passing cases**. The copied app
+transport now exposes explicit source-input completion and callback admission.
+Finite source completion is tested through the same sealed-input cursor used by
+`WorldAudio`; the candidate does not maintain a second completion queue. Pausing a
+sealed source preserves queued samples while another voice and room-response
+updates continue. Resume renders the remaining source at its original position.
+
+The new submission-boundary case pauses after native DSP and verifies that an
+already admitted PCM block is not discarded. Later paused callbacks are silent
+and do not consume source samples. A negative run replacing admission with the
+latest pause flag produces zero output after consuming that block and fails the
+case. Correct source passes all 24 cases, with 39 graphs released and no native
+validation diagnostics. The updated natural-tail case also asserts sealed input,
+rejected later packets and exact source completion independently of the wet tail.
+
+These are Windows candidate results. They do not replace the complete app native
+suite after changing the shared source. Source and mirror verification, full
+EditMode/PlayMode results and the original book/headless journeys are recorded in
+`.quest-evidence/audio-stream-contract`. The renderer is still outside the app;
+Android, production geometry, bounded multi-source admission, acoustic-tail
+retirement, Live capture and physical Quest acceptance remain required.
+
+
+### Finite tails and owner release
+
+The preceding `-OwnedLifecycle` checkpoint required **29 passing cases**. The candidate uses the pinned
+native direct, reflection and decoder tail APIs after sealed source playback.
+Completion is published after the final output boundary and checked against the
+output clock before the exact handle can be released with its final source
+receipt. Stopped or replaced voices cannot claim completion for their successor.
+
+Five added cases check final-block timing, completed voices consuming later
+responses without replay, a continuing second voice, paused tails, replacement
+with an empty open stream, actual device reset during draining, and room removal
+while an obsolete tail still exists. The run `d82d2951f5f4` passes all 29 cases,
+releases all 45 native graphs and reports zero native validation diagnostics.
+Detailed receipts are in `.quest-evidence/audio-tail-retirement`.
+
+Tail callbacks cannot acknowledge impulse responses they have not consumed;
+silent Apply resumes that handoff once the voice has drained. Source PCM counts
+do not include echoes. These contracts are detailed in
+[AUDIO.md](../../AUDIO.md#natural-renderer-completion). The candidate remains
+isolated; app geometry, production source budgets, Android/IL2CPP and Quest/Live
+acceptance are still required.
+
+A negative probe publishing completion before the final submission boundary
+fails the new timing check (28 pass, one expected failure). Exact hashes verify
+restoration of every input used by the passing run.
+
+### Existing streams and bounded voice admission
+
+The preceding `-OwnedLifecycle` checkpoint required **34 passing cases**. An owner accepts an existing
+application `SpeechPcmStream` by exclusive transfer, preserving already queued
+samples, the producer's completion flag and the same playback receipt. It does
+not copy them into a second queue. A stream can be claimed only once across
+candidate owners; rejecting an alias leaves its original owner intact. Fresh
+input rejected for invalid settings, stale generation, unavailable output or a
+full budget is closed. The caller must relinquish any previous render consumer;
+this transfer API is not a hot handoff between two concurrently running backends.
+
+Each graph has a fixed, validated capacity of 1–32 voices; the default remains two
+for the original fixtures. Native effects and buffers allocate only for that
+capacity. Instance IDs select exact bounded slots, and replacement handles cannot
+stop or finish their successors. Immutable scene frames hold one pose per slot.
+Their topology cannot change within a graph, and every slot participates in reset
+acknowledgment, response refresh, completion, retirement and ownership counts.
+This is renderer capacity, not a new production reservation policy.
+
+The five additional cases cover transferred prequeued/sealed input and real
+output, duplicate ownership, unavailable inputs, nine simultaneous sources,
+budget refusal, reuse of the ninth slot with new reflected audio, actual Unity
+audio-device reset, immutable poses and rejected topology changes. Nine sources
+exercise the current app combination of eight world-audio owners plus speech;
+the highest slot is checked using reflections alone. Rejected admission cannot
+evict another voice, and reset closes all old streams without replay.
+
+Run `f63ce690e507` passes all 34 cases with normal editor/wrapper exits, 53 native
+graphs created and released, and zero native validation diagnostics. The 19
+recorded input hashes match the verified source. Receipts are retained in
+`.quest-evidence/audio-voice-admission` and the isolated run directory.
+
+This remains a Windows evaluation. Production reservation enforcement, mutable
+gain and distance/nonspatial semantics, accepted world geometry and obstruction,
+Android/IL2CPP, sustained cost and Quest/Live acceptance still need integration
+and verification. The app's renderer and reflection gates remain unchanged.
+
+### Presentation controls and Unity reference measurements
+
+The preceding `-OwnedLifecycle` checkpoint required **41 passing cases**. Exact voice handles support
+mutable gain without reopening the input or recalculating the room response.
+The final submission applies gain to direct and reflected output together,
+including already processed tails. Zero gain continues the source clock; Pause
+retains its position. Invalid values and stale handles cannot change a successor.
+
+Spatial settings are immutable for one playback. Direct distance falloff matches
+the app's Unity logarithmic rolloff with Rolloff Scale one: a plateau inside the
+minimum distance followed by inverse-distance amplitude. The pinned Unity
+reference checks minima of one and two metres at distances 0, 0.5, 1, 2, 4 and 8,
+with maxDistance three. It confirms attenuation continues beyond maxDistance,
+consistent with [Unity's documented logarithmic behaviour](https://docs.unity3d.com/6000.0/Documentation/ScriptReference/AudioSource-maxDistance.html).
+Do not treat that field as a hard audibility boundary for future region retention.
+Reflected propagation already has native distance response and does not receive
+a duplicate direct-distance factor. A coincident source uses a finite front
+orientation rather than an undefined direction.
+
+Nonspatial mono input uses equal-power stereo centre routing, with no HRTF or
+room contribution. It retains the same queue, output clock and completion path.
+A real AudioSource/mono-clip reference verifies level and equal channels before
+and after listener/source/room movement. The first 41-case run exposed a
+1.896875 power ratio when using the native HRTF effect with blend zero. The
+[SDK describes blend zero as unspatialized](https://valvesoftware.github.io/steam-audio/doc/capi/binaural-effect.html),
+but that did not reproduce Unity's mono panning level. Bypassing that effect and
+using the measured centre-pan gain fixed the mismatch; reference assertions were
+not weakened. The failed run `2be893bf6c21` remains retained (40 pass, one fail).
+
+A borrowed transform binding refreshes after the avatar's LateUpdate. Parent
+translation, rotation and scale therefore move the source without a manual pose
+command. Unity-to-native coordinates are converted at that boundary. Unchanged
+poses do not publish a new revision. Disabled/destroyed anchors stop only their
+exact owner; old bindings retire without stopping replacements or destroying
+the caller's hierarchy. This demonstrates the pose/lifetime contract required by
+the future production adapter; it is not installed in the application.
+
+Run `e92851831b1d` passes all 41 cases, releases all 60 native graphs, has no native
+validation diagnostics and exits normally. All 22 recorded source hashes match.
+The reference comparisons and failed/passing runs are retained in
+`.quest-evidence/audio-presentation`. The preceding corrected run `e0f4bc3ae258`
+also passed, before adding the custom near-distance comparison. All 907 current
+application C# files still match the fully verified `c93a98c6` inputs.
+
+Production renderer selection, shared reservations, canonical geometry and
+obstruction, shared capture monitoring, Android/AOT and physical/performance
+acceptance remain open. Production reflections and automatic map scheduling stay
+disabled; these results do not resolve the retained Meta map-worker crash.
+
+
+### Immutable mesh instances from accepted geometry
+
+`-OwnedLifecycle` now requires **47 passing cases**. The candidate accepts value
+snapshots through the existing application `IAcousticGeometry` contract, copied
+into the isolated project and verified by hash. Local vertices, indices and
+placement are copied before publication; the worker never reads a GameObject or
+live importer mesh. The payload is derived renderer input, not another saved
+world schema or a replacement for canonical geometry preparation.
+
+A native subscene owns each immutable mesh payload. Exact instance identities
+place it in the simulation scene; multiple placements can share one payload.
+Translation, rotation and scale update the instance without rebuilding its mesh
+or restarting source playback. Changed topology replaces the corresponding
+instance and releases the old mesh after its last placement leaves. Geometry
+mutation and simulation share one worker and the existing graph lease. This
+follows the SDK's [scene and instance ownership API](https://valvesoftware.github.io/steam-audio/doc/capi/scene.html).
+
+All geometry replacements fence obsolete wet output at final submission, including
+edits during an admitted PCM callback. Device resets retain a busy worker's native
+objects until it returns, then build from the latest snapshot. Invalid meshes,
+transforms, duplicate identities and exceeded scan/virtual reservations fail
+before native admission. The current app's neutral hard-surface approximation is
+retained; image textures, opacity and physics participation do not infer acoustic
+materials or remove sound boundaries.
+
+Six additional cases measure real Unity output after destroying the source view
+and mutating its borrowed arrays, verify offset local vertices against a mirrored
+location, move/rotate/scale instanced geometry, share and replace topology, edit at
+the output boundary and reset while a worker owns the scene. Every case now checks
+native mesh and instance closure as well as graph closure.
+
+Run `342471727b9d` passes all 47 cases, releases all 67 graphs, 76 native mesh
+owners and 77 instance owners, reports zero native validation diagnostics and
+exits normally. All 26 input hashes match, including the copied application
+geometry contract and PCM transport. All 907 application C# sources and ten
+protected unrelated files remain unchanged. Evidence is retained in
+`.quest-evidence/audio-geometry`.
+
+The first run `c5cf6c3b5c79` passed 45 cases and failed two new silence assertions:
+a room moved 30 metres away still produced a weak reflection within the probe's
+0.25-second response. The corrected fixtures put that room 200 metres away,
+beyond the response horizon, retaining the exact silence assertions. Ordinary
+30-metre movement still measures attenuation. Runtime code was unchanged by this
+test correction; the failed run is retained. The 200-metre fixture does not expand
+the application's authored-world bounds.
+
+This proves the candidate's geometry input and lifetime boundary on Windows. The
+production bridge from active and dormant room owners, cooperative upload budget,
+direct obstruction, acoustic-material authoring, capture monitoring, Android/AOT,
+sustained performance and physical Quest/Live acceptance remain open. No candidate
+backend is installed in the application, reflections remain disabled, and the
+retained Meta map-worker crash remains unresolved.
+
+### Android ARM64 build and AOT boundary
+
+`-OwnedLifecycle` now requires **48 passing cases**. The extracted candidate has
+separate runtime and test assemblies. Its rooted native log callback is a named
+static method with `MonoPInvokeCallback`, following Unity's
+[AOT callback requirements](https://docs.unity3d.com/6000.3/Documentation/Manual/scripting-restrictions.html).
+Android selects the pinned binding's ARM NEON baseline. No candidate files or
+vendor dependencies are added to the shipping Unity project.
+
+The build-only Android runner uses that same runtime in a fresh ignored project:
+
+```powershell
+./unity/Tools/AudioBackendEvaluation/Run-AndroidProbe.ps1 `
+  -UnityArchive C:/path/to/steamaudio_unity_4.8.1.zip `
+  -Editor C:/path/to/6000.3.24f1/Editor/Unity.exe `
+  -AndroidSdk C:/path/to/Android/Sdk `
+  -AndroidNdk C:/path/to/Android/Sdk/ndk/27.2.12479018 `
+  -Java C:/path/to/jdk-17 `
+  -Python python
+```
+
+It builds `com.maestro.audioprobe`, a development-only ARM64/IL2CPP APK with High
+managed stripping, minimum API 32 and target API 34. It uses ordinary debug
+signing, does not auto-run or install, and does not access the release key.
+The runner rejects another live Unity editor, restores editor toolchain settings,
+retains process/build reports, and verifies that recorded and prepared sources
+remain unchanged. APK verification requires ARM64 libraries, all 46 native
+functions used by the copied runtime, satisfied native dependencies, and the
+registered reverse callback in generated IL2CPP output. The test assembly must
+be absent. The packaged core library must match the pinned SDK after reproducing
+the exact NDK `llvm-strip --strip-unneeded` transformation; arbitrary native-byte
+changes still fail.
+
+The player contains a nine-stream ABI/ownership probe using synthetic PCM and
+private output buffers. It checks finite nonzero native samples, exact completion
+receipts and drained graph/mesh/instance ownership. Its result explicitly records
+no physical playback or provider use. On a future deliberate Android execution
+it writes `native-audio-probe.json` to its persistent-data directory and exits.
+This is not a Unity audio-device or XR perceptual test.
+
+Windows run `a8169aa26eff` passes all 48 cases, including that exact probe and the
+static callback check. All 69 graphs, 78 mesh owners and 79 instance owners close
+with zero native diagnostics; 29 input hashes match. The probe completes all nine
+streams with 43,200 submitted and played samples. Android build `5ce17a52dda5`
+passes with zero build errors/warnings, 31 matching input hashes, normal editor
+and wrapper exits, and verified debug signature. The package SHA-256 begins
+`068F7B73`; full receipts are in `.quest-evidence/audio-android`.
+
+The first Android build `89f8e9319c33` compiled successfully but its original
+verifier failed because symbol stripping changes the SDK library's raw bytes.
+The reproducible strip check passes for those retained bytes, and the complete
+corrected runner passes on the fresh build above. The failed receipt is preserved.
+All 907 application C# sources and ten protected unrelated files are unchanged.
+
+No Android execution, audio-device output, Quest performance, Live coexistence or
+Store acceptance is claimed. Production geometry/reservation/obstruction/capture
+integration remains open. Reflection output and automatic map scheduling remain
+disabled; the retained Meta map-worker crash remains unresolved.
+
+### Shared room publication and bounded acquisition
+
+`-OwnedLifecycle` now requires **55 passing cases**. The app exposes a passive
+`AcousticGeometryCatalog` from its existing registered acoustic inputs. Transient
+keys survive an active-view/retained-input transfer because the existing owner
+keeps the key. Reading the catalog does not read meshes, upload native geometry,
+load views, start physics or create another saved room. Unchanged descriptions
+reuse the same catalog, while placement, definitions and pending boundaries remain
+separately observable. Publication availability follows room lifetime and focus,
+independently of the current SDK's context or upload success.
+
+The candidate `GeometryBridge` consumes that same contract and the application's
+`RoomPreparationBudget`, both copied by hash into the isolated project. The caller
+can supply the existing shared budget window. Geometry acquisition yields across
+frames, cancels changed definitions before reading more inputs, and uses the latest
+placement without repeatedly cancelling mesh preparation for ordinary movement.
+Unchanged meshes are not reread. Identical values after an owner transfer reuse
+the native mesh and exact instance ID. Stable read failures wait for a definition
+change or explicit retry.
+
+Scan and virtual reservations are checked during acquisition and again before
+publication through one candidate budget definition. Saturating virtual capacity
+does not spend the scan allowance. Excess inputs are reported as omitted without
+unbounded staging reads; changed membership can admit a previously refused input.
+An individual mesh read or native upload remains indivisible. This is not a
+hard real-time bound on the subsequent worker's native upload batch.
+
+A missing required boundary or unavailable room holds reflection output immediately,
+including an already admitted block at final submission. Direct PCM continues;
+while held, incremental reflection updates are not scheduled. Initial graph
+preparation still computes its first response, which remains inaudible under the
+hold. A busy worker retains its existing scene until it returns. Repair publishes
+fresh geometry before wet output becomes eligible again. Disposal cancels pending acquisition, and an audio
+reset cannot reopen the held output. No candidate is enabled in the app yet.
+
+Run `f1ab0b86eb0f` passes all 55 cases with 77 graphs, 93 mesh owners and 94 instance
+owners closed, zero native diagnostics, 33 matching input hashes and normal
+editor/wrapper exits. Four focused app tests also pass against the actual active
+and dormant room lifecycle. The native catalog's actions, events and facts are
+unchanged; four source-provenance entries were refreshed. Full application
+verification also passes: 1,140 EditMode and 1,265 PlayMode cases, three expected
+private-asset skips, native catalog equality, diagnostic gates and normal editor
+exits. Both native headless and original-book journeys pass with local scripted
+providers and client/editor/terminal exit zero. All 914 source/mirror hashes match
+(910 application C# files and four existing third-party inputs). Evidence is
+retained in `.quest-evidence/audio-bridge`.
+
+The current source also passes Android build `a5919eb1ceef`: ARM64/IL2CPP with
+High stripping, zero build errors/warnings, 35 matching input hashes, verified
+native exports/dependencies/static callback and a debug signature. APK SHA-256
+begins `C5773180`; both editor and wrapper exit normally. This compiles the shared
+bridge inputs but does not prove their behavior after player stripping or execute
+the bridge on Android. Actual Android playback remains untested.
+
+The first run `11dc489c4b91` passed 53/54 cases. Its absent-frequency assertion
+picked up finite-window leakage from the continuing dry tone. The corrected test
+measures direct playback, then mutes that dry voice and requires every output
+sample to be exactly zero. Run `1215515165a4` passed all 54 cases before adding
+capacity admission; the final run above retains these stronger silence checks.
+Runtime code did not change for the measurement correction. Failed evidence remains.
+
+Production renderer selection, playback reservations, direct obstruction, shared
+capture, actual Android audio and Quest/Live/performance acceptance remain open.
+The publication race and its atomic fix are covered by the concurrent audit below.
+The existing app residency-transfer admission still checks Meta context/handles;
+separate CPU geometry retention from that SDK admission before replacing the
+production backend. A passive catalog alone does not remove that dependency.
+The app's Meta direct path is unchanged; reflection output and automatic map
+scheduling stay disabled, and the retained Meta worker crash remains unresolved.
+
+### Atomic presentation and concurrent submission
+
+The candidate publishes the frame, required geometry revision and availability
+as one immutable state. Its control thread replaces one reference; readiness,
+DSP and final output each read a coherent state without a publication lock or
+allocation on the audio thread. Geometry changes still fence old reflections.
+Pure orientation changes keep the eligible room response instead of muting it
+just because the presentation reference changed.
+
+A deterministic publication gate reproduced the old race in run `5895c4f2a26b`:
+56/57 cases passed, but a distinct render thread observed the new frame as ready
+before its geometry requirement was written. It rendered obsolete reflected
+samples with block energy `1.25423195066506` where silence was required. The failed
+case and samples remain retained. The initial preflight `0c3a9061816f` stopped at
+compilation because the pinned NUnit lacks `Assert.Multiple`; using its supported
+individual assertions did not change the requirements.
+
+Fixed run `373b02cdbf61` passes all 57 cases with the same test-file hash as the
+failed behavioral run. Only the three renderer publication/consumer files changed
+after reproduction. The publication block is exactly zero, as are blocks held
+between DSP and submission while the control thread changes geometry or closes
+availability. Repair restores real native output; pure listener rotation remains
+audible. All 79 graphs, 96 mesh owners and 97 instance owners close, with zero
+native diagnostics, 34 matching input hashes and normal editor/wrapper exits.
+Evidence is retained in `.quest-evidence/audio-atomic`.
+
+Android build `d75527ac98b8` passes with zero build errors/warnings, ARM64/IL2CPP,
+High stripping and 36 matching input hashes. Native exports, dependencies, static
+callback registration, stripped SDK bytes and the debug signature are verified.
+APK SHA-256 begins `17A79365`; both editor and wrapper exit normally. This is
+compilation/payload evidence, not execution of the concurrency tests on Android.
+
+This is the isolated renderer. All 914 application/project C# inputs remain
+unchanged from the full verification at `33a68d7d`. Production selection,
+SDK-independent retention admission, upload timing, voice reservations, direct
+obstruction, shared capture and physical Android/Quest/Live acceptance remain
+open. The existing Meta direct path and disabled reflection gates are unchanged.
+
+
+### Shared listener reference
+
+The isolated project also copies the application's `EchoReferenceStream`,
+`RoomAudioTap` and `AcousticOutputMonitor` by hash. Its reference tests compare
+actual native reflected samples with the final listener, retain finite tails after
+source consumption, and verify independent voice ownership. The player entry
+runs the same optional listener owner on Unity's audio thread and mutes output in
+a later filter. Android payload verification requires all reference entry types
+after High stripping; a built APK is not an Android runtime result.
+
+This does not provide an echo canceller or wire a new microphone into Live.
+See [capture scope and remaining gates](../../AUDIO.md#bounded-rendered-echo-reference--2026-10-12).

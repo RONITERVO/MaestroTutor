@@ -20,7 +20,7 @@ it('delivers the pending transcript before turn persistence can remove its tempo
   const transcripts = createLiveTranscripts(state, timers);
   const callbacks = createLiveProviderCallbacks(state, {
     activity: { setVadActivity: vi.fn(), updateState: vi.fn() },
-    audio: createLiveModelAudio(state, { ...timers, createCodecWorker: vi.fn() }),
+    audio: createLiveModelAudio(state, { createCodecWorker: vi.fn(), onFailure: vi.fn() }),
     transcripts, cleanup: async () => {}, getAudioTelemetrySnapshot: vi.fn(),
     debugLogService: { logRequest: () => ({ complete: vi.fn() }) } as any,
   }, { sessionId: 1, playModelAudio: false, emitTurns: true, observerActivity: false, usageTracker: { flush: vi.fn(), trackSnapshot: vi.fn(), completeTurn: vi.fn() } });

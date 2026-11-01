@@ -197,3 +197,9 @@ describe('live windows', () => {
     expect(gateway).toBeGreaterThan(oldSinglePassEstimate);
   });
 });
+
+
+it('reserves extra retained context only for tool-enabled gateway sessions', () => {
+  expect(calculateLiveGatewayWindowUsd(120,undefined,false)).toBe(calculateLiveGatewayWindowUsd(120));
+  expect(calculateLiveGatewayWindowUsd(120,undefined,true)).toBeGreaterThan(calculateLiveGatewayWindowUsd(120));
+});

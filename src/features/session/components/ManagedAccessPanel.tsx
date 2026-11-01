@@ -13,7 +13,10 @@
  * The Stripe listeners stay here rather than in the modal: a checkout that
  * returns while the modal is closed must still reconcile.
  */
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
+import { isNativeQuestBook } from '../../../platform/quest/questIntegrityBridge';
+import { questPairingService } from '../../../services/auth/questPairingService';
+import { isLinkCancelled } from '../../../services/auth/questLinkProtocol';
 import { Capacitor } from '@capacitor/core';
 import { Browser } from '@capacitor/browser';
 import { useAppTranslations } from '../../../shared/hooks/useAppTranslations';
@@ -34,12 +37,16 @@ const ROW_BUTTON_CLASS = 'inline-flex h-8 items-center justify-center text-gate-
 
 const ManagedAccessPanel: React.FC<ManagedAccessPanelProps> = ({ session }) => {
   const { t } = useAppTranslations();
+  const isQuest = isNativeQuestBook();
+  const pairing = useSyncExternalStore(questPairingService.subscribe, questPairingService.snapshot, questPairingService.snapshot);
+  const signInAbort = useRef<AbortController | null>(null);
+  useEffect(() => () => { signInAbort.current?.abort(); }, []);
   const primaryPackId = maestroPaymentsService.getManagedCreditPackIds()[0] || '';
   const isNative = Capacitor.isNativePlatform();
   const nativeExternalCheckoutEnabled = isNative
     && maestroPaymentsService.isAndroidExternalCheckoutEnabled();
   const purchasingAvailable = (
-    maestroBackendService.isConfigured()
+    !isQuest && maestroBackendService.isConfigured()
     && Boolean(primaryPackId)
     && (!isNative || nativeExternalCheckoutEnabled)
   );
@@ -135,17 +142,21 @@ const ManagedAccessPanel: React.FC<ManagedAccessPanelProps> = ({ session }) => {
   }, [nativeExternalCheckoutEnabled]);
 
   const handleSignIn = useCallback(async () => {
+    if (signInAbort.current) return;
+    const operation = new AbortController(); signInAbort.current = operation;
+    if (isQuest) setIsDetailsOpen(true);
     setIsSigningIn(true);
     setErrorMessage(null);
     setStatusMessage(null);
     try {
-      await maestroManagedAccountController.signIn();
+      await maestroManagedAccountController.signIn(undefined, isQuest ? operation.signal : undefined);
     } catch (error) {
-      reportError(error, 'managedAccess.signInFailed');
+      if (!isLinkCancelled(error)) reportError(error, 'managedAccess.signInFailed');
     } finally {
+      if (signInAbort.current === operation) signInAbort.current = null;
       setIsSigningIn(false);
     }
-  }, [reportError]);
+  }, [isQuest, reportError]);
 
   const handleSignOut = useCallback(async () => {
     setErrorMessage(null);
@@ -325,7 +336,12 @@ const ManagedAccessPanel: React.FC<ManagedAccessPanelProps> = ({ session }) => {
         isDeleteConfirmOpen={isDeleteConfirmOpen}
         purchasingAvailable={purchasingAvailable}
         deleteConfirmationText={deleteConfirmationText}
-        onClose={() => setIsDetailsOpen(false)}
+        questPairing={isQuest ? pairing : undefined}
+        onCancelQuestPairing={isQuest ? () => signInAbort.current?.abort() : undefined}
+        onClose={() => {
+          if (isQuest) signInAbort.current?.abort();
+          setIsDetailsOpen(false);
+        }}
         onSignIn={() => void handleSignIn()}
         onSignOut={() => void handleSignOut()}
         onRefresh={() => void refreshAccount()}

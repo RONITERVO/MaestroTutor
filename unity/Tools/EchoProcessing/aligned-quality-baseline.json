@@ -1,0 +1,220 @@
+{
+  "version": 1,
+  "purpose": "Identity-based regression floors only. Known failures remain open; this is not acoustic or Quest acceptance. New onset maxima were not present in this retained evidence.",
+  "provenance": {
+    "sourceCommit": "9724832ce0bc68a50b92171275a3d735725c0f4f",
+    "evidenceRoot": ".quest-evidence/echo-effects/ci-artifacts-final",
+    "sourceVerification": "All relevant sources equal this commit, allowing only LF/CRLF normalization when comparing recorded SHA-256.",
+    "sourceHashes": {
+      "EchoProcessor.cpp": "3965da43c630d655eb97497343f5f85d6e48dc8570265bc1467de689e5f65527",
+      "EchoProcessor.h": "e5387f9bcd95e36b1595d5d117f9f5a52aee90e5c43affc1ddea8e4f0c9e5844",
+      "DuplexProcessor.cpp": "8e4237a3c89355fc093c92020cde1dc12765bbaaadea3dcd54a7727fd8658cef",
+      "DuplexProcessor.h": "afc049954aaa9365e35143e9b3fcc77fe218e5208945a6ac580c47c6749ddaa2",
+      "ClockAlignment.cpp": "23e452569a0dd29a91559669c955e9c3f6438ecfef6a93b3d2d8ff09ab1d3bbb",
+      "ClockAlignment.h": "500036d3a5feda868d73c0a793f0b4384164fd334664b9cd3d7e55b7de80d459",
+      "DeviceAudioClock.h": "1d8bc45851c644354a9b9f6d5492120b4e5e613e8d4c5165bbc925bf63619eb5",
+      "AudioFixture.h": "93ceeabbfb81d305c0d646a505c16fcdfa9cd8ac89f6e8639fac4ff2036fc04f",
+      "AlignmentProbe.cpp": "447a6e34eaee9bdd7a36ff393b87105839f763381a79256c0ea7718758ce46c9",
+      "meson.build": "3a59dbb7a9d47f2538015891e8514770181a207d69bd3703c834c6097e007117",
+      "CaptureInput.h": "cc51466f1dffea64d81587072d25523d7cc466368690cbca51e43c08cc2b308e",
+      "PlaybackOutput.h": "4ce62fc4a019b94910a1c3ee091d515d9576da4228476d7992f87db5821b5993"
+    },
+    "archives": {
+      "apm": "35e86b986d02ea15f3d04741a1a5a735ba399bc0fac0ee089c39480e35fc3253",
+      "abseil": "f50e5ac311a81382da7fa75b97310e4b9006474f9560ac46f54a9967f07d4ae3",
+      "overlay": "12dd8df1488a314c53e3751abd2750cf233b830651d168b6a9f15e7d0cf71f7b"
+    },
+    "profiles": {
+      "stock": {
+        "resultSha256": "343ee3b9a275986d9ee3f6fc06f7badc9523ee307722269a056617644dc497b2",
+        "logs": {
+          "aligned-quality.log": {
+            "sha256": "142f5f27e34b5d078633d2f7c536de53e06b3a63c5861066a4ea37fef2653c93",
+            "exitCode": 0
+          },
+          "aligned-tonal.log": {
+            "sha256": "c25d85862eaefe697046a9f538ddcd9bd89debaef468cbf9005404be074beed9",
+            "exitCode": 1
+          },
+          "aligned-warmtonal.log": {
+            "sha256": "3d61c21b76b1a7c4cabad86c2dc318e84cf48de0f1b7370b55a060dbfd9d6eda",
+            "exitCode": 0
+          },
+          "aligned-warmtonalpathchange.log": {
+            "sha256": "3afedb7963529399b0df90b8aee1d64d5e9cb442626bf4270121d0131fb34f60",
+            "exitCode": 0
+          },
+          "aligned-overlappingspeech.log": {
+            "sha256": "b61954d1da70d46829a7b12b22db5910a22310d93b69e9ff778084289cbee054",
+            "exitCode": 1
+          }
+        }
+      },
+      "stationary32": {
+        "resultSha256": "3412ba8d283363aea399ea0dd1026c39413c79a473e9eeb32f924caaa1f35326",
+        "logs": {
+          "aligned-quality.log": {
+            "sha256": "460507bcc234d2d12cb8d90c086a45eb9f2ffe16bc07490156841ed7d2304aca",
+            "exitCode": 0
+          },
+          "aligned-tonal.log": {
+            "sha256": "4582a6f7b100cbe915d171cc042eb2204c60028a225bfa27b5c103f29930bf79",
+            "exitCode": 1
+          },
+          "aligned-warmtonal.log": {
+            "sha256": "d9a6e86e5a3ea64c1f0a3882578b3ebc5ba8cba1d8caef3b3b0c26b6714c832b",
+            "exitCode": 1
+          },
+          "aligned-warmtonalpathchange.log": {
+            "sha256": "8b24e796c708fcf1b7d7f42607c432588f88decbe3490f50c96fa51ca3c5aa97",
+            "exitCode": 1
+          },
+          "aligned-overlappingspeech.log": {
+            "sha256": "cd3c79c9024017dec8c936228da11d1f00e54018f91e8e467fd80d93d1ae712d",
+            "exitCode": 1
+          }
+        }
+      },
+      "measured32": {
+        "resultSha256": "7b6f364ac4a384597427f9a9c4c1c4f4178dbf1583ea59987eb0c3a20a6e13b9",
+        "logs": {
+          "aligned-quality.log": {
+            "sha256": "5aa932460367e1921d55f0af9f642fafca3449f86fdfccb8c73536568e478224",
+            "exitCode": 0
+          },
+          "aligned-tonal.log": {
+            "sha256": "02ce58a37063fc0942f6aa88b250002a80d337a201fc9fce0c727459c22d3402",
+            "exitCode": 1
+          },
+          "aligned-warmtonal.log": {
+            "sha256": "443f7ae2f8acbc35b899e5642391506584c4ea2d8ba897b50c36c898ab74e8ca",
+            "exitCode": 1
+          },
+          "aligned-warmtonalpathchange.log": {
+            "sha256": "989fc633005fbad498ce7c04a3cb2174767de20310680d1f0523a2f7e6ea038f",
+            "exitCode": 1
+          },
+          "aligned-overlappingspeech.log": {
+            "sha256": "fa7711a9d331f6c3d77c1145990e5c73c2e15c15ba854aa80e938eafb68a37eb",
+            "exitCode": 1
+          }
+        }
+      }
+    }
+  },
+  "profiles": {
+    "stock": {
+      "Quality": {
+        "qualityCases": 3,
+        "failures": 0,
+        "passingCaseIds": [
+          "broadband|original|-900|900|20",
+          "broadband|original|0|0|0",
+          "broadband|original|900|-900|20"
+        ]
+      },
+      "Tonal": {
+        "qualityCases": 3,
+        "failures": 3,
+        "passingCaseIds": []
+      },
+      "WarmTonal": {
+        "qualityCases": 3,
+        "failures": 0,
+        "passingCaseIds": [
+          "tone-after-broadband|original|-900|900|20",
+          "tone-after-broadband|original|0|0|0",
+          "tone-after-broadband|original|900|-900|20"
+        ]
+      },
+      "WarmTonalPathChange": {
+        "qualityCases": 3,
+        "failures": 0,
+        "passingCaseIds": [
+          "tone-after-broadband-path-change|original|-900|900|20",
+          "tone-after-broadband-path-change|original|0|0|0",
+          "tone-after-broadband-path-change|original|900|-900|20"
+        ]
+      },
+      "OverlappingSpeech": {
+        "qualityCases": 27,
+        "failures": 23,
+        "passingCaseIds": [
+          "tone-after-broadband-path-change|overlapping-voiced|0|0|0",
+          "tone-after-broadband-path-change|overlapping-voiced|900|-900|20",
+          "tone-after-broadband|overlapping-voiced|0|0|0",
+          "tone-after-broadband|overlapping-voiced|900|-900|20"
+        ]
+      }
+    },
+    "stationary32": {
+      "Quality": {
+        "qualityCases": 3,
+        "failures": 0,
+        "passingCaseIds": [
+          "broadband|original|-900|900|20",
+          "broadband|original|0|0|0",
+          "broadband|original|900|-900|20"
+        ]
+      },
+      "Tonal": {
+        "qualityCases": 3,
+        "failures": 3,
+        "passingCaseIds": []
+      },
+      "WarmTonal": {
+        "qualityCases": 3,
+        "failures": 3,
+        "passingCaseIds": []
+      },
+      "WarmTonalPathChange": {
+        "qualityCases": 3,
+        "failures": 3,
+        "passingCaseIds": []
+      },
+      "OverlappingSpeech": {
+        "qualityCases": 27,
+        "failures": 27,
+        "passingCaseIds": []
+      }
+    },
+    "measured32": {
+      "Quality": {
+        "qualityCases": 3,
+        "failures": 0,
+        "passingCaseIds": [
+          "broadband|original|-900|900|20",
+          "broadband|original|0|0|0",
+          "broadband|original|900|-900|20"
+        ]
+      },
+      "Tonal": {
+        "qualityCases": 3,
+        "failures": 3,
+        "passingCaseIds": []
+      },
+      "WarmTonal": {
+        "qualityCases": 3,
+        "failures": 1,
+        "passingCaseIds": [
+          "tone-after-broadband|original|-900|900|20",
+          "tone-after-broadband|original|900|-900|20"
+        ]
+      },
+      "WarmTonalPathChange": {
+        "qualityCases": 3,
+        "failures": 3,
+        "passingCaseIds": []
+      },
+      "OverlappingSpeech": {
+        "qualityCases": 27,
+        "failures": 24,
+        "passingCaseIds": [
+          "tone-after-broadband|bursty-overlapping-voiced|-900|900|20",
+          "tone-after-broadband|bursty-overlapping-voiced|900|-900|20",
+          "tone-after-broadband|overlapping-voiced|-900|900|20"
+        ]
+      }
+    }
+  }
+}

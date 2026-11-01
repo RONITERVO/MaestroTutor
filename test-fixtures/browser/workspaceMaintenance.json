@@ -1,0 +1,168 @@
+{
+  "no-room-selected": {
+    "selected": null,
+    "running": [],
+    "outcomes": [],
+    "nextRunId": null,
+    "storageError": "The selected room is unavailable. Workspace maintenance remains available.",
+    "workspace": {
+      "selected": {
+        "id": "d10a5de97590451385cacb46ff99f243",
+        "capability": "workspace.archive.select",
+        "version": 1,
+        "resources": [],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "requestId": "549d790d48644fcfb4e83f0ede1c8b56"
+        },
+        "call": {
+          "id": "workspace.archive.select",
+          "version": 1,
+          "arguments": {}
+        }
+      },
+      "running": [],
+      "outcomes": [
+        {
+          "id": "d10a5de97590451385cacb46ff99f243",
+          "capability": "workspace.archive.select",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "requestId": "549d790d48644fcfb4e83f0ede1c8b56"
+          }
+        }
+      ],
+      "nextRunId": "b1a06e517dca4685b33f44e25d45b6d7",
+      "storageError": null,
+      "recovery": null
+    }
+  },
+  "restart-reconciled": {
+    "selected": null,
+    "running": [],
+    "outcomes": [],
+    "nextRunId": null,
+    "storageError": "The selected room is unavailable. Workspace maintenance remains available.",
+    "workspace": {
+      "selected": {
+        "id": "d10a5de97590451385cacb46ff99f243",
+        "capability": "workspace.archive.select",
+        "version": 1,
+        "resources": [],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "requestId": "549d790d48644fcfb4e83f0ede1c8b56"
+        },
+        "call": {
+          "id": "workspace.archive.select",
+          "version": 1,
+          "arguments": {}
+        }
+      },
+      "running": [],
+      "outcomes": [
+        {
+          "id": "d10a5de97590451385cacb46ff99f243",
+          "capability": "workspace.archive.select",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "requestId": "549d790d48644fcfb4e83f0ede1c8b56"
+          }
+        },
+        {
+          "id": "b1a06e517dca4685b33f44e25d45b6d7",
+          "capability": "workspace.archive.cancel",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "requestId": "549d790d48644fcfb4e83f0ede1c8b56"
+          }
+        }
+      ],
+      "nextRunId": "93e72537a5bd406fa74e77ad2aaba6a1",
+      "storageError": null,
+      "recovery": null
+    }
+  },
+  "held-export": {
+    "selected": null,
+    "running": [],
+    "outcomes": [],
+    "nextRunId": "7dae7a85163049b48c4586a58a34b3df",
+    "storageError": null,
+    "recovery": null,
+    "workspace": {
+      "selected": {
+        "id": "98caba62cffc47de8fe3cd3c68bea7f1",
+        "capability": "workspace.archive.export",
+        "version": 1,
+        "resources": [],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "location": "Downloads/Maestro/test.zip",
+          "sizeKiB": 3.2685546875,
+          "manifestHash": "ea440515467e1e15c2084ec77bc02383264d9a08c615fc705324a88ad6735372",
+          "files": 6,
+          "models": 0,
+          "images": 0,
+          "sounds": 0,
+          "motions": 0,
+          "modules": 0,
+          "unavailablePrograms": 0,
+          "missingImages": 0,
+          "missingSounds": 0,
+          "missingModels": 0,
+          "missingMotions": 0,
+          "missingControllerPrograms": 0
+        },
+        "call": {
+          "id": "workspace.archive.export",
+          "version": 1,
+          "arguments": {}
+        }
+      },
+      "running": [],
+      "outcomes": [
+        {
+          "id": "98caba62cffc47de8fe3cd3c68bea7f1",
+          "capability": "workspace.archive.export",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "location": "Downloads/Maestro/test.zip",
+            "sizeKiB": 3.2685546875,
+            "manifestHash": "ea440515467e1e15c2084ec77bc02383264d9a08c615fc705324a88ad6735372",
+            "files": 6,
+            "models": 0,
+            "images": 0,
+            "sounds": 0,
+            "motions": 0,
+            "modules": 0,
+            "unavailablePrograms": 0,
+            "missingImages": 0,
+            "missingSounds": 0,
+            "missingModels": 0,
+            "missingMotions": 0,
+            "missingControllerPrograms": 0
+          }
+        }
+      ],
+      "nextRunId": "ccb1dfd321454d87a5a2e969cc2adeab",
+      "storageError": null,
+      "recovery": null
+    }
+  }
+}

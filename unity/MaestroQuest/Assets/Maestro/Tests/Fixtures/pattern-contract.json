@@ -1,0 +1,794 @@
+[
+  {
+    "name": "absent pattern retains solid pigment",
+    "recipe": {
+      "version": 1,
+      "parts": [
+        {
+          "id": "Panel",
+          "parent": "",
+          "shape": "box",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "size": {
+            "x": 0.64,
+            "y": 0.02,
+            "z": 0.64
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "color": {
+            "r": 0.08,
+            "g": 0.08,
+            "b": 0.08,
+            "a": 1
+          }
+        }
+      ],
+      "tracks": [],
+      "duration": 2,
+      "playing": false,
+      "loop": false
+    },
+    "valid": true
+  },
+  {
+    "name": "checker",
+    "recipe": {
+      "version": 1,
+      "parts": [
+        {
+          "id": "Panel",
+          "parent": "",
+          "shape": "box",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "size": {
+            "x": 0.64,
+            "y": 0.02,
+            "z": 0.64
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "color": {
+            "r": 0.08,
+            "g": 0.08,
+            "b": 0.08,
+            "a": 1
+          },
+          "pattern": {
+            "kind": "checker",
+            "plane": "xz",
+            "columns": 8,
+            "rows": 8,
+            "secondary": "#FFFFFF"
+          }
+        }
+      ],
+      "tracks": [],
+      "duration": 2,
+      "playing": false,
+      "loop": false
+    },
+    "valid": true
+  },
+  {
+    "name": "solid",
+    "recipe": {
+      "version": 1,
+      "parts": [
+        {
+          "id": "Panel",
+          "parent": "",
+          "shape": "box",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "size": {
+            "x": 0.64,
+            "y": 0.02,
+            "z": 0.64
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "color": {
+            "r": 0.08,
+            "g": 0.08,
+            "b": 0.08,
+            "a": 1
+          },
+          "pattern": {
+            "kind": "solid",
+            "plane": "xz",
+            "columns": 8,
+            "rows": 8,
+            "secondary": "#FFFFFF"
+          }
+        }
+      ],
+      "tracks": [],
+      "duration": 2,
+      "playing": false,
+      "loop": false
+    },
+    "valid": true
+  },
+  {
+    "name": "stripes",
+    "recipe": {
+      "version": 1,
+      "parts": [
+        {
+          "id": "Panel",
+          "parent": "",
+          "shape": "box",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "size": {
+            "x": 0.64,
+            "y": 0.02,
+            "z": 0.64
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "color": {
+            "r": 0.08,
+            "g": 0.08,
+            "b": 0.08,
+            "a": 1
+          },
+          "pattern": {
+            "kind": "stripes",
+            "plane": "uv",
+            "columns": 12,
+            "rows": 1,
+            "secondary": "#FFFFFF"
+          }
+        }
+      ],
+      "tracks": [],
+      "duration": 2,
+      "playing": false,
+      "loop": false
+    },
+    "valid": true
+  },
+  {
+    "name": "maximum",
+    "recipe": {
+      "version": 1,
+      "parts": [
+        {
+          "id": "Panel",
+          "parent": "",
+          "shape": "box",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "size": {
+            "x": 0.64,
+            "y": 0.02,
+            "z": 0.64
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "color": {
+            "r": 0.08,
+            "g": 0.08,
+            "b": 0.08,
+            "a": 1
+          },
+          "pattern": {
+            "kind": "checker",
+            "plane": "xz",
+            "columns": 32,
+            "rows": 32,
+            "secondary": "#FFFFFF"
+          }
+        }
+      ],
+      "tracks": [],
+      "duration": 2,
+      "playing": false,
+      "loop": false
+    },
+    "valid": true
+  },
+  {
+    "name": "yz lower hex",
+    "recipe": {
+      "version": 1,
+      "parts": [
+        {
+          "id": "Panel",
+          "parent": "",
+          "shape": "box",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "size": {
+            "x": 0.64,
+            "y": 0.02,
+            "z": 0.64
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "color": {
+            "r": 0.08,
+            "g": 0.08,
+            "b": 0.08,
+            "a": 1
+          },
+          "pattern": {
+            "kind": "checker",
+            "plane": "yz",
+            "columns": 8,
+            "rows": 8,
+            "secondary": "#a1b2c3"
+          }
+        }
+      ],
+      "tracks": [],
+      "duration": 2,
+      "playing": false,
+      "loop": false
+    },
+    "valid": true
+  },
+  {
+    "name": "xy",
+    "recipe": {
+      "version": 1,
+      "parts": [
+        {
+          "id": "Panel",
+          "parent": "",
+          "shape": "box",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "size": {
+            "x": 0.64,
+            "y": 0.02,
+            "z": 0.64
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "color": {
+            "r": 0.08,
+            "g": 0.08,
+            "b": 0.08,
+            "a": 1
+          },
+          "pattern": {
+            "kind": "checker",
+            "plane": "xy",
+            "columns": 8,
+            "rows": 8,
+            "secondary": "#FFFFFF"
+          }
+        }
+      ],
+      "tracks": [],
+      "duration": 2,
+      "playing": false,
+      "loop": false
+    },
+    "valid": true
+  },
+  {
+    "name": "unknown kind",
+    "recipe": {
+      "version": 1,
+      "parts": [
+        {
+          "id": "Panel",
+          "parent": "",
+          "shape": "box",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "size": {
+            "x": 0.64,
+            "y": 0.02,
+            "z": 0.64
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "color": {
+            "r": 0.08,
+            "g": 0.08,
+            "b": 0.08,
+            "a": 1
+          },
+          "pattern": {
+            "kind": "noise",
+            "plane": "xz",
+            "columns": 8,
+            "rows": 8,
+            "secondary": "#FFFFFF"
+          }
+        }
+      ],
+      "tracks": [],
+      "duration": 2,
+      "playing": false,
+      "loop": false
+    },
+    "valid": false
+  },
+  {
+    "name": "unknown plane",
+    "recipe": {
+      "version": 1,
+      "parts": [
+        {
+          "id": "Panel",
+          "parent": "",
+          "shape": "box",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "size": {
+            "x": 0.64,
+            "y": 0.02,
+            "z": 0.64
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "color": {
+            "r": 0.08,
+            "g": 0.08,
+            "b": 0.08,
+            "a": 1
+          },
+          "pattern": {
+            "kind": "checker",
+            "plane": "world",
+            "columns": 8,
+            "rows": 8,
+            "secondary": "#FFFFFF"
+          }
+        }
+      ],
+      "tracks": [],
+      "duration": 2,
+      "playing": false,
+      "loop": false
+    },
+    "valid": false
+  },
+  {
+    "name": "zero columns",
+    "recipe": {
+      "version": 1,
+      "parts": [
+        {
+          "id": "Panel",
+          "parent": "",
+          "shape": "box",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "size": {
+            "x": 0.64,
+            "y": 0.02,
+            "z": 0.64
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "color": {
+            "r": 0.08,
+            "g": 0.08,
+            "b": 0.08,
+            "a": 1
+          },
+          "pattern": {
+            "kind": "checker",
+            "plane": "xz",
+            "columns": 0,
+            "rows": 8,
+            "secondary": "#FFFFFF"
+          }
+        }
+      ],
+      "tracks": [],
+      "duration": 2,
+      "playing": false,
+      "loop": false
+    },
+    "valid": false
+  },
+  {
+    "name": "large columns",
+    "recipe": {
+      "version": 1,
+      "parts": [
+        {
+          "id": "Panel",
+          "parent": "",
+          "shape": "box",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "size": {
+            "x": 0.64,
+            "y": 0.02,
+            "z": 0.64
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "color": {
+            "r": 0.08,
+            "g": 0.08,
+            "b": 0.08,
+            "a": 1
+          },
+          "pattern": {
+            "kind": "checker",
+            "plane": "xz",
+            "columns": 33,
+            "rows": 8,
+            "secondary": "#FFFFFF"
+          }
+        }
+      ],
+      "tracks": [],
+      "duration": 2,
+      "playing": false,
+      "loop": false
+    },
+    "valid": false
+  },
+  {
+    "name": "zero rows",
+    "recipe": {
+      "version": 1,
+      "parts": [
+        {
+          "id": "Panel",
+          "parent": "",
+          "shape": "box",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "size": {
+            "x": 0.64,
+            "y": 0.02,
+            "z": 0.64
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "color": {
+            "r": 0.08,
+            "g": 0.08,
+            "b": 0.08,
+            "a": 1
+          },
+          "pattern": {
+            "kind": "checker",
+            "plane": "xz",
+            "columns": 8,
+            "rows": 0,
+            "secondary": "#FFFFFF"
+          }
+        }
+      ],
+      "tracks": [],
+      "duration": 2,
+      "playing": false,
+      "loop": false
+    },
+    "valid": false
+  },
+  {
+    "name": "large rows",
+    "recipe": {
+      "version": 1,
+      "parts": [
+        {
+          "id": "Panel",
+          "parent": "",
+          "shape": "box",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "size": {
+            "x": 0.64,
+            "y": 0.02,
+            "z": 0.64
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "color": {
+            "r": 0.08,
+            "g": 0.08,
+            "b": 0.08,
+            "a": 1
+          },
+          "pattern": {
+            "kind": "checker",
+            "plane": "xz",
+            "columns": 8,
+            "rows": 33,
+            "secondary": "#FFFFFF"
+          }
+        }
+      ],
+      "tracks": [],
+      "duration": 2,
+      "playing": false,
+      "loop": false
+    },
+    "valid": false
+  },
+  {
+    "name": "short colour",
+    "recipe": {
+      "version": 1,
+      "parts": [
+        {
+          "id": "Panel",
+          "parent": "",
+          "shape": "box",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "size": {
+            "x": 0.64,
+            "y": 0.02,
+            "z": 0.64
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "color": {
+            "r": 0.08,
+            "g": 0.08,
+            "b": 0.08,
+            "a": 1
+          },
+          "pattern": {
+            "kind": "checker",
+            "plane": "xz",
+            "columns": 8,
+            "rows": 8,
+            "secondary": "#fff"
+          }
+        }
+      ],
+      "tracks": [],
+      "duration": 2,
+      "playing": false,
+      "loop": false
+    },
+    "valid": false
+  },
+  {
+    "name": "alpha colour",
+    "recipe": {
+      "version": 1,
+      "parts": [
+        {
+          "id": "Panel",
+          "parent": "",
+          "shape": "box",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "size": {
+            "x": 0.64,
+            "y": 0.02,
+            "z": 0.64
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "color": {
+            "r": 0.08,
+            "g": 0.08,
+            "b": 0.08,
+            "a": 1
+          },
+          "pattern": {
+            "kind": "checker",
+            "plane": "xz",
+            "columns": 8,
+            "rows": 8,
+            "secondary": "#FFFFFFFF"
+          }
+        }
+      ],
+      "tracks": [],
+      "duration": 2,
+      "playing": false,
+      "loop": false
+    },
+    "valid": false
+  },
+  {
+    "name": "bad colour",
+    "recipe": {
+      "version": 1,
+      "parts": [
+        {
+          "id": "Panel",
+          "parent": "",
+          "shape": "box",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "size": {
+            "x": 0.64,
+            "y": 0.02,
+            "z": 0.64
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "color": {
+            "r": 0.08,
+            "g": 0.08,
+            "b": 0.08,
+            "a": 1
+          },
+          "pattern": {
+            "kind": "checker",
+            "plane": "xz",
+            "columns": 8,
+            "rows": 8,
+            "secondary": "#GGFFFF"
+          }
+        }
+      ],
+      "tracks": [],
+      "duration": 2,
+      "playing": false,
+      "loop": false
+    },
+    "valid": false
+  },
+  {
+    "name": "fractional columns",
+    "recipe": {
+      "version": 1,
+      "parts": [
+        {
+          "id": "Panel",
+          "parent": "",
+          "shape": "box",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "size": {
+            "x": 0.64,
+            "y": 0.02,
+            "z": 0.64
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "color": {
+            "r": 0.08,
+            "g": 0.08,
+            "b": 0.08,
+            "a": 1
+          },
+          "pattern": {
+            "kind": "checker",
+            "plane": "xz",
+            "columns": 2.5,
+            "rows": 8,
+            "secondary": "#FFFFFF"
+          }
+        }
+      ],
+      "tracks": [],
+      "duration": 2,
+      "playing": false,
+      "loop": false
+    },
+    "valid": false
+  }
+]

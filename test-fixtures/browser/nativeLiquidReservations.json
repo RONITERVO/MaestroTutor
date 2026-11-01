@@ -1,0 +1,58 @@
+{
+  "budget": {
+    "instances": 32,
+    "preparing": 31,
+    "ready": 1,
+    "retiring": 0,
+    "instanceLimit": 32,
+    "streamPointLimit": 33
+  },
+  "preparing": [
+    {
+      "reservationId": "f7a11747d44e4e6189c6100184cbc6c1",
+      "worldId": "e0ca4d6208694f1da4fea84b79a820f2",
+      "regionId": "1c948f952120435db9bea94756c4fc01",
+      "target": "cd1846af153c4731bd75fd9ba3284690",
+      "phase": "preparing",
+      "active": false,
+      "surfaceAllocated": true,
+      "streamAllocated": true
+    }
+  ],
+  "ready": [
+    {
+      "reservationId": "f7a11747d44e4e6189c6100184cbc6c1",
+      "worldId": "e0ca4d6208694f1da4fea84b79a820f2",
+      "regionId": "1c948f952120435db9bea94756c4fc01",
+      "target": "cd1846af153c4731bd75fd9ba3284690",
+      "phase": "ready",
+      "active": true,
+      "surfaceAllocated": true,
+      "streamAllocated": true
+    }
+  ],
+  "disabled": [
+    {
+      "reservationId": "f7a11747d44e4e6189c6100184cbc6c1",
+      "worldId": "e0ca4d6208694f1da4fea84b79a820f2",
+      "regionId": "1c948f952120435db9bea94756c4fc01",
+      "target": "cd1846af153c4731bd75fd9ba3284690",
+      "phase": "ready",
+      "active": false,
+      "surfaceAllocated": true,
+      "streamAllocated": true
+    }
+  ],
+  "retiring": [
+    {
+      "reservationId": "f7a11747d44e4e6189c6100184cbc6c1",
+      "worldId": "e0ca4d6208694f1da4fea84b79a820f2",
+      "regionId": "1c948f952120435db9bea94756c4fc01",
+      "target": "cd1846af153c4731bd75fd9ba3284690",
+      "phase": "retiring",
+      "active": false,
+      "surfaceAllocated": true,
+      "streamAllocated": true
+    }
+  ]
+}

@@ -1,0 +1,565 @@
+[
+  {
+    "name": "configure a saved snow grid",
+    "capability": "object.field.edit",
+    "arguments": {
+      "operation": "configure",
+      "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "revision": 1,
+      "definition": {
+        "cells": 16,
+        "frame": {
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "width": 1,
+        "depth": 1,
+        "maxHeight": 0.25,
+        "material": "Snow",
+        "color": {
+          "r": 0.94,
+          "g": 0.97,
+          "b": 1,
+          "a": 1
+        }
+      },
+      "fillHeight": 0.08
+    },
+    "valid": true
+  },
+  {
+    "name": "configure 4 cells",
+    "capability": "object.field.edit",
+    "arguments": {
+      "operation": "configure",
+      "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "revision": 1,
+      "definition": {
+        "cells": 4,
+        "frame": {
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "width": 1,
+        "depth": 1,
+        "maxHeight": 0.25,
+        "material": "Snow",
+        "color": {
+          "r": 0.94,
+          "g": 0.97,
+          "b": 1,
+          "a": 1
+        }
+      },
+      "fillHeight": 0.08
+    },
+    "valid": true
+  },
+  {
+    "name": "configure 8 cells",
+    "capability": "object.field.edit",
+    "arguments": {
+      "operation": "configure",
+      "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "revision": 1,
+      "definition": {
+        "cells": 8,
+        "frame": {
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "width": 1,
+        "depth": 1,
+        "maxHeight": 0.25,
+        "material": "Snow",
+        "color": {
+          "r": 0.94,
+          "g": 0.97,
+          "b": 1,
+          "a": 1
+        }
+      },
+      "fillHeight": 0.08
+    },
+    "valid": true
+  },
+  {
+    "name": "configure 16 cells",
+    "capability": "object.field.edit",
+    "arguments": {
+      "operation": "configure",
+      "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "revision": 1,
+      "definition": {
+        "cells": 16,
+        "frame": {
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "width": 1,
+        "depth": 1,
+        "maxHeight": 0.25,
+        "material": "Snow",
+        "color": {
+          "r": 0.94,
+          "g": 0.97,
+          "b": 1,
+          "a": 1
+        }
+      },
+      "fillHeight": 0.08
+    },
+    "valid": true
+  },
+  {
+    "name": "remove a configured surface",
+    "capability": "object.field.edit",
+    "arguments": {
+      "operation": "remove",
+      "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "revision": 1
+    },
+    "valid": true
+  },
+  {
+    "name": "reject unsupported cell count",
+    "capability": "object.field.edit",
+    "arguments": {
+      "operation": "configure",
+      "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "revision": 1,
+      "definition": {
+        "cells": 5,
+        "frame": {
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "width": 1,
+        "depth": 1,
+        "maxHeight": 0.25,
+        "material": "Snow",
+        "color": {
+          "r": 0.94,
+          "g": 0.97,
+          "b": 1,
+          "a": 1
+        }
+      },
+      "fillHeight": 0.08
+    },
+    "valid": false
+  },
+  {
+    "name": "reject overfill",
+    "capability": "object.field.edit",
+    "arguments": {
+      "operation": "configure",
+      "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "revision": 1,
+      "definition": {
+        "cells": 16,
+        "frame": {
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "width": 1,
+        "depth": 1,
+        "maxHeight": 0.25,
+        "material": "Snow",
+        "color": {
+          "r": 0.94,
+          "g": 0.97,
+          "b": 1,
+          "a": 1
+        }
+      },
+      "fillHeight": 0.4
+    },
+    "valid": false
+  },
+  {
+    "name": "reject out of range frame",
+    "capability": "object.field.edit",
+    "arguments": {
+      "operation": "configure",
+      "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "revision": 1,
+      "definition": {
+        "cells": 16,
+        "frame": {
+          "position": {
+            "x": 11,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "width": 1,
+        "depth": 1,
+        "maxHeight": 0.25,
+        "material": "Snow",
+        "color": {
+          "r": 0.94,
+          "g": 0.97,
+          "b": 1,
+          "a": 1
+        }
+      },
+      "fillHeight": 0.08
+    },
+    "valid": false
+  },
+  {
+    "name": "reject invalid rotation",
+    "capability": "object.field.edit",
+    "arguments": {
+      "operation": "configure",
+      "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "revision": 1,
+      "definition": {
+        "cells": 16,
+        "frame": {
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 0.3
+          }
+        },
+        "width": 1,
+        "depth": 1,
+        "maxHeight": 0.25,
+        "material": "Snow",
+        "color": {
+          "r": 0.94,
+          "g": 0.97,
+          "b": 1,
+          "a": 1
+        }
+      },
+      "fillHeight": 0.08
+    },
+    "valid": false
+  },
+  {
+    "name": "reject malformed label",
+    "capability": "object.field.edit",
+    "arguments": {
+      "operation": "configure",
+      "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "revision": 1,
+      "definition": {
+        "cells": 16,
+        "frame": {
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "width": 1,
+        "depth": 1,
+        "maxHeight": 0.25,
+        "material": "Snow\n",
+        "color": {
+          "r": 0.94,
+          "g": 0.97,
+          "b": 1,
+          "a": 1
+        }
+      },
+      "fillHeight": 0.08
+    },
+    "valid": false
+  },
+  {
+    "name": "reject extra definition key",
+    "capability": "object.field.edit",
+    "arguments": {
+      "operation": "configure",
+      "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "revision": 1,
+      "definition": {
+        "cells": 16,
+        "frame": {
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "width": 1,
+        "depth": 1,
+        "maxHeight": 0.25,
+        "material": "Snow",
+        "color": {
+          "r": 0.94,
+          "g": 0.97,
+          "b": 1,
+          "a": 1
+        },
+        "secret": 0
+      },
+      "fillHeight": 0.08
+    },
+    "valid": false
+  },
+  {
+    "name": "reject zero size",
+    "capability": "object.field.edit",
+    "arguments": {
+      "operation": "configure",
+      "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "revision": 1,
+      "definition": {
+        "cells": 16,
+        "frame": {
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "width": 0,
+        "depth": 1,
+        "maxHeight": 0.25,
+        "material": "Snow",
+        "color": {
+          "r": 0.94,
+          "g": 0.97,
+          "b": 1,
+          "a": 1
+        }
+      },
+      "fillHeight": 0.08
+    },
+    "valid": false
+  },
+  {
+    "name": "sculpt raise",
+    "capability": "object.field.sculpt",
+    "arguments": {
+      "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "revision": 1,
+      "mode": "raise",
+      "radius": 0.08,
+      "height": 0.03,
+      "path": [
+        {
+          "x": -0.25,
+          "z": 0
+        },
+        {
+          "x": 0.25,
+          "z": 0
+        }
+      ]
+    },
+    "valid": true
+  },
+  {
+    "name": "sculpt lower",
+    "capability": "object.field.sculpt",
+    "arguments": {
+      "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "revision": 1,
+      "mode": "lower",
+      "radius": 0.08,
+      "height": 0.03,
+      "path": [
+        {
+          "x": -0.25,
+          "z": 0
+        },
+        {
+          "x": 0.25,
+          "z": 0
+        }
+      ]
+    },
+    "valid": true
+  },
+  {
+    "name": "sculpt level",
+    "capability": "object.field.sculpt",
+    "arguments": {
+      "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "revision": 1,
+      "mode": "level",
+      "radius": 0.08,
+      "height": 0.03,
+      "path": [
+        {
+          "x": -0.25,
+          "z": 0
+        },
+        {
+          "x": 0.25,
+          "z": 0
+        }
+      ]
+    },
+    "valid": true
+  },
+  {
+    "name": "reject empty stroke",
+    "capability": "object.field.sculpt",
+    "arguments": {
+      "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "revision": 1,
+      "mode": "lower",
+      "radius": 0.08,
+      "height": 0.03,
+      "path": []
+    },
+    "valid": false
+  },
+  {
+    "name": "reject arbitrary mode",
+    "capability": "object.field.sculpt",
+    "arguments": {
+      "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "revision": 1,
+      "mode": "code",
+      "radius": 0.08,
+      "height": 0.03,
+      "path": [
+        {
+          "x": -0.25,
+          "z": 0
+        },
+        {
+          "x": 0.25,
+          "z": 0
+        }
+      ]
+    },
+    "valid": false
+  },
+  {
+    "name": "reject oversized brush",
+    "capability": "object.field.sculpt",
+    "arguments": {
+      "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "revision": 1,
+      "mode": "lower",
+      "radius": 3,
+      "height": 0.03,
+      "path": [
+        {
+          "x": -0.25,
+          "z": 0
+        },
+        {
+          "x": 0.25,
+          "z": 0
+        }
+      ]
+    },
+    "valid": false
+  },
+  {
+    "name": "reject null height",
+    "capability": "object.field.sculpt",
+    "arguments": {
+      "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "revision": 1,
+      "mode": "lower",
+      "radius": 0.08,
+      "height": null,
+      "path": [
+        {
+          "x": -0.25,
+          "z": 0
+        },
+        {
+          "x": 0.25,
+          "z": 0
+        }
+      ]
+    },
+    "valid": false
+  }
+]

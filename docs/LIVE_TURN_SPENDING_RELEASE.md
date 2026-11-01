@@ -30,6 +30,15 @@ USD 100 of actual provider spend; monitor the budget document when diagnosing
 the daily-allowance error. Changing the limit is an owner/operator deployment.
 Do not delete the current day record to bypass the guard.
 
+On 2026-10-06 the owner authorized tripling the staging allowance for extended
+real-provider Quest learner tests. The deployed `chatwithmaestro-staging` `api`
+environment and its local deployment configuration now use **USD 450**, previously
+USD 150. The environment-only update completed successfully. No admission records
+were reset, and production configuration and the code default above were unchanged.
+The original 13-turn managed learner collection settled USD 0.631325 actual
+estimated usage; its Live opening was denied by the former admission allowance.
+This difference is expected from the conservative per-request reservations.
+
 For Live, operator admission separately covers the largest enabled model's full
 131,072-token context and 65,536-token output at the highest applicable modality
 rates, plus 10% headroom (USD 1.297613 per admitted session). Gemini can generate

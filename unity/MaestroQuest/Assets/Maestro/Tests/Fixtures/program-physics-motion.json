@@ -1,0 +1,165 @@
+{
+  "version": 3,
+  "entry": "main",
+  "resources": [
+    "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+  ],
+  "state": [
+    {
+      "name": "landed",
+      "initial": false
+    },
+    {
+      "name": "movingAgain",
+      "initial": false
+    },
+    {
+      "name": "quiet",
+      "initial": 0
+    }
+  ],
+  "events": [],
+  "functions": [
+    {
+      "name": "main",
+      "returns": "void",
+      "parameters": [],
+      "locals": [
+        {
+          "name": "received",
+          "initial": false
+        },
+        {
+          "name": "source",
+          "initial": ""
+        },
+        {
+          "name": "settled",
+          "initial": false
+        },
+        {
+          "name": "speed",
+          "initial": 0
+        },
+        {
+          "name": "spin",
+          "initial": 0
+        },
+        {
+          "name": "quiet",
+          "initial": 0
+        }
+      ],
+      "body": [
+        {
+          "id": "settling",
+          "op": "awaitEvent",
+          "event": "object.motion.changed",
+          "source": "",
+          "version": 1,
+          "arguments": {
+            "target": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "speedThreshold": 0.05,
+            "angularThreshold": 0.1,
+            "quietSeconds": 0.3,
+            "transition": "settled",
+            "initial": "report"
+          },
+          "bindings": {},
+          "timeout": {
+            "value": 20
+          },
+          "received": "received",
+          "value": "source",
+          "fields": {
+            "settled": "settled",
+            "speed": "speed",
+            "angularSpeed": "spin",
+            "quietSeconds": "quiet"
+          }
+        },
+        {
+          "id": "landed",
+          "op": "if",
+          "test": {
+            "var": "received"
+          },
+          "then": [
+            {
+              "id": "rememberRest",
+              "op": "setState",
+              "variable": "landed",
+              "value": {
+                "var": "settled"
+              }
+            },
+            {
+              "id": "rememberQuiet",
+              "op": "setState",
+              "variable": "quiet",
+              "value": {
+                "var": "quiet"
+              }
+            },
+            {
+              "id": "paint",
+              "op": "invoke",
+              "capability": "object.color.set",
+              "version": 1,
+              "arguments": {
+                "target": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+                "red": 0.2,
+                "green": 0.8,
+                "blue": 0.3
+              },
+              "bindings": {}
+            }
+          ],
+          "else": []
+        },
+        {
+          "id": "moving",
+          "op": "awaitEvent",
+          "event": "object.motion.changed",
+          "source": "",
+          "version": 1,
+          "arguments": {
+            "target": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "speedThreshold": 0.05,
+            "angularThreshold": 0.1,
+            "quietSeconds": 0.3,
+            "transition": "moving",
+            "initial": "baseline"
+          },
+          "bindings": {},
+          "timeout": {
+            "value": 20
+          },
+          "received": "received",
+          "value": "source",
+          "fields": {
+            "settled": "settled",
+            "speed": "speed",
+            "angularSpeed": "spin",
+            "quietSeconds": "quiet"
+          }
+        },
+        {
+          "id": "rememberMove",
+          "op": "setState",
+          "variable": "movingAgain",
+          "value": {
+            "var": "received"
+          }
+        },
+        {
+          "id": "finish",
+          "op": "sleep",
+          "seconds": {
+            "value": 30
+          }
+        }
+      ]
+    }
+  ]
+}

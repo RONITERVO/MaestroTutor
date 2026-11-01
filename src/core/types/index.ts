@@ -1,6 +1,7 @@
 // Copyright 2025 Roni Tervo
 //
 // SPDX-License-Identifier: Apache-2.0
+import type { ImageOrigin } from '../../../shared/imageOrigin';
 
 /**
  * The persisted layout box for a message's rich attachment.
@@ -21,7 +22,8 @@ export interface EmbedBox {
 export interface ChatMessage {
   id: string;
   role: 'user' | 'assistant' | 'system' | 'error' | 'status' | 'system_selection';
-  maestroToolKind?: 'image' | 'audio-note' | 'music';
+  maestroToolKind?: 'image' | 'audio-note' | 'music' | 'agent';
+  agentTask?: { id: string; sourceUserId?: string; sourceAssistantId?: string; phase: 'working' | 'replying' | 'completed' | 'limited' | 'stopped' | 'interrupted' | 'failed'; note: string };
   text?: string;
   /** Ephemeral ink feedback while the provider transcript is pending; never speech text. */
   speechPreviewProgress?: number;
@@ -41,6 +43,8 @@ export interface ChatMessage {
   ttsAudioCache?: TtsAudioCacheEntry[];
   imageUrl?: string;
   imageMimeType?: string;
+  /** Origin of the displayed image, independent of compression/upload variants. */
+  imageOrigin?: ImageOrigin;
   /** Original attachment file name if available (e.g. README.md, app.tsx) */
   attachmentName?: string;
   /** Optimized (lower res) image for local storage to reduce DB size */
@@ -91,6 +95,13 @@ export type UploadedAttachmentSource =
   | 'svg-rasterized'
   | 'derived';
 
+/** Provenance is application metadata; never sent as a provider fileData field. */
+export interface ChatFilePart {
+  fileUri: string;
+  mimeType: string;
+  origin?: ImageOrigin;
+}
+
 export interface UploadedAttachmentVariant {
   /** Stable variant key so callers can upsert a specific surrogate. */
   id: string;
@@ -98,6 +109,7 @@ export interface UploadedAttachmentVariant {
   mimeType: string;
   targets: UploadedAttachmentTarget[];
   source: UploadedAttachmentSource;
+  origin?: ImageOrigin;
   order?: number;
 }
 
@@ -106,6 +118,8 @@ export interface SpeechPart {
   langCode: string;
   cacheKey?: string;
   cachedAudio?: string;
+  /** A learner's actual recording must not be emitted from Maestro's avatar. */
+  speaker?: 'maestro' | 'learner';
   onAudioCached?: (audioDataUrl: string, details: SpeechCacheDetails) => void;
   context?: SpeechCacheContext;
   voiceName?: string;

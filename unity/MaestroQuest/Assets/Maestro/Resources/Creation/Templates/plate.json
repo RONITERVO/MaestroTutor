@@ -1,0 +1,128 @@
+{
+  "format": "maestro-creation-template",
+  "version": 1,
+  "id": "plate",
+  "name": "Plate",
+  "description": "Shallow dish with an open collision interior.",
+  "tags": [
+    "tableware",
+    "lathe"
+  ],
+  "author": "Roni Tervo / Maestro",
+  "license": "Apache-2.0",
+  "definition": {
+    "version": 1,
+    "recipe": {
+      "version": 1,
+      "parts": [
+        {
+          "id": "Body",
+          "shape": "lathe",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "size": {
+            "x": 0.28,
+            "y": 0.025,
+            "z": 0.28
+          },
+          "rotation": {
+            "x": 0.0,
+            "y": 0,
+            "z": 0.0,
+            "w": 1.0
+          },
+          "parent": null,
+          "color": {
+            "r": 0.91,
+            "g": 0.88,
+            "b": 0.76,
+            "a": 1
+          },
+          "profile": [
+            {
+              "x": 0,
+              "y": -0.5
+            },
+            {
+              "x": 0.5,
+              "y": -0.5
+            },
+            {
+              "x": 0.5,
+              "y": 0.5
+            },
+            {
+              "x": 0.38,
+              "y": -0.1
+            },
+            {
+              "x": 0,
+              "y": -0.1
+            }
+          ],
+          "segments": 24
+        }
+      ],
+      "tracks": [],
+      "duration": 2,
+      "playing": false,
+      "loop": true
+    },
+    "collision": {
+      "version": 1,
+      "shapes": [
+        {
+          "id": "Floor",
+          "shape": "cylinder",
+          "position": {
+            "x": 0,
+            "y": -0.0075,
+            "z": 0
+          },
+          "size": {
+            "x": 0.28,
+            "y": 0.01,
+            "z": 0.28
+          },
+          "rotation": {
+            "x": 0.0,
+            "y": 0,
+            "z": 0.0,
+            "w": 1.0
+          },
+          "segments": 12
+        },
+        {
+          "id": "Rim",
+          "shape": "ring",
+          "position": {
+            "x": 0,
+            "y": 0.0025,
+            "z": 0
+          },
+          "size": {
+            "x": 0.28,
+            "y": 0.02,
+            "z": 0.28
+          },
+          "rotation": {
+            "x": 0.0,
+            "y": 0,
+            "z": 0.0,
+            "w": 1.0
+          },
+          "innerRadius": 0.43,
+          "segments": 12
+        }
+      ]
+    },
+    "physics": {
+      "mode": "solid",
+      "shape": "automatic",
+      "mass": 0.25
+    }
+  }
+}

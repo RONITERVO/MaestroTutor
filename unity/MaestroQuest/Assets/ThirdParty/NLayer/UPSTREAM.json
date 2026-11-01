@@ -1,0 +1,50 @@
+{
+  "name": "NLayer",
+  "version": "3.0.0",
+  "commit": "046c7ce422970f8f0f0bc205d6c6341bcb7debf1",
+  "repository": "https://github.com/naudio/NLayer",
+  "sourceSha256": {
+    "Enums.cs": "ea13989cafa259baf6a2740899c3325265dc8d9e6cc4dd75bd417175b421c895",
+    "IMpegFrame.cs": "562bf839ba59b91fec4ed6940984e41318a4fa2bf44e8d9fe764918dd80b8de9",
+    "MpegFile.cs": "39d3178389530d49706ee1aa6861d2fd2c8bc7c5039115224bfcdcb0a63c60b8",
+    "MpegFrameDecoder.cs": "65361fd6d2e25128f7f60ff6c86855d3b14b833aaf778aa2fe3e6ce8cd9b04c5",
+    "Decoder/BitReservoir.cs": "4ed184472b74e174d7048064eaefcfd73afc031034ef3e74883c37d865fb9280",
+    "Decoder/FrameBase.cs": "8676940bc6fae0601ef80ab6ea187b7e83a53be69f898a643c1cabdc7437142b",
+    "Decoder/Huffman.cs": "3aac5e07f9af7134e2a2cca473f311c86093ebe8301735e364e58e53395010c6",
+    "Decoder/ID3Frame.cs": "027348dbd5c7b206fb7003e8f1a69fb9f015d84d8907a6311034b8f16bf65e22",
+    "Decoder/LayerDecoderBase.cs": "a224fd2e74745d4664cffb85367b97297d3426c5d9376040bc5672414bbd31f9",
+    "Decoder/LayerIDecoder.cs": "c25f743862f09cf2bcc9bf3b5f85f28d20d7ecd89a60baaff763b603334b3725",
+    "Decoder/LayerIIDecoder.cs": "55accb422f03ab36ff815e8ee4a7089f2317bef041b4fb65d3498358d4414c82",
+    "Decoder/LayerIIDecoderBase.cs": "2d541e4be78383266311e05e2d7c0c41b9077d05be2605e5c7495e85c46f2ee4",
+    "Decoder/LayerIIIDecoder.cs": "23bf221aed434eb04650072205571fb836a3a028038af4fa90a56f18148f818d",
+    "Decoder/MpegFrame.cs": "d3983a37b38f4044ca627760a7db51760942002a92dbc4333466ad97e548c299",
+    "Decoder/MpegStreamReader.cs": "1b3fbed283405a957963de647358712a7e055d36b660d2e33df48baf248b151b",
+    "Decoder/RiffHeaderFrame.cs": "54630c2b38bfa3f769a29d35940be849d257872e0723ab44efc3b887594d2718",
+    "Decoder/VBRInfo.cs": "4baca28802e33663320ee3f6e68b537ec2775f864f394ee2e0da5b68821883e3"
+  },
+  "patches": {
+    "Decoder/MpegFrame.cs": "Recognize Lavc/Lavf encoder delay/padding in the same Xing layout as LAME (FFmpeg 7.1.1 mp3enc.c).",
+    "MpegFile.cs": "Reject damaged/truncated frame decoding instead of treating it as ordinary EOF; apply known Layer III synthesis delay along with encoder delay, carrying skips across MPEG-2/2.5 frames without changing logical duration.",
+    "Decoder/LayerIIIDecoder.cs": "Use the 72-line short-block Huffman region at 8 kHz (MPEG-2.5), instead of the 36-line region used at other rates."
+  },
+  "shippedSourceSha256": {
+    "Decoder/BitReservoir.cs": "4ed184472b74e174d7048064eaefcfd73afc031034ef3e74883c37d865fb9280",
+    "Decoder/FrameBase.cs": "8676940bc6fae0601ef80ab6ea187b7e83a53be69f898a643c1cabdc7437142b",
+    "Decoder/Huffman.cs": "3aac5e07f9af7134e2a2cca473f311c86093ebe8301735e364e58e53395010c6",
+    "Decoder/ID3Frame.cs": "027348dbd5c7b206fb7003e8f1a69fb9f015d84d8907a6311034b8f16bf65e22",
+    "Decoder/LayerDecoderBase.cs": "a224fd2e74745d4664cffb85367b97297d3426c5d9376040bc5672414bbd31f9",
+    "Decoder/LayerIDecoder.cs": "c25f743862f09cf2bcc9bf3b5f85f28d20d7ecd89a60baaff763b603334b3725",
+    "Decoder/LayerIIDecoder.cs": "55accb422f03ab36ff815e8ee4a7089f2317bef041b4fb65d3498358d4414c82",
+    "Decoder/LayerIIDecoderBase.cs": "2d541e4be78383266311e05e2d7c0c41b9077d05be2605e5c7495e85c46f2ee4",
+    "Decoder/LayerIIIDecoder.cs": "7b5a11e76e124f126878aa842c98e852524913e8faa21124e9adf36b4f924ed8",
+    "Decoder/MpegFrame.cs": "474bfa49c710feb05c5b9a7018a8d78283eb5a9e809eca719c205e3b1044b980",
+    "Decoder/MpegStreamReader.cs": "1b3fbed283405a957963de647358712a7e055d36b660d2e33df48baf248b151b",
+    "Decoder/RiffHeaderFrame.cs": "54630c2b38bfa3f769a29d35940be849d257872e0723ab44efc3b887594d2718",
+    "Decoder/VBRInfo.cs": "4baca28802e33663320ee3f6e68b537ec2775f864f394ee2e0da5b68821883e3",
+    "Enums.cs": "ea13989cafa259baf6a2740899c3325265dc8d9e6cc4dd75bd417175b421c895",
+    "IMpegFrame.cs": "562bf839ba59b91fec4ed6940984e41318a4fa2bf44e8d9fe764918dd80b8de9",
+    "MpegFile.cs": "485cf8dcd8966552609c317a73629ff6e1263657bb8e351215275d0684999549",
+    "MpegFrameDecoder.cs": "65361fd6d2e25128f7f60ff6c86855d3b14b833aaf778aa2fe3e6ce8cd9b04c5"
+  },
+  "shippedHashNormalization": "UTF-8 source with CRLF normalized to LF"
+}

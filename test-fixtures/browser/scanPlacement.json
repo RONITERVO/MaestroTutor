@@ -1,0 +1,115 @@
+{
+  "scan": {
+    "available": true,
+    "stateId": "0edc29e865584ac985b51f3c771107e2",
+    "roomId": "fdd8380ea1db476d994ba05462ac6abd",
+    "count": 2,
+    "omitted": 0,
+    "reason": "Loaded scan bounds; physical alignment is not verified"
+  },
+  "request": {
+    "operation": "start",
+    "runId": "39eead9545d141e0ab2c4cffb0cc572e",
+    "call": {
+      "id": "object.scan.place",
+      "version": 1,
+      "arguments": {
+        "target": "e3ba480ea4e040b28ad634d6abf2e8b9",
+        "stateId": "0edc29e865584ac985b51f3c771107e2",
+        "anchorId": "00000000000000000000000000000001",
+        "x": 0.5,
+        "y": -0.4
+      }
+    }
+  },
+  "receipt": {
+    "selected": {
+      "id": "39eead9545d141e0ab2c4cffb0cc572e",
+      "capability": "object.scan.place",
+      "version": 1,
+      "resources": [
+        "e3ba480ea4e040b28ad634d6abf2e8b9"
+      ],
+      "phase": "completed",
+      "status": "Action completed",
+      "output": {
+        "target": "e3ba480ea4e040b28ad634d6abf2e8b9",
+        "revision": 7,
+        "roomId": "fdd8380ea1db476d994ba05462ac6abd",
+        "anchorId": "00000000000000000000000000000001",
+        "position": {
+          "x": 0.473999977,
+          "y": 0.385999858,
+          "z": 0.399999976
+        },
+        "point": {
+          "x": 0.5,
+          "y": 0.349999964,
+          "z": 0.399999976
+        },
+        "normal": {
+          "x": 0.0,
+          "y": 1.0,
+          "z": 5.960465E-08
+        },
+        "temporary": false
+      },
+      "call": {
+        "id": "object.scan.place",
+        "version": 1,
+        "arguments": {
+          "target": "e3ba480ea4e040b28ad634d6abf2e8b9",
+          "stateId": "0edc29e865584ac985b51f3c771107e2",
+          "anchorId": "00000000000000000000000000000001",
+          "x": 0.5,
+          "y": -0.4
+        }
+      }
+    },
+    "running": [],
+    "outcomes": [
+      {
+        "id": "39eead9545d141e0ab2c4cffb0cc572e",
+        "capability": "object.scan.place",
+        "version": 1,
+        "resources": [
+          "e3ba480ea4e040b28ad634d6abf2e8b9"
+        ],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "target": "e3ba480ea4e040b28ad634d6abf2e8b9",
+          "revision": 7,
+          "roomId": "fdd8380ea1db476d994ba05462ac6abd",
+          "anchorId": "00000000000000000000000000000001",
+          "position": {
+            "x": 0.473999977,
+            "y": 0.385999858,
+            "z": 0.399999976
+          },
+          "point": {
+            "x": 0.5,
+            "y": 0.349999964,
+            "z": 0.399999976
+          },
+          "normal": {
+            "x": 0.0,
+            "y": 1.0,
+            "z": 5.960465E-08
+          },
+          "temporary": false
+        }
+      }
+    ],
+    "nextRunId": "8c7c157978ed477eab06826b5e3afdf9",
+    "storageError": null,
+    "recovery": null
+  },
+  "before": {
+    "x": 1.0,
+    "y": 1.6,
+    "z": 1.0
+  },
+  "beforeRevision": 6,
+  "boundary": "synthetic scan source; real native placement, persistence, Undo and receipt"
+}

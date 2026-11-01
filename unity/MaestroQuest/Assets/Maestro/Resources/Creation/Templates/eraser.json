@@ -1,0 +1,136 @@
+{
+  "format": "maestro-creation-template",
+  "version": 1,
+  "id": "eraser",
+  "name": "Eraser",
+  "description": "A held whole-stroke eraser. Sweep its pink end across configured ink; lift to save the touched strokes with one Undo.",
+  "tags": [
+    "drawing",
+    "tool",
+    "eraser"
+  ],
+  "author": "Roni Tervo / Maestro",
+  "license": "Apache-2.0",
+  "definition": {
+    "version": 1,
+    "recipe": {
+      "version": 1,
+      "parts": [
+        {
+          "id": "Rubber",
+          "shape": "box",
+          "parent": "",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "size": {
+            "x": 0.05,
+            "y": 0.022,
+            "z": 0.07
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "color": {
+            "r": 0.9,
+            "g": 0.48,
+            "b": 0.56,
+            "a": 1
+          }
+        },
+        {
+          "id": "Sleeve",
+          "shape": "box",
+          "parent": "",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": -0.012
+          },
+          "size": {
+            "x": 0.052,
+            "y": 0.024,
+            "z": 0.035
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "color": {
+            "r": 0.44,
+            "g": 0.27,
+            "b": 0.57,
+            "a": 1
+          }
+        }
+      ],
+      "tracks": [],
+      "duration": 1,
+      "loop": false,
+      "playing": false
+    },
+    "collision": {
+      "version": 1,
+      "shapes": [
+        {
+          "id": "Body",
+          "shape": "box",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "size": {
+            "x": 0.052,
+            "y": 0.024,
+            "z": 0.07
+          }
+        }
+      ]
+    },
+    "physics": {
+      "mode": "solid",
+      "shape": "automatic",
+      "mass": 0.06
+    },
+    "drawingTips": [
+      {
+        "version": 2,
+        "part": "",
+        "position": {
+          "x": 0,
+          "y": 0,
+          "z": 0.035
+        },
+        "rotation": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1
+        },
+        "color": {
+          "r": 1,
+          "g": 1,
+          "b": 1,
+          "a": 1
+        },
+        "radius": 0.012,
+        "enabled": true,
+        "mode": "erase"
+      }
+    ]
+  }
+}

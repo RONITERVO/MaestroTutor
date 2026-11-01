@@ -8,8 +8,10 @@ import {
   useGeminiLiveConversation,
   LiveSessionState,
   type LiveTurnTranscriptUpdate,
+  type LiveTurnContext,
 } from '../../speech';
 import { useMaestroStore } from '../../../store';
+import { prepareLiveRoomAgentContext } from '../../chat';
 import { createSmartRef } from '../../../shared/utils/smartRef';
 import { buildLiveSystemInstruction } from '../utils/liveSystemInstruction';
 import { LIVE_OPEN_TRIGGER } from '../../../../shared/liveOpenReason';
@@ -31,7 +33,8 @@ export interface UseSilentObserverControllerConfig {
     userText: string,
     modelText: string,
     userAudioPcm?: Int16Array,
-    modelAudioLines?: Int16Array[]
+    modelAudioLines?: Int16Array[],
+    context?: LiveTurnContext
   ) => void | Promise<void>;
   onTurnTranscriptUpdate?: (update: LiveTurnTranscriptUpdate) => void;
 }
@@ -40,6 +43,7 @@ export interface UseSilentObserverControllerReturn {
   silentObserverState: LiveSessionState;
   silentObserverError: string | null;
   stopSilentObserver: () => Promise<void>;
+  pauseObserverForSpeech: () => Promise<boolean>;
   resetSilentObserver: () => Promise<void>;
 }
 
@@ -127,9 +131,9 @@ export const useSilentObserverController = ({
     onTurnTranscriptUpdate: (update) => {
       onTurnTranscriptUpdate?.(update);
     },
-    onTurnComplete: (userText, modelText, userAudioPcm, modelAudioLines) => {
+    onTurnComplete: (userText, modelText, userAudioPcm, modelAudioLines, context) => {
       if (!onTurnComplete) return;
-      return Promise.resolve(onTurnComplete(userText, modelText, userAudioPcm, modelAudioLines)).catch((error) => {
+      return Promise.resolve(onTurnComplete(userText, modelText, userAudioPcm, modelAudioLines, context)).catch((error) => {
         console.error('Silent observer turn handler failed:', error);
       });
     },
@@ -156,22 +160,26 @@ export const useSilentObserverController = ({
     if (startInFlightRef.current) return;
     startInFlightRef.current = true;
     clearRetryTimer();
+    const conversationId = useMaestroStore.getState().settings.selectedLanguagePairId;
     const startAttempt = Date.now();
     lastStartAttemptRef.current = startAttempt;
 
     try {
       const liveSystemInstruction = await buildObserverInstruction();
-      if (!shouldRunRef.current || lastStartAttemptRef.current !== startAttempt) return;
+      if (!shouldRunRef.current || lastStartAttemptRef.current !== startAttempt || !conversationId
+        || useMaestroStore.getState().settings.selectedLanguagePairId !== conversationId) return;
 
       const voiceName = settingsRef.current.tts.voiceName || 'Kore';
       const activeStream = liveVideoStream && liveVideoStream.active ? liveVideoStream : null;
 
       await startObserverConversation({
         liveOpenTrigger: LIVE_OPEN_TRIGGER.WHISPER_OBSERVER,
+        conversationId,
         stream: activeStream,
         videoElement: visualContextVideoRef.current,
         systemInstruction: liveSystemInstruction,
         buildSystemInstruction: () => instructionBuilderRef.current(),
+        prepareTurnContext: prepareLiveRoomAgentContext,
         voiceName,
         responseModalities: [Modality.AUDIO],
         playModelAudio: true,
@@ -219,13 +227,24 @@ export const useSilentObserverController = ({
     clearRetryTimer();
     try {
       await stopObserverConversation();
+      return true;
     } catch {
-      // Ignore stop errors; observer lifecycle will reconcile on next effect tick.
+      // The lifecycle can retry; audio ownership must not assume this succeeded.
+      return false;
     }
   }, [clearRetryTimer, clearSuspendWakeTimer, stopObserverConversation]);
 
   const stopSilentObserver = useCallback(async () => {
     await stopObserverInternal('manual-stop', OBSERVER_MANUAL_STOP_HOLD_MS);
+  }, [stopObserverInternal]);
+
+  const pauseObserverForSpeech = useCallback(async () => {
+    const mode = useMaestroStore.getState().silentObserverState;
+    if (mode === 'active' || mode === 'connecting') return false;
+    // Fence a pending instruction build before waiting for transport cleanup.
+    // The caller's TTS activity reservation prevents automatic re-arming.
+    shouldRunRef.current = false;
+    return await stopObserverInternal('task-speech');
   }, [stopObserverInternal]);
 
   const resetSilentObserver = useCallback(async () => {
@@ -321,6 +340,7 @@ export const useSilentObserverController = ({
     silentObserverState,
     silentObserverError,
     stopSilentObserver,
+    pauseObserverForSpeech,
     resetSilentObserver,
   };
 };

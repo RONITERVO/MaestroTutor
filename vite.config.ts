@@ -107,6 +107,7 @@ export default defineConfig(() => ({
         // installing the app, so this is a second entry point rather than a
         // route inside the SPA.
         deleteAccount: path.resolve(__dirname, 'delete-account.html'),
+        questLink: path.resolve(__dirname, 'quest-link.html'),
       },
     },
   },

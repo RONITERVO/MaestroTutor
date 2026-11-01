@@ -242,10 +242,7 @@ const createManagedGatewaySession = async (params: {
   return new Promise((resolve, reject) => {
     let completed = false;
     const timeoutId = globalThis.setTimeout(() => {
-      if (completed) return;
-      completed = true;
-      socket.close(4000, 'connect-timeout');
-      reject(gatewayError('Managed Live gateway connection timed out.', 'LIVE_GATEWAY_TIMEOUT'));
+      rejectBeforeReady(gatewayError('Managed Live gateway connection timed out.', 'LIVE_GATEWAY_TIMEOUT'));
     }, Math.max(1_000, params.connectTimeoutMs));
 
     const cleanup = () => {
@@ -266,7 +263,11 @@ const createManagedGatewaySession = async (params: {
     };
 
     const handleMessage = async (event: { data?: unknown }) => {
+      // Drop late readiness after a failed connect, but drain data/billing queued
+      // before a ready session closes; onClose waits for that inbound queue.
+      if (completed && !ready) return;
       const message = await parseGatewayMessage(event.data);
+      if (completed && !ready) return;
       if (message.type === 'ready') {
         params.timing?.linkGateway(message.sessionId);
         if (ready) throw gatewayError('Managed Live gateway sent duplicate readiness.', 'LIVE_GATEWAY_PROTOCOL');

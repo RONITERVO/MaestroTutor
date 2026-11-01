@@ -5,6 +5,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { env, pipeline, type AutomaticSpeechRecognitionPipeline } from '@huggingface/transformers';
+import runtimeWasmUrl from 'onnxruntime-web/ort-wasm-simd-threaded.asyncify.wasm?url';
 import type { ObserverWhisperRequest, ObserverWhisperResponse } from './observerWhisperProtocol';
 
 declare const self: DedicatedWorkerGlobalScope;
@@ -29,6 +30,22 @@ let activeProfile: LoadProfile = Q4_PROFILE;
 let transcriberPromise: Promise<AutomaticSpeechRecognitionPipeline> | null = null;
 
 env.allowLocalModels = false;
+
+// Transformers supplies CDN URLs even when Vite has bundled the real factory
+// and WASM. Override only that library-selected asyncify default: a WASM-only
+// URL keeps ORT's embedded factory and resolves from the packaged worker origin.
+// Preserve custom paths and the library's non-asyncify fallback for older Safari;
+// that existing fallback is not covered by the packaged-runtime guarantee.
+const onnx = env.backends.onnx;
+const wasm = onnx.wasm;
+const paths = wasm?.wasmPaths;
+const version = onnx.versions?.web;
+const defaultPrefix = `https://cdn.jsdelivr.net/npm/onnxruntime-web@${version}/dist/`;
+if (wasm && version && typeof paths === 'object' && paths
+    && paths.mjs === `${defaultPrefix}ort-wasm-simd-threaded.asyncify.mjs`
+    && paths.wasm === `${defaultPrefix}ort-wasm-simd-threaded.asyncify.wasm`) {
+  wasm.wasmPaths = { wasm: new URL(runtimeWasmUrl, self.location.href).href };
+}
 
 const post = (message: ObserverWhisperResponse, transfer?: Transferable[]) => {
   self.postMessage(message, transfer ?? []);

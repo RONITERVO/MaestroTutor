@@ -1,0 +1,216 @@
+{
+  "license": "CC0-1.0",
+  "description": "Synthetic mathematical test tones generated for Maestro; no user recordings or provider data. ffmpeg is fixture authoring only, not an app dependency.",
+  "generator": "FFmpeg 7.1.1",
+  "fixtures": [
+    {
+      "file": "stereo-vbr.mp3.bytes",
+      "rate": 44100,
+      "channels": 2,
+      "duration": 0.6,
+      "arguments": [
+        "-hide_banner",
+        "-loglevel",
+        "error",
+        "-y",
+        "-f",
+        "lavfi",
+        "-i",
+        "aevalsrc=0.2*sin(2*PI*440*t)|0.1*sin(2*PI*880*t):s=44100:d=0.6",
+        "-c:a",
+        "libmp3lame",
+        "-q:a",
+        "4",
+        "-map_metadata",
+        "-1",
+        "-f",
+        "mp3",
+        "unity\\MaestroQuest\\Assets\\Maestro\\Tests\\Fixtures\\CompressedAudio\\stereo-vbr.mp3.bytes"
+      ],
+      "sha256": "9488243393f3d993d309eb6177855612d619eeaff4fac4641d2f9b56be7ea343"
+    },
+    {
+      "file": "mono-cbr.mp3.bytes",
+      "rate": 24000,
+      "channels": 1,
+      "duration": 0.6,
+      "arguments": [
+        "-hide_banner",
+        "-loglevel",
+        "error",
+        "-y",
+        "-f",
+        "lavfi",
+        "-i",
+        "aevalsrc=0.2*sin(2*PI*440*t):s=24000:d=0.6",
+        "-c:a",
+        "libmp3lame",
+        "-b:a",
+        "48k",
+        "-map_metadata",
+        "-1",
+        "-f",
+        "mp3",
+        "unity\\MaestroQuest\\Assets\\Maestro\\Tests\\Fixtures\\CompressedAudio\\mono-cbr.mp3.bytes"
+      ],
+      "sha256": "17fe6f55d119afcdb55fc43dc37cf44fe55ab197d34ff3c4f8765535aa76a484"
+    },
+    {
+      "file": "mono-low.mp3.bytes",
+      "rate": 8000,
+      "channels": 1,
+      "duration": 0.6,
+      "arguments": [
+        "-hide_banner",
+        "-loglevel",
+        "error",
+        "-y",
+        "-f",
+        "lavfi",
+        "-i",
+        "aevalsrc=0.2*sin(2*PI*440*t):s=8000:d=0.6",
+        "-c:a",
+        "libmp3lame",
+        "-b:a",
+        "24k",
+        "-map_metadata",
+        "-1",
+        "-f",
+        "mp3",
+        "unity\\MaestroQuest\\Assets\\Maestro\\Tests\\Fixtures\\CompressedAudio\\mono-low.mp3.bytes"
+      ],
+      "sha256": "a2f2dba53bf6227ba468b5c11b78747286205e605bb629b01855f78a9d4682e5"
+    },
+    {
+      "file": "stereo.ogg.bytes",
+      "rate": 48000,
+      "channels": 2,
+      "duration": 0.6,
+      "arguments": [
+        "-hide_banner",
+        "-loglevel",
+        "error",
+        "-y",
+        "-f",
+        "lavfi",
+        "-i",
+        "aevalsrc=0.2*sin(2*PI*440*t)|0.1*sin(2*PI*880*t):s=48000:d=0.6",
+        "-c:a",
+        "libvorbis",
+        "-q:a",
+        "3",
+        "-map_metadata",
+        "-1",
+        "-f",
+        "ogg",
+        "unity\\MaestroQuest\\Assets\\Maestro\\Tests\\Fixtures\\CompressedAudio\\stereo.ogg.bytes"
+      ],
+      "sha256": "0b3586d08ba9938f076253be3179618d068b7c1f83d23bbd15cb3ecdba4dfb06"
+    },
+    {
+      "file": "mono.ogg.bytes",
+      "rate": 16000,
+      "channels": 1,
+      "duration": 0.6,
+      "arguments": [
+        "-hide_banner",
+        "-loglevel",
+        "error",
+        "-y",
+        "-f",
+        "lavfi",
+        "-i",
+        "aevalsrc=0.2*sin(2*PI*440*t):s=16000:d=0.6",
+        "-c:a",
+        "libvorbis",
+        "-q:a",
+        "3",
+        "-map_metadata",
+        "-1",
+        "-f",
+        "ogg",
+        "unity\\MaestroQuest\\Assets\\Maestro\\Tests\\Fixtures\\CompressedAudio\\mono.ogg.bytes"
+      ],
+      "sha256": "b4627c4a35abdae3d91f23322986ca0241854c9d63f6b60a0888b4d9cb76627a"
+    },
+    {
+      "file": "high.ogg.bytes",
+      "rate": 96000,
+      "channels": 2,
+      "duration": 0.6,
+      "arguments": [
+        "-hide_banner",
+        "-loglevel",
+        "error",
+        "-y",
+        "-f",
+        "lavfi",
+        "-i",
+        "aevalsrc=0.2*sin(2*PI*440*t)|0.1*sin(2*PI*880*t):s=96000:d=0.6",
+        "-c:a",
+        "libvorbis",
+        "-q:a",
+        "4",
+        "-map_metadata",
+        "-1",
+        "-f",
+        "ogg",
+        "unity\\MaestroQuest\\Assets\\Maestro\\Tests\\Fixtures\\CompressedAudio\\high.ogg.bytes"
+      ],
+      "sha256": "bfaae5c5f041b30905857625120429712fa69ec0016aa32d61f1e6d84ba4c52c"
+    }
+  ],
+  "references": [
+    {
+      "file": "stereo-vbr.mp3.reference.wav.bytes",
+      "source": "stereo-vbr.mp3.bytes",
+      "generator": "FFmpeg 7.1.1",
+      "arguments": [
+        "-i",
+        "stereo-vbr.mp3.bytes",
+        "-ac",
+        "1",
+        "-ar",
+        "24000",
+        "-c:a",
+        "pcm_s16le",
+        "stereo-vbr.mp3.reference.wav.bytes"
+      ],
+      "sha256": "d1adcd79c15b98aea7cc9e90e6cad9906a43dc95a9be01e537562b62a5cb66b5"
+    },
+    {
+      "file": "mono-cbr.mp3.reference.wav.bytes",
+      "source": "mono-cbr.mp3.bytes",
+      "generator": "FFmpeg 7.1.1",
+      "arguments": [
+        "-i",
+        "mono-cbr.mp3.bytes",
+        "-ac",
+        "1",
+        "-ar",
+        "24000",
+        "-c:a",
+        "pcm_s16le",
+        "mono-cbr.mp3.reference.wav.bytes"
+      ],
+      "sha256": "2641137b51b98772a010a65af94a82126106eac55c4234393ea9dc89cdbc8bf8"
+    },
+    {
+      "file": "mono-low.mp3.reference.wav.bytes",
+      "source": "mono-low.mp3.bytes",
+      "generator": "FFmpeg 7.1.1",
+      "arguments": [
+        "-i",
+        "mono-low.mp3.bytes",
+        "-ac",
+        "1",
+        "-ar",
+        "24000",
+        "-c:a",
+        "pcm_s16le",
+        "mono-low.mp3.reference.wav.bytes"
+      ],
+      "sha256": "b5f420896eb6c7865bb9ce36d9d9c2369c2677614a3648949fc44fb8b09e1c50"
+    }
+  ]
+}

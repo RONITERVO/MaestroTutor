@@ -1,0 +1,755 @@
+{
+  "version": 3,
+  "dataVersion": 1,
+  "moduleVersion": 1,
+  "imports": [
+    {
+      "alias": "kit",
+      "hash": "36c5a559829eed5e0a6517c7ec9c870ac6ccc184028ec801c60c20c93d170aea",
+      "module": {
+        "version": 1,
+        "name": "Small fort",
+        "exports": [
+          "create"
+        ],
+        "program": {
+          "version": 3,
+          "dataVersion": 1,
+          "entry": "main",
+          "resources": [],
+          "state": [],
+          "events": [],
+          "functions": [
+            {
+              "name": "main",
+              "returns": "void",
+              "parameters": [],
+              "locals": [],
+              "body": []
+            },
+            {
+              "name": "create",
+              "returns": {
+                "list": "text"
+              },
+              "parameters": [
+                {
+                  "name": "position",
+                  "type": {
+                    "record": {
+                      "x": "number",
+                      "y": "number",
+                      "z": "number"
+                    }
+                  }
+                },
+                {
+                  "name": "rotation",
+                  "type": {
+                    "record": {
+                      "x": "number",
+                      "y": "number",
+                      "z": "number",
+                      "w": "number"
+                    }
+                  }
+                },
+                {
+                  "name": "scale",
+                  "type": "number"
+                }
+              ],
+              "locals": [
+                {
+                  "name": "pieces",
+                  "type": {
+                    "list": "text"
+                  },
+                  "initial": []
+                }
+              ],
+              "body": [
+                {
+                  "id": "build",
+                  "op": "invoke",
+                  "capability": "object.batch.create",
+                  "version": 1,
+                  "arguments": {
+                    "blueprint": {
+                      "version": 1,
+                      "pieces": [
+                        {
+                          "slot": "base",
+                          "name": "Fort base",
+                          "position": {
+                            "x": 0,
+                            "y": 0,
+                            "z": 0
+                          },
+                          "rotation": {
+                            "x": 0,
+                            "y": 0,
+                            "z": 0,
+                            "w": 1
+                          },
+                          "scale": 1,
+                          "source": {
+                            "kind": "recipe",
+                            "recipe": {
+                              "version": 1,
+                              "parts": [
+                                {
+                                  "id": "Base",
+                                  "parent": null,
+                                  "shape": "box",
+                                  "position": {
+                                    "x": 0,
+                                    "y": 0,
+                                    "z": 0
+                                  },
+                                  "size": {
+                                    "x": 0.68,
+                                    "y": 0.04,
+                                    "z": 0.68
+                                  },
+                                  "rotation": {
+                                    "x": 0,
+                                    "y": 0,
+                                    "z": 0,
+                                    "w": 1
+                                  },
+                                  "color": {
+                                    "r": 0.12,
+                                    "g": 0.5,
+                                    "b": 0.48,
+                                    "a": 1
+                                  }
+                                }
+                              ],
+                              "tracks": [],
+                              "duration": 2,
+                              "playing": false,
+                              "loop": false
+                            },
+                            "collision": {
+                              "version": 1,
+                              "shapes": [
+                                {
+                                  "id": "Base",
+                                  "shape": "box",
+                                  "position": {
+                                    "x": 0,
+                                    "y": 0,
+                                    "z": 0
+                                  },
+                                  "size": {
+                                    "x": 0.68,
+                                    "y": 0.04,
+                                    "z": 0.68
+                                  },
+                                  "rotation": {
+                                    "x": 0,
+                                    "y": 0,
+                                    "z": 0,
+                                    "w": 1
+                                  }
+                                }
+                              ]
+                            },
+                            "physics": {
+                              "mode": "fixed",
+                              "shape": "automatic",
+                              "mass": 1
+                            }
+                          }
+                        },
+                        {
+                          "slot": "t00",
+                          "name": "Fort tower 1 brick 1",
+                          "position": {
+                            "x": -0.23,
+                            "y": 0.053,
+                            "z": -0.23
+                          },
+                          "rotation": {
+                            "x": 0,
+                            "y": 0,
+                            "z": 0,
+                            "w": 1
+                          },
+                          "scale": 1,
+                          "source": {
+                            "kind": "template",
+                            "templateHash": "5b2a5337e621dea6bf7fe5f0226721eed4d2b5f923f8dd7ebe0f402536affd33"
+                          }
+                        },
+                        {
+                          "slot": "t01",
+                          "name": "Fort tower 1 brick 2",
+                          "position": {
+                            "x": -0.23,
+                            "y": 0.127,
+                            "z": -0.23
+                          },
+                          "rotation": {
+                            "x": 0,
+                            "y": 0,
+                            "z": 0,
+                            "w": 1
+                          },
+                          "scale": 1,
+                          "source": {
+                            "kind": "template",
+                            "templateHash": "5b2a5337e621dea6bf7fe5f0226721eed4d2b5f923f8dd7ebe0f402536affd33"
+                          }
+                        },
+                        {
+                          "slot": "t02",
+                          "name": "Fort tower 1 brick 3",
+                          "position": {
+                            "x": -0.23,
+                            "y": 0.201,
+                            "z": -0.23
+                          },
+                          "rotation": {
+                            "x": 0,
+                            "y": 0,
+                            "z": 0,
+                            "w": 1
+                          },
+                          "scale": 1,
+                          "source": {
+                            "kind": "template",
+                            "templateHash": "5b2a5337e621dea6bf7fe5f0226721eed4d2b5f923f8dd7ebe0f402536affd33"
+                          }
+                        },
+                        {
+                          "slot": "t10",
+                          "name": "Fort tower 2 brick 1",
+                          "position": {
+                            "x": 0.23,
+                            "y": 0.053,
+                            "z": -0.23
+                          },
+                          "rotation": {
+                            "x": 0,
+                            "y": 0,
+                            "z": 0,
+                            "w": 1
+                          },
+                          "scale": 1,
+                          "source": {
+                            "kind": "template",
+                            "templateHash": "5b2a5337e621dea6bf7fe5f0226721eed4d2b5f923f8dd7ebe0f402536affd33"
+                          }
+                        },
+                        {
+                          "slot": "t11",
+                          "name": "Fort tower 2 brick 2",
+                          "position": {
+                            "x": 0.23,
+                            "y": 0.127,
+                            "z": -0.23
+                          },
+                          "rotation": {
+                            "x": 0,
+                            "y": 0,
+                            "z": 0,
+                            "w": 1
+                          },
+                          "scale": 1,
+                          "source": {
+                            "kind": "template",
+                            "templateHash": "5b2a5337e621dea6bf7fe5f0226721eed4d2b5f923f8dd7ebe0f402536affd33"
+                          }
+                        },
+                        {
+                          "slot": "t12",
+                          "name": "Fort tower 2 brick 3",
+                          "position": {
+                            "x": 0.23,
+                            "y": 0.201,
+                            "z": -0.23
+                          },
+                          "rotation": {
+                            "x": 0,
+                            "y": 0,
+                            "z": 0,
+                            "w": 1
+                          },
+                          "scale": 1,
+                          "source": {
+                            "kind": "template",
+                            "templateHash": "5b2a5337e621dea6bf7fe5f0226721eed4d2b5f923f8dd7ebe0f402536affd33"
+                          }
+                        },
+                        {
+                          "slot": "t20",
+                          "name": "Fort tower 3 brick 1",
+                          "position": {
+                            "x": -0.23,
+                            "y": 0.053,
+                            "z": 0.23
+                          },
+                          "rotation": {
+                            "x": 0,
+                            "y": 0,
+                            "z": 0,
+                            "w": 1
+                          },
+                          "scale": 1,
+                          "source": {
+                            "kind": "template",
+                            "templateHash": "5b2a5337e621dea6bf7fe5f0226721eed4d2b5f923f8dd7ebe0f402536affd33"
+                          }
+                        },
+                        {
+                          "slot": "t21",
+                          "name": "Fort tower 3 brick 2",
+                          "position": {
+                            "x": -0.23,
+                            "y": 0.127,
+                            "z": 0.23
+                          },
+                          "rotation": {
+                            "x": 0,
+                            "y": 0,
+                            "z": 0,
+                            "w": 1
+                          },
+                          "scale": 1,
+                          "source": {
+                            "kind": "template",
+                            "templateHash": "5b2a5337e621dea6bf7fe5f0226721eed4d2b5f923f8dd7ebe0f402536affd33"
+                          }
+                        },
+                        {
+                          "slot": "t22",
+                          "name": "Fort tower 3 brick 3",
+                          "position": {
+                            "x": -0.23,
+                            "y": 0.201,
+                            "z": 0.23
+                          },
+                          "rotation": {
+                            "x": 0,
+                            "y": 0,
+                            "z": 0,
+                            "w": 1
+                          },
+                          "scale": 1,
+                          "source": {
+                            "kind": "template",
+                            "templateHash": "5b2a5337e621dea6bf7fe5f0226721eed4d2b5f923f8dd7ebe0f402536affd33"
+                          }
+                        },
+                        {
+                          "slot": "t30",
+                          "name": "Fort tower 4 brick 1",
+                          "position": {
+                            "x": 0.23,
+                            "y": 0.053,
+                            "z": 0.23
+                          },
+                          "rotation": {
+                            "x": 0,
+                            "y": 0,
+                            "z": 0,
+                            "w": 1
+                          },
+                          "scale": 1,
+                          "source": {
+                            "kind": "template",
+                            "templateHash": "5b2a5337e621dea6bf7fe5f0226721eed4d2b5f923f8dd7ebe0f402536affd33"
+                          }
+                        },
+                        {
+                          "slot": "t31",
+                          "name": "Fort tower 4 brick 2",
+                          "position": {
+                            "x": 0.23,
+                            "y": 0.127,
+                            "z": 0.23
+                          },
+                          "rotation": {
+                            "x": 0,
+                            "y": 0,
+                            "z": 0,
+                            "w": 1
+                          },
+                          "scale": 1,
+                          "source": {
+                            "kind": "template",
+                            "templateHash": "5b2a5337e621dea6bf7fe5f0226721eed4d2b5f923f8dd7ebe0f402536affd33"
+                          }
+                        },
+                        {
+                          "slot": "t32",
+                          "name": "Fort tower 4 brick 3",
+                          "position": {
+                            "x": 0.23,
+                            "y": 0.201,
+                            "z": 0.23
+                          },
+                          "rotation": {
+                            "x": 0,
+                            "y": 0,
+                            "z": 0,
+                            "w": 1
+                          },
+                          "scale": 1,
+                          "source": {
+                            "kind": "template",
+                            "templateHash": "5b2a5337e621dea6bf7fe5f0226721eed4d2b5f923f8dd7ebe0f402536affd33"
+                          }
+                        },
+                        {
+                          "slot": "w0",
+                          "name": "Fort wall 1",
+                          "position": {
+                            "x": 0,
+                            "y": 0.095,
+                            "z": 0.23
+                          },
+                          "rotation": {
+                            "x": 0,
+                            "y": 0,
+                            "z": 0,
+                            "w": 1
+                          },
+                          "scale": 1,
+                          "source": {
+                            "kind": "recipe",
+                            "recipe": {
+                              "version": 1,
+                              "parts": [
+                                {
+                                  "id": "Wall",
+                                  "parent": null,
+                                  "shape": "box",
+                                  "position": {
+                                    "x": 0,
+                                    "y": 0,
+                                    "z": 0
+                                  },
+                                  "size": {
+                                    "x": 0.332,
+                                    "y": 0.14,
+                                    "z": 0.07
+                                  },
+                                  "rotation": {
+                                    "x": 0,
+                                    "y": 0,
+                                    "z": 0,
+                                    "w": 1
+                                  },
+                                  "color": {
+                                    "r": 0.88,
+                                    "g": 0.61,
+                                    "b": 0.23,
+                                    "a": 1
+                                  }
+                                }
+                              ],
+                              "tracks": [],
+                              "duration": 2,
+                              "playing": false,
+                              "loop": false
+                            },
+                            "collision": {
+                              "version": 1,
+                              "shapes": [
+                                {
+                                  "id": "Wall",
+                                  "shape": "box",
+                                  "position": {
+                                    "x": 0,
+                                    "y": 0,
+                                    "z": 0
+                                  },
+                                  "size": {
+                                    "x": 0.332,
+                                    "y": 0.14,
+                                    "z": 0.07
+                                  },
+                                  "rotation": {
+                                    "x": 0,
+                                    "y": 0,
+                                    "z": 0,
+                                    "w": 1
+                                  }
+                                }
+                              ]
+                            },
+                            "physics": {
+                              "mode": "solid",
+                              "shape": "automatic",
+                              "mass": 0.3
+                            }
+                          }
+                        },
+                        {
+                          "slot": "w1",
+                          "name": "Fort wall 2",
+                          "position": {
+                            "x": -0.23,
+                            "y": 0.095,
+                            "z": 0
+                          },
+                          "rotation": {
+                            "x": 0,
+                            "y": 0,
+                            "z": 0,
+                            "w": 1
+                          },
+                          "scale": 1,
+                          "source": {
+                            "kind": "recipe",
+                            "recipe": {
+                              "version": 1,
+                              "parts": [
+                                {
+                                  "id": "Wall",
+                                  "parent": null,
+                                  "shape": "box",
+                                  "position": {
+                                    "x": 0,
+                                    "y": 0,
+                                    "z": 0
+                                  },
+                                  "size": {
+                                    "x": 0.07,
+                                    "y": 0.14,
+                                    "z": 0.332
+                                  },
+                                  "rotation": {
+                                    "x": 0,
+                                    "y": 0,
+                                    "z": 0,
+                                    "w": 1
+                                  },
+                                  "color": {
+                                    "r": 0.88,
+                                    "g": 0.61,
+                                    "b": 0.23,
+                                    "a": 1
+                                  }
+                                }
+                              ],
+                              "tracks": [],
+                              "duration": 2,
+                              "playing": false,
+                              "loop": false
+                            },
+                            "collision": {
+                              "version": 1,
+                              "shapes": [
+                                {
+                                  "id": "Wall",
+                                  "shape": "box",
+                                  "position": {
+                                    "x": 0,
+                                    "y": 0,
+                                    "z": 0
+                                  },
+                                  "size": {
+                                    "x": 0.07,
+                                    "y": 0.14,
+                                    "z": 0.332
+                                  },
+                                  "rotation": {
+                                    "x": 0,
+                                    "y": 0,
+                                    "z": 0,
+                                    "w": 1
+                                  }
+                                }
+                              ]
+                            },
+                            "physics": {
+                              "mode": "solid",
+                              "shape": "automatic",
+                              "mass": 0.3
+                            }
+                          }
+                        },
+                        {
+                          "slot": "w2",
+                          "name": "Fort wall 3",
+                          "position": {
+                            "x": 0.23,
+                            "y": 0.095,
+                            "z": 0
+                          },
+                          "rotation": {
+                            "x": 0,
+                            "y": 0,
+                            "z": 0,
+                            "w": 1
+                          },
+                          "scale": 1,
+                          "source": {
+                            "kind": "recipe",
+                            "recipe": {
+                              "version": 1,
+                              "parts": [
+                                {
+                                  "id": "Wall",
+                                  "parent": null,
+                                  "shape": "box",
+                                  "position": {
+                                    "x": 0,
+                                    "y": 0,
+                                    "z": 0
+                                  },
+                                  "size": {
+                                    "x": 0.07,
+                                    "y": 0.14,
+                                    "z": 0.332
+                                  },
+                                  "rotation": {
+                                    "x": 0,
+                                    "y": 0,
+                                    "z": 0,
+                                    "w": 1
+                                  },
+                                  "color": {
+                                    "r": 0.88,
+                                    "g": 0.61,
+                                    "b": 0.23,
+                                    "a": 1
+                                  }
+                                }
+                              ],
+                              "tracks": [],
+                              "duration": 2,
+                              "playing": false,
+                              "loop": false
+                            },
+                            "collision": {
+                              "version": 1,
+                              "shapes": [
+                                {
+                                  "id": "Wall",
+                                  "shape": "box",
+                                  "position": {
+                                    "x": 0,
+                                    "y": 0,
+                                    "z": 0
+                                  },
+                                  "size": {
+                                    "x": 0.07,
+                                    "y": 0.14,
+                                    "z": 0.332
+                                  },
+                                  "rotation": {
+                                    "x": 0,
+                                    "y": 0,
+                                    "z": 0,
+                                    "w": 1
+                                  }
+                                }
+                              ]
+                            },
+                            "physics": {
+                              "mode": "solid",
+                              "shape": "automatic",
+                              "mass": 0.3
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    "position": {
+                      "x": 0.4,
+                      "y": 1,
+                      "z": 0.7
+                    },
+                    "rotation": {
+                      "x": 0,
+                      "y": 0,
+                      "z": 0,
+                      "w": 1
+                    },
+                    "scale": 1
+                  },
+                  "bindings": {
+                    "position": {
+                      "var": "position"
+                    },
+                    "rotation": {
+                      "var": "rotation"
+                    },
+                    "scale": {
+                      "var": "scale"
+                    }
+                  },
+                  "results": {
+                    "objectIds": "pieces"
+                  }
+                },
+                {
+                  "id": "created",
+                  "op": "return",
+                  "value": {
+                    "var": "pieces"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "signals": {}
+    }
+  ],
+  "entry": "main",
+  "resources": [],
+  "state": [],
+  "events": [],
+  "functions": [
+    {
+      "name": "main",
+      "returns": "void",
+      "parameters": [],
+      "locals": [
+        {
+          "name": "pieces",
+          "type": {
+            "list": "text"
+          },
+          "initial": []
+        }
+      ],
+      "body": [
+        {
+          "id": "buildLever",
+          "op": "call",
+          "module": "kit",
+          "function": "create",
+          "args": [
+            {
+              "value": {
+                "x": 0.4,
+                "y": 1,
+                "z": 0.7
+              }
+            },
+            {
+              "value": {
+                "x": 0,
+                "y": 0,
+                "z": 0,
+                "w": 1
+              }
+            },
+            {
+              "value": 1
+            }
+          ],
+          "result": "pieces"
+        }
+      ]
+    }
+  ]
+}
