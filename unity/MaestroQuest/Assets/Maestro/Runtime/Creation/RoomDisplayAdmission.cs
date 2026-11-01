@@ -39,7 +39,7 @@ namespace Maestro.Quest.Creation
                     Spatial=RoomSpatialBounds.Unknown,SpatialRevision=ObjectRevision(data.id),SuppressStartupAutoplay=RuntimeGate.Held,
                     SpatialPlacement=Matrix4x4.TRS(data.position,data.rotation.normalized,Vector3.one*data.scale)
                 });
-                InvalidateMovementResidency();startupAutoplayTargets.Add(data.id);
+                InvalidateMovementResidency(data.id);startupAutoplayTargets.Add(data.id);
             }
         }
         void InvalidateNativeDisplay(){displayVersion++;ResetNativeDisplayDemand();if(RuntimeGate.Held)foreach(var id in startupAutoplayTargets)if(dormantNative.TryGetValue(id,out var entry))entry.SuppressStartupAutoplay=true;}

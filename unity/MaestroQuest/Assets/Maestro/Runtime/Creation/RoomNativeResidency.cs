@@ -48,7 +48,7 @@ namespace Maestro.Quest.Creation
         void SynchronizeNativeResidency(HashSet<string> saved)
         {
             if(!ReferenceEquals(nativeJournal,journal)){CancelNativeActivation();ReleaseDormantRecoveries();ReleaseNativeAcoustics();ReleaseDormantCollisions();ReleaseResidentCollisions();dormantNative.Clear();InvalidateMovementResidency();nativeJournal=journal;}
-            foreach(var id in dormantNative.Keys.Where(id=>!saved.Contains(id)).ToArray()){ReleaseNativeAcoustic(dormantNative[id]);ReleaseDormantCollision(id,dormantNative[id]);dormantNative.Remove(id);InvalidateMovementResidency();}
+            foreach(var id in dormantNative.Keys.Where(id=>!saved.Contains(id)).ToArray()){ReleaseNativeAcoustic(dormantNative[id]);ReleaseDormantCollision(id,dormantNative[id]);dormantNative.Remove(id);InvalidateMovementResidency(id);}
             foreach(var pair in dormantNative){
                 var entry=pair.Value;SynchronizeDormantCollision(pair.Key,entry);int revision=ObjectRevision(pair.Key);
                 if(entry.Acoustics==null||entry.AcousticRevision==revision)continue;
@@ -114,7 +114,7 @@ namespace Maestro.Quest.Creation
             foreach(var pair in snapshots){var saved=Read(pair.Key);pair.Value.SavedPosition=saved.position;pair.Value.SavedRotation=saved.rotation;pair.Value.SavedScale=saved.scale;
                 pair.Value.ScanPlacement=ScanSpatialPlacement.From(saved);
                 pair.Value.AcousticSource=pair.Value.AuthoredSpatialSource=pair.Value.SpatialSource=SpatialSource(saved);pair.Value.SpatialRevision=ObjectRevision(pair.Key);pair.Value.SpatialCurrent=true;
-                pair.Value.SpatialPlacement=Matrix4x4.TRS(pair.Value.Position,pair.Value.Rotation,Vector3.one*pair.Value.Scale);dormantNative.Add(pair.Key,pair.Value);InvalidateMovementResidency();}
+                pair.Value.SpatialPlacement=Matrix4x4.TRS(pair.Value.Position,pair.Value.Rotation,Vector3.one*pair.Value.Scale);dormantNative.Add(pair.Key,pair.Value);InvalidateMovementResidency(pair.Key);}
             foreach(var pair in snapshots)SynchronizeDormantCollision(pair.Key,pair.Value); // Publish barriers before detaching any real collider.
             foreach(var pair in snapshots){var item=Find(pair.Key);DetachNativeIdentity(pair.Key,item);regionModels.Remove(pair.Key);item.gameObject.SetActive(false);Destroy(item.gameObject);}
             retired=true;RefreshRegionCollision();UpdateSelection();error=null;return true;
@@ -190,7 +190,7 @@ namespace Maestro.Quest.Creation
                     Check();
                 }finally{applying=false;}
                 Liquids?.Synchronize(journal.Snapshot());
-                foreach(var id in targets){dormantNative[id].Acoustics?.Restore(candidates[id].gameObject);ReleaseNativeAcoustic(dormantNative[id]);ReleaseDormantCollision(id,dormantNative[id]);dormantNative.Remove(id);InvalidateMovementResidency();}
+                foreach(var id in targets){dormantNative[id].Acoustics?.Restore(candidates[id].gameObject);ReleaseNativeAcoustic(dormantNative[id]);ReleaseDormantCollision(id,dormantNative[id]);dormantNative.Remove(id);InvalidateMovementResidency(id);}
                 // All peers and shapes are now active, but every restored body is
                 // held. A failed proof publishes an editable view, never motion.
                 foreach(var item in candidates.Values)item.GetComponent<Maestro.Quest.Interaction.RoomEnvironmentBinding>()?.FinishRestoration();

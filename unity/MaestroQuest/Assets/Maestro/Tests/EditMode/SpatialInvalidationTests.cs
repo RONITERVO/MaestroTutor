@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using Maestro.Quest.Interaction;
 using System.Threading.Tasks;
 using Maestro.Quest.Creation;
 using Maestro.Quest.Imports;
@@ -65,6 +67,86 @@ namespace Maestro.Quest.Tests {
             document.objects[3].color=Color.blue;index.Synchronize(document);Assert.That(state.Current(journal,index,0),Is.True);Drain(index);Assert.That(state.Current(journal,index,0),Is.True);
             document.objects[2].color=Color.red;index.Synchronize(document);Assert.That(state.Current(journal,index,0),Is.False);
             state=State(journal,index);Drain(index);Assert.That(state.Current(journal,index,0),Is.False);
+        }
+        [Test] public void SpatialIdentityCollectionValidatesEmptyAndLostWindowsAndOwnsItsResults(){
+            var changes=new RoomSpatialChanges();
+            Assert.That(changes.TryCollect(0,out var empty,out var end),Is.True);Assert.That(empty,Is.Empty);Assert.That(end,Is.Zero);
+            Assert.That(changes.TryCollect(-1,out _,out _),Is.False);Assert.That(changes.TryCollect(1,out _,out _),Is.False);
+            for(int i=0;i<RoomSpatialChanges.Capacity;i++)changes.Record(i%3==0?Cold:Live);
+            Assert.That(changes.TryCollect(0,out var exact,out end),Is.True);CollectionAssert.AreEqual(new[]{Cold,Live},exact);Assert.That(end,Is.EqualTo(RoomSpatialChanges.Capacity));
+            exact[0]="caller mutation";Assert.That(changes.TryCollect(0,out exact,out _),Is.True);CollectionAssert.AreEqual(new[]{Cold,Live},exact);
+            changes.Record(Live);Assert.That(changes.TryCollect(0,out _,out _),Is.False,"An empty prior directory cannot excuse missing history");
+            Assert.That(changes.TryCollect(1,out _,out _),Is.True);Assert.That(changes.TryCollect(changes.Version,out empty,out end),Is.True);Assert.That(empty,Is.Empty);Assert.That(end,Is.EqualTo(changes.Version));
+            Assert.That(changes.TryCollect(changes.Version+1,out _,out _),Is.False);
+        }
+        [Test] public void SpatialIdentityCollectionDoesNotLetFastConsumersConsumeSlowHistory(){
+            var changes=new RoomSpatialChanges();long fast=0;
+            for(int i=0;i<RoomSpatialChanges.Capacity+1;i++){
+                changes.Record(Live);Assert.That(changes.TryCollect(fast,out var ids,out fast),Is.True);CollectionAssert.AreEqual(new[]{Live},ids);
+            }
+            Assert.That(changes.TryCollect(0,out _,out _),Is.False);changes.Record(Cold);
+            Assert.That(changes.TryCollect(fast,out var final,out _),Is.True);CollectionAssert.AreEqual(new[]{Cold},final);
+        }
+        [Test] public void SpatialAuthoredDeltasUnionInsertRemoveMultiEditUndoAndRedoWithoutWorldSettings(){
+            var journal=new RoomJournal(Document());long cursor=journal.SpatialAuthoredVersion;
+            string inserted=new('c',32);var replacement=journal.Read(Live);replacement.name="Changed live name";
+            var added=new RoomObjectData{id=inserted,kind=RoomObjectKind.Block};
+            Assert.That(journal.Apply(new[]{replacement,added},new[]{Cold},out var error),Is.True,error);
+            Assert.That(journal.TrySpatialAuthoredChanges(cursor,out var ids,out cursor),Is.True);CollectionAssert.AreEqual(new[]{Cold,Live,inserted},ids);
+            Assert.That(journal.Undo(),Is.True);Assert.That(journal.TrySpatialAuthoredChanges(cursor,out ids,out cursor),Is.True);CollectionAssert.AreEqual(new[]{Cold,Live,inserted},ids);
+            Assert.That(journal.Read(inserted),Is.Null);Assert.That(journal.Read(Cold),Is.Not.Null);
+            Assert.That(journal.Redo(),Is.True);Assert.That(journal.TrySpatialAuthoredChanges(cursor,out ids,out cursor),Is.True);CollectionAssert.AreEqual(new[]{Cold,Live,inserted},ids);
+            var lighting=journal.Lighting;lighting.sunIntensity=.75f;
+            Assert.That(journal.Apply(Array.Empty<RoomObjectData>(),Array.Empty<string>(),out error,lighting:lighting),Is.True,error);
+            Assert.That(journal.TrySpatialAuthoredChanges(cursor,out ids,out var unchanged),Is.True);Assert.That(ids,Is.Empty);Assert.That(unchanged,Is.EqualTo(cursor));
+            Assert.That(journal.Undo(),Is.True);Assert.That(journal.TrySpatialAuthoredChanges(cursor,out ids,out _),Is.True);Assert.That(ids,Is.Empty);
+        }
+        [Test] public void SpatialAuthoredAndPlacementWindowsHaveIndependentCursorsAndInvalidEditsPublishNothing(){
+            var journal=new RoomJournal(Document());long authored=journal.SpatialAuthoredVersion,placement=journal.SpatialPlacementVersion;
+            Assert.That(journal.UpdatePlacement(Cold,Vector3.up,Quaternion.identity),Is.True);
+            Assert.That(journal.TrySpatialPlacementChanges(placement,out var moved,out placement),Is.True);CollectionAssert.AreEqual(new[]{Cold},moved);
+            Assert.That(journal.TrySpatialAuthoredChanges(authored,out var ids,out _),Is.True);Assert.That(ids,Is.Empty);
+            var value=journal.Read(Live);value.color=Color.blue;Assert.That(journal.Apply(new[]{value},Array.Empty<string>(),out var error),Is.True,error);
+            Assert.That(journal.TrySpatialAuthoredChanges(authored,out ids,out authored),Is.True);CollectionAssert.AreEqual(new[]{Live},ids);
+            Assert.That(journal.TrySpatialPlacementChanges(placement,out moved,out _),Is.True);Assert.That(moved,Is.Empty);
+            value.position=new(float.NaN,0,0);Assert.That(journal.Apply(new[]{value},Array.Empty<string>(),out _),Is.False);
+            Assert.That(journal.TrySpatialAuthoredChanges(authored,out ids,out var now),Is.True);Assert.That(ids,Is.Empty);Assert.That(now,Is.EqualTo(authored));
+            Assert.That(journal.TrySpatialPlacementChanges(-1,out _,out _),Is.False);Assert.That(journal.TrySpatialAuthoredChanges(authored+1,out _,out _),Is.False);
+        }
+        [Test] public void SpatialPublicationDeltaContainsCurrentIdentityAndCannotResurrectDeletedPendingMetadata(){
+            var completion=new TaskCompletionSource<ModelAssetBounds>();using var index=new RoomSpatialIndex((h,c)=>completion.Task);
+            var old=new RoomObjectData{id=Cold,kind=RoomObjectKind.ImportedModel,modelHash=new string('1',64)};
+            index.Synchronize(new RoomDocument{objects=new[]{old}});index.Tick();long cursor=index.Generation;
+            var current=old.Copy();current.id=Live;index.Synchronize(new RoomDocument{objects=new[]{current}});
+            Assert.That(index.TryChanges(cursor,out var ids,out cursor),Is.True);CollectionAssert.AreEqual(new[]{Cold,Live},ids);
+            completion.SetResult(ModelAssetBounds.Unknown("Fixture unavailable"));Drain(index);
+            Assert.That(index.TryChanges(cursor,out ids,out _),Is.True);CollectionAssert.AreEqual(new[]{Live},ids);
+            Assert.That(index.TryRead(Cold,RoomEditor.SpatialSource(old.Copy()),out _),Is.False);
+            Assert.That(index.TryRead(Live,RoomEditor.SpatialSource(current.Copy()),out var result),Is.True);Assert.That(result.Collision.Known,Is.False);
+        }
+        [Test] public void SpatialGroundProjectionMatchesFullDirectoryAcrossAcceptedClassificationChanges(){
+            var journal=new RoomJournal(Document());
+            void Same(){
+                var expected=journal.Snapshot().objects.Where(x=>!x.IsBuiltIn&&x.physics==ItemPhysics.Fixed&&((x.heightFields?.Length??0)>0||x.kind==RoomObjectKind.ImportedModel&&x.modelGeometry.walkable&&x.modelGeometry.meshCollision)).Select(x=>x.id).OrderBy(x=>x,StringComparer.Ordinal).ToArray();
+                CollectionAssert.AreEqual(expected,journal.GroundCandidates().Select(x=>x.target));
+                foreach(var item in journal.Snapshot().objects){bool ground=journal.GroundCandidate(item.id,out var projected);Assert.That(ground,Is.EqualTo(expected.Contains(item.id)),item.id);if(ground){Assert.That(projected.target,Is.EqualTo(item.id));Assert.That(projected.terrain,Is.EqualTo(item.heightFields.Length>0));Assert.That(projected.imported,Is.EqualTo(item.kind==RoomObjectKind.ImportedModel&&item.modelGeometry.walkable&&item.modelGeometry.meshCollision));}}
+                Assert.That(journal.GroundCandidate(new string('d',32),out _),Is.False);
+            }
+            Same();var terrain=journal.Read(Cold);terrain.physics=ItemPhysics.Fixed;terrain.heightFields=new[]{new RoomHeightField{cells=4,width=2,depth=2,maxHeight=.5f,heights=Enumerable.Repeat(.1f,25).ToArray()}};
+            Assert.That(journal.Apply(new[]{terrain},Array.Empty<string>(),out var error),Is.True,error);Same();
+            var imported=new RoomObjectData{id=new string('c',32),kind=RoomObjectKind.ImportedModel,modelHash=new string('1',64),physics=ItemPhysics.Fixed,modelGeometry=new(){meshCollision=true,walkable=true}};
+            Assert.That(journal.Apply(new[]{imported},Array.Empty<string>(),out error),Is.True,error);Same();
+            var invalid=imported.Copy();invalid.modelGeometry.meshCollision=false;
+            Assert.That(journal.Apply(new[]{invalid},Array.Empty<string>(),out _),Is.False,"Walkable without mesh collision is not an accepted authored state");Same();
+            invalid=imported.Copy();invalid.physics=ItemPhysics.Solid;
+            Assert.That(journal.Apply(new[]{invalid},Array.Empty<string>(),out _),Is.False,"A dynamic mesh collider is not accepted");Same();
+            invalid=journal.Read("maestro");invalid.heightFields=terrain.heightFields;
+            Assert.That(journal.Apply(new[]{invalid},Array.Empty<string>(),out _),Is.False,"Built-in avatars cannot become height-field supports");Same();
+            terrain.physics=ItemPhysics.Solid;terrain.heightFields=Array.Empty<RoomHeightField>();imported.modelGeometry.walkable=false;
+            Assert.That(journal.Apply(new[]{terrain,imported},Array.Empty<string>(),out error),Is.True,error);Same();
+            imported.modelGeometry.meshCollision=false;Assert.That(journal.Apply(new[]{imported},Array.Empty<string>(),out error),Is.True,error);Same();
+            imported.physics=ItemPhysics.Solid;Assert.That(journal.Apply(new[]{imported},Array.Empty<string>(),out error),Is.True,error);Same();
+            Assert.That(journal.Undo(),Is.True);Same();Assert.That(journal.Apply(Array.Empty<RoomObjectData>(),new[]{Cold,imported.id},out error),Is.True,error);Same();
         }
     }
 }

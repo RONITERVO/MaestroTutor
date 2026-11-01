@@ -2,23 +2,37 @@
 
 Status: active implementation. Nothing in this document claims store readiness.
 
-The latest model download-maintenance increment adds shared inspection and
-confirmed removal of unused private model payloads. Full metadata is retained,
-including across portable backups and exact reimport. Native and journey
-verification is in progress; this is not physical or release acceptance.
+The latest [incremental dormant movement directory](#incremental-dormant-movement-directory--2026-11-01)
+updates changed dormant collision candidates without rebuilding every unchanged
+neighbor. Exact collision readiness and existing world limits are unchanged.
+Fresh verification passes 2,252 EditMode cases with 13 documented Windows
+privilege skips and all 48 selected PlayMode cases. The native catalog keeps
+149 actions, 252 facts, 19 events and 11 guides. The full offline Headless journey
+and unsigned Android compilation pass independent review; see the
+[integration checkpoint](#incremental-movement-integration-checkpoint--2026-11-01).
+No new headset or release acceptance is claimed.
+
+The preceding [exact asset choices and passive fact recovery](#exact-asset-choices-and-passive-fact-recovery--2026-11-01)
+and [guarded model download maintenance](#guarded-model-download-maintenance-and-portable-metadata--2026-11-01)
+have completed their recorded native, offline Headless/Book and unsigned Android
+checks. They preserve exact asset identities, full attribution and historical
+receipts. The separate [backend dependency repair](QUEST_DEPENDENCY_REVIEW.md#backend-production-dependency-repair--2026-11-01)
+has passed release and native-echo CI at `ff39b08e`; bounded echo checks retain
+their documented quality limits.
 
 The preceding [model source ownership and retained-reference increment](#model-source-ownership-and-retained-references--2026-10-30)
 protects source files through reads, previews, native imports, background geometry
 checks and workspace closure. Saved avatar preferences and dormant/temporary
-room history retain exact model identities. It establishes prerequisites for
-future model cleanup; no model-removal action is exposed.
+room history retain exact model identities. At that ownership-only checkpoint,
+no model-removal action was exposed; the later model-maintenance checkpoint
+supplies the guarded action.
 
 The preceding [guarded finite sound cleanup](#shared-finite-sound-reclamation--2026-10-30)
 extends the shared inspection/removal path to imported audio, including exact
 workspace admission and actual decoder/stream closure. Canonical sound identity,
 retained references and historical receipts are preserved. Native, full offline
-Headless/Book and unsigned Android checks pass; physical acceptance and model
-payload cleanup remain separate.
+Headless/Book and unsigned Android checks pass. Physical acceptance remains
+separate; model payload cleanup was added in the later model-maintenance checkpoint.
 
 The preceding [guarded image payload cleanup](#shared-image-payload-reclamation--2026-10-30)
 adds an explicit shared user/agent inspection and removal path, fresh retained
@@ -73,8 +87,10 @@ supplies the tracked viewpoint's finite-water contacts. These do not complete
 underwater presentation or replace the candidate/device release gates.
 
 Start with the [accepted product scope](#accepted-product-scope) and
-[release evidence checklist](#release-evidence-still-required) and the latest
-[complete integration checkpoint](#complete-native-and-android-checkpoint--2026-10-28) and
+[release evidence checklist](#release-evidence-still-required), then the current
+[movement increment](#incremental-dormant-movement-directory--2026-11-01) and
+[asset-read checkpoint](#exact-asset-choices-and-passive-fact-recovery--2026-11-01).
+Earlier evidence includes the [complete integration checkpoint](#complete-native-and-android-checkpoint--2026-10-28) and
 [production text-to-Live increment](#production-text-to-live-continuity--2026-10-26) and
 [checkpointed native restart](#checkpointed-native-process-restart--2026-10-28) and
 [lost action acknowledgement](#lost-running-action-acknowledgement--2026-10-28) and
@@ -19306,3 +19322,103 @@ bytes. Development tooling and native acceptance remain separate. The next nativ
 slice is incremental dormant movement/collision invalidation; its source is being
 verified independently. Device/provider/signing/deployment/Meta holds are unchanged.
 Evidence: `.quest-evidence/backend-repair-20261101/local-checkpoint.json`.
+
+Subsequent fresh CI for `ff39b08ef40afc38ad8776e163ea848c05af1dd2` passes
+[Release gate](https://github.com/RONITERVO/MaestroTutor/actions/runs/41268769089)
+and [Native echo evaluation](https://github.com/RONITERVO/MaestroTutor/actions/runs/41268769010).
+The release gate includes 3,941 app tests, 118 Functions units (including its
+16 dependency compatibility cases), all five emulator groups, and 31 gateway
+units plus 16 matching compatibility cases, with zero production audit findings. Echo checks remain bounded offline evidence;
+the stock32/stationary32/measured32 quality failures remain 32/56/31.
+
+
+### Incremental dormant movement directory — 2026-11-01
+
+Movement/collision candidate captures now reuse an immutable base lookup and a
+bounded overlay of exact identity replacements and removals. Authored edits,
+runtime placements, metadata publication and native membership each supply their
+own bounded identity stream. A consumer receives the complete changed window or
+falls back to a full refresh; an empty previous partition never hides an insertion
+or lost history. A replacement journal, metadata index or residency epoch also
+forces a fresh owned view. Cursors publish only with the complete replacement
+snapshot, so a failed projection can retry without losing changes.
+
+An overlay retains at most 32 distinct replacement/removal identities. Repeated
+changes to one identity replace that entry. A 33rd distinct entry compacts from
+already-owned values without rereading unchanged dormant geometry. Capacity is
+counted by final active identities, including a removal and insertion in the same
+batch. Old captures remain immutable across replacements, deletion, Undo/Redo and
+compaction. Unknown bounds remain conservative candidates outside their previous
+location; visual metadata never establishes native collision readiness.
+
+Live objects, unexpected missing native instances and scan-bound drawings still
+read current geometry on every capture. The shared per-object ground predicate
+keeps fixed heightfields and fixed, walkable imported mesh colliders consistent
+with the existing full ground directory. An entirely unchanged movement directory
+returns before allocating a new cursor or identity collection. This does not make
+the whole candidate capture allocation-free: dynamic snapshots still own their
+values, and changed partitions still copy/sort identities.
+
+The visual and ground directories retain their previous conservative invalidation
+rules for this slice. The lookup's existing 4,096-entry internal bound and all v1
+saved/native/resource limits, persistence formats, capabilities and readiness
+rules remain unchanged. `RoomSpatialIndex.Synchronize` still traverses the world;
+this change does not claim that all room edits or frames have constant cost, or
+that any Quest frame-rate target has been met. The same small overlay is available
+for later directory adoption rather than introducing separate implementations.
+
+Fresh native verification passes 2,252 EditMode tests with the same 13 Windows
+symlink-privilege skips (2,265 total), and exactly 48 selected PlayMode tests. New
+coverage includes 17 pure overlay cases, six identity-window/classification cases
+and 13 native movement cases. A 64-dormant-object fixture proves zero dormant
+reads/tree work for a live-only edit and one dormant read/zero base-tree work for
+one changed dormant identity. The unchanged directory refresh allocates zero bytes
+across 256 measured calls; that excludes whole-capture allocations and frame costs.
+
+The first PlayMode run's three failures are retained. They exposed fixture
+assumptions about together-loading closure, an internal physics-restoration cache
+consumer, and cancellation after synchronous completion. Corrected tests preserve
+grouped and independent loading, fresh readiness, an actually pending cancellation
+and old-snapshot checks. Independent review verifies both final process exits,
+3,206 native input hashes, all 16 protected files and the original failed evidence.
+Fresh catalog export confirms unchanged 149 actions, 252 facts, 19 events and 11
+guides; only provenance changes (836 native source entries). Integration and Android
+compilation for this exact source are recorded in the following checkpoint.
+
+Evidence: `.quest-evidence/spatial-overlay-20261101/`, including
+`native-review-final.json`, `catalog-semantic-review.json` and both independent
+failure diagnoses. Device/provider/signing/deployment/Meta holds remain unchanged.
+
+
+### Incremental movement integration checkpoint — 2026-11-01
+
+Fresh full offline Headless run `5ba9033ea62f4ffca2fcb4cc7c640f4f` and unsigned
+Android export `Android-compile-20261101-035933-f8aafacc` pass independent review
+on the verified movement source. Headless completes all 113 ordinary leaves,
+with final acknowledgement 3,389, 3,165 observations, 3,164 readsets and fourteen
+matching saved/native objects. Image/audio/model maintenance retains 6/6/7
+completed receipts and motion maintenance fourteen; exact restored metadata,
+current references and immutable historical outcomes remain verified. Counts
+exclude preparation/direct calls and do not establish real-provider judgment.
+
+Android executes all 41 actionable compile/merge tasks. Its 22 selected ARM64
+libraries and 73 ELF LOAD segments pass 16 KiB alignment checks; all 152 fresh web
+payloads match. The disabled development profile and all 4,943 frozen inputs /
+sixteen protected files match. NativeBrowser's unchanged 128 passes/two skips
+and six lint warnings are reused evidence. No APK/AAB or device operation occurs.
+
+The earlier visible Book run remains the UI baseline; this increment does not
+change book or capability semantics. Full-frame Quest performance, ground/visual
+cache refresh, whole-world metadata traversal, mixed-world scale, physical
+input, audio quality and release acceptance remain open. Existing capacity and
+readiness policies are unchanged. The next bounded cache reuse can adopt the
+same overlay for ground candidates while preserving fresh native support checks;
+it cannot by itself justify larger world limits or remove the remaining world
+traversal costs.
+
+See [journey scope](QUEST_NATIVE_ROOM_PROBE.md#incremental-dormant-movement-integration--2026-11-01)
+and [compile scope](QUEST_RELEASE_BUILD.md#incremental-dormant-movement-compile-checkpoint--2026-11-01).
+Private evidence is under `.quest-evidence/spatial-overlay-20261101/`.
+The first native fixture failures and the Android reviewer's over-specific log
+assertion remain recorded with their corrections. All operational holds remain
+unchanged; this is an implementation checkpoint, not release readiness.

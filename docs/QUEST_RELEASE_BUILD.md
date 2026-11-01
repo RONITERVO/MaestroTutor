@@ -1138,3 +1138,44 @@ Evidence lives under `.quest-evidence/model-reclamation-20261101/android-final/`
 signing, deployment or Meta action occurred. Installed **D85F3CB7 / f58dab48**
 and packaged **5899972E / 5100f612** remain unchanged; physical and release
 acceptance remain open.
+
+
+## Incremental dormant movement compile checkpoint — 2026-11-01
+
+The movement/collision overlay and exact changed-identity streams have a fresh
+unsigned development export at
+`D:/Projects/Builds/MaestroQuestVerify/Builds/Android-compile-20261101-035933-f8aafacc`.
+Unity 6000.3.24f1 exits normally, with success, five build-report warnings and
+zero errors. The compiler log retains nine distinct existing C# warnings. The
+five selected compile/merge targets produce 53 graph nodes: all 41 actionable
+tasks execute, nine nodes are up-to-date and three have no source. No packaging,
+signing or installation task runs; no APK/AAB is produced.
+
+Independent review verifies all 22 selected ARM64 libraries and 73 ELF LOAD
+segments for 16 KiB alignment and congruent offsets. Five unselected dependency
+libraries remain in the intermediate; final package ABI filtering is not proven.
+The merged manifest remains `com.maestro.quest.development`, Quest 3, minimum
+API 32 and target API 34. The platform profile remains disabled in source, mirror
+and the exported TextAsset.
+
+All 152 fresh web payloads match dist, the owned Unity mirror and the export.
+The 161 paired Unity metadata companions are checked separately. NativeBrowser's
+110 source/tool inputs and AAR are identical to the prior verified artifact;
+128 test passes/two skips and six lint warnings are explicitly reused, not new
+executions. All 4,943 frozen source/configuration files and sixteen protected
+files remain unchanged. Canonical mirror sync checks 3,206 native files, copies
+zero files and deletes none before export.
+
+The first independent review rejected an absent literal batchmode shutdown
+message. Its failed receipt is retained. The corrected verifier requires the
+actual nonforced Editor exit zero, exact owned export, successful report, ordered
+input/Mono/Package Manager cleanup and the root process's matching exit receipt.
+No product, frozen wrapper or build changed for that review-only correction.
+
+Evidence: `.quest-evidence/spatial-overlay-20261101/android-final/`, plus
+`android-review-completed.json`, `android-review-marker-correction.json` and the
+retained `android-review-final.json` beside that directory. Full native tests and
+the [fresh offline Headless journey](QUEST_NATIVE_ROOM_PROBE.md#incremental-dormant-movement-integration--2026-11-01)
+have their own coverage boundaries. The earlier fact-read Book run is not a fresh
+UI run for this native-only slice. Installed and previously packaged candidates
+remain unchanged; provider, device, audio-quality and Store acceptance stay open.

@@ -13,15 +13,22 @@ namespace Maestro.Quest.Creation
         // every recipe, animation, stroke and texture in the saved world.
         (string target,bool terrain,bool imported)[] groundCandidates;
         int groundCandidatesRevision=-1,groundCandidatesCount=-1;
+        internal bool GroundCandidate(string target,out (string target,bool terrain,bool imported) candidate)
+        {
+            candidate=default;
+            if(target==null||!items.TryGetValue(target,out var value)||value.IsBuiltIn||value.physics!=ItemPhysics.Fixed)return false;
+            bool terrain=(value.heightFields?.Length??0)>0;
+            bool imported=value.kind==RoomObjectKind.ImportedModel&&value.modelGeometry?.walkable==true&&value.modelGeometry.meshCollision;
+            if(!terrain&&!imported)return false;
+            candidate=(target,terrain,imported);return true;
+        }
         internal (string target,bool terrain,bool imported)[] GroundCandidates()
         {
             if(groundCandidates!=null&&groundCandidatesRevision==spatialCatalogRevision&&groundCandidatesCount==items.Count)return groundCandidates;
             groundCandidatesRevision=spatialCatalogRevision;groundCandidatesCount=items.Count;
-            return groundCandidates=items.Values
-                .Where(x=>!x.IsBuiltIn&&x.physics==ItemPhysics.Fixed&&
-                    ((x.heightFields?.Length??0)>0||x.kind==RoomObjectKind.ImportedModel&&x.modelGeometry?.walkable==true&&x.modelGeometry.meshCollision))
-                .OrderBy(x=>x.id,StringComparer.Ordinal)
-                .Select(x=>(x.id,(x.heightFields?.Length??0)>0,x.kind==RoomObjectKind.ImportedModel&&x.modelGeometry?.walkable==true&&x.modelGeometry.meshCollision)).ToArray();
+            return groundCandidates=items.Keys.OrderBy(id=>id,StringComparer.Ordinal)
+                .Select(id=>GroundCandidate(id,out var candidate)?((string target,bool terrain,bool imported)?)candidate:null)
+                .Where(candidate=>candidate.HasValue).Select(candidate=>candidate.Value).ToArray();
         }
     }
     public sealed partial class RoomEditor

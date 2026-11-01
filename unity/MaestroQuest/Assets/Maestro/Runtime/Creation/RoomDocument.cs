@@ -450,6 +450,7 @@ namespace Maestro.Quest.Creation
             InvalidateResourceMembers(before,after);
             foreach (var item in before) { items.Remove(item.id); revisions.Remove(item.id); }
             foreach (var item in after) { items[item.id] = item.Copy(); revisions[item.id]=clock.Next++; }
+            foreach(var id in before.Select(value=>value.id).Concat(after.Select(value=>value.id)).Distinct(StringComparer.Ordinal))spatialAuthored.Record(id);
         }
         [Serializable] sealed class ObjectDelta { public RoomObjectData[] objects; }
         static bool Equivalent(RoomObjectData[] a, RoomObjectData[] b) => JsonUtility.ToJson(new ObjectDelta { objects = a.OrderBy(x => x.id).ToArray() }) == JsonUtility.ToJson(new ObjectDelta { objects = b.OrderBy(x => x.id).ToArray() });

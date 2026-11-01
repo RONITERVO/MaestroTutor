@@ -75,12 +75,18 @@ namespace Maestro.Quest.Tests
         }
         [UnityTest] public IEnumerator PersistentCollisionLookupCancellationAndActivationKeepTheCorrectPartition()
         {
-            string id=editor.Identity(block),area=NativeAreaFor(id);Assert.That(editor.RetireNativeArea(area,out var error),Is.True,error);
-            var before=editor.ReadCollisionBounds(id).Bounds;editor.CaptureMovementCandidates(false);
+            string id=editor.Identity(block),area=NativeAreaFor(id);yield return VisualLookupPrepared();
+            Assert.That(editor.RetireNativeArea(area,out var error),Is.True,error);
+            var before=editor.ReadCollisionBounds(id).Bounds;editor.CaptureMovementCandidates(false,false);
             using(var cancel=new CancellationTokenSource()){
-                var opening=editor.ActivateNativeArea(area,cancel.Token);cancel.Cancel();yield return NativeAreaCompletion(opening,false);
+                // No yielded frame since retirement: the real activation must
+                // await destruction before it can commit native membership.
+                var opening=editor.ActivateNativeArea(area,cancel.Token);Assert.That(opening.IsCompleted,Is.False);
+                cancel.Cancel();yield return NativeAreaCompletion(opening,false);
             }
-            Assert.That(editor.Find(id),Is.Null);Assert.That(editor.SpatialMovementTargets(CollisionPoint(before.center),null),Does.Contain(id));
+            Assert.That(editor.Find(id),Is.Null);var cancelled=editor.CaptureMovementCandidates(false,false);
+            Assert.That(cancelled.DormantBoundsReads,Is.Zero);Assert.That(cancelled.DormantOverlayUpdates,Is.Zero);Assert.That(cancelled.IndexBuildWork,Is.Zero,"Preparation/cancellation alone does not change native membership");
+            Assert.That(cancelled.Targets(CollisionPoint(before.center),null),Does.Contain(id));
             yield return NativeAreaCompletion(editor.ActivateNativeArea(area));var item=editor.Find(id);item.transform.localPosition+=Vector3.forward*3;
             var after=editor.ReadCollisionBounds(id).Bounds;var current=editor.CaptureMovementCandidates(false);
             Assert.That(current.Targets(CollisionPoint(after.center),null),Does.Contain(id));Assert.That(current.Targets(CollisionPoint(before.center),null),Does.Not.Contain(id));

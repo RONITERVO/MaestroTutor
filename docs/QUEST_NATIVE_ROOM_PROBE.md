@@ -2558,3 +2558,37 @@ Ordinary fresh offline `Headless` and `Book` runs now use a 20-minute native ses
 The launcher records the selected minutes in `owner.json`, the native probe validates that the owner explicitly describes an ordinary offline journey, and `ready.json` records both `fullJourneyTimeoutMinutes` and the applied `sessionTimeoutSeconds`. Successful full runs verify those values before writing `verified.json`. Provider, first-learner, focused, resumed and process-restart modes retain their existing deadlines; they record zero for this override and reject an explicitly supplied `FullJourneyTimeoutMinutes`. The restart supervisor still has its separate 15-minute client limit, and interactive provider learner sessions retain their 60-minute native limit. Legacy and restart-child owners without this new field retain their prior native limit.
 
 `Test-QuestProbeTimeout.ps1` executes the actual launcher's parameter and scope selection in isolation, checks the evidence/deadline linkage, and runs in the offline release gate. `QuestRoomProbeTimeoutTests` separately covers native admission and bounds. These checks do not claim a completed full native journey.
+
+
+## Incremental dormant movement integration — 2026-11-01
+
+Fresh full offline Headless run `5ba9033ea62f4ffca2fcb4cc7c640f4f` passes on
+the immutable dormant movement overlay. Client, Editor and launcher exit zero
+normally. Independent review verifies all 113 ordinary result leaves, final
+acknowledgement 3,389, 3,165 recorded observations and 3,164 readsets. Preparation
+and direct calls account for 224 acknowledgements outside the observation array;
+these counts are not a contiguous wire log or a branch-coverage percentage.
+
+The final 14 saved objects and world identity agree with the native directory.
+The room is saved and idle, with no pending files, running actions or storage
+error. Image/audio/model maintenance completes 6/6/7 receipts, motion maintenance
+completes 14, and historical duplicate starts retain their original outcomes.
+Exact private bytes and metadata survive removal/reimport; the model's full
+6,834-byte sidecar remains intact. Its three refusal paths retain their existing
+before-dispatch versus failed attempted-call distinction. All five recorded chat
+offers use page zero and zero discovery restarts; no later-page or source-change
+race coverage is inferred from this run.
+
+The reviewer matches 578 leaf snapshots to recorded observations and identifies
+45 preparation/direct snapshots separately. There are no unexpected native fact,
+script, metadata, compiler or fatal diagnostics. All 3,206 native inputs, 4,943
+broad inputs, 836 catalog provenance entries and sixteen protected files match.
+Virtual camera transport preserves exact 512×384 JPEG bytes and capture identity;
+that is not a visual-quality or physical-camera judgement.
+
+Evidence: `.quest-evidence/spatial-overlay-20261101/headless-independent-review.json`
+and the root `headless-terminal.json`. This run uses desktop Unity and synthetic
+physics/model/gait/audio fixtures, with provider evidence false. No fresh rendered
+Book journey is claimed for this native-only increment; the fact-read Book run
+above remains the earlier UI baseline. Physical input, provider judgement,
+Android WebView rendering, performance and Store acceptance remain separate.

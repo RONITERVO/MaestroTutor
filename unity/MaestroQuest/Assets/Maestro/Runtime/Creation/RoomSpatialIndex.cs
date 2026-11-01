@@ -26,6 +26,7 @@ namespace Maestro.Quest.Creation
         internal int Count=>entries.Count;
         readonly RoomSpatialChanges changes=new();
         internal long Generation=>changes.Version;
+        internal bool TryChanges(long since,out string[] changed,out long end)=>changes.TryCollect(since,out changed,out end);
         internal bool ChangesAffect(long since,HashSet<string> targets)=>changes.Affects(since,targets);
         internal bool Pending=>!ended&&(pending.Count>0||reading!=null);
         internal RoomSpatialIndex(ModelLibrary library):this(library.PrepareRestBoundsAsync,hash=>library.TryReadBounds(hash,out var value,true)?value:null){}
