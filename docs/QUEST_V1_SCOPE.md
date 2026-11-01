@@ -215,9 +215,10 @@ Passing commands or desktop suites alone do not establish complete v1.
 ## Current limits and explicit exclusions
 
 Current implementation limits are evidence boundaries, not new product promises:
-256 saved creations, 128 native roots, 16 liquid containers, 25-metre authored bounds
-and four height fields. The motion library currently allows 1,024 entries within
-128 MiB, with eight clips/800,000 curve values cached for playback. Neither those
+256 saved creations, 128 native roots, four imported room objects, 16 liquid
+containers, 25-metre authored bounds and four height fields. The motion library
+currently allows 1,024 entries within 128 MiB, with eight clips/800,000 curve values
+cached for playback. Neither those
 numbers nor an internal spatial-index capacity certify a full city or every asset
 combination on Quest. Expansion needs complete shared discovery/editing, bounded
 work, recovery and measured hardware acceptance; increasing constants is insufficient.
