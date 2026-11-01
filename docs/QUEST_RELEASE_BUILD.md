@@ -1017,6 +1017,50 @@ provider call, deployment or Meta action occurred. Installed **D85F3CB7 / f58dab
 and packaged **5899972E / 5100f612** remain unchanged; physical and release
 acceptance remain open.
 
+## Fact-read reliability compile checkpoint — 2026-11-01
+
+The cost-aware fact pages, compact exact chat choices/metadata and visible
+passive-read failure boundary have a fresh unsigned Android export:
+`D:/Projects/Builds/MaestroQuestVerify/Builds/Android-compile-20261101-024621-9d7e5a7a`.
+Unity 6000.3.24f1 exits normally and reports success, five warnings and zero
+errors. The compiler log also retains nine distinct existing C# warnings; the
+build-report count is not a claim of warning-free compilation. All 41 actionable
+compilation/merge tasks execute in the 53-node graph;
+nine nodes are up-to-date and three have no source. No APK/AAB or signing,
+installation or application-packaging task is produced or run.
+
+Independent verification checks the 22 selected ARM64 library hashes and 73 ELF
+LOAD segments for 16 KiB alignment, the final development manifest and disabled
+exported platform profile. Five unselected libraries remain in the intermediate;
+this does not establish final package ABI filtering. All 152 fresh production
+web payloads match dist, the mirror and the export. Validated Unity metadata
+companions are checked separately from those payloads.
+
+The existing NativeBrowser source/tool inputs and AAR remain identical. Gradle
+reuses its 128 passing/two skipped tests and six lint warnings; those are not new
+executions. All 4,936 frozen source/configuration files and sixteen protected
+files match after compilation. Before export, two canonical project settings
+files were restored from that frozen source into the owned mirror; no file was
+deleted by the sync. The generated passthrough material pair remains separately
+identified as project-setup output.
+
+A pre-export wrapper review found missing ancestor checks around generated
+output paths. The corrected private wrappers pin the mirror and owner, reject
+reparse points (including broken links), validate written paths before mutation,
+and require a new absent export/report path. Ten focused guard checks pass.
+Original preparation and prebuild receipts were preserved, with a separate
+correction receipt and updated guard review. Only the isolated build helper is
+managed; no user device session is accessed.
+
+Evidence: `.quest-evidence/fact-read-20261101/android-final/`, including
+`run.json`, `mirror-input-sync.json`, `target-guard-correction.json`,
+`source-inputs.json`, `prebuilt-artifacts.json` and `independent-review.json`.
+`independent-second-review.json` separately verifies actual files, ELF segments,
+sync chronology and the preserved guard/prebuild receipts.
+The full desktop Headless/Book journeys and native/web tests retain their own
+coverage boundaries. Physical headset, real-provider, signed-package and Store
+acceptance remain open; installed and previously packaged candidates are unchanged.
+
 ## Model ownership compile checkpoint — 2026-10-30
 
 The model source-ownership/reference change passed 2,093 full EditMode cases

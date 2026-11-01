@@ -5,6 +5,7 @@ import {createHash} from 'node:crypto';
 import {lstat,mkdir,open,readdir,readFile,unlink,writeFile} from 'node:fs/promises';
 import {join,resolve} from 'node:path';
 import type {RoomAgentState} from '../src/core-sdk/room/roomAgent';
+import {inspectChatOffer} from './probe-chat-offers';
 
 export type AudioMaintenanceReceipt=NonNullable<NonNullable<RoomAgentState['execution']>['selected']>;
 export interface AudioMaintenanceDriver {
@@ -107,9 +108,8 @@ export async function probeAudioMaintenance(driver:AudioMaintenanceDriver,direct
   const staleArgs={assetHash:audio.hash,inspectionRevision:original.inspectionRevision},stale=await driver.reject('audio.library.edit',staleArgs);
   assertStaleAudioRemovalRejected(stale,staleArgs);evidence.stale=stale;await assertFiles(false);await checkpoint('stale-refused');
   await driver.offer(audio);
-  let offers=await fact<{offerSet:string;entries:{assetHash:string}[]}>('audio.chat.library',{offset:0});const deadline=Date.now()+45000;
-  while(!offers.entries.some(value=>value.assetHash===audio.hash)&&Date.now()<deadline){await delay();offers=await fact('audio.chat.library',{offset:0});}
-  assert.ok(offers.entries.some(value=>value.assetHash===audio.hash),'Synthetic original audio did not enter the ordinary chat source');
+  const deadline=Date.now()+45000,offers=await inspectChatOffer(driver.fact.bind(driver),'audio',audio,deadline);
+  evidence.chatOffer=offers;await checkpoint('chat-offer-verified');
   const selected=await invoke('audio.import',{operation:'selectChat',offerSet:offers.offerSet,assetHash:audio.hash});
   let preview=await fact<{requestId:string;phase:string;error:string;preview:{assetHash:string}}>('audio.import.selection');
   while(preview.phase!=='preview'&&Date.now()<deadline){assert.ok(!['failed','cancelled'].includes(preview.phase),preview.error);await delay();preview=await fact('audio.import.selection');}

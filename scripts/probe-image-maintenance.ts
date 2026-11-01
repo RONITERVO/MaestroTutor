@@ -6,6 +6,7 @@ import {lstat,mkdir,open,readdir,readFile,unlink,writeFile} from 'node:fs/promis
 import {join,resolve} from 'node:path';
 import {deflateSync} from 'node:zlib';
 import type {RoomAgentState} from '../src/core-sdk/room/roomAgent';
+import {inspectChatOffer} from './probe-chat-offers';
 
 export type ImageMaintenanceReceipt=NonNullable<NonNullable<RoomAgentState['execution']>['selected']>;
 export interface ImageMaintenanceDriver {
@@ -100,9 +101,8 @@ export async function probeImageMaintenance(driver:ImageMaintenanceDriver,direct
   const staleArgs={imageHash:image.hash,inspectionRevision:original.inspectionRevision},stale=await driver.reject('image.library.edit',staleArgs);
   assertStaleImageRemovalRejected(stale,staleArgs);evidence.stale=stale;await assertFiles(false);await checkpoint('stale-refused');
   await driver.offer(image);
-  let offers=await fact<{offerSet:string;entries:{imageHash:string}[]}>('image.chat.library',{offset:0});const deadline=Date.now()+45000;
-  while(!offers.entries.some(value=>value.imageHash===image.hash)&&Date.now()<deadline){await delay();offers=await fact('image.chat.library',{offset:0});}
-  assert.ok(offers.entries.some(value=>value.imageHash===image.hash),'Synthetic original image did not enter the ordinary chat source');
+  const deadline=Date.now()+45000,offers=await inspectChatOffer(driver.fact.bind(driver),'image',image,deadline);
+  evidence.chatOffer=offers;await checkpoint('chat-offer-verified');
   const selected=await invoke('image.import',{operation:'selectChat',offerSet:offers.offerSet,imageHash:image.hash});
   let preview=await fact<{requestId:string;phase:string;error:string;preview:{imageHash:string}}>('image.import.selection');
   while(preview.phase!=='preview'&&Date.now()<deadline){assert.ok(!['failed','cancelled'].includes(preview.phase),preview.error);await delay();preview=await fact('image.import.selection');}

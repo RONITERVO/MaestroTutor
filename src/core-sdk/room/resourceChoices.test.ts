@@ -66,3 +66,19 @@ it('selects the shared appearance within a native variant without touching its a
   const broken=structuredClone(s);mutate(broken);expect(()=>resourceChoices(broken)).toThrow('invalid destination');
  }
 });
+
+
+it('follows changing entry counts and exact next cursors rather than assuming four sounds per page',()=>{
+ const action=capabilityDefinition('object.audioEmitter.edit')!,schema=resolveCapabilitySchema(action.input,action.example)!,choice=resourceChoices(schema)[0];
+ const entries=Array.from({length:5},(_,i)=>({id:String(i+1).repeat(32),name:i===0?'L'.repeat(80):'Sound '+i,kind:'tone',revision:i+1}));
+ const pages=[{offset:0,total:5,next:1,entries:entries.slice(0,1)},{offset:1,total:5,next:4,entries:entries.slice(1,4)},{offset:4,total:5,next:-1,entries:entries.slice(4)}];
+ const collected:string[]=[];let offset:number|null=0;
+ for(const page of pages){
+  expect(offset).toBe(page.offset);expect(resourceChoiceRequest(schema,choice,offset!)).toMatchObject({arguments:{offset:page.offset}});
+  const value={total:page.total,next:page.next,entries:page.entries};
+  const loaded=readResourceChoicePage(schema,choice,page.offset,view('audio.source.list',value,page.offset));
+  collected.push(...loaded.entries.map(entry=>entry.id));offset=loaded.next;
+  expect(()=>readResourceChoicePage(schema,choice,page.offset,view('audio.source.list',{...value,next:page.offset+4},page.offset))).toThrow('next resource page');
+ }
+ expect(offset).toBeNull();expect(collected).toEqual(entries.map(entry=>entry.id));
+});

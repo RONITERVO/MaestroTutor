@@ -67,3 +67,12 @@ native-book browser journey verifies readable controls without horizontal overfl
 at 1,024 by 768 and 819 by 614 pixels, opens the references to verify the guard is
 read-only, and checks that resizing or inspecting fields sends no room commands.
 Desktop viewport checks do not replace Quest readability and hand-input acceptance.
+
+## Refresh admission — 2026-11-01
+
+Starting another Load current values read revokes the previous accepted snapshot,
+availability check and permanent-action confirmation. A failed current read
+leaves the editable arguments visible but does not restore permission to run from
+the older snapshot. A successful matching read is required before checking or
+running again. Query/session identity and the draft epoch reject late responses;
+an obsolete failure cannot overwrite the status of a newer read.

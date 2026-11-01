@@ -2,7 +2,7 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 import {act,cleanup,fireEvent,render} from '@testing-library/react';
-import {afterEach,expect,it} from 'vitest';
+import {afterEach,expect,it,vi} from 'vitest';
 import exportReceipt from '../../../test-fixtures/browser/workspaceExportReceipt.json';
 import nativeSelection from '../../../test-fixtures/browser/workspaceSelection.json';
 import nativeActivation from '../../../test-fixtures/browser/workspaceActivation.json';
@@ -339,6 +339,8 @@ it('commits the exact recovery preview and reads preservation and review status 
  const fact=behaviourFact('workspace.recovery')!;
  await receive({operation:'search',category:'facts',query:'',offset:0,total:1,pageSize:6,entries:[{id:fact.id,version:1,label:fact.label}],status:'Inspect completion'});
  fireEvent.click(screen.getByRole('button',{name:new RegExp(fact.label)}));
+ await receive({operation:'inspect',category:'facts',capability:fact.id,version:1,definition:fact,available:false,value:null,status:'Choose fact inputs'});
+ fireEvent.click(screen.getByRole('button',{name:'Read fact'}));
  await receive({operation:'inspect',category:'facts',capability:fact.id,version:1,definition:fact,arguments:{},available:true,value:nativeWorkspaceRecovery.completed,status:'Available'});
  const displayed=screen.getByLabelText('Current fact value').textContent;
  for(const value of [nativeWorkspaceRecovery.completed.requestId,nativeWorkspaceRecovery.completed.evidenceHash,nativeWorkspaceRecovery.completed.committedRevision,'review'])expect(displayed).toContain(value);
@@ -380,7 +382,9 @@ it('uses the generated history reset form and reports preserved evidence separat
  fireEvent.change(screen.getByLabelText('Catalog category'),{target:{value:'facts'}});fireEvent.click(screen.getByRole('button',{name:'Search'}));
  const fact=behaviourFact('workspace.history')!;
  await receive({operation:'search',category:'facts',query:'',offset:0,total:1,pageSize:6,entries:[{id:fact.id,version:1,label:fact.label}],status:'Inspect reset outcome'});
- fireEvent.click(screen.getByRole('button',{name:new RegExp(fact.label)}));await receive({operation:'inspect',category:'facts',capability:fact.id,version:1,definition:fact,arguments:{},available:true,value:nativeHistory.status,status:'Available'});
+ fireEvent.click(screen.getByRole('button',{name:new RegExp(fact.label)}));await receive({operation:'inspect',category:'facts',capability:fact.id,version:1,definition:fact,available:false,value:null,status:'Choose fact inputs'});
+ fireEvent.click(screen.getByRole('button',{name:'Read fact'}));
+ await receive({operation:'inspect',category:'facts',capability:fact.id,version:1,definition:fact,arguments:{},available:true,value:nativeHistory.status,status:'Available'});
  const value=screen.getByLabelText('Current fact value').textContent;
  for(const text of [nativeHistory.reset.requestId,nativeHistory.reset.evidenceId,'reset','recovery'])expect(value).toContain(text);
  expect(client.snapshot().request).toBeNull();act(()=>client.cancel());
@@ -405,7 +409,9 @@ it('shows the published evidence result and submits removal with its exact nativ
  fireEvent.change(screen.getByLabelText('Catalog category'),{target:{value:'facts'}});fireEvent.click(screen.getByRole('button',{name:'Search'}));
  const fact=behaviourFact('workspace.evidence')!;
  await receive({operation:'search',category:'facts',query:'',offset:0,total:1,pageSize:6,entries:[{id:fact.id,version:1,label:fact.label}],status:'Inspect actual removal'});
- fireEvent.click(screen.getByRole('button',{name:new RegExp(fact.label)}));await receive({operation:'inspect',category:'facts',capability:fact.id,version:1,definition:fact,arguments:{},available:true,value:nativeEvidence.status,status:'Available'});
+ fireEvent.click(screen.getByRole('button',{name:new RegExp(fact.label)}));await receive({operation:'inspect',category:'facts',capability:fact.id,version:1,definition:fact,available:false,value:null,status:'Choose fact inputs'});
+ fireEvent.click(screen.getByRole('button',{name:'Read fact'}));
+ await receive({operation:'inspect',category:'facts',capability:fact.id,version:1,definition:fact,arguments:{},available:true,value:nativeEvidence.status,status:'Available'});
  const value=screen.getByLabelText('Current fact value').textContent;
  expect(value).toContain(receipt.id);expect(value).toContain('removed');expect(client.snapshot().request).toBeNull();act(()=>client.cancel());
 });
@@ -429,6 +435,8 @@ it('exports an inspected retained workspace using shared forms and displays port
  const fact=behaviourFact('workspace.retention.entry')!;
  await receive({operation:'search',category:'facts',query:'',offset:0,total:1,pageSize:6,entries:[{id:fact.id,version:1,label:fact.label}],status:'Inspect retained metadata'});
  fireEvent.click(screen.getByRole('button',{name:new RegExp(fact.label)}));
+ await receive({operation:'inspect',category:'facts',capability:fact.id,version:1,definition:fact,available:false,value:null,status:'Choose retained entry'});
+ fireEvent.change(screen.getByLabelText('Fact inputs inspectionId'),{target:{value:nativeRetention.inspection.inspectionId}});fireEvent.click(screen.getByRole('button',{name:'Read fact'}));
  await receive({operation:'inspect',category:'facts',capability:fact.id,version:1,definition:fact,arguments:{inspectionId:nativeRetention.inspection.inspectionId,index:0},available:true,value:nativeRetention.entry,status:'Available'});
  expect(screen.getByLabelText('Current fact value').textContent).toContain(nativeRetention.entry.generationId);
  expect(client.snapshot().request).toBeNull();act(()=>client.cancel());
@@ -758,7 +766,7 @@ it('reads exact imported motion pages from generated fact inputs without reusing
  const {client,screen,receive}=setup(true,['modelImport.v1']);const definition=behaviourFact('model.import.motions')!;
  fireEvent.click(screen.getByRole('button',{name:'Action catalog'}));fireEvent.change(screen.getByLabelText('Catalog category'),{target:{value:'facts'}});fireEvent.click(screen.getByRole('button',{name:/^Search$/}));
  await receive({operation:'search',category:'facts',query:'',offset:0,total:1,pageSize:6,entries:[{id:definition.id,version:definition.version,label:definition.label}],status:'Motion pages'});
- fireEvent.click(screen.getByRole('button',{name:new RegExp(definition.label)}));await receive({operation:'inspect',category:'facts',capability:definition.id,version:definition.version,definition,arguments:definition.example,available:false,value:null,status:'Choose the import request'});
+ fireEvent.click(screen.getByRole('button',{name:new RegExp(definition.label)}));await receive({operation:'inspect',category:'facts',capability:definition.id,version:definition.version,definition,available:false,value:null,status:'Choose the import request'});
  fireEvent.change(screen.getByLabelText('Fact inputs requestId'),{target:{value:nativeImportReadback.summary.requestId}});
  for(const page of nativeImportReadback.pages){
   fireEvent.change(screen.getByLabelText('Fact inputs motionOffset'),{target:{value:page.arguments.motionOffset}});expect(screen.getByLabelText('Current fact value').textContent).not.toContain(page.value.motionIds[0]);fireEvent.click(screen.getByRole('button',{name:'Read fact'}));
@@ -1313,6 +1321,7 @@ it.each(['image.library','audio.library'])('keeps %s warnings on later pages and
  const warning='Some saved files could not be inspected.';
  const value={ready:true,error:warning,total:3,next:2,entries:[entry,{...entry,id:'f'.repeat(64),name:'Another healthy item'}]};
  const reading:Extract<CatalogView,{operation:'inspect';category:'facts'}>={operation:'inspect',category:'facts',capability,version:1,definition,arguments:{offset:0},available:true,value,status:'Cached library page'};
+ await receive({operation:'inspect',category:'facts',capability,version:1,definition,available:false,value:null,status:'Choose library offset'});fireEvent.click(screen.getByRole('button',{name:'Read fact'}));
  await receive(reading);
  expect(screen.getByRole('region',{name:'Library inventory status'}).textContent).toContain(warning);
  expect(screen.getByLabelText('Current fact value').textContent).toContain(entry.name);
@@ -1330,4 +1339,108 @@ it.each(['image.library','audio.library'])('keeps %s warnings on later pages and
  await receive({...later,value:{...value,total:0,next:-1,entries:[],error:''}});
  expect(screen.queryByRole('region',{name:'Library inventory status'})).toBeNull();
  expect(client.snapshot().request).toBeNull();act(()=>client.cancel());
+});
+
+
+it.each(['unavailable','command failure','request rejection'] as const)('revokes an earlier current-input approval when refresh ends in %s',async failure=>{
+ const {client,screen,receive,state}=setup(true,['spatialSettings.v1','execution.v1','structuredValues.v1']);
+ const definition=capabilityDefinition('object.physics.configure')!,before=nativeSpatial.beforePhysics;
+ await receive(undefined,false,{objects:[...state.objects,{...state.objects[0],id:before.target,kind:'Block',name:'Refresh block'}]});
+ fireEvent.click(screen.getByRole('button',{name:'Action catalog'}));fireEvent.click(screen.getByRole('button',{name:'Search'}));
+ await receive({operation:'search',query:'',offset:0,total:1,pageSize:6,entries:[{id:definition.id,version:1,label:definition.label}],status:'Found'});
+ fireEvent.click(screen.getByRole('button',{name:new RegExp(definition.label)}));await receive({operation:'inspect',capability:definition.id,version:1,definition,status:'Physics settings'});
+ fireEvent.change(screen.getByLabelText('Action inputs target'),{target:{value:before.target}});
+ await loadCurrentDraft(screen,receive,definition,before);
+ fireEvent.change(screen.getByLabelText('Action inputs mass'),{target:{value:3}});
+ const draft=(screen.getByLabelText('Action arguments') as HTMLTextAreaElement).value;
+ const controls=['Check availability','Run action now','Add read and action to draft'];
+ for(const name of controls)expect((screen.getByRole('button',{name}) as HTMLButtonElement).disabled).toBe(false);
+ const status='Fact read failed; refresh the room settings';
+ const spy=failure==='request rejection'?vi.spyOn(client,'request').mockRejectedValueOnce(new Error(status)):null;
+ fireEvent.click(screen.getByRole('button',{name:'Load current values'}));
+ expect(screen.getByText('Load current values before checking, running or adding this action.')).toBeTruthy();
+ for(const name of controls)expect((screen.getByRole('button',{name}) as HTMLButtonElement).disabled).toBe(true);
+ if(failure==='request rejection'){await act(async()=>{await Promise.resolve();});spy!.mockRestore();}
+ else if(failure==='command failure')await receive(undefined,false,{ok:false,status}); // Deliberately retains the earlier successful catalog snapshot.
+ else await receive({operation:'inspect',category:'facts',capability:'object.physics.settings',version:1,definition:behaviourFact('object.physics.settings')!,arguments:{target:before.target},available:false,value:null,status});
+ expect(screen.getByRole('status').textContent).toBe(status);
+ expect((screen.getByLabelText('Action arguments') as HTMLTextAreaElement).value).toBe(draft);
+ for(const name of controls){expect((screen.getByRole('button',{name}) as HTMLButtonElement).disabled).toBe(true);fireEvent.click(screen.getByRole('button',{name}));}
+ expect(client.snapshot().request).toBeNull();
+ const recovered={...before,revision:before.revision+1,mass:4};
+ fireEvent.click(screen.getByRole('button',{name:'Load current values'}));
+ await receive({operation:'inspect',category:'facts',capability:'object.physics.settings',version:1,definition:behaviourFact('object.physics.settings')!,arguments:{target:before.target},available:true,value:recovered,status:'Current settings recovered'},false,{ok:true,status:'Ready'});
+ expect(JSON.parse((screen.getByLabelText('Action arguments') as HTMLTextAreaElement).value)).toEqual({target:before.target,revision:recovered.revision,mode:before.mode,shape:before.shape,mass:4});
+ for(const name of controls)expect((screen.getByRole('button',{name}) as HTMLButtonElement).disabled).toBe(false);
+ expect(client.snapshot().request).toBeNull();act(()=>client.cancel());
+});
+
+it('revokes an earlier multi-object snapshot when one refreshed member is unavailable',async()=>{
+ const {client,screen,receive,args,fact}=await captureDraft(['indexedInputs.v1']);
+ fireEvent.click(screen.getByRole('button',{name:'Load current values'}));await receive(fact(0));await receive(fact(1));
+ fireEvent.change(screen.getByLabelText('Action inputs members 1 slot'),{target:{value:'keep_my_label'}});
+ const before=args();expect((screen.getByRole('button',{name:'Run action now'}) as HTMLButtonElement).disabled).toBe(false);
+ fireEvent.click(screen.getByRole('button',{name:'Load current values'}));
+ const updated=fact(0);if(updated.operation!=='inspect'||updated.category!=='facts')throw new Error();
+ await receive({...updated,value:{...updated.value as Record<string,DataValue>,revision:222}});
+ await receive({...fact(1),available:false,value:null,status:'Second piece read failed'} as CatalogView);
+ expect(args()).toEqual(before);expect(screen.getByText('Second piece read failed')).toBeTruthy();
+ for(const name of ['Check availability','Run action now','Add read and action to draft'])expect((screen.getByRole('button',{name}) as HTMLButtonElement).disabled).toBe(true);
+ expect(client.snapshot().request).toBeNull();act(()=>client.cancel());
+});
+
+it('renders numeric zero as an available fact and shows a failed read status without reusing it',async()=>{
+ const definition=behaviourFact('object.connection.travel')!,{client,screen,receive,state}=setup(true,definition.features??[]);
+ const target=state.objects.find(object=>/^[a-f0-9]{32}$/.test(object.id))!.id;
+ fireEvent.click(screen.getByRole('button',{name:'Action catalog'}));fireEvent.change(screen.getByLabelText('Catalog category'),{target:{value:'facts'}});fireEvent.click(screen.getByRole('button',{name:'Search'}));
+ await receive({operation:'search',category:'facts',query:'',offset:0,total:1,pageSize:6,entries:[{id:definition.id,version:1,label:definition.label}],status:'Connection fact'});
+ fireEvent.click(screen.getByRole('button',{name:new RegExp(definition.label)}));
+ const fact:Extract<CatalogView,{operation:'inspect';category:'facts'}>={operation:'inspect',category:'facts',capability:definition.id,version:1,definition,arguments:{target},available:true,value:0,status:'Current connection travel'};
+ await receive({...fact,arguments:undefined,available:false,value:null,status:'Choose a connection'});
+ fireEvent.change(screen.getByLabelText('Fact inputs target'),{target:{value:target}});fireEvent.click(screen.getByRole('button',{name:'Read fact'}));
+ expect(client.snapshot().request?.commands[0].catalog).toMatchObject({arguments:{target}});
+ await receive(fact);expect(screen.getByLabelText('Current fact value').textContent).toBe('Current value0');
+ await receive({...fact,available:false,value:null,status:'Fact read failed: connection data unavailable'});
+ expect(screen.getByLabelText('Current fact value').textContent).toContain('Unavailable');expect(screen.getByLabelText('Current fact value').textContent).not.toContain('Current value0');
+ expect(screen.getByRole('status').textContent).toContain('Fact read failed: connection data unavailable');
+ await receive(fact);expect(screen.getByLabelText('Current fact value').textContent).toBe('Current value0');expect(client.snapshot().request).toBeNull();act(()=>client.cancel());
+});
+
+
+it.each(['unavailable','command failure','request rejection'] as const)('hides the old fact during refresh and keeps it hidden after %s',async failure=>{
+ const {client,screen,receive}=setup(true),definition=behaviourFact('physics.ready')!;
+ fireEvent.click(screen.getByRole('button',{name:'Action catalog'}));fireEvent.change(screen.getByLabelText('Catalog category'),{target:{value:'facts'}});fireEvent.click(screen.getByRole('button',{name:'Search'}));
+ await receive({operation:'search',category:'facts',query:'',offset:0,total:1,pageSize:6,entries:[{id:definition.id,version:1,label:definition.label}],status:'Physics fact'});
+ fireEvent.click(screen.getByRole('button',{name:new RegExp(definition.label)}));
+ const fact:Extract<CatalogView,{operation:'inspect';category:'facts'}>={operation:'inspect',category:'facts',capability:definition.id,version:1,definition,available:true,value:true,status:'Current physics readiness'};
+ await receive(fact);expect(screen.getByLabelText('Current fact value').textContent).toBe('Current valuetrue');
+ const status='Fact read failed; try again',spy=failure==='request rejection'?vi.spyOn(client,'request').mockRejectedValueOnce(new Error(status)):null;
+ fireEvent.click(screen.getByRole('button',{name:'Refresh fact'}));
+ expect(screen.getByLabelText('Current fact value').textContent).not.toContain('Current valuetrue');
+ if(failure==='request rejection'){await act(async()=>{await Promise.resolve();});spy!.mockRestore();}
+ else if(failure==='command failure')await receive(undefined,false,{ok:false,status});
+ else await receive({...fact,available:false,value:null,status});
+ expect(screen.getByLabelText('Current fact value').textContent).toContain('Unavailable');expect(screen.getByRole('status').textContent).toBe(status);
+ await receive(fact,false,{ok:true,status:'A later room observation'});
+ expect(screen.getByLabelText('Current fact value').textContent).not.toContain('Current value'); // An unsolicited old value cannot approve the failed read.
+ fireEvent.click(screen.getByRole('button',{name:'Refresh fact'}));await receive({...fact,value:false});
+ expect(screen.getByLabelText('Current fact value').textContent).toBe('Current valuefalse');expect(client.snapshot().request).toBeNull();act(()=>client.cancel());
+});
+
+it.each(['success','failure'] as const)('does not promote a late fact %s or overwrite inputs edited while that read was pending',async outcome=>{
+ const {client,screen,receive}=setup(true),definition=behaviourFact('object.position')!;
+ fireEvent.click(screen.getByRole('button',{name:'Action catalog'}));fireEvent.change(screen.getByLabelText('Catalog category'),{target:{value:'facts'}});fireEvent.click(screen.getByRole('button',{name:'Search'}));
+ await receive({operation:'search',category:'facts',query:'',offset:0,total:1,pageSize:6,entries:[{id:definition.id,version:definition.version,label:definition.label}],status:'Position fact'});
+ fireEvent.click(screen.getByRole('button',{name:new RegExp(definition.label)}));
+ const fact:Extract<CatalogView,{operation:'inspect';category:'facts'}>={operation:'inspect',category:'facts',capability:definition.id,version:definition.version,definition,available:false,value:null,status:'Choose a target'};
+ await receive(fact);fireEvent.click(screen.getByRole('button',{name:'Read fact'}));
+ await receive({...fact,arguments:{target:'book'},available:true,value:{x:10,y:0,z:0},status:'Current position'});
+ fireEvent.click(screen.getByRole('button',{name:'Read fact'}));
+ fireEvent.change(screen.getByLabelText('Fact inputs target'),{target:{value:'maestro'}});
+ await receive({...fact,arguments:{target:'book'},available:true,value:{x:99,y:0,z:0},status:'Late book position'},false,{ok:outcome==='success',status:outcome==='failure'?'Late failed request':'Ready'});
+ expect(screen.getByRole('status').textContent).not.toContain('Late failed request');
+ expect((screen.getByLabelText('Fact inputs target') as HTMLInputElement).value).toBe('maestro');expect(screen.getByLabelText('Current fact value').textContent).toContain('Not read yet');expect(screen.getByLabelText('Current fact value').textContent).not.toContain('99');
+ fireEvent.click(screen.getByRole('button',{name:'Read fact'}));expect(client.snapshot().request?.commands[0].catalog).toMatchObject({arguments:{target:'maestro'}});
+ await receive({...fact,arguments:{target:'maestro'},available:true,value:{x:0,y:0,z:0},status:'Current Maestro position'},false,{ok:true,status:'Ready'});
+ expect(screen.getByLabelText('Current fact value').textContent).toContain('"x":0');expect(client.snapshot().request).toBeNull();act(()=>client.cancel());
 });

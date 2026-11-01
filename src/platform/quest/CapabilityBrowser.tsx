@@ -25,7 +25,8 @@ export function CapabilityBrowser({client,onClose,onInsert,initialCall}:{client:
  const [query,setQuery]=useState(''),[page,setPage]=useState<Extract<CatalogView,{operation:'search'}>|null>(null);
  const [inspection,setInspection]=useState<Extract<CatalogView,{operation:'inspect'}>|null>(null),[args,writeArgs]=useState('{}'),[error,setError]=useState('');
  const [checked,setChecked]=useState(''),[recoveryNotice,setRecoveryNotice]=useState(''),[confirming,setConfirming]=useState('');
- const draftEpoch=useRef(0),alive=useRef(true),seeded=useRef(false);
+ const draftEpoch=useRef(0),alive=useRef(true),seeded=useRef(false),factReadGeneration=useRef(0);
+ const [factRead,setFactRead]=useState<{identity:string;ready:boolean}|null>(null);
  const [readContext,setReadContext]=useState<RoomCommandContext|null>(null);
  const [loaded,setLoaded]=useState(''),[acceptedSnapshot,setAcceptedSnapshot]=useState(''),[loading,setLoading]=useState(false);
  const busy=pending||loading;
@@ -33,12 +34,12 @@ export function CapabilityBrowser({client,onClose,onInsert,initialCall}:{client:
  const [currentChoices,setCurrentChoices]=useState<Record<string,boolean>>({}),[loadedInputs,setLoadedInputs]=useState<Record<string,unknown>|null>(null);
  const roomScope=JSON.stringify([state?.session,state?.temporaryRoom?.id]);
  const previousSession=useRef(roomScope);
- useEffect(()=>{if(previousSession.current!==roomScope){previousSession.current=roomScope;draftEpoch.current++;setInspection(null);setLoaded('');setAcceptedSnapshot('');setChecked('');setConfirming('');}},[roomScope]);
- useEffect(()=>{alive.current=true;return()=>{alive.current=false;draftEpoch.current++;};},[]);
+ useEffect(()=>{if(previousSession.current!==roomScope){previousSession.current=roomScope;draftEpoch.current++;factReadGeneration.current++;setFactRead(null);setInspection(null);setLoaded('');setAcceptedSnapshot('');setChecked('');setConfirming('');}},[roomScope]);
+ useEffect(()=>{alive.current=true;return()=>{alive.current=false;draftEpoch.current++;factReadGeneration.current++;};},[]);
  const setArgs=(value:string)=>{draftEpoch.current++;writeArgs(value);setLoaded('');};
- const send=async(catalog:CatalogRequest)=>{
-  setError('');setRecoveryNotice('');try {const result=await client.request([{action:'catalog',catalog}]);if(!result.ok){setError(result.status);return null;}return result.catalog??null;}
-  catch(e){setError(e instanceof Error?e.message:'The room is unavailable.');return null;}
+ const send=async(catalog:CatalogRequest,current:()=>boolean=()=>true)=>{
+  if(current()){setError('');setRecoveryNotice('');}try {const result=await client.request([{action:'catalog',catalog}]);if(!result.ok){if(current())setError(result.status);return null;}return result.catalog??null;}
+  catch(e){if(current())setError(e instanceof Error?e.message:'The room is unavailable.');return null;}
  };
  const execute=async(execution:ExecutionRequest)=>{
   setError('');setRecoveryNotice('');setLoading(true);try {const reviewed=execution.operation==='start'&&hasCurrent&&snapshotReady?readContext:null;const result=await client.requestPrepared([{action:'execution',execution}],reviewed?.state??state??undefined,reviewed?.objects);if(!result.ok)setError(result.status);else if(execution.operation==='recover')setRecoveryNotice(result.status);}
@@ -46,15 +47,23 @@ export function CapabilityBrowser({client,onClose,onInsert,initialCall}:{client:
   finally{if(alive.current)setLoading(false);}
  };
  const scope=category==='actions'?{}:{category};
- const search=async(offset=0)=>{setInspection(null);const result=await send({operation:'search',...scope,query:offset?page?.query??query:query,offset});if(result?.operation==='search'&&(result.category??'actions')===category)setPage(result);};
- const inspect=async(id:string,version:number,argumentsValue?:Record<string,unknown>,seed?:Record<string,unknown>)=>{const result=await send({operation:'inspect',...scope,capability:id,version,...(argumentsValue?{arguments:argumentsValue}:{})});if(result?.operation==='inspect'&&(result.category??'actions')===category&&result.capability===id&&result.version===version){
+ const search=async(offset=0)=>{factReadGeneration.current++;setFactRead(null);setInspection(null);const result=await send({operation:'search',...scope,query:offset?page?.query??query:query,offset});if(result?.operation==='search'&&(result.category??'actions')===category)setPage(result);};
+ const factIdentity=(id:string,version:number,argumentsValue?:Record<string,unknown>)=>JSON.stringify([roomScope,id,version,argumentsValue]);
+ const inspect=async(id:string,version:number,argumentsValue?:Record<string,unknown>,seed?:Record<string,unknown>)=>{
+  const token=++factReadGeneration.current,epoch=draftEpoch.current,session=state?.session,temporary=state?.temporaryRoom?.id,identity=factIdentity(id,version,argumentsValue);
+  if(category==='facts')setFactRead({identity,ready:false});
+  const current=()=>alive.current&&token===factReadGeneration.current&&client.snapshot().session===session&&client.getSnapshot().state?.temporaryRoom?.id===temporary&&(category!=='facts'||draftEpoch.current===epoch);
+  const result=await send({operation:'inspect',...scope,capability:id,version,...(argumentsValue?{arguments:argumentsValue}:{})},current);
+  if(!current())return;
+  if(result?.operation==='inspect'&&(result.category??'actions')===category&&result.capability===id&&result.version===version&&(result.category!=='facts'||JSON.stringify(result.arguments)===JSON.stringify(argumentsValue))){
+  if(result.category==='facts')setFactRead({identity,ready:result.available});
   setInspection(result);setCurrentChoices({});setLoadedInputs(null);setProgramInputs('current');setAcceptedSnapshot('');setChecked('');setConfirming('');if(!result.definition)setError(result.status);
   else if(result.category==='facts'&&result.definition.input)setArgs(JSON.stringify(result.arguments??result.definition.example??{},null,2));
   else if(result.category!=='events'&&result.category!=='facts'&&result.category!=='modules'&&result.category!=='guides')setArgs(JSON.stringify(seed??result.definition.example??initialCapabilityValue(result.definition.input,state?.objects??[]),null,2));
  }};
  useEffect(()=>{if(initialCall&&!seeded.current){seeded.current=true;void inspect(initialCall.id,initialCall.version,undefined,initialCall.arguments);}},[initialCall]);
  const definition=inspection&&inspection.category!=='events'&&inspection.category!=='facts'&&inspection.category!=='modules'&&inspection.category!=='guides'?inspection.definition:null;
- const currentFact=state?.catalog?.operation==='inspect'&&state.catalog.category==='facts'&&inspection?.category==='facts'&&state.catalog.capability===inspection.capability&&state.catalog.version===inspection.version&&JSON.stringify(state.catalog.arguments)===JSON.stringify(inspection.arguments)?state.catalog:null;
+ const currentFact=factRead?.ready&&inspection?.category==='facts'&&factRead.identity===factIdentity(inspection.capability,inspection.version,inspection.arguments)&&state?.catalog?.operation==='inspect'&&state.catalog.category==='facts'&&state.catalog.capability===inspection.capability&&state.catalog.version===inspection.version&&JSON.stringify(state.catalog.arguments)===JSON.stringify(inspection.arguments)?state.catalog:null;
  let factArgs:Record<string,unknown>|undefined,factError='';if(inspection?.category==='facts'&&inspection.definition?.input)try{factArgs=JSON.parse(args);factError=validateFactArguments(inspection.capability,inspection.version,factArgs)??'';}catch{factError='Enter valid fact arguments.';}
  const factDirty=inspection?.category==='facts'&&Boolean(inspection.definition?.input)&&JSON.stringify(factArgs)!==JSON.stringify(inspection.arguments);
  let call:CapabilityInvocation|null=null,invalid='',parsedArgs:unknown;
@@ -84,7 +93,7 @@ export function CapabilityBrowser({client,onClose,onInsert,initialCall}:{client:
   if(!definition||!currentQueries.length||currentError)return;
   const epoch=draftEpoch.current,session=state?.session,temporary=state?.temporaryRoom?.id;
   const stillCurrent=()=>alive.current&&draftEpoch.current===epoch&&client.snapshot().session===session&&client.getSnapshot().state?.temporaryRoom?.id===temporary;
-  setError('');setLoaded('');setChecked('');setConfirming('');setLoading(true);
+  setError('');setLoaded('');setChecked('');setConfirming('');setAcceptedSnapshot('');setLoadedInputs(null);setReadContext(null);setLoading(true);
   try{
    const views:CatalogView[]=[],observations:RoomAgentState[]=[];
    for(let i=0;i<currentQueries.length;i++){
@@ -98,7 +107,7 @@ export function CapabilityBrowser({client,onClose,onInsert,initialCall}:{client:
    const next=applyCurrentInputSnapshots(definition.input,parsedArgs,views);
    const last=observations[observations.length-1];setReadContext({state:last,objects:roomRevisionBasis(last,observations.slice(0,-1))});
    setArgs(JSON.stringify(next,null,2));setLoadedInputs(next);setCurrentChoices({});setAcceptedSnapshot(currentInputsIdentity(definition.input,next,roomScope));setLoaded('Current values loaded. Review your changes before running.');
-  }catch(e){if(stillCurrent()){setLoaded('');setError(e instanceof Error?e.message:'Current values could not be read.');}}
+  }catch(e){if(stillCurrent()){setLoaded('');setAcceptedSnapshot('');setLoadedInputs(null);setReadContext(null);setError(e instanceof Error?e.message:'Current values could not be read.');}}
   finally{if(alive.current)setLoading(false);}
  };
  const key=call?JSON.stringify(call):'';
@@ -113,14 +122,14 @@ export function CapabilityBrowser({client,onClose,onInsert,initialCall}:{client:
   <section className="room-workspace-page room-hierarchy" aria-label="Find an action">
    <div className="room-workspace-heading"><div><span className="room-eyebrow">ROOM VOCABULARY</span><h1>{category==='actions'?'Action catalog':category==='events'?'Events':category==='guides'?'Guides':'Room facts'}</h1></div><button disabled={busy} onClick={onClose}>Back to workshop</button></div>
    <p className="room-workspace-intro">Explore what Maestro can do, what programs can wait for and what they can observe. Search and inspect use the same native catalog as the agent.</p>
-   {state?.capabilities?.includes('catalogVocabulary.v1')&&<label>Browse<select aria-label="Catalog category" value={category} disabled={busy} onChange={e=>{setCategory(e.target.value as CatalogCategory);setPage(null);setInspection(null);setQuery('');setChecked('');setError('');setRecoveryNotice('');}}><option value="actions">Actions</option><option value="events">Events</option><option value="facts">Room facts</option>{state?.capabilities?.includes('catalogGuides.v1')&&<option value="guides">Guides</option>}</select></label>}
+   {state?.capabilities?.includes('catalogVocabulary.v1')&&<label>Browse<select aria-label="Catalog category" value={category} disabled={busy} onChange={e=>{factReadGeneration.current++;setFactRead(null);setCategory(e.target.value as CatalogCategory);setPage(null);setInspection(null);setQuery('');setChecked('');setError('');setRecoveryNotice('');}}><option value="actions">Actions</option><option value="events">Events</option><option value="facts">Room facts</option>{state?.capabilities?.includes('catalogGuides.v1')&&<option value="guides">Guides</option>}</select></label>}
    <form onSubmit={e=>{e.preventDefault();void search();}}><label>Search {category}<input value={query} maxLength={80} onChange={e=>setQuery(e.target.value)}/></label><button disabled={busy||!supported}>Search</button></form>
    {page&&<><p>{page.total} matching {category}</p><div className="room-object-list">{page.entries.map(entry=><button key={entry.id} disabled={busy} aria-pressed={inspection?.capability===entry.id} onClick={()=>void inspect(entry.id,entry.version)}><span>{entry.label}</span><small>{entry.id} · v{entry.version}</small></button>)}</div>
     <div className="room-workspace-actions"><button disabled={busy||page.offset===0} onClick={()=>void search(Math.max(0,page.offset-page.pageSize))}>Previous {category}</button><span>{page.total?Math.floor(page.offset/page.pageSize)+1:0} / {Math.ceil(page.total/page.pageSize)}</span><button disabled={busy||page.offset+page.pageSize>=page.total} onClick={()=>void search(page.offset+page.pageSize)}>Next {category}</button></div></>}
   </section>
   <section className="room-workspace-page room-inspector" aria-label="Action details">
    <h2>{(inspection?.category==='modules'?inspection.definition?.name:inspection?.definition?.label)??(category==='actions'?'Choose an action':category==='events'?'Choose an event':category==='guides'?'Choose a guide':'Choose a fact')}</h2>
-   <div role="status" className={error||execution?.storageError?'room-message room-message-warning':'room-message'}>{error||execution?.storageError||recoveryNotice||(!supported?'Update the native app to browse actions.':pending?'Waiting for the room…':category==='actions'?(check?.status??execution?.selected?.status??'Select an action or check its availability.'):category==='facts'?(currentFact?.status??'Inspect a fact to read its current value.'):(inspection?.status??(category==='guides'?'Inspect a guide to read the shared reference.':'Inspect an event to see its payload and subscription rules.')))}</div>
+   <div role="status" className={error||execution?.storageError?'room-message room-message-warning':'room-message'}>{error||execution?.storageError||recoveryNotice||(!supported?'Update the native app to browse actions.':pending?'Waiting for the room…':category==='actions'?(check?.status??execution?.selected?.status??'Select an action or check its availability.'):category==='facts'?(currentFact?.status??(inspection?.category==='facts'?inspection.status:undefined)??'Inspect a fact to read its current value.'):(inspection?.status??(category==='guides'?'Inspect a guide to read the shared reference.':'Inspect an event to see its payload and subscription rules.')))}</div>
 
    {inspection?.category==='guides'&&inspection.definition&&<section aria-label="Guide reference">
     <p>{inspection.definition.id} · version {inspection.definition.version}</p><p>{inspection.definition.description}</p>
@@ -141,7 +150,7 @@ export function CapabilityBrowser({client,onClose,onInsert,initialCall}:{client:
    </section>}
    {inspection?.category==='facts'&&inspection.definition&&<section aria-label="Fact definition">
     <p>{inspection.definition.id} · version {inspection.definition.version}</p><p>{inspection.definition.description}</p><p>Value type: {dataTypeLabel(inspection.definition.type)}</p>
-    <div className="room-message" aria-label="Current fact value">{factDirty?<><strong>Not read yet</strong><p>Read this fact with the chosen inputs.</p></>:currentFact?.available?<><strong>Current value</strong><LibraryInventoryNotice capability={inspection.capability} value={currentFact.value} fact/><p>{JSON.stringify(currentFact.value)}</p></>:<><strong>Unavailable</strong><p>{currentFact?'The runtime has no reliable value now.':'Refresh this fact to read it again.'}</p></>}</div>
+    <div className="room-message" aria-label="Current fact value">{factDirty?<><strong>Not read yet</strong><p>Read this fact with the chosen inputs.</p></>:currentFact?.available?<><strong>Current value</strong><LibraryInventoryNotice capability={inspection.capability} value={currentFact.value} fact/><p>{JSON.stringify(currentFact.value)}</p></>:pending&&factRead&&!factRead.ready?<><strong>Reading current value</strong><p>Waiting for this fact read to finish.</p></>:<><strong>Unavailable</strong><p>{currentFact?'The runtime has no reliable value now.':'Refresh this fact to read it again.'}</p></>}</div>
     {inspection.definition.input&&<><CapabilityFields schema={inspection.definition.input} value={factArgs} label="Fact inputs" objects={state?.objects??[]} onChange={value=>setArgs(JSON.stringify(value,null,2))}/>{factError&&<p className="room-message room-message-warning">{factError}</p>}</>}
     <button disabled={busy||Boolean(factError)||Boolean(inspection.definition.input)&&!state?.capabilities?.includes('factQueries.v1')} onClick={()=>void inspect(inspection.capability,inspection.version,factArgs)}>{inspection.definition.input?'Read fact':'Refresh fact'}</button>
     <p className="room-workspace-intro">Choose this fact as a condition or calculation input in a program. This reading is a snapshot; it does not subscribe to changes or run a behaviour.</p>

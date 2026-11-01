@@ -4,6 +4,7 @@ using System;
 using System.Linq;
 using System.IO;
 using Newtonsoft.Json.Linq;
+using Maestro.Quest.Programs;
 namespace Maestro.Quest.Imports {
     /// <summary>Ephemeral byte transport. Advertising never imports an asset.
     /// The shared import action selects exact advertised bytes before receiving.</summary>
@@ -60,7 +61,14 @@ namespace Maestro.Quest.Imports {
             return null;
         }
         internal JObject Request()=>Active&&offset<buffer.Length?new JObject{["requestId"]=request,["offerSet"]=set,[hashKey]=hash,["offset"]=offset,["bytes"]=buffer.Length}:null;
-        internal JObject Library(int start)=>new(){["offerSet"]=set,["total"]=offers.Count,["next"]=start+2<offers.Count?start+2:-1,["entries"]=new JArray(offers.Skip(start).Take(2).Select(v=>new JObject{
-            ["id"]=(string)v[hashKey],["revision"]=1,[hashKey]=(string)v[hashKey],["name"]=(string)v["name"],["messageId"]=(string)v["messageId"],["origin"]=(string)v["origin"],["kibibytes"]=(int)v["bytes"]/1024d}))};
+        internal JObject Choices(int start)=>FactPage.Prefix(offers.Count,start,offers.Skip(start).Take(2).Select(v=>new JObject{
+            ["id"]=(string)v[hashKey],["revision"]=1,[hashKey]=(string)v[hashKey],["name"]=(string)v["name"],["kibibytes"]=(int)v["bytes"]/1024d}),new JObject{["offerSet"]=set});
+        internal JObject Metadata(string assetHash,string field){
+            if(field is not ("name" or "messageId" or "origin"))return null;
+            var offer=offers.FirstOrDefault(v=>(string)v[hashKey]==assetHash);
+            return offer==null?null:new JObject{["offerSet"]=set,[hashKey]=assetHash,["field"]=field,["value"]=(string)offer[field]};
+        }
+        internal JObject Library(int start)=>FactPage.Prefix(offers.Count,start,offers.Skip(start).Take(2).Select(v=>new JObject{
+            ["id"]=(string)v[hashKey],["revision"]=1,[hashKey]=(string)v[hashKey],["name"]=(string)v["name"],["messageId"]=(string)v["messageId"],["origin"]=(string)v["origin"],["kibibytes"]=(int)v["bytes"]/1024d}),new JObject{["offerSet"]=set});
     }
 }

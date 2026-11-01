@@ -39,7 +39,13 @@ function syntheticDriver(images:string,options:{captureFailure?:boolean;replayDe
   }),
   fact:vi.fn<ImageMaintenanceDriver['fact']>(async(id,args)=>{
    if(id==='image.library.review')return {available:true,value:await record(String(args.imageHash))};
-   if(id==='image.chat.library')return {available:true,value:{offerSet:'b'.repeat(32),entries:offered?[{imageHash:offered.hash}]:[]}};
+   if(id.startsWith('image.chat.')){
+    const row=offered?{id:offered.hash,revision:1,imageHash:offered.hash,name:offered.name,messageId:'maintenance-original',origin:'generated',kibibytes:Buffer.from(offered.dataUrl.split(',')[1],'base64').length/1024}:undefined;
+    if(id==='image.chat.metadata')return {available:!!row,value:row?{offerSet:'b'.repeat(32),imageHash:row.imageHash,field:args.field,value:row[args.field as 'name'|'messageId'|'origin']}:null};
+    if(id==='image.chat.item')return {available:!!row,value:row?{offerSet:'b'.repeat(32)}:null};
+    expect(['image.chat.library','image.chat.choices']).toContain(id);expect(args.offset).toBe(0);
+    return {available:true,value:{offerSet:'b'.repeat(32),total:row?1:0,next:-1,entries:row?[id.endsWith('.choices')?{id:row.id,revision:row.revision,imageHash:row.imageHash,name:row.name,kibibytes:row.kibibytes}:row]:[]}};
+   }
    expect(id).toBe('image.import.selection');return {available:true,value:{requestId:'c'.repeat(32),phase:'preview',error:'',preview:{imageHash:offered!.hash}}};
   }),
   reject:vi.fn<ImageMaintenanceDriver['reject']>(async()=>({ok:false,status:options.unrelatedSceneRejection?'The scene changed; inspect again':'Inspect this image and load its current file revision before removing the download'} as RoomAgentState)),
@@ -60,7 +66,7 @@ it.each(['headless','book'] as const)('uses the actual room path, preserves unre
  const f=await fixture(),before=await files(f.images),{driver,phases}=syntheticDriver(f.images);if(client==='book')delete driver.replay;else delete driver.history;
  await probeImageMaintenance(driver,f.directory,client);const image=maintenanceImage(f.id,client),after=await files(f.images);
  expect(after['existing.image']).toBe(before['existing.image']);expect(after['existing.txt']).toBe(before['existing.txt']);expect(after[image.hash+'.image']).toBe(image.bytes.toString('hex'));expect(after[image.hash+'.txt']).toBe(Buffer.from(image.name+'\n').toString('hex'));expect(Object.keys(after)).toHaveLength(4);
- const result=JSON.parse(await readFile(join(f.directory,client+'-image-maintenance.json'),'utf8'));expect(result.complete).toBe(true);expect(result.phase).toBe('complete');expect(result.receipts.map((r:ImageMaintenanceReceipt)=>r.capability)).toEqual(['image.library.inspect','image.library.edit','image.import','image.import','image.library.inspect','image.library.inspect']);
+ const result=JSON.parse(await readFile(join(f.directory,client+'-image-maintenance.json'),'utf8'));expect(result.complete).toBe(true);expect(result.phase).toBe('complete');expect(result.chatOffer).toMatchObject({offerSet:'b'.repeat(32),metadata:{name:image.name,messageId:'maintenance-original',origin:'generated'},restarts:0});expect(driver.fact).toHaveBeenCalledWith('image.chat.choices',{offset:0});expect(driver.fact).toHaveBeenCalledWith('image.chat.item',{imageHash:image.hash});expect(result.receipts.map((r:ImageMaintenanceReceipt)=>r.capability)).toEqual(['image.library.inspect','image.library.edit','image.import','image.import','image.library.inspect','image.library.inspect']);
  expect(phases).toContain('stale-refused');expect(driver.offer).toHaveBeenCalledOnce();expect(driver.reject).toHaveBeenCalledOnce();expect(client==='headless'?result.duplicateStart:result.historicalRevisit).toMatchObject({capability:'image.library.edit',phase:'completed',output:{removed:true}});
 });
 it.each(['missing room','selected generation','provider workspace'] as const)('refuses %s before invoking or writing a fixture',async mode=>{

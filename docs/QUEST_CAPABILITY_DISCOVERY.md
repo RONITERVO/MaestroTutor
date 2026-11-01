@@ -80,3 +80,34 @@ remain follow-up work. No new provider service or Unity Gemini client is added.
   native execution and availability are verified separately in Unity.
 - Quest readability, text entry, original-provider planning quality and actual
   headset latency still need acceptance. Device work remains on hold.
+
+## Passive fact reliability — 2026-11-01
+
+An unavailable fact is different from a valid `false`, zero or empty value. A
+native reader returning an invalid typed value now faults explicitly. Catalog
+inspection catches only that bounded `ProgramFault`, returns `available: false`
+with a null value and a visible failure status, and keeps publishing the room
+observation and existing action receipts. It logs one sanitized diagnostic per
+registered fact/version in that catalog instance. The diagnostic contains no
+arguments, private metadata or exception text. Unrelated programming exceptions
+remain visible; executing programs still fail at the invalid read.
+
+The book hides a previous Current value as soon as a refresh starts or fails.
+Responses from an older query, edited arguments or an earlier refresh cannot
+replace a newer result. Reading and recovery never edit the room, import an
+asset or retry an action. Focus and pause admission still apply.
+
+`image.chat.library`, `audio.chat.library` and `audio.source.list` now return
+exact ordered prefixes sized against the complete typed-value envelope. Clients
+must follow the returned `next` cursor, which advances by the actual entry count;
+page sizes can shrink. The existing 1,024-unit limit is unchanged. A single
+legacy row that cannot fit fails visibly rather than being truncated or skipped.
+
+The additive `image.chat.choices` and `audio.chat.choices` facts expose exact
+identities and names without full message metadata. Their matching
+`image.chat.metadata` and `audio.chat.metadata` facts read one exact `name`,
+`messageId` or `origin` field by hash. These compact reads fit even the maximum
+accepted escaped metadata. Both carry the current `offerSet`; readers must not
+join pages or fields across different sets. Import controls use the choices
+facts and retain the existing current-item guard. Saved metadata and legacy
+library schemas are unchanged.

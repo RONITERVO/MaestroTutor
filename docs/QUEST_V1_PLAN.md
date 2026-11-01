@@ -19201,10 +19201,90 @@ scope; this dependency checkpoint does not claim a new Unity or headset run.
 
 The separate backend trees retain moderate findings: release-gate thresholds
 currently permit them, while the strict gateway staging audit would fail.
-They need a separately verified repair, not a threshold relaxation. Root
-release CI must be rerun on this repair before being reported green.
+They need a separately verified repair, not a threshold relaxation. The repair
+commit `10c79949` subsequently passed release CI (`41262656557`) and native-echo
+CI (`41262656566`). Release CI includes all 3,908 app tests, the Functions and
+gateway suites, managed emulator checks and the scripted first-learner journey;
+these are not new real-provider or headset executions.
 
 Cost-aware fact paging and visible passive catalog-read failure remain the
 next native reliability task, ahead of incremental spatial invalidation.
 Device/provider/signing/deployment/Meta holds and the remaining v1 gates stay
 unchanged. Evidence: `.quest-evidence/dependency-review-20261101/`.
+
+### Exact asset choices and passive fact recovery — 2026-11-01
+
+The next reliability slice implements the counterexample review above. Image and
+audio offer pages and saved audio names now use their actual typed-value cost,
+returning exact ordered prefixes and advancing `next` by the emitted count. No
+identity/name truncation or larger global value budget is introduced. A single
+legacy entry that cannot fit fails explicitly. Four additive choices/metadata
+facts preserve access to the maximum accepted escaped chat metadata; the native
+import selectors use the compact choices with their existing current-item guard.
+
+Passive catalog inspection now contains only typed-value `ProgramFault` failures,
+publishes an unavailable/null value with an explicit status, and keeps the room
+observation, acknowledgement and immutable completed receipts available. A
+bounded sanitized diagnostic identifies the native defect. Program execution
+still faults at an invalid read. Pause/focus gating and action ownership are
+unchanged. The book revokes stale fact displays and accepted current-input
+snapshots when refreshing; late reads cannot restore them or authorize actions.
+See [fact contracts](QUEST_CAPABILITY_DISCOVERY.md#passive-fact-reliability--2026-11-01)
+and [current inputs](QUEST_CURRENT_INPUTS.md#refresh-admission--2026-11-01).
+
+Full EditMode verification passes 2,229 cases with thirteen unchanged Windows
+symlink-privilege skips. All 42 new EditMode cases pass. The selected runtime
+group passes 29/29, including actual RoomAgent acknowledgements and receipt
+preservation across failing/recovering reads, maximum exact chat metadata,
+audio-source definitions and import flows. The first run's 28/29 result is
+retained: its healthy-control assertion queried an intentionally absent Maestro
+activity signal. Only that test was corrected to read the available false
+`physics.ready` value; runtime sources remain identical to the full EditMode run.
+
+The full web suite passes 3,941 tests across 393 files; lint, production build,
+probe TypeScript and catalog/core/prompt ownership checks pass. The fresh native
+catalog export contains 149 actions, 252 facts, 19 events and eleven guides and
+matches the shared manifest. Independent review verifies all 3,177 native input
+hashes, the documented single test correction and all sixteen protected files.
+The full native journeys and unsigned Android compilation are separate checks.
+
+Full offline Headless run `10f416c38cb94db08c1be7923fe8813f` passed independent
+review with clean client, Editor and launcher exits and no unexpected fact or
+runtime diagnostics. The new recorded reads contain two image choices pages,
+three image metadata fields and one image current-item guard; audio contains
+eight choices pages, twelve metadata fields and four current-item guards. All
+five offer sets agree with their exact imported selections. Image/audio
+maintenance each preserve six completed receipts, model maintenance seven and
+motion maintenance fourteen, including their separate refusal/history cases.
+The final fourteen saved object IDs and world identity match native inspection.
+Its 3,167 observations and 3,166 readsets omit preparation/direct calls and 224
+positive acknowledgements; they are not exhaustive wire or branch coverage.
+The final acknowledgement is 3,391. See `headless-independent-review.json`.
+
+Full Book run `6de22a1773ac450f94e2096e3f884a38` also passes independent review:
+2,812 contiguous requests all acknowledged, 8,671 observations, zero browser
+errors and clean exits. Its generated controls load current revisions, confirm
+permanent actions, import exact image/audio/model fixtures and revisit unchanged
+historical receipts. The compact choices, metadata and current-item reads agree
+with their native acknowledgements and offer sets. A final reload creates a new
+session, with one acknowledgement-zero observation and no replayed commands.
+All 3,177 native inputs, thirteen relevant web/driver hashes and sixteen
+protected files match. The new picker fixture is on page zero; later-page UI
+selection remains separate web coverage. Root reviewed four rendered desktop
+captures, including intentionally scrolled history/action views. See
+`book-review-final.json` and `book-visual-review.json`.
+
+Fresh unsigned Android export `Android-compile-20261101-024621-9d7e5a7a` and
+all 41 actionable compilation/merge tasks pass. The verifier checks 22 selected
+ARM64 libraries, 73 aligned ELF LOAD segments, the disabled platform profile,
+development manifest and all 152 fresh web payloads. All 4,936 frozen inputs and
+sixteen protected files remain unchanged. NativeBrowser's 128 passes/two skips
+and six lint warnings are explicitly reused evidence. No APK/AAB was produced.
+The private build wrapper's ancestor/reparse checks were strengthened before
+export; ten focused checks passed, and the existing prebuild receipts remain
+intact. See the [compile checkpoint](QUEST_RELEASE_BUILD.md#fact-read-reliability-compile-checkpoint--2026-11-01).
+
+Evidence: `.quest-evidence/fact-read-20261101/`. These offline desktop results do
+not establish headset readability, real-provider quality, device performance or
+Store acceptance. Incremental spatial invalidation, remaining world/audio
+limits, backend audit findings and the existing operational holds remain open.

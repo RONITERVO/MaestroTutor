@@ -2512,6 +2512,45 @@ checks are not inferred from these Headless or Book journeys; the model leaf
 reimports its payload before continuing the full journey.
 
 
+## Exact chat-offer reads — 2026-11-01
+
+The ordinary image/audio maintenance leaves and chat-audio import driver now
+discover their synthetic fixtures through `*.chat.choices`, following each
+returned `next` cursor. They read the three exact metadata fields separately,
+compare them with the known short fixture's legacy library row, and check the
+current item before import. A changed `offerSet` discards the whole accumulated
+read and restarts at zero; no identity is joined across generations. The private
+helper bounds attempts and elapsed discovery time. Its deadline is cooperative;
+the existing request, UI and whole-journey limits bound an in-flight read.
+
+The Book maintenance fixture is newest and its generated picker selects page
+zero. Later-page picker behavior has separate web test coverage; these full
+journeys do not establish that native UI case. Likewise the legacy comparison
+is deliberately for a known short fixture, not a claim that all maximum-length
+metadata fits one legacy row. Native PlayMode cases cover maximum escaped
+metadata and exact recovery through the compact facts.
+
+Ordinary journey verification rejects a `Native fact read failed:` diagnostic
+in either original or restarted Unity logs, even if observation subsequently
+recovers. Unit tests that deliberately provoke this diagnostic still use the
+ordinary log check and explicitly expect the error through Unity Test Framework.
+This distinction prevents a recovered defect from being reported as a clean
+integration journey without hiding intentional failure-boundary tests.
+
+The completed Headless run `10f416c38cb94db08c1be7923fe8813f` and Book run
+`6de22a1773ac450f94e2096e3f884a38` pass independent review with no unexpected
+fact failures and clean client/Editor/launcher exits. Headless records 3,167
+observations and 3,166 readsets, with final acknowledgement 3,391; preparation
+and direct calls are outside those arrays. Book records 2,812 contiguous
+acknowledged requests, 8,671 observations and zero browser errors. Both retain
+exact metadata and completed maintenance receipts. Book's final reload starts a
+new native session without replaying commands. These are offline desktop runs;
+the page-zero, short-fixture, scripted-provider and Editor-picker boundaries
+above still apply. Evidence is under `.quest-evidence/fact-read-20261101/`, in
+`headless-independent-review.json`, `book-review-final.json` and the root visual
+review. The corresponding fresh Android compilation is documented separately in
+[release build evidence](QUEST_RELEASE_BUILD.md#fact-read-reliability-compile-checkpoint--2026-11-01).
+
 ## Full offline journey time budget — 2026-11-01
 
 Ordinary fresh offline `Headless` and `Book` runs now use a 20-minute native session deadline. `Run-QuestRoomProbe.ps1 -FullJourneyTimeoutMinutes <minutes>` can select an integer from 15 through 30 for those runs, including sparse observation and optional synthetic asset fixtures. The deadline starts when the Editor enters Play mode; it is not a per-action timeout or proof that a journey passed.

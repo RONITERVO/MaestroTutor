@@ -8,6 +8,7 @@ import {createHash} from 'node:crypto';
 import type {HeadlessRoomTransport} from '../src/headless/roomTransport';
 import type {RoomCommand} from '../src/core-sdk/room/roomAgent';
 import {factReply,type NativeProbeState} from './native-probe-contract';
+import {inspectChatOffer} from './probe-chat-offers';
 export function chatSoundFixture(format:'wav'|'mp3'|'vorbis'='wav'){
  if(format!=='wav'){
   const name=format==='mp3'?'stereo-vbr.mp3':'stereo.ogg',bytes=readFileSync(new URL('../unity/MaestroQuest/Assets/Maestro/Tests/Fixtures/CompressedAudio/'+name+'.bytes',import.meta.url));
@@ -23,7 +24,8 @@ export async function probeChatAudio(transport:HeadlessRoomTransport,execute:Exe
 }
 async function probeOne(transport:HeadlessRoomTransport,execute:Execute,directory:string,format:'wav'|'mp3'|'vorbis'){
  const fixture=chatSoundFixture(format);transport.setChatSource(()=>({scope:'sound-probe',messages:[{id:'generated-sound',role:'assistant',timestamp:1,maestroToolKind:'audio-note',imageUrl:fixture.dataUrl,attachmentName:'Chat rain.wav'}]}));
- const read=async(capability:string,args?:Record<string,unknown>,version=1)=>{const reply=factReply(await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability,version,...(args===undefined?{}:{arguments:args})}}]));assert.equal(reply.available,true,JSON.stringify(reply));return reply.value as Record<string,unknown>;};
+ const readFact=async(capability:string,args?:Record<string,unknown>,version=1)=>factReply(await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability,version,...(args===undefined?{}:{arguments:args})}}]));
+ const read=async(capability:string,args?:Record<string,unknown>,version=1)=>{const reply=await readFact(capability,args,version);assert.equal(reply.available,true,JSON.stringify(reply));return reply.value as Record<string,unknown>;};
  const invoke=async(id:string,args:Record<string,unknown>)=>{
   let result=(await execute([{action:'execution',execution:{operation:'start',call:{id,version:1,arguments:args}}}])).execution?.selected;
   assert.ok(result);const runId=result.id,deadline=Date.now()+15000;
@@ -33,8 +35,7 @@ async function probeOne(transport:HeadlessRoomTransport,execute:Execute,director
   }
   assert.equal(result.phase,'completed',JSON.stringify(result));return result;
  };
- const deadline=Date.now()+45000;let offers=await read('audio.chat.library',{offset:0});while(Number(offers.total)===0&&Date.now()<deadline){await new Promise(r=>setTimeout(r,100));offers=await read('audio.chat.library',{offset:0});}
- assert.equal((offers.entries as {assetHash:string}[])[0].assetHash,fixture.hash);
+ const deadline=Date.now()+45000,offers=await inspectChatOffer(readFact,'audio',{hash:fixture.hash,name:'Chat rain.wav'},deadline);
  const selected=await invoke('audio.import',{operation:'selectChat',offerSet:offers.offerSet,assetHash:fixture.hash});
  let preview=await read('audio.import.selection');while(preview.phase!=='preview'&&Date.now()<deadline){assert.ok(!['failed','cancelled'].includes(String(preview.phase)),JSON.stringify(preview));await new Promise(r=>setTimeout(r,100));preview=await read('audio.import.selection');}
  assert.equal(preview.phase,'preview');const asset=preview.preview as {assetHash:string;sampleRate:number;channels:number;seconds:number};assert.match(asset.assetHash,/^[a-f0-9]{64}$/);if(format==='wav')assert.equal(asset.assetHash,fixture.hash);else{assert.notEqual(asset.assetHash,fixture.hash);assert.equal(asset.sampleRate,24000);assert.equal(asset.channels,1);assert.ok(Math.abs(asset.seconds-fixture.seconds)<.09);}const accepted=await invoke('audio.import',{operation:'accept',requestId:selected.output!.requestId,assetHash:asset.assetHash});assert.equal(accepted.output!.assetHash,asset.assetHash);

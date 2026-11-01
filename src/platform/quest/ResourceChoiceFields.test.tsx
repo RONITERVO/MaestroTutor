@@ -8,7 +8,7 @@ import {ResourceChoiceFields} from './ResourceChoiceFields';
 import {CapabilityBrowser} from './CapabilityBrowser';
 import {RoomAgentClient} from './roomAgentBridge';
 import {behaviourFact} from '../../../shared/behaviourCatalog';
-import {capabilityDefinition} from '../../../shared/capabilities';
+import {capabilityDefinition,resolveCapabilitySchema} from '../../../shared/capabilities';
 import type {CatalogView} from '../../../shared/roomCatalog';
 import type {RoomAgentState} from '../../core-sdk/room/roomAgent';
 import native from '../../../test-fixtures/browser/programBookState.json';
@@ -17,8 +17,8 @@ const first={id:'a'.repeat(32),name:'Landscape',revision:3},second={id:'b'.repea
 const definition=()=>capabilityDefinition('object.visibility.assign')!;
 const fact=(id:string,value:unknown,args:Record<string,unknown>={offset:0}):CatalogView=>({operation:'inspect',category:'facts',capability:id,version:1,definition:behaviourFact(id)!,arguments:args,available:true,value,status:'Available'}) as CatalogView;
 const list=(entries=[first,second],offset=0,total=entries.length)=>fact('visibility.layers',{offset,total,pageSize:3,entries},{offset});
-function setup(){
- const client=new RoomAgentClient();let state={...structuredClone(native),ack:0,revision:1,catalog:null,capabilities:[...new Set([...native.capabilities,'catalog.v1','catalogVocabulary.v1','factQueries.v1','visibilityLayers.v1','structuredValues.v1'])]} as RoomAgentState;expect(client.receive(state)).toBe(true);
+function setup(extraFeatures:string[]=[]){
+ const client=new RoomAgentClient();let state={...structuredClone(native),ack:0,revision:1,catalog:null,capabilities:[...new Set([...native.capabilities,...extraFeatures,'catalog.v1','catalogVocabulary.v1','factQueries.v1','visibilityLayers.v1','structuredValues.v1'])]} as RoomAgentState;expect(client.receive(state)).toBe(true);
  const receive=async(catalog:CatalogView|null,more:Partial<RoomAgentState>={})=>{state={...state,...more,revision:state.revision+1,ack:client.snapshot().request?.sequence??state.ack,catalog};await act(async()=>{expect(client.receive(state)).toBe(true);});};
  return {client,receive,session:state.session};
 }
@@ -66,4 +66,29 @@ it('chooses a named lookup first, requires its own current read and invalidates 
  expect((screen.getByRole('button',{name:'Check availability'}) as HTMLButtonElement).disabled).toBe(false);
  choose(second.id);expect(screen.queryByText('Current values loaded. Review your changes before running.')).toBeNull();choose(first.id);expect((screen.getByRole('button',{name:'Check availability'}) as HTMLButtonElement).disabled).toBe(true);
  expect((screen.getByRole('button',{name:'Add read and action to draft'}) as HTMLButtonElement).disabled).toBe(true);expect(insert).not.toHaveBeenCalled();expect(client.snapshot().request).toBeNull();client.cancel();
+});
+
+it.each([
+ {kind:'image',hashField:'imageHash'},
+ {kind:'audio',hashField:'assetHash'},
+])('uses compact $kind choices with exact names and a one-entry next page without importing',async({kind,hashField})=>{
+ const d=capabilityDefinition(kind+'.import')!,initial={operation:'selectChat',offerSet:'f'.repeat(32),[hashField]:'a'.repeat(64)};
+ const schema=resolveCapabilitySchema(d.input,initial)!,choice=schema['x-choices']![0],id=kind+'.chat.choices';
+ expect(choice.fact).toBe(id);expect(schema['x-current']?.fact).toBe(kind+'.chat.item');
+ const {client,receive,session}=setup(behaviourFact(id)!.features??[]),changed=vi.fn();
+ function Harness(){const [value,setValue]=useState(initial);return <><ResourceChoiceFields {...{schema,value,client,session}} ready canLookup onChange={(next,fields)=>{changed(next,fields);setValue(next as typeof initial);}}/><pre data-testid="draft">{JSON.stringify(value)}</pre></>;}
+ const screen=render(<Harness/>),label=choice.label.toLowerCase(),name='Long'+'\u2028'.repeat(75)+'X',hash='b'.repeat(64),nextHash='c'.repeat(64);
+ fireEvent.click(screen.getByRole('button',{name:'Load saved '+label}));
+ expect(client.snapshot().request?.commands).toEqual([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:id,version:1,arguments:{offset:0}}}]);
+ await receive(fact(id,{offerSet:initial.offerSet,total:2,next:1,entries:[{id:hash,revision:1,[hashField]:hash,name,kibibytes:2}]},{offset:0}));
+ const options=screen.getAllByRole('option');expect(options[1].textContent).toBe(name.trim()+' · revision 1');
+ expect(screen.getByText('1–1 of 2')).toBeTruthy();
+ fireEvent.click(screen.getByRole('button',{name:'Next '+label}));
+ expect(client.snapshot().request?.commands[0].catalog).toMatchObject({capability:id,arguments:{offset:1}});
+ await receive(fact(id,{offerSet:initial.offerSet,total:2,next:-1,entries:[{id:nextHash,revision:1,[hashField]:nextHash,name:'Second',kibibytes:1}]},{offset:1}));
+ expect((screen.getByRole('button',{name:'Next '+label}) as HTMLButtonElement).disabled).toBe(true);
+ fireEvent.change(screen.getByLabelText('Choose '+label),{target:{value:JSON.stringify([nextHash,null])}});
+ expect(changed).toHaveBeenCalledExactlyOnceWith({...initial,[hashField]:nextHash},[hashField]);
+ expect(JSON.parse(screen.getByTestId('draft').textContent!)).toEqual({...initial,[hashField]:nextHash});
+ expect(client.snapshot().request).toBeNull();client.cancel();
 });

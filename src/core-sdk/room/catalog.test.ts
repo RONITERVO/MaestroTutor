@@ -143,3 +143,29 @@ it('preserves collision interruption as an explicit physics-input fact across th
  expect(validCatalogView({...view,value:missing})).toBe(false);
  expect(definition.description).toContain('resume from rest');
 });
+
+
+it('retains failure diagnostics with null values while distinguishing reliable false and zero',()=>{
+ const unavailable={operation:'inspect',category:'facts',capability:'object.connection.travel',version:1,definition:behaviourFact('object.connection.travel'),arguments:{target:'a'.repeat(32)},available:false,value:null,status:'Fact read failed: typed value exceeds the observation budget'};
+ expect(validCatalogView(unavailable)).toBe(true);
+ for(const value of [false,0,'',{},[]])expect(validCatalogView({...unavailable,value})).toBe(false);
+ expect(validCatalogView({...unavailable,available:true,value:0,status:'Current connection travel'})).toBe(true);
+ expect(validCatalogView({...unavailable,available:true,value:false})).toBe(false);
+ const boolean={operation:'inspect',category:'facts',capability:'physics.ready',version:1,definition:behaviourFact('physics.ready'),available:true,value:false,status:'Reliable false reading'};
+ expect(validCatalogView(boolean)).toBe(true);expect(validCatalogView({...boolean,available:false,value:null,status:'Fact read failed'})).toBe(true);
+ for(const status of ['bad\nstatus','x'.repeat(2049),null])expect(validCatalogView({...unavailable,status})).toBe(false);
+});
+
+it.each([{kind:'image',hashField:'imageHash'},{kind:'audio',hashField:'assetHash'}])('accepts complete $kind metadata as bounded untrusted text with explicit source identity',({kind,hashField})=>{
+ const hash='a'.repeat(64),offerSet='b'.repeat(32),value='\u2028'.repeat(128);
+ const query={operation:'inspect',category:'facts',capability:kind+'.chat.metadata',version:1,arguments:{[hashField]:hash,field:'origin'}};
+ expect(validCatalogRequest(query)).toBe(true);
+ const view={...query,definition:behaviourFact(query.capability),available:true,value:{offerSet,[hashField]:hash,field:'origin',value},status:'Available'};
+ expect(validCatalogView(view)).toBe(true);expect(JSON.parse(JSON.stringify(view)).value.value).toBe(value);
+ expect(validCatalogView({...view,value:{...view.value,value:value+'x'}})).toBe(false);
+ expect(validCatalogView({...view,value:{...view.value,value:0}})).toBe(false);
+ expect(validCatalogView({...view,available:false,value:null,status:'The offered source is no longer available'})).toBe(true);
+ expect(validCatalogView({...view,available:false})).toBe(false);
+ for(const field of ['name','messageId','origin'])expect(validCatalogRequest({...query,arguments:{[hashField]:hash,field}})).toBe(true);
+ expect(validCatalogView({...view,arguments:{[hashField]:hash,field:'url'}})).toBe(false);
+});

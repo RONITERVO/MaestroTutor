@@ -47,7 +47,13 @@ function syntheticDriver(audios:string,options:{captureFailure?:boolean;replayDe
    if(id==='audio.instances')return {available:true,value:{entries:accepted&&options.unexpectedPlayback?[{instance:'f'.repeat(32)}]:[]}};
    if(id==='audio.source.definition')return {available:true,value:{definition:{clip:{assetHash:offered!.hash}}}};
    if(id==='audio.library.review')return {available:true,value:await record(String(args.assetHash))};
-   if(id==='audio.chat.library')return {available:true,value:{offerSet:'b'.repeat(32),entries:offered?[{assetHash:offered.hash}]:[]}};
+   if(id.startsWith('audio.chat.')){
+    const row=offered?{id:offered.hash,revision:1,assetHash:offered.hash,name:offered.name,messageId:'maintenance-original',origin:'generated',kibibytes:Buffer.from(offered.dataUrl.split(',')[1],'base64').length/1024}:undefined;
+    if(id==='audio.chat.metadata')return {available:!!row,value:row?{offerSet:'b'.repeat(32),assetHash:row.assetHash,field:args.field,value:row[args.field as 'name'|'messageId'|'origin']}:null};
+    if(id==='audio.chat.item')return {available:!!row,value:row?{offerSet:'b'.repeat(32)}:null};
+    expect(['audio.chat.library','audio.chat.choices']).toContain(id);expect(args.offset).toBe(0);
+    return {available:true,value:{offerSet:'b'.repeat(32),total:row?1:0,next:-1,entries:row?[id.endsWith('.choices')?{id:row.id,revision:row.revision,assetHash:row.assetHash,name:row.name,kibibytes:row.kibibytes}:row]:[]}};
+   }
    expect(id).toBe('audio.import.selection');return {available:true,value:{requestId:'c'.repeat(32),phase:'preview',error:'',preview:{assetHash:offered!.hash}}};
   }),
   reject:vi.fn<AudioMaintenanceDriver['reject']>(async(_id,args)=>accepted&&!options.ignoreRetention?retainedState(args as {assetHash:string;inspectionRevision:string}):({ok:accepted&&options.ignoreRetention?true:false,status:options.unrelatedSceneRejection?'The scene changed; inspect again':'Inspect this sound and load its current file revision before removing the download'} as RoomAgentState)),
@@ -68,7 +74,7 @@ it.each(['headless','book'] as const)('uses the actual room path, preserves unre
  const f=await fixture(),before=await files(f.audios),{driver,phases}=syntheticDriver(f.audios);if(client==='book')delete driver.replay;else delete driver.history;
  await probeAudioMaintenance(driver,f.directory,client);const audio=maintenanceAudio(f.id,client),after=await files(f.audios);
  expect(after['existing.wav']).toBe(before['existing.wav']);expect(after['existing.txt']).toBe(before['existing.txt']);expect(after[audio.hash+'.wav']).toBe(audio.bytes.toString('hex'));expect(after[audio.hash+'.txt']).toBe(Buffer.from(audio.name+'\n').toString('hex'));expect(Object.keys(after)).toHaveLength(4);
- const result=JSON.parse(await readFile(join(f.directory,client+'-audio-maintenance.json'),'utf8'));expect(result.complete).toBe(true);expect(result.phase).toBe('complete');expect(result.receipts.map((r:AudioMaintenanceReceipt)=>r.capability)).toEqual(['audio.library.inspect','audio.library.edit','audio.import','audio.import','audio.library.inspect','audio.library.inspect']);
+ const result=JSON.parse(await readFile(join(f.directory,client+'-audio-maintenance.json'),'utf8'));expect(result.complete).toBe(true);expect(result.phase).toBe('complete');expect(result.chatOffer).toMatchObject({offerSet:'b'.repeat(32),metadata:{name:audio.name,messageId:'maintenance-original',origin:'generated'},restarts:0});expect(driver.fact).toHaveBeenCalledWith('audio.chat.choices',{offset:0});expect(driver.fact).toHaveBeenCalledWith('audio.chat.item',{assetHash:audio.hash});expect(result.receipts.map((r:AudioMaintenanceReceipt)=>r.capability)).toEqual(['audio.library.inspect','audio.library.edit','audio.import','audio.import','audio.library.inspect','audio.library.inspect']);
  expect(phases).toContain('stale-refused');expect(phases).toContain('unbound-source-protected');expect(driver.offer).toHaveBeenCalledOnce();expect(driver.reject).toHaveBeenCalledTimes(2);expect(client==='headless'?result.duplicateStart:result.historicalRevisit).toMatchObject({capability:'audio.library.edit',phase:'completed',output:{removed:true}});
 });
 it.each(['missing room','selected generation','provider workspace'] as const)('refuses %s before invoking or writing a fixture',async mode=>{

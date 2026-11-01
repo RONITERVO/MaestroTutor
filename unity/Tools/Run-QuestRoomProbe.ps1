@@ -220,8 +220,8 @@ try{
   & $runner (Join-Path $repoRoot 'scripts/assert-quest-action-interruption.ts') $directory
   if($LASTEXITCODE -ne 0){throw "Action interruption evidence failed. Evidence: $directory"}
  }
- if($restarting){& (Join-Path $PSScriptRoot 'Assert-QuestUnityLog.ps1') -LogPath $initialLog}
- & (Join-Path $PSScriptRoot 'Assert-QuestUnityLog.ps1') -LogPath $log
+ if($restarting){& (Join-Path $PSScriptRoot 'Assert-QuestUnityLog.ps1') -LogPath $initialLog -RejectFactReadFailures}
+ & (Join-Path $PSScriptRoot 'Assert-QuestUnityLog.ps1') -LogPath $log -RejectFactReadFailures
  @{version=1;id=$id;clientExit=$clientExit;editorExit=$process.ExitCode;directory=$directory;providerUsed=![string]::IsNullOrWhiteSpace($Prompt);journey=$Journey;fullJourneyTimeoutMinutes=$fullJourneyTimeout;firstLearner=[bool]$FirstLearner;liveContinuity=[bool]$LiveContinuity;nativeRestart=[bool]$restarting;actionInterruption=[bool]$ActionInterruption;sparseObjectView=[bool]$SparseObjectView;motionOnly=[bool]$MotionOnly;steeringOnly=[bool]$SteeringOnly;identityOnly=[bool]$IdentityOnly;transportOnly=[bool]$TransportOnly;providerScenario=$ProviderScenario;outcome=$(if($ProviderScenario -eq 'LearnerConversation'){'collected-requires-semantic-review'}else{'passed'});resumedFrom=$(if($ResumeIdentityRun){$ResumeIdentityRun}else{$ResumeLearnerRun})} | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $directory 'verified.json')
  if($ProviderScenario -eq 'LearnerConversation'){Write-Output "Learner session collected (manual outcome review required): $directory"}else{Write-Output "Native room probe passed: $directory"}
 }finally{

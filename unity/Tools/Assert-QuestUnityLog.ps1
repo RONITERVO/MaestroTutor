@@ -1,7 +1,7 @@
 # Copyright 2026 Roni Tervo
 # SPDX-License-Identifier: Apache-2.0
 [CmdletBinding()]
-param([Parameter(Mandatory)][string]$LogPath)
+param([Parameter(Mandatory)][string]$LogPath, [switch]$RejectFactReadFailures)
 $ErrorActionPreference = 'Stop'
 if (!(Test-Path -LiteralPath $LogPath -PathType Leaf) -or (Get-Item -LiteralPath $LogPath).Length -eq 0) {
     throw "Unity verification log is missing or empty: $LogPath"
@@ -20,4 +20,14 @@ $ignoredAssets = @(Select-String -LiteralPath $LogPath -Pattern '^\s*The \.meta 
 if ($ignoredAssets.Count -gt 0) {
     $lines = ($ignoredAssets | ForEach-Object { $_.LineNumber }) -join ', '
     throw "Unity ignored-asset metadata diagnostics found at lines $lines. See $LogPath"
+}
+
+# NUnit boundary tests explicitly expect these diagnostics. Ordinary integration
+# journeys must opt in so a recovered UI observation cannot hide a native defect.
+if ($RejectFactReadFailures) {
+    $factFailures = @(Select-String -LiteralPath $LogPath -Pattern '^\s*Native fact read failed: ')
+    if ($factFailures.Count -gt 0) {
+        $lines = ($factFailures | ForEach-Object { $_.LineNumber }) -join ', '
+        throw "Native fact contract failures found at lines $lines. See $LogPath"
+    }
 }

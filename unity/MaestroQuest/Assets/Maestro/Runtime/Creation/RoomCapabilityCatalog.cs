@@ -16,6 +16,9 @@ namespace Maestro.Quest.Creation
         public const int MaximumInvocationResources=RoomDocument.MaximumObjects+2;
         readonly RoomEditor editor;readonly WorkspaceHost workspace;
         JObject request,cached;
+        // Keys can only come from the finite registered vocabulary, never query arguments.
+        readonly System.Collections.Generic.HashSet<string> reportedFactFailures=new(StringComparer.Ordinal);
+        internal const string FactReadFailureStatus="Fact read failed because its native value is invalid or exceeds the supported limits. No room action was performed.";
         Entry inspected;
         int moduleRevision;bool moduleReady,modulePending;string moduleNotice;
         public RoomCapabilityCatalog(RoomEditor editor,WorkspaceHost workspace=null) {this.editor=editor;this.workspace=workspace??(editor?editor.GetComponentInParent<WorkspaceHost>():null);}
@@ -91,7 +94,17 @@ namespace Maestro.Quest.Creation
             var runtime=editor?editor.GetComponent<RoomRules>():null;ProgramValue value=default;
             var definition=entry==null?null:BehaviourCatalog.Fact(entry.Id);var arguments=request["arguments"] as JObject;
             if(request.ContainsKey("arguments"))result["arguments"]=request["arguments"].DeepClone();
-            bool available=definition!=null&&(definition.Domain=="workspace"&&workspace?workspace.Runtime.TryRead(entry.Id,entry.Version,arguments,out value):runtime&&runtime.TryReadFact(entry.Id,entry.Version,arguments,out value))&&definition.ValidValue(value);
+            bool available;
+            try {
+                available=definition!=null&&(definition.Domain=="workspace"&&workspace?workspace.Runtime.TryRead(entry.Id,entry.Version,arguments,out value):runtime&&runtime.TryReadFact(entry.Id,entry.Version,arguments,out value));
+                if(available&&!definition.ValidValue(value))throw new ProgramFault("Invalid native fact value");
+            }catch(ProgramFault) {
+                // This boundary covers only passive reads, including cached observations.
+                // Keep programming exceptions visible and never change action receipts.
+                if(reportedFactFailures.Add(entry.Id+"@"+entry.Version))
+                    UnityEngine.Debug.LogError("Native fact read failed: "+entry.Id+" v"+entry.Version+" (invalid typed value).");
+                result["available"]=false;result["value"]=JValue.CreateNull();result["status"]=FactReadFailureStatus;return result;
+            }
             result["available"]=available;result["value"]=available?JToken.FromObject(value.Value):JValue.CreateNull();
             if(entry!=null)result["status"]=available?"Current fact value. Reading does not change the room.":definition.Parameterized&&arguments==null?"Choose fact arguments to read a value.":!definition.ValidArguments(entry.Version,arguments,out _)?"Fact arguments do not match this definition.":"Fact value is currently unavailable; do not treat it as false or zero.";
             return result;
