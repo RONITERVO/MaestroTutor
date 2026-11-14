@@ -158,3 +158,18 @@ it('releases local waiting and keeps the draft if its result leaves the bounded 
  expect(screen.getByRole('status').textContent).toContain('inspect action history');expect(screen.getByRole('status').textContent).toContain('draft is kept');
  expect((screen.getByRole('button',{name:'Apply changes'}) as HTMLButtonElement).disabled).toBe(false);expect(client.snapshot().request).toBeNull();
 });
+
+
+it('labels a broad room update separately from an unsaved recipe draft',()=>{
+ const client=new RoomAgentClient();client.receive(state({status:'Action completed'}));const screen=render(<RoomWorkspace client={client}/>);
+ expect(screen.getByRole('status').textContent).toBe('Room status: Action completed');
+ fireEvent.click(screen.getByRole('button',{name:'Size x plus'}));
+ expect(screen.getByRole('status').textContent).toContain('Draft changes');
+ act(()=>{expect(client.receive(state({revision:2,status:'Another action completed'}))).toBe(true);});
+ expect(screen.getByRole('status').textContent).toContain('Draft changes');
+ expect(screen.getByRole('status').textContent).not.toContain('Another action completed');
+ expect(client.snapshot().request).toBeNull();
+ fireEvent.click(screen.getByRole('button',{name:'Discard draft'}));
+ expect(screen.getByRole('status').textContent).toBe('Room status: Another action completed');
+ expect(client.snapshot().request).toBeNull();act(()=>client.cancel());
+});

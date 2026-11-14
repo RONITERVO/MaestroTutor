@@ -1444,3 +1444,93 @@ it.each(['success','failure'] as const)('does not promote a late fact %s or over
  await receive({...fact,arguments:{target:'maestro'},available:true,value:{x:0,y:0,z:0},status:'Current Maestro position'},false,{ok:true,status:'Ready'});
  expect(screen.getByLabelText('Current fact value').textContent).toContain('"x":0');expect(client.snapshot().request).toBeNull();act(()=>client.cancel());
 });
+
+
+async function actionFeedbackFixture(){
+ const client=new RoomAgentClient();const call=nativeExecutions.running.execution.selected.call;
+ const prior=structuredClone(nativeExecutions.completed.execution);
+ let state={...structuredClone(nativeExecutions.completed),ack:0,revision:1,catalog:null,
+  execution:{...prior,nextRunId:nativeExecutions.running.execution.selected.id}} as RoomAgentState;
+ expect(client.receive(state)).toBe(true);
+ const screen=render(<CapabilityBrowser client={client} onClose={()=>{}} initialCall={call}/>);
+ const receive=async(more:Partial<RoomAgentState>={})=>{
+  state={...state,...more,revision:state.revision+1,ack:client.snapshot().request?.sequence??state.ack};
+  await act(async()=>{expect(client.receive(state)).toBe(true);});
+ };
+ await receive({catalog:catalogFixture(native.inspect.catalog)});
+ const running=structuredClone(nativeExecutions.running.execution) as NonNullable<RoomAgentState['execution']>;
+ const selected={...running.selected!,phase:'completed' as const,status:'Action completed'};
+ const {call:_,...outcome}=selected;const completed={...running,selected,running:[],outcomes:[outcome]};
+ const requested=()=>screen.getByRole('status').textContent;
+ return {client,screen,receive,call,running,completed,prior,requested};
+}
+
+it.each(['target','generated field','advanced JSON','action selection'] as const)('separates a %s edit from the previous execution without dispatch or guard refresh',async(kind)=>{
+ const {client,screen,receive,call,running,completed,prior,requested}=await actionFeedbackFixture();
+ // Even an exact historical call does not establish that this newly opened form ran.
+ expect(requested()).toContain('Action draft · Not run');
+ expect(screen.getByLabelText('Selected action').textContent).toContain('Previous action result');
+ expect(client.getSnapshot().state!.execution!.selected).toEqual(prior.selected);
+ fireEvent.click(screen.getByRole('button',{name:'Run action now'}));
+ expect((screen.getByLabelText('Action arguments') as HTMLTextAreaElement).disabled).toBe(true);
+ expect(screen.getByLabelText('Action inputs seconds').closest('fieldset[disabled]')).not.toBeNull();
+ expect(client.snapshot().request!.commands[0]).toMatchObject({action:'execution',execution:{operation:'start',call}});
+ await receive({execution:running});
+ expect(requested()).toContain('Action requested from these inputs');
+ expect(screen.getByLabelText('Selected action').textContent).toContain('Selected action in progress');
+ expect(screen.getByRole('button',{name:/Stop action/})).toBeTruthy();
+ await receive({execution:completed});
+ const receipt=JSON.stringify(client.getSnapshot().state!.execution),history=screen.getByLabelText('Selected action').textContent;
+ expect(requested()).toContain('Action requested from these inputs');
+ expect(requested()).not.toContain('Action completed');
+ if(kind==='target')fireEvent.change(screen.getByLabelText('Action inputs target'),{target:{value:nativeExecutions.running.objects[0].id}});
+ else if(kind==='generated field')fireEvent.change(screen.getByLabelText('Action inputs seconds'),{target:{value:'2'}});
+ else if(kind==='advanced JSON')fireEvent.change(screen.getByLabelText('Action arguments'),{target:{value:JSON.stringify({...call.arguments,seconds:3})}});
+ else {
+  const definition=capabilityDefinition('object.create')!;
+  fireEvent.click(screen.getByRole('button',{name:/^Search$/}));
+  await receive({catalog:{operation:'search',query:'',offset:0,pageSize:6,total:1,entries:[{id:definition.id,version:definition.version,label:definition.label}],status:'Found action'}});
+  fireEvent.click(screen.getByRole('button',{name:new RegExp(definition.label)}));
+  await receive({catalog:{operation:'inspect',capability:definition.id,version:definition.version,definition,status:'Action definition'}});
+ }
+ const draft=(screen.getByLabelText('Action arguments') as HTMLTextAreaElement).value;
+ expect(requested()).toContain('Action draft · Not run');expect(requested()).not.toContain('Action completed');
+ expect(screen.getByLabelText('Selected action').textContent).toBe(history);
+ expect(JSON.stringify(client.getSnapshot().state!.execution)).toBe(receipt);expect(client.snapshot().request).toBeNull();
+ // An explicit history read may arrive after editing. It is not a new submission.
+ fireEvent.click(screen.getByRole('button',{name:/Play animation · completed/}));
+ expect(client.snapshot().request!.commands).toEqual([{action:'execution',execution:{operation:'inspect',runId:completed.selected.id}}]);
+ await receive({execution:completed,status:'Action completed'});
+ expect(requested()).toContain('Action draft · Not run');
+ expect((screen.getByLabelText('Action arguments') as HTMLTextAreaElement).value).toBe(draft);
+ expect(JSON.stringify(client.getSnapshot().state!.execution)).toBe(receipt);expect(client.snapshot().request).toBeNull();
+ act(()=>client.cancel());
+});
+
+it('keeps edits unsent when a running action completes later and when advanced JSON is invalid',async()=>{
+ const {client,screen,receive,running,completed,requested}=await actionFeedbackFixture();
+ fireEvent.click(screen.getByRole('button',{name:'Run action now'}));await receive({execution:running});
+ fireEvent.change(screen.getByLabelText('Action inputs seconds'),{target:{value:'2'}});
+ expect(requested()).toContain('Action draft · Not run');
+ expect(screen.getByRole('button',{name:/Stop action/})).toBeTruthy();
+ await receive({execution:completed});expect(requested()).toContain('Action draft · Not run');
+ expect((screen.getByLabelText('Action inputs seconds') as HTMLInputElement).value).toBe('2');
+ fireEvent.change(screen.getByLabelText('Action arguments'),{target:{value:'{"seconds":'}});
+ expect(requested()).toContain('Action draft · Not run');expect(screen.getByText('Enter valid JSON arguments.')).toBeTruthy();
+ expect((screen.getByRole('button',{name:'Run action now'}) as HTMLButtonElement).disabled).toBe(true);
+ expect(screen.getByLabelText('Selected action').textContent).toContain('Previous action result');
+ expect(client.snapshot().request).toBeNull();act(()=>client.cancel());
+});
+
+it('retains an explicit execution failure after an input edit while preserving its historical receipt',async()=>{
+ const {client,screen,receive,running,requested}=await actionFeedbackFixture();
+ fireEvent.click(screen.getByRole('button',{name:'Run action now'}));
+ const selected={...running.selected!,phase:'failed' as const,status:'The source is no longer available'};
+ const {call:_,...outcome}=selected;const failed={...running,selected,running:[],outcomes:[outcome]};
+ await receive({execution:failed,ok:false,status:'The source is no longer available'});
+ expect(requested()).toBe('The source is no longer available');
+ fireEvent.change(screen.getByLabelText('Action inputs seconds'),{target:{value:'2'}});
+ expect(requested()).toBe('The source is no longer available');
+ expect(screen.getByLabelText('Selected action').textContent).toContain('Previous action result');
+ expect(client.getSnapshot().state!.execution).toEqual(failed);expect(client.snapshot().request).toBeNull();act(()=>client.cancel());
+});

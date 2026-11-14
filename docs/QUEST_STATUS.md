@@ -68,7 +68,10 @@ evidence, but cannot substitute for the remaining acceptance in that row.
 
 Runtime source is `1db401172e68b1f00d4b64f7784fdba1336f4675`, committed after verification with
 matching frozen content after Git line-ending normalization. Later documentation
-and backend-only lock changes do not create new native runtime evidence. The [static-support checkpoint](quest/checkpoints/2026-11.md#ordinary-static-support-and-editable-stairs--2026-11-14)
+and backend-only lock changes do not create new native runtime evidence. The later
+web feedback update is verified separately below; the native, Android and full
+journey rows retain their named frozen inputs, not the updated browser payload.
+The [static-support checkpoint](quest/checkpoints/2026-11.md#ordinary-static-support-and-editable-stairs--2026-11-14)
 records exact identities, preserved failures and toolchain limitations. Ignored
 `.quest-evidence/` paths are local receipts, not public downloads.
 
@@ -79,6 +82,7 @@ records exact identities, preserved failures and toolchain limitations. Ignored
 | Full offline Headless | Run `f0c545c50b3842d3a396ff9890e04e5d`: 113 ordinary leaves plus new support coverage; acknowledgement 3,449, 3,221 observations / 3,220 readsets and fourteen exact saved/native objects. Clean client, Editor and root exits. Synthetic physics/media; no provider. |
 | Full rendered Book | Run `f93cd21eedb44e9e993483a7afe24d33`: 71 ordinary leaves plus new support coverage, 2,876 requests, 8,311 observations, zero browser errors, visible controls and reload without replay. Six new screenshots inspected. Desktop UI, not Quest optical acceptance. The two final journey drivers were not pinned to the intended Node executable; see the checkpoint's retained helper-path correction. |
 | Android compilation | `Android-compile-20261114-020734-02eff427`: 41 executed tasks in a 53-node graph; 22 selected ARM64 libraries / 73 LOAD segments pass 16 KiB checks. All 154 fresh web payloads and 5,003 frozen inputs match. NativeBrowser 128 passes/two skips and six lint warnings are exact-prior reuse. Existing diagnostics and five unselected ARMv7 intermediate libraries remain disclosed; no APK/AAB or final-package filtering proof. |
+| Web editing feedback | Current action drafts, requests and previous results are distinct; technical argument detail is collapsed below the editable fields. 116 focused UI tests, four development-replay contract cases, full app lint and production build pass on Node 22.23.4. Rendered replay evidence and limits are recorded in the [November checkpoint](quest/checkpoints/2026-11.md#action-feedback-and-default-world-integration-review--2026-11-14). No new Unity/Android/device claim. |
 | Per-pushed-head CI | [PR #248 checks](https://github.com/RONITERVO/MaestroTutor/pull/248/checks) are authoritative for the currently pushed head. Local checks and historical green runs do not establish CI for a new head. |
 | Dependency audits | November 14 compatible backend lock updates repair newly reported advisories. Installed production app, Functions and gateway audits have zero findings; backend units/builds and all five emulator groups pass. Current-head CI must renew that evidence; development-tooling audits are separate. [Dependency review](QUEST_DEPENDENCY_REVIEW.md#backend-advisory-refresh--2026-11-14). |
 | Audio quality | Regression contracts pass, while stock/stationary32/measured32 retain 32/56/31 open quality failures. Reflections remain disabled. Actual route, audibility, simultaneous speech and mixed-scene acceptance remain required. [Audio contract](../unity/AUDIO.md). |
@@ -93,11 +97,15 @@ See the [support contract](quest/plans/STATIC_SUPPORT.md). Moving platforms,
 automatic arbitrary-stair conversion, larger-world streaming and sustained Quest
 performance are not supplied by this increment.
 
-Next offline work includes clarifying the workshop's last-action banner versus
-unsaved draft intent, and reviewing the proposed default world against shared
-editable content, movement/input ownership, audio resources and persistence.
-Visual-cache refresh, whole-world metadata synchronization and broader
-region/route costs remain separate work.
+The workshop now distinguishes current draft/request feedback from previous
+action results and puts technical schema detail in the expandable reference.
+The proposed default world has completed source review, with concrete ownership
+gaps recorded in the [integration contract](quest/plans/DEFAULT_WORLD.md). It has
+not been merged or installed. Next offline work is the shared bundled-pack
+descriptor/preview and durable application path, followed by the editable
+observatory and the remaining content through that same system. Visual-cache
+refresh, whole-world metadata synchronization and broader region/route costs
+remain separate work.
 
 Current public limits remain 256 saved creations plus book/Maestro, 128 native
 roots, four imported room objects, sixteen liquid containers, 25-metre authored

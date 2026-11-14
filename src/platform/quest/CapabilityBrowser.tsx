@@ -25,6 +25,7 @@ export function CapabilityBrowser({client,onClose,onInsert,initialCall}:{client:
  const [query,setQuery]=useState(''),[page,setPage]=useState<Extract<CatalogView,{operation:'search'}>|null>(null);
  const [inspection,setInspection]=useState<Extract<CatalogView,{operation:'inspect'}>|null>(null),[args,writeArgs]=useState('{}'),[error,setError]=useState('');
  const [checked,setChecked]=useState(''),[recoveryNotice,setRecoveryNotice]=useState(''),[confirming,setConfirming]=useState('');
+ const [actionRequested,setActionRequested]=useState(false);
  const draftEpoch=useRef(0),alive=useRef(true),seeded=useRef(false),factReadGeneration=useRef(0);
  const [factRead,setFactRead]=useState<{identity:string;ready:boolean}|null>(null);
  const [readContext,setReadContext]=useState<RoomCommandContext|null>(null);
@@ -34,14 +35,17 @@ export function CapabilityBrowser({client,onClose,onInsert,initialCall}:{client:
  const [currentChoices,setCurrentChoices]=useState<Record<string,boolean>>({}),[loadedInputs,setLoadedInputs]=useState<Record<string,unknown>|null>(null);
  const roomScope=JSON.stringify([state?.session,state?.temporaryRoom?.id]);
  const previousSession=useRef(roomScope);
- useEffect(()=>{if(previousSession.current!==roomScope){previousSession.current=roomScope;draftEpoch.current++;factReadGeneration.current++;setFactRead(null);setInspection(null);setLoaded('');setAcceptedSnapshot('');setChecked('');setConfirming('');}},[roomScope]);
+ useEffect(()=>{if(previousSession.current!==roomScope){previousSession.current=roomScope;draftEpoch.current++;factReadGeneration.current++;setFactRead(null);setInspection(null);setActionRequested(false);setLoaded('');setAcceptedSnapshot('');setChecked('');setConfirming('');}},[roomScope]);
  useEffect(()=>{alive.current=true;return()=>{alive.current=false;draftEpoch.current++;factReadGeneration.current++;};},[]);
- const setArgs=(value:string)=>{draftEpoch.current++;writeArgs(value);setLoaded('');};
+ const setArgs=(value:string)=>{draftEpoch.current++;writeArgs(value);setActionRequested(false);setLoaded('');};
  const send=async(catalog:CatalogRequest,current:()=>boolean=()=>true)=>{
   if(current()){setError('');setRecoveryNotice('');}try {const result=await client.request([{action:'catalog',catalog}]);if(!result.ok){if(current())setError(result.status);return null;}return result.catalog??null;}
   catch(e){if(current())setError(e instanceof Error?e.message:'The room is unavailable.');return null;}
  };
  const execute=async(execution:ExecutionRequest)=>{
+  // A request from this form is not completion. Historical inspection/cancel/recovery
+  // must never make the current draft look submitted, even for an identical call.
+  if(execution.operation==='start'){setActionRequested(true);setChecked('');}
   setError('');setRecoveryNotice('');setLoading(true);try {const reviewed=execution.operation==='start'&&hasCurrent&&snapshotReady?readContext:null;const result=await client.requestPrepared([{action:'execution',execution}],reviewed?.state??state??undefined,reviewed?.objects);if(!result.ok)setError(result.status);else if(execution.operation==='recover')setRecoveryNotice(result.status);}
   catch(e){setError(e instanceof Error?e.message:'The action could not be confirmed. Inspect the room before retrying.');}
   finally{if(alive.current)setLoading(false);}
@@ -129,7 +133,7 @@ export function CapabilityBrowser({client,onClose,onInsert,initialCall}:{client:
   </section>
   <section className="room-workspace-page room-inspector" aria-label="Action details">
    <h2>{(inspection?.category==='modules'?inspection.definition?.name:inspection?.definition?.label)??(category==='actions'?'Choose an action':category==='events'?'Choose an event':category==='guides'?'Choose a guide':'Choose a fact')}</h2>
-   <div role="status" className={error||execution?.storageError?'room-message room-message-warning':'room-message'}>{error||execution?.storageError||recoveryNotice||(!supported?'Update the native app to browse actions.':pending?'Waiting for the room…':category==='actions'?(check?.status??execution?.selected?.status??'Select an action or check its availability.'):category==='facts'?(currentFact?.status??(inspection?.category==='facts'?inspection.status:undefined)??'Inspect a fact to read its current value.'):(inspection?.status??(category==='guides'?'Inspect a guide to read the shared reference.':'Inspect an event to see its payload and subscription rules.')))}</div>
+   <div role="status" className={error||execution?.storageError?'room-message room-message-warning':'room-message'}>{error||execution?.storageError||recoveryNotice||(!supported?'Update the native app to browse actions.':pending?'Waiting for the room…':category==='actions'?(check?<><strong>Availability check</strong><p>{check.status}</p></>:definition?(actionRequested?'Action requested from these inputs. Check action history for progress and the result.':'Action draft · Not run. Review the inputs before running.'):'Select an action or check its availability.'):category==='facts'?(currentFact?.status??(inspection?.category==='facts'?inspection.status:undefined)??'Inspect a fact to read its current value.'):(inspection?.status??(category==='guides'?'Inspect a guide to read the shared reference.':'Inspect an event to see its payload and subscription rules.')))}</div>
 
    {inspection?.category==='guides'&&inspection.definition&&<section aria-label="Guide reference">
     <p>{inspection.definition.id} · version {inspection.definition.version}</p><p>{inspection.definition.description}</p>
@@ -158,7 +162,6 @@ export function CapabilityBrowser({client,onClose,onInsert,initialCall}:{client:
    {definition&&<>
     <fieldset disabled={busy} className="capability-input-editor">
     {definition.input.oneOf&&<CapabilityVariant schema={definition.input} value={parsedArgs} objects={state?.objects??[]} onChange={editActionInputs}/>}
-    {resolveCapabilitySchema(definition.input,call?.arguments)?.description&&<p>{resolveCapabilitySchema(definition.input,call?.arguments)?.description}</p>}
     {hasCurrent&&<section aria-label="Current action inputs"><p>Load the linked room settings, then review your changes below.</p>
      <button disabled={busy||!currentQueries.length||Boolean(currentError)||currentLocations.some(l=>Object.keys(l.mapping.arguments).length>0)&&!state?.capabilities?.includes('factQueries.v1')} onClick={()=>void loadCurrent()}>Load current values</button>
      {currentError&&<p>{currentError}</p>}{loaded&&<p role="status">{loaded}</p>}
@@ -181,7 +184,7 @@ export function CapabilityBrowser({client,onClose,onInsert,initialCall}:{client:
     {confirmation&&call&&confirming===key&&<section aria-label="Confirm permanent action" className="room-message room-message-warning"><p>{confirmation}</p><pre>{JSON.stringify(call.arguments,null,2)}</pre><button disabled={busy} onClick={()=>setConfirming('')}>Cancel confirmation</button><button disabled={busy||Boolean(execution?.storageError)} onClick={()=>{setConfirming('');void execute({operation:'start',call});}}>Confirm permanent action</button></section>}
     <p className="room-workspace-intro">{definition.domain==='workspace'?'Workspace maintenance runs once and cannot be added to a room behaviour.':onInsert?'Adding a block changes your draft. Apply it in the workshop when ready.':'Choose a behaviour in the workshop to add an action block.'} Availability can change before execution.</p>
     <details key={definition.id+':source'}><summary>Advanced action arguments</summary><label>Action arguments<textarea aria-label="Action arguments" rows={12} spellCheck={false} value={args} disabled={busy} onChange={e=>{setArgs(e.target.value);setReadContext(null);setLoadedInputs(null);setCurrentChoices({});setChecked('');setConfirming('');try{setAcceptedSnapshot(currentInputsIdentity(definition.input,JSON.parse(e.target.value),roomScope));}catch{setAcceptedSnapshot('');}}}/></label></details>
-    <details key={definition.id+':reference'}><summary>Argument reference</summary><p>{definition.id} · version {definition.version}</p>{definition.description&&<p>{definition.description}</p>}
+    <details key={definition.id+':reference'}><summary>Argument reference</summary><p>{definition.id} · version {definition.version}</p>{definition.description&&<p>{definition.description}</p>}{selectedSchema?.description&&selectedSchema.description!==definition.description&&<p>{selectedSchema.description}</p>}
      {hasCurrent&&<><p>Load current values replaces {mappedFields.map(f=>currentInputFieldLabel(f.path)).join(', ')} from the room; other fields stay as you chose them.</p><p>Revision and state identifiers protect this snapshot. They are never silently refreshed when you run. Load again after a stale-edit error.</p></>}
      <p>Duration: {definition.duration}. Uses: {(resolveCapabilitySchema(definition.input,call?.arguments)?.['x-channels']??definition.channels).join(', ')||'no animation channel'}.</p><p>Needs: {(resolveCapabilitySchema(definition.input,call?.arguments)?.['x-requirements']??definition.requirements).join(', ')||'no additional requirements'}.</p><pre>{JSON.stringify(definition.input,null,2)}</pre></details>
    </>}
@@ -202,7 +205,7 @@ function ExecutionHistory({view,pending,execute,recoverable,workspace=false}:{vi
   {view.storageError&&<p className="room-message room-message-warning">{view.storageError}</p>}
   {view.running.map(run=><div key={run.id} className="room-message"><strong>{capabilityDefinition(run.capability)?.label??run.capability}</strong><p>{run.status}</p><div className="room-workspace-actions"><button disabled={pending} onClick={()=>void execute({operation:'inspect',runId:run.id})}>Inspect action {run.id.slice(0,6)}</button><button disabled={pending} onClick={()=>void execute({operation:'cancel',runId:run.id})}>Stop action {run.id.slice(0,6)}</button></div></div>)}
   {!view.running.length&&<p>{workspace?'No workspace action is running.':'No one-off action is running.'}</p>}
-  {view.selected&&<div aria-label={workspace?'Selected workspace action':'Selected action'} className="room-message"><strong>{view.selected.phase}</strong><p>{view.selected.status}</p>{view.selected.output&&<><h3>Action result</h3><LibraryInventoryNotice capability={view.selected.capability} value={view.selected.output}/><pre aria-label="Action result">{JSON.stringify(view.selected.output,null,2)}</pre></>}<details><summary>Exact action</summary><pre>{JSON.stringify(view.selected.call,null,2)}</pre></details></div>}
+  {view.selected&&<div aria-label={workspace?'Selected workspace action':'Selected action'} className="room-message"><h3>{view.selected.phase==='preparing'||view.selected.phase==='running'?'Selected action in progress':'Previous action result'}</h3><p>{capabilityDefinition(view.selected.capability)?.label??view.selected.capability} · v{view.selected.version}</p><strong>{view.selected.phase}</strong><p>{view.selected.status}</p>{view.selected.output&&<><h3>Action result</h3><LibraryInventoryNotice capability={view.selected.capability} value={view.selected.output}/><pre aria-label="Action result">{JSON.stringify(view.selected.output,null,2)}</pre></>}<details><summary>Exact action</summary><pre>{JSON.stringify(view.selected.call,null,2)}</pre></details></div>}
   {view.outcomes.length>0&&<details><summary>{workspace?'Recent workspace results':'Recent action results'}</summary><div className="room-object-list">{[...view.outcomes].reverse().map(run=><button key={run.id} disabled={pending} onClick={()=>void execute({operation:'inspect',runId:run.id})}><span>{capabilityDefinition(run.capability)?.label??run.capability} · {run.phase}</span><small>{run.id.slice(0,6)} · {run.status}</small></button>)}</div></details>}
  </section>;
 }
