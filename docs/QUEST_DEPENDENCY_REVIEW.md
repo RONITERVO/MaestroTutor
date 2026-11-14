@@ -279,3 +279,46 @@ A local test-wrapper argument error was likewise corrected before the successful
 full Functions run; failed receipts remain preserved. All sixteen unrelated
 protected files are unchanged. CI for this checkpoint is recorded separately;
 these backend results do not substitute for Unity or headset acceptance.
+
+
+## Backend advisory refresh — 2026-11-14
+
+The release gate for `0a4b9e89` correctly stopped at newly reported production
+Functions advisories; its native echo workflow passed all five jobs. Fresh local
+checks also found the XML-parser advisory in Live gateway. Both lockfiles now
+select compatible patched releases without changing package manifests, SDK
+versions, overrides or audit thresholds:
+
+| Dependency | Functions | Live gateway |
+| --- | --- | --- |
+| `@hono/node-server` | 2.1.5 → 2.1.8 | Unchanged / not selected |
+| `hono` | 4.13.12 → 4.13.18 | Unchanged / not selected |
+| `fast-xml-parser` | 5.11.2 → 5.12.1 | 5.11.1 → 5.12.1 |
+
+The upstream fixes cover [node-server path parsing](https://github.com/honojs/node-server/security/advisories/GHSA-jpvv-r467-5p4w),
+[asynchronous upgrade failure](https://github.com/honojs/node-server/security/advisories/GHSA-qv5m-9pm6-hqp3),
+[Hono form validation](https://github.com/honojs/hono/security/advisories/GHSA-4h7h-rv7c-7m2v)
+and [XML stop-node scanning](https://github.com/NaturalIntelligence/fast-xml-parser/security/advisories/GHSA-474x-hrwr-fgx4).
+The fresh audits include the other current Hono advisories as well.
+
+Each backend changes five existing package versions. The remaining changes are
+required compatible XML-parser descendants: builder 1.3.2 and is-unsafe 2.0.3 in
+both, plus entities 3.1.0 and strnum 2.5.1 in the gateway. No package paths are
+added or removed, and no local-file dependency is introduced. Clean installs
+used npm lockfile integrity verification with lifecycle scripts disabled;
+installed versions match every reviewed lock change. The previous scoped
+gax/rimraf override remains unchanged.
+
+On pinned Node **22.23.4**, **118 Functions unit tests**, **31 gateway unit tests**,
+its **16 compatibility cases**, both TypeScript builds and the complete five-part
+Firestore emulator command pass. Functions' 16 dependency compatibility cases
+are included in its 118 total. The emulator covers billing, Live gateway,
+**57 managed Gemini cases**, Quest attestation and account linking, using its
+demo project and simulated provider responses. All three installed production
+audits (app, Functions, gateway) report **zero findings** and pass the strict
+complete-report validator. This does not include development-only advisories.
+
+No browser/native source changed or new Unity, device, real-provider, deployment
+or release action occurred. All sixteen protected unrelated files remain exact.
+The failed CI run remains recorded; current-head CI is a separate result on the
+PR checks page. Local receipts are in `.quest-evidence/backend-repair-20261114/`.

@@ -68,7 +68,7 @@ evidence, but cannot substitute for the remaining acceptance in that row.
 
 Runtime source is `1db401172e68b1f00d4b64f7784fdba1336f4675`, committed after verification with
 matching frozen content after Git line-ending normalization. Later documentation
-commits do not create new runtime evidence. The [static-support checkpoint](quest/checkpoints/2026-11.md#ordinary-static-support-and-editable-stairs--2026-11-14)
+and backend-only lock changes do not create new native runtime evidence. The [static-support checkpoint](quest/checkpoints/2026-11.md#ordinary-static-support-and-editable-stairs--2026-11-14)
 records exact identities, preserved failures and toolchain limitations. Ignored
 `.quest-evidence/` paths are local receipts, not public downloads.
 
@@ -80,7 +80,7 @@ records exact identities, preserved failures and toolchain limitations. Ignored
 | Full rendered Book | Run `f93cd21eedb44e9e993483a7afe24d33`: 71 ordinary leaves plus new support coverage, 2,876 requests, 8,311 observations, zero browser errors, visible controls and reload without replay. Six new screenshots inspected. Desktop UI, not Quest optical acceptance. The two final journey drivers were not pinned to the intended Node executable; see the checkpoint's retained helper-path correction. |
 | Android compilation | `Android-compile-20261114-020734-02eff427`: 41 executed tasks in a 53-node graph; 22 selected ARM64 libraries / 73 LOAD segments pass 16 KiB checks. All 154 fresh web payloads and 5,003 frozen inputs match. NativeBrowser 128 passes/two skips and six lint warnings are exact-prior reuse. Existing diagnostics and five unselected ARMv7 intermediate libraries remain disclosed; no APK/AAB or final-package filtering proof. |
 | Per-pushed-head CI | [PR #248 checks](https://github.com/RONITERVO/MaestroTutor/pull/248/checks) are authoritative for the currently pushed head. Local checks and historical green runs do not establish CI for a new head. |
-| Dependency audits | The last recorded production app, Functions and gateway audits have zero findings. Fresh per-head CI must renew that evidence; development-tooling audits are separate. [Dependency review](QUEST_DEPENDENCY_REVIEW.md). |
+| Dependency audits | November 14 compatible backend lock updates repair newly reported advisories. Installed production app, Functions and gateway audits have zero findings; backend units/builds and all five emulator groups pass. Current-head CI must renew that evidence; development-tooling audits are separate. [Dependency review](QUEST_DEPENDENCY_REVIEW.md#backend-advisory-refresh--2026-11-14). |
 | Audio quality | Regression contracts pass, while stock/stationary32/measured32 retain 32/56/31 open quality failures. Reflections remain disabled. Actual route, audibility, simultaneous speech and mixed-scene acceptance remain required. [Audio contract](../unity/AUDIO.md). |
 
 ## Current work and next acceptance
