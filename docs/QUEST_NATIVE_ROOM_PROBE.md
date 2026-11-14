@@ -11,6 +11,45 @@ registration only. The adapter exchanges the production version-2 requests and
 native observations with a real MaestroRoom running in a dedicated batch Editor.
 There is no replacement scene simulation or mock action executor in this journey.
 
+## 2026-11-14: Windows Editor evidence paths
+
+Windows Editor runs require the canonical workspace path plus a reserved
+191-character native-write suffix to fit within 255 characters. This covers
+ordinary generated workspace files, including generation storage and temporary
+image imports; it is not general Windows long-path or arbitrary damaged-tree
+recovery support. Every launcher mode checks the envelope before creating a run
+or starting the Editor. Long checkout paths need an explicit short root:
+
+```powershell
+./unity/Tools/Run-QuestRoomProbe.ps1 -Editor '<Unity.exe>' -BuildMirror '<owned mirror>' -EvidenceRoot 'D:/Projects/Builds/.q'
+```
+
+`Verify-Quest.ps1` accepts and forwards the same optional `-EvidenceRoot` to all
+three native journeys, and checks it before mirror preparation or native tests.
+`Build-QuestDevelopment.ps1`, `Build-QuestRelease.ps1` and their shared
+`Build-QuestPackage.ps1` also accept and forward this option through verification;
+it does not alter their build, signing or release permissions.
+
+The entire run stays at `<EvidenceRoot>/<32-character-id>`, including `workspace`,
+logs, screenshots, ownership, terminal and verification receipts. The root above
+leaves a 64-character workspace path and the full 191-character reserve. It is an
+example; the launcher does not select it automatically, create aliases or relocate
+old evidence. `owner.json` and `verified.json` record the actual root and envelope.
+
+An explicit root must be fresh, or have the exact `.maestro-probe-evidence.json`
+owner containing only this canonical source repository and build mirror. An
+existing unmarked custom directory is never adopted. Paths cannot traverse links,
+reparse points, dot segments, device/UNC prefixes or short-name aliases. Existing
+repository-default evidence remains its established namespace on supported short
+paths, with its original receipts unchanged; it is not given a new custom owner.
+`ResumeIdentityRun` and `ResumeLearnerRun` look only under the selected root and
+check the prior run owner. Resume copies reject links/reparse points.
+
+`Test-QuestProbeEvidence.ps1` exercises these admission, ownership and resume rules
+without Unity or providers and runs in web CI. Non-Windows paths keep the normal
+repository default without the Windows length envelope. Native runtime validation
+and long-path diagnosis remain separate from this launcher-only contract.
+
 ## Run and evidence
 
 `unity/Tools/Verify-Quest.ps1` runs the full-room headless and live-book journeys
@@ -23,7 +62,8 @@ A standalone rerun after verification is available with:
 
 The wrapper first runs the same strict driver type-check as CI, then checks mirror
 ownership, matching native source files and absence of another Editor using that mirror. It starts one hidden Editor and uses a fresh
-`.quest-evidence/native-room/<id>` directory. The entire workspace and global
+`.quest-evidence/native-room/<id>` directory by default, or `<EvidenceRoot>/<id>`
+when an explicit root is selected. The entire workspace and global
 room preferences use that directory. Existing user rooms are not read or changed.
 The scene starts empty and composes the actual MaestroRoom, including the bundled
 avatar, native catalog, workspace services and action executor.

@@ -4,6 +4,7 @@
 param(
     [Parameter(Mandatory)][string]$Editor,
     [Parameter(Mandatory)][string]$BuildMirror,
+    [string]$EvidenceRoot,
     [Parameter(Mandatory)][string]$AndroidSdk,
     [Parameter(Mandatory)][string]$AndroidJdk,
     [switch]$UpdateBehaviourCatalog,

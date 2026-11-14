@@ -4178,7 +4178,7 @@ completed request does not delete a model that was reimported later.
 Portable workspace archives retain valid metadata even when its model, image or
 sound payload was removed. Metadata alone does not count as an available asset
 or satisfy a missing reference. Archive format 33 introduced this retention;
-current format 34 preserves it and accepts bounded format 32/33 archives. Archive
+current format 35 preserves it and accepts bounded format 32/33/34 archives. Archive
 entry and byte limits still apply; exceeding them fails explicitly and leaves
 the workspace unchanged.
 
@@ -4202,3 +4202,29 @@ copy, work and map capacity through native completion and deferred destruction.
 See the [support contract](quest/plans/STATIC_SUPPORT.md) for eligibility, limits
 and remaining acceptance. Existing authored caps remain unchanged; this increment
 does not establish moving-platform transport, streaming or city-scale performance.
+
+
+## Included editable worlds — 2026-11-14
+
+Included world sources use the shared construction and workspace contracts. The
+first Observatory source contains an editable deck, bridge and globe. Choosing
+one explicitly prepares a new workspace; it does not add scenery to the open
+room. Preview and cancellation leave the current content unchanged. Opening the
+verified preview preserves the previous accepted workspace and keeps activity
+held until its separate review completes.
+
+Archive format 35 covers `world-packs.v1.json`, which records the exact source
+hash and original object/resource mappings. This is historical provenance: user
+edits and deletions remain valid and do not trigger reinstallation. Ordinary worlds
+may omit this document. When present, it must match the accepted room identity;
+malformed, future or unrecognized evidence is refused without inventing a
+replacement. Deleted mapped objects remain valid history.
+
+Ordinary object edits and Undo continue to use their existing owners. Fresh
+recovery stays unchanged. See the [default-world plan](quest/plans/DEFAULT_WORLD.md)
+for the bounded initial source format and remaining larger-world integration.
+Final focused native checks and the full offline Headless and rendered Book
+workflows pass. The Book visual review covers advanced catalog pages, not a 3D
+world scene or novice chooser. [Current status](QUEST_STATUS.md#latest-verified-proof)
+records the source boundaries and verified unsigned Android compilation. Physical
+and real-provider acceptance remain open; no new installed or signed candidate is claimed.

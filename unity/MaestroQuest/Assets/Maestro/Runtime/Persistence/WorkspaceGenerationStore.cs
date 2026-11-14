@@ -153,7 +153,13 @@ namespace Maestro.Quest.Persistence
         internal PreparedWorkspaceGeneration PrepareImport(Stream archive,CancellationToken cancellation=default)=>PrepareArchive(archive,false,cancellation);
         PreparedWorkspaceGeneration PrepareArchive(Stream archive,bool initialize,CancellationToken cancellation)
         {
-            using var lease=Lease(initialize);cancellation.ThrowIfCancellationRequested();
+            using var lease=Lease(initialize);
+            return PrepareArchiveLocked(archive,cancellation);
+        }
+        // The caller owns the generation lease for the complete stage/publication boundary.
+        PreparedWorkspaceGeneration PrepareArchiveLocked(Stream archive,CancellationToken cancellation)
+        {
+            cancellation.ThrowIfCancellationRequested();
             if(Directory.EnumerateDirectories(generations).Take(MaximumGenerations).Count()>=MaximumGenerations)throw Invalid("Workspace retention is full. Review retained workspaces before importing another.");
             string id=Guid.NewGuid().ToString("N"),target=GenerationPath(id);bool created=false;
             try {

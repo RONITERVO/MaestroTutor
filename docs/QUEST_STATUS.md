@@ -33,10 +33,11 @@ package bytes or acceptance. The signed-package record retains its full hash.
 
 | Record | Identity and evidence boundary |
 | --- | --- |
-| Verified native runtime source | `1db401172e68b1f00d4b64f7784fdba1336f4675`, branch `codex/maestro-quest-v1`, [draft PR #248](https://github.com/RONITERVO/MaestroTutor/pull/248). Tests/compilation ran on frozen worktree bytes before this commit was created; the committed paths match the verified frozen content after Git line-ending normalization. Later documentation edits are not a new runtime build. |
+| Current frozen runtime source | **Uncommitted included-world increment**, branch `codex/maestro-quest-v1`, [draft PR #248](https://github.com/RONITERVO/MaestroTutor/pull/248). Catalog-v4 pins 3,281 unchanged native inputs. The latest web prebuild covers 5,035 broad inputs; earlier full Headless used its recorded 5,034-input map before the web/driver fix. The fresh Android compilation below uses this frozen source; no new runtime commit or installed candidate is implied. |
+| Previous committed runtime checkpoint | `1db401172e68b1f00d4b64f7784fdba1336f4675`. Its verified frozen content matches the commit after Git line-ending normalization. This historical static-support checkpoint predates the current included-world source. |
 | Last verified installed development app | APK `D85F3CB7`, source `f58dab48`; later desktop source has not received physical acceptance. |
 | Last packaged development APK | `5899972E`, source `5100f612`; recorded as not installed. |
-| Latest verified unsigned Android compilation | `Android-compile-20261114-020734-02eff427`; development package/profile, no APK/AAB, signing or installation. [Static-support checkpoint](quest/checkpoints/2026-11.md#ordinary-static-support-and-editable-stairs--2026-11-14). |
+| Latest verified unsigned Android compilation | `Android-compile-20261114-072523-02ff8c01`, from the current frozen uncommitted source; development package/profile, no APK/AAB, signing or installation. [Included-world checkpoint](quest/checkpoints/2026-11.md#included-editable-world-lifecycle--2026-11-14). The earlier `020734-02eff427` compilation remains historical static-support evidence. |
 | Signed/private Meta checkpoint | APK `DA689683`, source `d7d5d847`, app `1763835394893209`, package `com.maestro.quest`, build `1767008267909255`. Owner screenshots later confirmed it current in private Alpha. Package malware/security checks passed; VRC/Store/account/provider acceptance did not. [Signed package](QUEST_RELEASE_BUILD.md#corrected-signed-quest-3-candidate--2026-10-06) and [channel observation](https://github.com/RONITERVO/MaestroTutor/blob/f7a252feafcea470ddffe78df62512cd63a04de7/docs/QUEST_V1_PLAN.md#L471-L480). |
 | Backend rollout | Two Quest bootstrap endpoints were deployed but disabled; the temporary private diagnostic was removed. [Rollout record](QUEST_MANAGED_ACCESS.md#scoped-backend-rollout--2026-10-06). Existing application/account/provider rollout remains separate. |
 
@@ -55,7 +56,7 @@ evidence, but cannot substitute for the remaining acceptance in that row.
 | --- | --- | --- |
 | Familiar language-learning chat and full-page book | Original web components, both book layouts, inline artifacts and ribbon bookmark; recorded offline Headless and visible Book journeys against their named desktop Unity sources. A separate production-entry offline English/Spanish lesson covers onboarding, proactive artifact plus image, chat/native/Live composition and a native restart after completed saves. These use scripted provider responses and synthetic microphone input; the focused Book fixture alone does not cover every Live/media controller. | Fresh first-lesson, smalltalk, proactive artifact/tool combinations, image, weather, room actions and text-to-Live continuation on the chosen Quest candidate, through both managed and BYOK providers. See [coverage](QUEST_AGENT_RELEASE_COVERAGE.md) and [device QA](QUEST_DEVICE_QA.md). |
 | Language-first, shared user/agent actions | Shared capability catalog, generated user controls, event-driven programs, traces, cancellation and ownership; deterministic and actual Unity integration coverage. | Real-provider multi-step completion, recovery and understandable learner feedback on the release candidate. Offline execution cannot establish model reliability. |
-| Creation, import and reusable authored worlds | Primitive/recipe/drawing/template creation, GLB/VRM models and motion collections, materials/images, editable constructions and shared saved completion. | Candidate import/rendering, memory pressure, interrupted work and restore acceptance with representative user content. Validate the declared capacity; the current 256 saved creations, 128 native roots, four imported room objects, 16 liquid containers, 25-metre bounds and four height fields are not a city-scale promise. See [world authoring](QUEST_WORLD_AUTHORING.md) and [model imports](QUEST_MODEL_IMPORT.md). |
+| Creation, import and reusable authored worlds | Primitive/recipe/drawing/template creation, GLB/VRM models and motion collections, materials/images, editable constructions and shared saved completion. The included editable Observatory now prepares as an explicitly chosen new workspace, preserves the previous accepted world and uses archive-covered historical provenance. See the [included-world contract](quest/plans/DEFAULT_WORLD.md). | Candidate import/rendering, memory pressure, interrupted work and restore acceptance with representative user content. Validate the declared capacity; the current 256 saved creations, 128 native roots, four imported room objects, 16 liquid containers, 25-metre bounds and four height fields are not a city-scale promise. See [world authoring](QUEST_WORLD_AUTHORING.md) and [model imports](QUEST_MODEL_IMPORT.md). |
 | Default Maestro, custom avatars and animation | Included avatar/motions, exact compatible motion IDs, activity/gait bindings, joint posing, recording, shared walk/follow and attention paths; optional exact-model foot fitting through the shared catalog. | Remaining default-motion curation toward the accepted several-hundred-motion direction, current-candidate motion fidelity, humanoid variety, hands-on posing, transitions and sustained performance. Bounded foot fitting uses a rest-bound shoe-plane estimate with explicit trims; visual calibration, real-headset acceptance and general crowd/interior planning remain unfinished. See [animation authoring](QUEST_ANIMATION_AUTHORING.md) and [library](QUEST_ANIMATION_LIBRARY.md). |
 | One world with adjustable reality | Per-entity real-room collision participation, accepted virtual ground, swept movement, saved visual layers, passthrough windows and separate camera-source paths have desktop evidence. Older physical depth-occlusion/alignment checks are retained. | Same-candidate physical alignment, independent collision/visibility/audio policy, virtual movement, camera permission/source lifecycle, hand/controller occlusion and recovery. An actor opting out of the real floor still needs valid virtual support. Ordinary fixed platforms and compound stairs now use the [shared support role](quest/plans/STATIC_SUPPORT.md), with desktop traversal/readiness tests. Current-candidate physical and sustained-use acceptance remain open. |
 | Living terrain, water, weather and objects | Bounded local physics, contact events, terrain, lighting/weather/time, live water quantities, shared grounded policies and owned submerged travel; surface swimming, shore transitions and continuous following have complete desktop and unsigned Android compilation evidence. Observation-driven residency/scheduling remains shared. See the [surface movement evidence](QUEST_V1_PLAN.md#surface-swimming). | Mixed-scene long-session behavior, allocation/thermal/frame budgets and physical input acceptance. Named areas support independent or together loading. Explicit terrain-edge overflow now shares the bounded stream and liquid journal. Broader region streaming, river/landscape flow, underwater interaction and candidate headset acceptance remain open; retain them as explicit unfinished scope rather than silently claiming a complete living-world system. |
@@ -66,22 +67,27 @@ evidence, but cannot substitute for the remaining acceptance in that row.
 
 ## Latest verified proof
 
-Runtime source is `1db401172e68b1f00d4b64f7784fdba1336f4675`, committed after verification with
-matching frozen content after Git line-ending normalization. Later documentation
-and backend-only lock changes do not create new native runtime evidence. The later
-web feedback update is verified separately below; the native, Android and full
-journey rows retain their named frozen inputs, not the updated browser payload.
-The [static-support checkpoint](quest/checkpoints/2026-11.md#ordinary-static-support-and-editable-stairs--2026-11-14)
-records exact identities, preserved failures and toolchain limitations. Ignored
-`.quest-evidence/` paths are local receipts, not public downloads.
+The current included-world evidence refers to **frozen uncommitted source**:
+3,281 unchanged native inputs and sixteen protected files. Latest web/prebuild
+inputs total 5,035; earlier Headless retains its own 5,034-input map before the
+five-file web/driver correction. Earlier broad runs, focused corrections and the
+final test-only type annotation have separate source boundaries below.
+The [included-world checkpoint](quest/checkpoints/2026-11.md#included-editable-world-lifecycle--2026-11-14)
+records exact identities and preserved failures. Ignored `.quest-evidence/` paths
+are local receipts, not public downloads. Older installed, signed and compiled
+candidates above remain historical.
 
 | Proof | Result and limitation |
 | --- | --- |
-| Native tests | 2,309 EditMode passes and thirteen explicit Windows symlink-privilege skips. Exact inventory review resolves a private wrapper's parameterized-name parsing failure; the Editor exited zero, while the old root handle was unavailable. PlayMode combines 375 passes from the selected 376-case run with one corrected focused reflection-fixture pass. Not a fresh full PlayMode rerun. |
-| Full local web suite | 3,996 tests in 395 files pass under Node 22.23.4; all 36 snapshots match and none are updated. |
-| Full offline Headless | Run `f0c545c50b3842d3a396ff9890e04e5d`: 113 ordinary leaves plus new support coverage; acknowledgement 3,449, 3,221 observations / 3,220 readsets and fourteen exact saved/native objects. Clean client, Editor and root exits. Synthetic physics/media; no provider. |
-| Full rendered Book | Run `f93cd21eedb44e9e993483a7afe24d33`: 71 ordinary leaves plus new support coverage, 2,876 requests, 8,311 observations, zero browser errors, visible controls and reload without replay. Six new screenshots inspected. Desktop UI, not Quest optical acceptance. The two final journey drivers were not pinned to the intended Node executable; see the checkpoint's retained helper-path correction. |
-| Android compilation | `Android-compile-20261114-020734-02eff427`: 41 executed tasks in a 53-node graph; 22 selected ARM64 libraries / 73 LOAD segments pass 16 KiB checks. All 154 fresh web payloads and 5,003 frozen inputs match. NativeBrowser 128 passes/two skips and six lint warnings are exact-prior reuse. Existing diagnostics and five unselected ARMv7 intermediate libraries remain disclosed; no APK/AAB or final-package filtering proof. |
+| Broad native baseline | 2,380 EditMode passes/thirteen Windows link-privilege skips and 396 selected unique PlayMode cases with passing union evidence. These runs precede the final fact typing repair; they were not all rerun on the final source. |
+| Final focused native checks | Fourteen EditMode cases pass across ten-plus-four actual selections on identical inputs; the first wrapper's missing-case failure is retained. A clean fourteen-case PlayMode run includes three new runtime/RoomAgent fact-pipeline cases. Overlapping counts are not added to the baseline. |
+| Web and shared drivers | Fresh Node22.23.4 suite: 4,071 tests in 398 files, no snapshot updates; 173 focused shared/UI/driver checks also pass. These runs precede only a 23-byte erased test annotation, verified by exact reverse-byte proof; production TypeScript checking passes afterward. Earlier 4,010/45-case evidence remains historical. |
+| Native catalog | Catalog-v4 `00abc3a7…777df95a`: 151 actions, 256 facts, nineteen events and 856 source-provenance entries. Schemas are unchanged from v3; only the corrected fact reader's source hash changed. |
+| Focused actual Unity workflow | Run `bd49cf4c87f64b809e31b7439edc8bf5` passes prepare/cancel/open/review/paint/Undo/restore with clean client/Editor/root exits and independent review. This focused ready-fixture check is separate from the full journeys. |
+| Full offline Headless | Run `3ef2a16c0b034b0f8ff469c228e23140` passes 113 ordinary leaves plus the included-world workflow; all fourteen original saved/native identities are restored. Clean exits and independent review on its named inputs. Native/catalog remain unchanged; later web/driver changes have separate coverage. Synthetic media/physics, not provider or physical Quest acceptance. |
+| Focused rendered Book | Run `fb4ad34c26b44a39adc72839de5eb0dd` passes with clean exits, independent review and all five original fixture objects restored. Five advanced catalog-page captures were inspected; this is not a 3D-scene, novice-lesson or Quest optical review. |
+| Full rendered Book | v4 run `1c681381df5845bf9911b12115fc8994` passes all 71 ordinary leaves plus the pack workflow, with 11 completed pack actions and all 13 original objects restored exactly. Independent review finds no recorded errors. Five advanced catalog pages were visually inspected; this is not a 3D scene, novice chooser or Quest optics review. |
+| Android compilation | v6 fresh export/compile and independent review pass: 41 executed tasks, 22 selected ARM64 libraries with at least 16 KiB ELF LOAD alignment, 154 exact web payloads and the exact included-world source. All 5,035 broad/3,281 native inputs and sixteen protected files match. NativeBrowser 128 passes/two skips/six lint warnings are exact prior reuse. Build warnings remain documented; no APK/AAB, signing, installation or final-package filtering proof. |
 | Web editing feedback | Current action drafts, requests and previous results are distinct; technical argument detail is collapsed below the editable fields. 116 focused UI tests, four development-replay contract cases, full app lint and production build pass on Node 22.23.4. Rendered replay evidence and limits are recorded in the [November checkpoint](quest/checkpoints/2026-11.md#action-feedback-and-default-world-integration-review--2026-11-14). No new Unity/Android/device claim. |
 | Per-pushed-head CI | [PR #248 checks](https://github.com/RONITERVO/MaestroTutor/pull/248/checks) are authoritative for the currently pushed head. Local checks and historical green runs do not establish CI for a new head. |
 | Dependency audits | November 14 compatible backend lock updates repair newly reported advisories. Installed production app, Functions and gateway audits have zero findings; backend units/builds and all five emulator groups pass. Current-head CI must renew that evidence; development-tooling audits are separate. [Dependency review](QUEST_DEPENDENCY_REVIEW.md#backend-advisory-refresh--2026-11-14). |
@@ -99,13 +105,15 @@ performance are not supplied by this increment.
 
 The workshop now distinguishes current draft/request feedback from previous
 action results and puts technical schema detail in the expandable reference.
-The proposed default world has completed source review, with concrete ownership
-gaps recorded in the [integration contract](quest/plans/DEFAULT_WORLD.md). It has
-not been merged or installed. Next offline work is the shared bundled-pack
-descriptor/preview and durable application path, followed by the editable
-observatory and the remaining content through that same system. Visual-cache
-refresh, whole-world metadata synchronization and broader region/route costs
-remain separate work.
+The proposed default world remains source-reviewed, with ownership gaps recorded
+in the [integration contract](quest/plans/DEFAULT_WORLD.md). Its separate scene
+owners have not been merged. A bounded shared-world path now prepares the included
+editable Observatory through the existing workspace lifecycle and archive-covered
+provenance. Final focused checks, full offline Headless and rendered Book journeys,
+and unsigned Android compilation pass within the evidence boundaries above. The wider
+Cosmos content, learner-facing world selection, additive multi-document merging,
+shared lesson/attention integration, visual-cache refresh, whole-world metadata
+synchronization and broader region/route costs remain work.
 
 Current public limits remain 256 saved creations plus book/Maestro, 128 native
 roots, four imported room objects, sixteen liquid containers, 25-metre authored

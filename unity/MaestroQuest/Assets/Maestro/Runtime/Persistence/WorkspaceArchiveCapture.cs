@@ -73,10 +73,11 @@ namespace Maestro.Quest.Persistence
                 var definitions=modules.ToDictionary(x=>"program-modules.v1/"+x.Hash+".json",x=>x.ReadDefinition(),StringComparer.Ordinal);var heldMotions=motions;var heldSounds=sounds;var heldImages=images;
                 return Task.Run(()=>{
                     try {
-                        using(var pairOwner=RoomSnapshotTransaction.Inspect(savedDirectory)){cancellation.ThrowIfCancellationRequested();}
+                        byte[] packs;using(var pairOwner=RoomSnapshotTransaction.Inspect(savedDirectory)){cancellation.ThrowIfCancellationRequested();packs=WorldPackDocument.ReadOptional(savedDirectory);}
                         cancellation.ThrowIfCancellationRequested();var documents=new Dictionary<string,byte[]>(StringComparer.Ordinal);var assets=new Dictionary<string,Func<Stream>>(StringComparer.Ordinal);
                         var utf8=new UTF8Encoding(false,true);byte[] Json(object value)=>utf8.GetBytes(JsonUtility.ToJson(value));
                         documents.Add(ProgramMemoryStore.FileName,memory.Encode());
+                        if(packs!=null)documents.Add(WorldPackDocument.FileName,packs);
                         documents.Add(RoomStorage.FileName,utf8.GetBytes(RoomLiquidCodec.Encode(room)));documents.Add("behaviours.v2.json",Json(behaviours));documents.Add("controls.v2.json",Json(preferences));documents.Add("avatar-activities.v2.json",Json(activities));
                         foreach(var pair in definitions)documents.Add(pair.Key,utf8.GetBytes(pair.Value.ToString(Formatting.None)));
                         models.Collect(documents,assets);heldMotions.Collect(documents,assets);heldSounds.Collect(documents,assets);heldImages.Collect(documents,assets);return process(new WorkspaceArchiveSnapshot(documents,assets),cancellation);

@@ -25,25 +25,36 @@ namespace Maestro.Quest.Persistence
     {
         IWorkspaceArchivePicker picker;
         WorkspaceGenerationStore store;
-        string requestId,phase="idle",name="",error="",releasePending,previousRevision;
+        enum SelectionSource { File,Previous,Bundled }
+        SelectionSource source;
+        string requestId,phase="idle",name="",error="",releasePending,originRevision;
+        WorldPackCatalog.Entry[] packs=Array.Empty<WorldPackCatalog.Entry>();
+        JObject packPreview;
+        sealed class PreparationResult {
+            internal readonly PreparedWorkspaceGeneration Generation;internal readonly JObject PackPreview;
+            internal PreparationResult(PreparedWorkspaceGeneration generation,JObject preview=null){Generation=generation;PackPreview=preview;}
+        }
         string unavailable="Workspace selection requires the Quest app.";
-        Task<PreparedWorkspaceGeneration> preparation;
+        Task<PreparationResult> preparation;
         Task discard,retirement;
         PreparedWorkspaceGeneration prepared;
         CancellationTokenSource cancellation;
-        bool cancelRequested,paused,focused=true,activationOwned,previousSource;
+        bool cancelRequested,paused,focused=true,activationOwned;
         internal Action<string> Fault;
         float nextPoll;
         public bool Available=>picker!=null;
+        internal bool SelectionAvailable=>store!=null;
+        internal bool PacksAvailable=>store!=null&&packs.Length>0;
+        void CapturePacks(){try{packs=WorldPackCatalog.Available.ToArray();}catch(Exception){packs=Array.Empty<WorldPackCatalog.Entry>();}}
         public void Initialize(string applicationData)
         {
-            store=new WorkspaceGenerationStore(applicationData,point=>Fault?.Invoke(point));
+            store=new WorkspaceGenerationStore(applicationData,point=>Fault?.Invoke(point));CapturePacks();
 #if UNITY_ANDROID && !UNITY_EDITOR
             try{picker=new AndroidWorkspacePicker();unavailable=null;}catch(Exception){unavailable="Resume Maestro before choosing a workspace archive.";}
 #endif
         }
         internal void InitializeForTests(string applicationData,IWorkspaceArchivePicker source)
-        {store=new WorkspaceGenerationStore(applicationData,point=>Fault?.Invoke(point));picker=source;unavailable=null;}
+        {store=new WorkspaceGenerationStore(applicationData,point=>Fault?.Invoke(point));picker=source;unavailable=null;CapturePacks();}
         internal bool Occupied=>preparation!=null||discard!=null||releasePending!=null||prepared!=null||activationOwned||phase is "selecting" or "copying" or "preparing" or "cancelling";
         internal bool StableForRecovery=>retirement==null&&preparation==null&&discard==null&&releasePending==null&&!activationOwned&&phase is not ("selecting" or "copying" or "preparing" or "cancelling");
         internal bool CanRecoverCandidate(string generation,string hash)=>StableForRecovery&&(prepared==null||phase=="prepared"&&prepared.Id==generation&&prepared.Receipt.ManifestHash==hash);
@@ -88,14 +99,62 @@ namespace Maestro.Quest.Persistence
         internal string SelectPrevious(JObject args)
         {
             if(!CanSelectPrevious(args,out var issue))throw new InvalidOperationException(issue);
-            requestId=Guid.NewGuid().ToString("N");phase="preparing";name="Previous workspace";error="";cancelRequested=false;previousSource=true;previousRevision=(string)args["expectedRevision"];
+            requestId=Guid.NewGuid().ToString("N");phase="preparing";name="Previous workspace";error="";cancelRequested=false;source=SelectionSource.Previous;originRevision=(string)args["expectedRevision"];packPreview=null;
             cancellation=new CancellationTokenSource(TimeSpan.FromMinutes(10));var token=cancellation.Token;var owner=store;string revision=(string)args["expectedRevision"],generation=(string)args["generationId"],hash=(string)args["manifestHash"];
-            preparation=Task.Run(()=>owner.PreparePrevious(revision,generation,hash,token));return requestId;
+            preparation=Task.Run(()=>new PreparationResult(owner.PreparePrevious(revision,generation,hash,token)));return requestId;
         }
+        internal JObject ReadPacks(int offset)
+        {
+            if(!SelectionAvailable||offset<0||offset>32)return null;
+            var entries=new JArray();if(offset<packs.Length){var entry=packs[offset];entries.Add(new JObject {
+                ["id"]=entry.Id,["version"]=entry.Version,["hash"]=entry.Hash,["name"]=entry.Name,["entryId"]=entry.EntryId});}
+            return new JObject {["offset"]=offset,["total"]=packs.Length,["next"]=offset+1<packs.Length?offset+1:-1,["entries"]=entries};
+        }
+        internal bool CanSelectPack(JObject args,out string issue)
+        {
+            issue="Resume Maestro before preparing a bundled world.";
+            var host=GetComponent<WorkspaceHost>();
+            if(store==null||paused||!focused||!isActiveAndEnabled||!host||!host.isActiveAndEnabled||!host.Ready||!host.Current||host.Selection==null)return false;
+            if(host.Switching||host.Retiring||host.Activation?.Busy==true||host.Review?.Busy==true||host.Recovery?.BlocksOtherOperations==true||
+                host.Retention?.Busy==true||host.Evidence?.Busy==true||host.History?.Busy==true){issue="Finish the current workspace operation before preparing a bundled world.";return false;}
+            if(host.Export?.Busy==true||host.Activation?.HistoryUnavailable==true||host.Review?.HistoryUnavailable==true||host.Recovery?.HistoryUnavailable==true){issue="Finish export or recover unavailable workspace history before preparing another world.";return false;}
+            if(host.Selection.Revision!=(string)args["expectedRevision"]){issue="The workspace changed. Read workspace.current before preparing a world.";return false;}
+            if(!Idle(out issue))return false;
+            if(!packs.Any(entry=>entry.Id==(string)args["packId"]&&entry.Version==(int)args["packVersion"]&&entry.Hash==(string)args["packHash"])){
+                issue="That exact bundled world is unavailable. Read workspace.packs again.";return false;
+            }
+            try{if(!JToken.DeepEquals(store.Load().Json(),host.Selection.Json())){issue="Workspace storage differs from the live room. Recover it before preparing another world.";return false;}}
+            catch(Exception){issue="Workspace selection is unavailable. Saved data is preserved; recovery is required.";return false;}
+            var content=host.Current;
+            if(!WorkspaceArchiveCapture.CanStart(content.Editor,content.Rules,content.Controls,out issue)||
+                !content.Editor.WriteGate.CanFreeze(out issue)||!content.Editor.CanChangeTemporaryBoundary(out issue))return false;
+            if(content.Rules.Runtime&&content.Rules.Runtime.AnyButtonHeld){issue="Release action buttons before preparing another world.";return false;}
+            return true;
+        }
+        internal string SelectPack(JObject args)
+        {
+            if(!CanSelectPack(args,out var issue))throw new InvalidOperationException(issue);
+            var entry=packs.Single(value=>value.Id==(string)args["packId"]&&value.Version==(int)args["packVersion"]&&value.Hash==(string)args["packHash"]);
+            var host=GetComponent<WorkspaceHost>();var avatar=host.IncludedAvatar;var motions=host.IncludedMotions;var owner=store;
+            requestId=Guid.NewGuid().ToString("N");phase="preparing";name=entry.Name;error="";cancelRequested=false;source=SelectionSource.Bundled;
+            originRevision=(string)args["expectedRevision"];packPreview=null;
+            string id=requestId,origin=originRevision;cancellation=new CancellationTokenSource(TimeSpan.FromMinutes(10));var token=cancellation.Token;
+            preparation=Task.Run(()=>{
+                token.ThrowIfCancellationRequested();
+                var result=WorldPackPreparation.Prepare(entry,WorkspaceDefaults.Snapshot(avatar,motions),token);token.ThrowIfCancellationRequested();
+                var snapshot=result.Snapshot;WorldPackPreparation.RequireClosed(snapshot.Metadata.Summary);
+                var provenance=WorldPackDocument.Decode(snapshot.Documents[WorldPackDocument.FileName]);var instance=provenance.instances.Single();
+                var staged=owner.PrepareSnapshot(snapshot,token);
+                var preview=new JObject {["requestId"]=id,["packId"]=entry.Id,["packVersion"]=entry.Version,["packHash"]=entry.Hash,["entryId"]=entry.EntryId,
+                    ["originRevision"]=origin,["worldId"]=provenance.worldId,["instanceId"]=instance.instanceId,["objects"]=instance.objects.Length,["resources"]=instance.resources.Length,["recipeParts"]=result.Summary.RecipeParts,["collisionPieces"]=result.Summary.CollisionPieces,["customGeometryVertices"]=result.Summary.CustomGeometryVertices,["files"]=staged.Receipt.Summary.Files,["bytes"]=staged.Receipt.Summary.Bytes};
+                return new PreparationResult(staged,preview);
+            });return requestId;
+        }
+        internal JObject ReadPackPreview(string id)=>retirement==null&&source==SelectionSource.Bundled&&phase=="prepared"&&prepared!=null&&id==requestId?packPreview?.DeepClone() as JObject:null;
         internal string Select()
         {
             if(!CanSelect(out var issue))throw new InvalidOperationException(issue);
-            requestId=Guid.NewGuid().ToString("N");phase="selecting";name="";error="";cancelRequested=false;previousSource=false;
+            requestId=Guid.NewGuid().ToString("N");phase="selecting";name="";error="";cancelRequested=false;source=SelectionSource.File;originRevision=null;packPreview=null;
             try{picker.Start(requestId);}catch(Exception){phase="failed";error="The file chooser could not open. Resume Maestro and choose the archive again.";Release();}
             // This ID acknowledges a tracked request, not a successful choice or import.
             return requestId;
@@ -103,7 +162,7 @@ namespace Maestro.Quest.Persistence
         internal bool CanCancel(string id,out string issue)
         {
             issue=null;
-            if((!Available&&!previousSource)||id!=requestId){issue="This archive request is no longer available. Inspect the current request.";return false;}
+            if((!Available&&source==SelectionSource.File)||id!=requestId){issue="This archive request is no longer available. Inspect the current request.";return false;}
             if(activationOwned){issue="Cancel the tracked workspace operation before changing its archive selection.";return false;}
             return true;
         }
@@ -116,11 +175,11 @@ namespace Maestro.Quest.Persistence
             if(prepared!=null){Discard();return;}
             phase="cancelled";error="";Release();
         }
-        internal bool MatchesOrigin(string revision)=>!previousSource||previousRevision==revision;
+        internal bool MatchesOrigin(string revision)=>source==SelectionSource.File||originRevision==revision;
         internal bool CanActivate(string id,string generation,string hash,out string issue)
         {
             issue="Inspect the current prepared archive before activating it.";
-            if(activationOwned||phase!="prepared"||prepared==null||preparation!=null||discard!=null||releasePending!=null||id!=requestId||generation!=prepared.Id||hash!=prepared.Receipt.ManifestHash)return false;
+            if(retirement!=null||activationOwned||phase!="prepared"||prepared==null||preparation!=null||discard!=null||releasePending!=null||id!=requestId||generation!=prepared.Id||hash!=prepared.Receipt.ManifestHash)return false;
             issue=null;return true;
         }
         internal void BorrowForActivation(){activationOwned=true;phase="activating";}
@@ -138,7 +197,7 @@ namespace Maestro.Quest.Persistence
         }
         void Release()
         {
-            if(previousSource||picker==null||requestId==null)return;
+            if(source!=SelectionSource.File||picker==null||requestId==null)return;
             try{picker.Release(requestId);releasePending=null;}
             catch(Exception){releasePending=requestId;error="Selection cleanup is pending. Resume Maestro before choosing another archive.";}
         }
@@ -154,7 +213,7 @@ namespace Maestro.Quest.Persistence
         }
         internal void Poll()
         {
-            if(requestId==null||picker==null&&!previousSource)return;
+            if(retirement!=null||requestId==null||picker==null&&source==SelectionSource.File)return;
             if(releasePending!=null)Release();
             if(discard!=null&&discard.IsCompleted){
                 var failure=discard.Exception?.GetBaseException();discard=null;
@@ -164,7 +223,7 @@ namespace Maestro.Quest.Persistence
             if(preparation!=null){
                 if(!preparation.IsCompleted)return;
                 var task=preparation;preparation=null;Release();
-                if(task.Status==TaskStatus.RanToCompletion){prepared=task.Result;if(cancelRequested)Discard();else{phase="prepared";error="";}}
+                if(task.Status==TaskStatus.RanToCompletion){prepared=task.Result.Generation;packPreview=task.Result.PackPreview;if(cancelRequested)Discard();else{phase="prepared";error="";}}
                 else {phase=cancelRequested?"cancelled":"failed";error=cancelRequested?"":task.IsCanceled?"Archive preparation was interrupted. Choose the archive again.":PreparationError(task.Exception?.GetBaseException());}
                 cancellation?.Dispose();cancellation=null;return;
             }
@@ -186,7 +245,7 @@ namespace Maestro.Quest.Persistence
                 token.ThrowIfCancellationRequested();string file=PrivateCopy(path,cacheRoot);
                 using var stream=new FileStream(file,FileMode.Open,FileAccess.Read,FileShare.Read);
                 if(stream.Length<1||stream.Length>WorkspaceArchive.MaximumArchiveBytes)throw new InvalidDataException("Choose a workspace ZIP no larger than 512 MB.");
-                return ownerStore.PrepareImport(stream,token);
+                return new PreparationResult(ownerStore.PrepareImport(stream,token));
             });
         }
         static string SafeText(string value,int maximum)
@@ -206,12 +265,12 @@ namespace Maestro.Quest.Persistence
         internal Task Retire()
         {
             if(retirement!=null)return retirement;
-            cancellation?.Cancel();var task=preparation;var remove=discard;var backend=previousSource?null:picker;var id=requestId;var owner=store;var tokenOwner=cancellation;
+            cancellation?.Cancel();var task=preparation;var remove=discard;var backend=source==SelectionSource.File?picker:null;var id=requestId;var owner=store;var tokenOwner=cancellation;
             // No scene owner or Unity API is touched by late cleanup. Keep already prepared previews
             // retained, but never leak a newly completed preparation whose owner was destroyed.
             retirement=Task.Run(async()=>{
                 try {
-                    if(task!=null) {PreparedWorkspaceGeneration abandoned=null;try{abandoned=await task.ConfigureAwait(false);}catch(Exception){}
+                    if(task!=null) {PreparedWorkspaceGeneration abandoned=null;try{abandoned=(await task.ConfigureAwait(false)).Generation;}catch(Exception){}
                         if(abandoned!=null)owner.DiscardPrepared(abandoned.Id,abandoned.Receipt.ManifestHash);}
                     if(remove!=null)await remove.ConfigureAwait(false);
                 }catch(Exception){}finally{try{if(id!=null)backend?.Release(id);}catch(Exception){}tokenOwner?.Dispose();}

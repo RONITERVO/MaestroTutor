@@ -218,7 +218,8 @@ it('opens a tracked archive choice and inspects the real native preview without 
  fireEvent.click(screen.getByRole('button',{name:new RegExp(fact.label)}));await receive({operation:'inspect',category:'facts',capability:fact.id,version:1,definition:fact,available:false,value:null,status:'Choose request'});
  fireEvent.change(screen.getByLabelText('Fact inputs requestId'),{target:{value:receipt.output.requestId}});fireEvent.click(screen.getByRole('button',{name:'Read fact'}));
  expect(client.snapshot().request?.commands[0]).toEqual({action:'catalog',catalog:{operation:'inspect',category:'facts',capability:fact.id,version:1,arguments:{requestId:receipt.output.requestId}}});
- await receive(catalogFixture(nativeSelection.prepared));expect(screen.getByLabelText('Current fact value').textContent).toContain(nativeSelection.prepared.value.manifestHash);
+ // Historical native preview data uses today's catalog definition; real Unity is tested separately.
+ await receive(catalogFixture({...nativeSelection.prepared,definition:fact}));expect(screen.getByLabelText('Current fact value').textContent).toContain(nativeSelection.prepared.value.manifestHash);
  expect(screen.getByLabelText('Current fact value').textContent).toContain('prepared');expect(screen.queryByRole('button',{name:'Run action now'})).toBeNull();expect(client.snapshot().request).toBeNull();
  fireEvent.change(screen.getByLabelText('Fact inputs requestId'),{target:{value:'f'.repeat(32)}});expect(screen.getByLabelText('Current fact value').textContent).toContain('Not read yet');expect(client.snapshot().request).toBeNull();
  act(()=>client.cancel());
@@ -1533,4 +1534,34 @@ it('retains an explicit execution failure after an input edit while preserving i
  expect(requested()).toBe('The source is no longer available');
  expect(screen.getByLabelText('Selected action').textContent).toContain('Previous action result');
  expect(client.getSnapshot().state!.execution).toEqual(failed);expect(client.snapshot().request).toBeNull();act(()=>client.cancel());
+});
+
+
+it('loads the bundled-world readonly revision through explicit empty fact arguments before normal check and run',async()=>{
+ const {client,screen,receive}=setup(true,['workspacePacks.v1','execution.v1','actionResults.v1']);
+ const definition=capabilityDefinition('workspace.pack.prepare')!,runId='f'.repeat(32),packHash='9'.repeat(64);
+ await receive(undefined,false,{execution:{...nativeExecutions.running.execution,selected:null,running:[],outcomes:[],nextRunId:runId} as RoomAgentState['execution']});
+ fireEvent.click(screen.getByRole('button',{name:'Action catalog'}));fireEvent.click(screen.getByRole('button',{name:'Search'}));
+ await receive({operation:'search',query:'',offset:0,total:1,pageSize:6,entries:[{id:definition.id,version:1,label:definition.label}],status:'Included world action'});
+ fireEvent.click(screen.getByRole('button',{name:new RegExp(definition.label)}));await receive({operation:'inspect',capability:definition.id,version:1,definition,status:'Included world contract'});
+ fireEvent.change(screen.getByLabelText('Action inputs packHash'),{target:{value:packHash}});
+ const guard=screen.getByLabelText('Action inputs expectedRevision') as HTMLInputElement;
+ expect(guard.readOnly).toBe(true);expect(guard.value).toBe('initial');expect(guard.closest('details')!.open).toBe(false);
+ expect((screen.getByRole('button',{name:'Run action now'}) as HTMLButtonElement).disabled).toBe(true);
+ expect((screen.getByRole('button',{name:'Check availability'}) as HTMLButtonElement).disabled).toBe(true);
+ const load=screen.getByRole('button',{name:'Load current values'}) as HTMLButtonElement;
+ expect(load.disabled).toBe(false);expect(screen.queryByText('Choose valid inputs for the current-value lookup.')).toBeNull();
+ fireEvent.click(load);
+ expect(client.snapshot().request?.commands).toEqual([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'workspace.current',version:1,arguments:{}}}]);
+ const value={revision:'a'.repeat(32),generationId:'b'.repeat(32),available:true,reviewRequired:false,changing:false,activationRequestId:'',reviewRequestId:'',error:''};
+ await receive({operation:'inspect',category:'facts',capability:'workspace.current',version:1,definition:behaviourFact('workspace.current')!,arguments:{},available:true,value,status:'Current workspace'});
+ expect(guard.value).toBe(value.revision);expect(guard.readOnly).toBe(true);expect(guard.closest('details')!.open).toBe(false);
+ const args={...definition.example!,packHash,expectedRevision:value.revision},call={id:definition.id,version:1,arguments:args};
+ expect(JSON.parse((screen.getByLabelText('Action arguments') as HTMLTextAreaElement).value)).toEqual(args);
+ fireEvent.click(screen.getByRole('button',{name:'Check availability'}));expect(client.snapshot().request?.commands).toEqual([{action:'catalog',catalog:{operation:'check',call}}]);
+ await receive({operation:'check',call,valid:true,available:true,occupied:false,resources:[],status:'Ready'});
+ expect((screen.getByRole('button',{name:'Run action now'}) as HTMLButtonElement).disabled).toBe(false);
+ fireEvent.click(screen.getByRole('button',{name:'Run action now'}));
+ expect(client.snapshot().request?.commands).toEqual([{action:'execution',execution:{operation:'start',call,runId}}]);
+ act(()=>client.cancel());
 });

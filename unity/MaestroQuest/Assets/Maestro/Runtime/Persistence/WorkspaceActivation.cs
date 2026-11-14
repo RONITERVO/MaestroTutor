@@ -72,7 +72,7 @@ namespace Maestro.Quest.Persistence
             if(host.Retention?.Busy==true||host.Evidence?.Busy==true||host.History?.Busy==true||Busy||host.Retiring||host.Switching||host.Review?.Busy==true||host.Recovery?.BlocksOtherOperations==true){issue="Wait for the current activation to finish.";return false;}
             if(!host.Current||host.Selection==null){issue="Recover the current workspace before replacing it.";return false;}
             if(host.Selection.Revision!=(string)args["expectedRevision"]){issue="The workspace changed. Read workspace.current before activating.";return false;}
-            if(!host.Import.MatchesOrigin((string)args["expectedRevision"])){issue="The previous-workspace preview belongs to an earlier selection. Cancel it and inspect the current previous workspace again.";return false;}
+            if(!host.Import.MatchesOrigin((string)args["expectedRevision"])){issue="The prepared workspace preview belongs to an earlier selection. Cancel it and prepare a new preview from the current workspace.";return false;}
             if(!host.Import.CanActivate((string)args["selectionRequestId"],(string)args["generationId"],(string)args["manifestHash"],out issue))return false;
             try {if(!JToken.DeepEquals(store.Load().Json(),host.Selection.Json())){issue="Workspace storage differs from the live room. Recover it before activating.";return false;}}
             catch(Exception){issue="Workspace selection is unavailable. Saved data is preserved; recovery is required.";return false;}

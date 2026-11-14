@@ -10029,9 +10029,88 @@
       }
     },
     {
+      "id": "workspace.pack.prepare",
+      "version": 1,
+      "label": "Prepare included world",
+      "input": {
+        "type": "object",
+        "properties": {
+          "packId": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9.-]*$",
+            "maxLength": 96
+          },
+          "packVersion": {
+            "type": "integer",
+            "minimum": 1.0,
+            "maximum": 2147483647.0
+          },
+          "packHash": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "maxLength": 64
+          },
+          "expectedRevision": {
+            "type": "string",
+            "pattern": "^(initial|[a-f0-9]{32})$",
+            "maxLength": 32
+          }
+        },
+        "required": [
+          "packId",
+          "packVersion",
+          "packHash",
+          "expectedRevision"
+        ],
+        "additionalProperties": false,
+        "x-current": {
+          "fact": "workspace.current",
+          "version": 1,
+          "arguments": {},
+          "fields": {
+            "expectedRevision": [
+              "revision"
+            ]
+          },
+          "guards": [
+            "expectedRevision"
+          ]
+        },
+        "x-features": [
+          "workspacePacks.v1"
+        ]
+      },
+      "duration": "instant",
+      "ownership": "none",
+      "channels": [],
+      "requirements": [],
+      "domain": "workspace",
+      "description": "Prepare an exact included world from workspace.packs as a new editable workspace. This is a new/open world operation, never an addition to the current room, an automatic installation or a recovery default. Read workspace.current and supply its revision together with exact pack id/version/hash. Returns only a tracked requestId: read workspace.archive.selection until prepared, then workspace.pack.preview for the actual expanded content counts and origin. Current content, activity and original defaults remain unchanged during preparation. Only one file/previous/bundled selection can own preparation or a preview. Cancel through workspace.archive.cancel. To open the reviewed preview, explicitly use workspace.archive.activate with its selection request/generation/manifest and the same expectedRevision; that existing path preserves accepted current edits and opens the new content under its activity review hold. A changed workspace selection invalidates this preview, even if activation supplies a newer revision. Preparation performs no provider request and starts no program, physics, sound or camera.",
+      "example": {
+        "packId": "maestro.observatory",
+        "packVersion": 1,
+        "packHash": "0000000000000000000000000000000000000000000000000000000000000000",
+        "expectedRevision": "initial"
+      },
+      "output": {
+        "type": "object",
+        "properties": {
+          "requestId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          }
+        },
+        "required": [
+          "requestId"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
       "id": "workspace.archive.cancel",
       "version": 1,
-      "label": "Cancel archive selection",
+      "label": "Cancel workspace selection",
       "input": {
         "type": "object",
         "properties": {
@@ -10046,7 +10125,7 @@
         ],
         "additionalProperties": false,
         "x-features": [
-          "workspaceArchiveSelection.v1"
+          "workspaceSelectionCancellation.v1"
         ]
       },
       "duration": "instant",
@@ -10054,7 +10133,7 @@
       "channels": [],
       "requirements": [],
       "domain": "workspace",
-      "description": "Cancel the exact file-selection or previous-workspace request, or discard its verified, unused preview. It never deletes the source file or changes the active workspace. Cleanup may continue after this acknowledgement; read workspace.archive.selection for cancelled/failed and any retained preview. Cancelling does not restart paused room actions. A stale request cannot cancel a newer chooser.",
+      "description": "Cancel the exact file-selection, previous-workspace or included-world request, or discard its verified, unused preview. It never deletes the source file or changes the active workspace. Cleanup may continue after this acknowledgement; read workspace.archive.selection for cancelled/failed and any retained preview. Cancelling does not restart paused room actions. A stale request cannot cancel a newer chooser.",
       "example": {
         "requestId": "00000000000000000000000000000000"
       },
@@ -10076,7 +10155,7 @@
     {
       "id": "workspace.archive.activate",
       "version": 1,
-      "label": "Activate reviewed workspace archive",
+      "label": "Open reviewed workspace",
       "input": {
         "type": "object",
         "properties": {
@@ -10117,7 +10196,7 @@
       "channels": [],
       "requirements": [],
       "domain": "workspace",
-      "description": "Start activating the exact prepared preview after the user requests the switch. Read workspace.archive.selection for selectionRequestId, generationId and manifestHash, and workspace.current for expectedRevision. Preserve accepted current content in a separate verified generation before any switch. Editing and activity are held until preservation/commit finish. Returns a tracked activation requestId, not completed activation. Read workspace.archive.activation with that ID. The book and agent transport survive; the room agent session changes. Imported activity stays held for review. Pause or cancellation attempts to stop before commit, but cannot undo a committed selection; always inspect the outcome. Never silently retry an interrupted pair after editing resumes. Startup reconciles the exact pair without replay. Only the latest activation status is retained.",
+      "description": "Start activating the exact prepared file, previous-workspace or included-world preview after the user requests the switch. This replaces the open workspace; it does not add scenery to it. Read workspace.archive.selection for selectionRequestId, generationId and manifestHash, and workspace.current for expectedRevision. Preserve accepted current content in a separate verified generation before any switch. Editing and activity are held until preservation/commit finish. Returns a tracked activation requestId, not completed activation. Read workspace.archive.activation with that ID. The book and agent transport survive; the room agent session changes. Imported activity stays held for review. Pause or cancellation attempts to stop before commit, but cannot undo a committed selection; always inspect the outcome. Never silently retry an interrupted pair after editing resumes. Startup reconciles the exact pair without replay. Only the latest activation status is retained.",
       "example": {
         "selectionRequestId": "00000000000000000000000000000000",
         "generationId": "00000000000000000000000000000000",
@@ -48156,8 +48235,8 @@
           }
         }
       },
-      "label": "Archive selection status",
-      "description": "Read the exact archive or previous-workspace preview request. Previous-workspace preparation uses no file chooser. Phases: selecting, copying, preparing, prepared, activating, activated, retained, cancelling, cancelled or failed. Activated means the preview was committed; follow workspace.archive.activation to establish whether content opened. Retained means an interrupted attempt must not be reused; its files are preserved. Prepared means its manifest, documents and assets were verified into a private preview; nothing was activated. Summary counts describe that preview, including unavailable programs and missing references. Inspect errors before another choice. IDs and counts are empty/zero until a preview exists. An unknown request or paused runtime is unavailable. Read-only; never opens a chooser, imports or runs anything.",
+      "label": "Workspace selection status",
+      "description": "Read the exact archive, previous-workspace or included-world preview request. Previous and bundled preparation use no file chooser. For a bundled preview, workspace.pack.preview exposes exact origin and structural counts. Phases: selecting, copying, preparing, prepared, activating, activated, retained, cancelling, cancelled or failed. Activated means the preview was committed; follow workspace.archive.activation to establish whether content opened. Retained means an interrupted attempt must not be reused; its files are preserved. Prepared means its manifest, documents and assets were verified into a private preview; nothing was activated. Summary counts describe that preview, including unavailable programs and missing references. Inspect errors before another choice. IDs and counts are empty/zero until a preview exists. An unknown request or paused runtime is unavailable. Read-only; never opens a chooser, imports or runs anything.",
       "domain": "workspace",
       "input": {
         "type": "object",
@@ -48175,6 +48254,147 @@
       },
       "example": {
         "requestId": "00000000000000000000000000000000"
+      },
+      "features": [
+        "factQueries.v1"
+      ]
+    },
+    {
+      "id": "workspace.packs",
+      "version": 1,
+      "type": {
+        "record": {
+          "offset": "number",
+          "total": "number",
+          "next": "number",
+          "entries": {
+            "list": {
+              "record": {
+                "id": "text",
+                "version": "number",
+                "hash": "text",
+                "name": "text",
+                "entryId": "text"
+              }
+            }
+          }
+        }
+      },
+      "label": "Included editable worlds",
+      "description": "Read one exact included-world descriptor at a time. Start offset 0 and follow next until -1. These are explicit new/open workspace sources, not additions to the current room or recovery defaults. Names are display text; prepare only the exact id/version/hash. A source hash identifies its authored descriptor, not a prepared instance or measured performance. Reading never expands, saves, installs, loads native content or starts activity.",
+      "domain": "workspace",
+      "input": {
+        "type": "object",
+        "properties": {
+          "offset": {
+            "type": "integer",
+            "minimum": 0.0,
+            "maximum": 32.0
+          }
+        },
+        "required": [
+          "offset"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "offset": 0
+      },
+      "features": [
+        "factQueries.v1",
+        "workspacePacks.v1"
+      ]
+    },
+    {
+      "id": "workspace.pack.preview",
+      "version": 1,
+      "type": {
+        "record": {
+          "instanceId": "text",
+          "packId": "text",
+          "packVersion": "number",
+          "packHash": "text",
+          "entryId": "text",
+          "objects": "number",
+          "resources": "number",
+          "requestId": "text",
+          "originRevision": "text",
+          "worldId": "text",
+          "recipeParts": "number",
+          "collisionPieces": "number",
+          "customGeometryVertices": "number",
+          "files": "number",
+          "bytes": "number"
+        }
+      },
+      "label": "Prepared included world",
+      "description": "Read the exact completed bundled-world preview, without re-expanding it. Available only while this selection is prepared and unused. objects/resources count its newly mapped authored objects and definitions; recipeParts/collisionPieces/customGeometryVertices are structural source costs, not native residency or Quest performance. files/bytes describe the verified archive including its baseline avatar and motions. Use workspace.archive.selection for generation/manifest and missing-reference summary. worldId/instanceId identify this new instance; originRevision must still match activation. No current objects, programs or settings are changed by this read.",
+      "domain": "workspace",
+      "input": {
+        "type": "object",
+        "properties": {
+          "requestId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          }
+        },
+        "required": [
+          "requestId"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "requestId": "00000000000000000000000000000000"
+      },
+      "features": [
+        "factQueries.v1",
+        "workspacePacks.v1"
+      ]
+    },
+    {
+      "id": "workspace.pack.instance",
+      "version": 1,
+      "type": {
+        "record": {
+          "worldId": "text",
+          "offset": "number",
+          "total": "number",
+          "next": "number",
+          "entries": {
+            "list": {
+              "record": {
+                "instanceId": "text",
+                "packId": "text",
+                "packVersion": "number",
+                "packHash": "text",
+                "entryId": "text",
+                "objects": "number",
+                "resources": "number"
+              }
+            }
+          }
+        }
+      },
+      "label": "Installed world origins",
+      "description": "Read one historical included-world instance from the current accepted workspace at a time. Start offset 0 and follow next until -1. The origin is immutable provenance, not a live dependency, ownership claim or proof that every mapped object still exists: user edits/deletions remain valid. objects/resources are original mapping counts. The exact mapping document remains preserved in saves and exports; this compact fact does not enumerate its slots. No file read, installation, repair or activity starts here.",
+      "domain": "workspace",
+      "input": {
+        "type": "object",
+        "properties": {
+          "offset": {
+            "type": "integer",
+            "minimum": 0.0,
+            "maximum": 16.0
+          }
+        },
+        "required": [
+          "offset"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "offset": 0
       },
       "features": [
         "factQueries.v1"
@@ -52222,6 +52442,10 @@
       "sha256": "d3c6438fa431c5fa3702ba2d8e47535fa1e88067a45044c83b06488dddff0c78"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Resources/WorldPacks/observatory.json",
+      "sha256": "902b1c34b555fe732125f45b7daad9ff5aec395a1591ab98ed9c8b7499702eab"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Art/AppearanceImages.cs",
       "sha256": "1fafe1ea690876c2918fb6c6cd4673aeb888329e2654b1d27b0b9fe53aa3e034"
     },
@@ -52679,7 +52903,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilityModules.cs",
-      "sha256": "4cc262557cc2346e28c70a858ccf1e1c8fcb8e8b7df37044f8a93e8f94ea08fb"
+      "sha256": "529b074e4f02f1abf9069d6517e549484cc2f1a0a46c29569ee384c42d1ea05c"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilitySchema.cs",
@@ -53187,7 +53411,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/WorkspaceActivationCapabilities.cs",
-      "sha256": "41291c4504ba8289406e2973eb482323f5dd99f17419d8b0432eb192d954543d"
+      "sha256": "5004a0023c1449bd3f34ed514fdf241817c228597e4b1a60bc2593bfeea40541"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/WorkspaceEvidenceCapabilities.cs",
@@ -53200,6 +53424,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/WorkspaceHistoryCapabilities.cs",
       "sha256": "4ce888d3814286124c8791c11354fcf8e5fe4418b0a4ee838543c4ff128e6bcf"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/WorkspacePackCapabilities.cs",
+      "sha256": "a134ebf7d33f30e59d8f9ff7ee19d48c0b8b0c8c8ba6f5d3210aaface9676ca5"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/WorkspacePreviousCapabilities.cs",
@@ -53219,7 +53447,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/WorkspaceSelectionCapabilities.cs",
-      "sha256": "db33866721bfc22728a415eb62ca17e905acfd281e3c8f512ea9aa6be9cb540b"
+      "sha256": "b73b85d6ad05379fabe08e7be4c1ae644bbea3a5bbfd767f8f2014467f7cbe8a"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/WorldGroundFacts.cs",
@@ -53367,7 +53595,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreationBatch.cs",
-      "sha256": "0cd717c35e7338352dca74aa353dfe7c810493c2e62224a930ddbae31ec66c54"
+      "sha256": "65fc51cbc442b8190d3c00cf5d67c823f08fbfa2239c8eab96f487afcbfbf98b"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreationBatchMapping.cs",
+      "sha256": "a16c1f3a19ee67c76822c2f03e0456d573662c635190ca2276392685c38ef971"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreationPrototype.cs",
@@ -53375,7 +53607,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreationResources.cs",
-      "sha256": "d755d0a3fbc08314977630436ea59327a50f96b30926c8421566c02ca46a1857"
+      "sha256": "776468d27df1c76a78b1f2bb2330c1d40cceeac9f2a9b4fb71c0dc0add576069"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreationTemplates.cs",
@@ -53795,7 +54027,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomControls.cs",
-      "sha256": "f6ee2aa1103d562a1ea75f031b8bc4e7ec9a0f78fdf3ef792ede24b7497225ed"
+      "sha256": "b97ebb608e4b82d7a28000a606f3abb8a0ef70315d39da29259374e8e068de09"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomCreationBudget.cs",
@@ -55171,19 +55403,19 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceActivation.cs",
-      "sha256": "433e089949ea8f0674e9f2d48171ec8f58e8b3c3d59f4f16636587f36d796cd1"
+      "sha256": "2b1aa0023b4cad438189fd2473f89f264e9eb2af8fc9b58b5384db4ee278bc93"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceArchive.cs",
-      "sha256": "60fb65eece983df1c3f8bb7cbdd350fd020a987aee582beb43259a6339cfa377"
+      "sha256": "9f99b9694ae282ae6efe32d91face3f69b037f9c126df9f19390222e87a899e9"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceArchiveCapture.cs",
-      "sha256": "4e9d242e07e69b30b4552b8da66c80a34f8ba9ebd150a720e1d75f003b26a960"
+      "sha256": "25a4e90eb753bd7a89fb565b80b4009fa589a5e8319bd63f38aa6086af3cae6b"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceArchiveSnapshot.cs",
-      "sha256": "662c5515a0b63fd24df925c00073fe01c163137a22d27d4c5489dbeb653697b3"
+      "sha256": "f8d561ac62e61ee492887ac373dec9d5d300c7b60ee1bb2122fa08550e440019"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceAssetFence.cs",
@@ -55218,6 +55450,10 @@
       "sha256": "12f6689f0245abd15eb847fd4d9ceccd28f0c45bad226f8cafcca848d1f2615f"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceGenerationStore.Bundled.cs",
+      "sha256": "f6d3fcd95669f6591d644a515759b14fbf63a52f681e550a687727ea561d3981"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceGenerationStore.Recovery.cs",
       "sha256": "e4fac4bd0a87290c245fd3d293355334aedadefa301570b6707faf4eb4b05340"
     },
@@ -55227,11 +55463,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceGenerationStore.Retention.cs",
-      "sha256": "2cbe4df130c9c9ee36c1bfe266d4bb8d4e9245e070a053148ed3b6e9dc83204d"
+      "sha256": "670abf4963bf33247011e3f353770c0af008f3dc0453823b537d51e1d432514e"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceGenerationStore.cs",
-      "sha256": "a5fa98a171e624c17acb52157954eced3c3792add8d69fdf31d42b744f13c37c"
+      "sha256": "30a26c1d06bcf9c95f465d50a93114174b09e5e9d8e39f5e7e1450adba213798"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceHistory.cs",
@@ -55243,7 +55479,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceHost.cs",
-      "sha256": "770b6689fb4d1fdf5c8692896d45393bdd871bc535dbf6ea390dea4c7f731d7d"
+      "sha256": "6cbf76e4093f4db72ab4eec25f5bd7bfc761263a4ae3e94770f46a88afa72534"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceHostOwnership.cs",
@@ -55251,7 +55487,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceImport.cs",
-      "sha256": "d10ba5d44dadc81284970fb954fee8f3da6e241a0b53dea194a90b13ecb6f78c"
+      "sha256": "a0227fe3a33d53caf29257565619ff185eaf876ef5de97931b362605ac04f0b0"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceLibraryCapture.cs",
@@ -55286,6 +55522,18 @@
       "sha256": "d035ded66afd1c875ea365df93f12fa7bad3f8e193e7a66d8ad2ee43c88558bf"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorldPackCatalog.cs",
+      "sha256": "7ff3f38725a1c85eda9b2793d27eb84ad09da61627e728e41a08f3d95778a957"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorldPackDocument.cs",
+      "sha256": "ba87438c5a1cc57230879aa09318141bdbcfe6dacdc922bbcc2d6d6710ae4980"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorldPackPreparation.cs",
+      "sha256": "5cf0716c23ccebfefefc73006ea7dc914318328c581e64bc78900841e011a08f"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/AnchorProximitySubscription.cs",
       "sha256": "be52c08ec6bec3bb2083426d91e2abad7a13ec8248281b9fa1686576fbccd411"
     },
@@ -55303,7 +55551,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "6bb670401ffd0fb97089c9d48e76d8d13b5df571b33b01d89c387c0aad94302d"
+      "sha256": "98e60cb02b7521b3096df4c3d9a78b7f5cff56d942e17c869a8eb396a8d38097"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourProgram.cs",

@@ -24,6 +24,7 @@ const sources=[
  'Resources/MaestroRoomAudio.mixer','Resources/RoomGuides.json',
  ...await discover('Resources/Creation/Templates',name=>/\.json$/i.test(name)),
  ...await discover('Resources/Programs/Modules',name=>/\.json$/i.test(name)),
+ ...await discover('Resources/WorldPacks',name=>/\.json$/i.test(name)),
 ].sort().map(path=>nativePrefix+path);
 if(manifest.version!==1||JSON.stringify(manifest.sources?.map(source=>source.path))!==JSON.stringify(sources))throw new Error('Invalid behaviour catalog provenance.');
 for(const source of manifest.sources) {

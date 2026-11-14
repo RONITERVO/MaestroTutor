@@ -12,7 +12,7 @@ const view=():CatalogView=>({operation:'inspect',category:'facts',capability:'ob
 it('checks every native current-input annotation against both registered contracts',()=>{
  let count=0;
  const visit=(s:CapabilitySchema)=>{if(s['x-current'])count++;expect(()=>validateCurrentInputMapping(s)).not.toThrow();for(const child of [...s.oneOf??[],...Object.values(s.properties??{}),...s.items?[s.items]:[]])visit(child);};
- for(const action of behaviourCatalog.actions)visit(action.input as CapabilitySchema);expect(count).toBe(131);
+ for(const action of behaviourCatalog.actions)visit(action.input as CapabilitySchema);expect(count).toBe(132);
 });
 it('loads exact fact values atomically and distinguishes guards from editable preferences',()=>{
  const next=applyCurrentInputs(schema(),args(),view());expect(next).toEqual({target:native.beforePhysics.target,revision:native.beforePhysics.revision,mode:native.beforePhysics.mode,shape:native.beforePhysics.shape,mass:native.beforePhysics.mass});
@@ -170,4 +170,34 @@ it('loads the model-download revision only for the requested content hash and is
  for(const mismatched of [otherFact,{...observation,arguments:{modelHash:'c'.repeat(64)}},{...observation,version:2},{...observation,available:false,value:null},{...observation,value:{...value,inspectionRevision:'not-a-file-revision'}}])expect(()=>applyCurrentInputs(input,draft,mismatched as CatalogView)).toThrow();
  expect(()=>currentInputRequest(input,{...draft,modelHash:'../model.glb'})).toThrow();
  expect(draft).toEqual({modelHash:'a'.repeat(64),inspectionRevision:'0'.repeat(64)});expect(value.inspectionRevision).toBe('b'.repeat(64));
+});
+
+
+it('omits arguments only for a true no-input current fact and rejects an empty-object response',()=>{
+ const input=capabilityDefinition('room.tools.recall')!.input,draft={stateId:'0'.repeat(32),revision:1};
+ expect(behaviourFact('room.tools.recovery')!.input).toBeUndefined();
+ const query=currentInputRequest(input,draft);
+ expect(query).toEqual({operation:'inspect',category:'facts',capability:'room.tools.recovery',version:1});
+ expect(Object.prototype.hasOwnProperty.call(query,'arguments')).toBe(false);
+ const value={stateId:'a'.repeat(32),revision:8,ready:true,reason:''};
+ const observation:CatalogView={operation:'inspect',category:'facts',capability:'room.tools.recovery',version:1,definition:behaviourFact('room.tools.recovery')!,available:true,value,status:'Current recovery'};
+ expect(applyCurrentInputs(input,draft,observation)).toEqual({stateId:value.stateId,revision:8});
+ expect(()=>applyCurrentInputs(input,draft,{...observation,arguments:{}})).toThrow();
+ expect(draft).toEqual({stateId:'0'.repeat(32),revision:1});
+});
+
+it('sends explicit empty arguments for the real bundled-world current fact and requires that exact response',()=>{
+ const definition=capabilityDefinition('workspace.pack.prepare')!,draft:Record<string,unknown>={...definition.example!,packHash:'9'.repeat(64)};
+ expect(behaviourFact('workspace.current')!.input).toEqual({type:'object',properties:{},required:[],additionalProperties:false});
+ const query=currentInputRequest(definition.input,draft);
+ expect(query).toEqual({operation:'inspect',category:'facts',capability:'workspace.current',version:1,arguments:{}});
+ expect(currentInputFields(definition.input,draft).map(({path,guard})=>({path,guard}))).toEqual([{path:'expectedRevision',guard:true}]);
+ const value={revision:'a'.repeat(32),generationId:'b'.repeat(32),available:true,reviewRequired:false,changing:false,activationRequestId:'',reviewRequestId:'',error:''};
+ const observation:CatalogView={operation:'inspect',category:'facts',capability:'workspace.current',version:1,definition:behaviourFact('workspace.current')!,arguments:{},available:true,value,status:'Current workspace'};
+ const loaded=applyCurrentInputs(definition.input,draft,observation);
+ expect(loaded).toEqual({...draft,expectedRevision:value.revision});
+ const {arguments:omitted,...withoutArguments}=observation;expect(omitted).toEqual({});
+ for(const response of [withoutArguments,{...observation,arguments:{unexpected:true}},{...observation,available:false,value:null}])expect(()=>applyCurrentInputs(definition.input,draft,response)).toThrow();
+ expect(currentInputIdentity(definition.input,loaded,'session')).not.toBe(currentInputIdentity(definition.input,{...loaded,expectedRevision:'c'.repeat(32)},'session'));
+ expect(draft.expectedRevision).toBe('initial');
 });

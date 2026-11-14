@@ -24,7 +24,7 @@ namespace Maestro.Quest.Programs
             new WorkspaceHistoryCapability(false),new WorkspaceHistoryCapability(true),
             new WorkspaceExportCapability(),
             new WorkspaceSelectCapability(),
-            new WorkspaceSelectPreviousCapability(),
+            new WorkspaceSelectPreviousCapability(),new WorkspacePackPrepareCapability(),
             new WorkspaceCancelSelectionCapability(),
             new WorkspaceActivateCapability(),
             new WorkspaceCancelActivationCapability(),

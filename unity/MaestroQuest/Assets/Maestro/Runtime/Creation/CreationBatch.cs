@@ -119,8 +119,9 @@ namespace Maestro.Quest.Creation
             return batch;
         }
         public bool Prepare(out RoomObjectData[] objects,out string error)=>Prepare(out objects,out _,out error);
-        internal bool Prepare(out RoomObjectData[] objects,out CreationResources resources,out string error) {
-            objects=null;resources=null;error="Provide a valid blueprint, room position, unit rotation and scale";
+        internal bool Prepare(out RoomObjectData[] objects,out CreationResources resources,out string error)=>Prepare(out objects,out resources,out _,out error);
+        internal bool Prepare(out RoomObjectData[] objects,out CreationResources resources,out CreationBatchMapping mapping,out string error) {
+            objects=null;resources=null;mapping=null;error="Provide a valid blueprint, room position, unit rotation and scale";
             if(blueprint==null||!float.IsFinite(position.sqrMagnitude)||position.sqrMagnitude>625||!MotionFrame.ValidRotation(rotation)||!float.IsFinite(scale)||scale<.1f||scale>4)return false;
             if(!blueprint.Validate(out error))return false;
             var values=new List<RoomObjectData>();
@@ -139,8 +140,9 @@ namespace Maestro.Quest.Creation
             if(!RoomConnection.ValidateCollection(values.ToArray(),out error))return false;
             var local=blueprint.version==4?blueprint.resources:new CreationResources();var prepared=values.ToArray();
             if(!local.Validate(prepared,out error))return false;
-            resources=local.Instantiate(prepared);
+            resources=local.Instantiate(prepared,out var resourceSlots);
             if(!CreationPrototype.ValidateObjects(prepared,out error,resources)){resources=null;return false;}
+            mapping=new CreationBatchMapping(slots.ToDictionary(p=>p.Key,p=>p.Value.id,StringComparer.Ordinal),resourceSlots);
             objects=prepared;error=null;return true;
         }
     }

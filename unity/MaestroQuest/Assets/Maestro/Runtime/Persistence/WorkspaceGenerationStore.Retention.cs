@@ -64,6 +64,7 @@ namespace Maestro.Quest.Persistence
             // Optional memory is validated even when absent, so unknown formats or
             // backup-only evidence cannot silently disappear from portable exports.
             _=Programs.ProgramMemoryStore.ReadSaved(data);
+            _=WorldPackDocument.ReadOptional(data);
             var motionNames=MotionLibrary.DecodeSnapshot(documents["motions/motions.v2.json"]).entries.Where(x=>!x.removed).Select(x=>"motions/"+x.hash+".motion.glb").ToHashSet(StringComparer.Ordinal);
             foreach(string name in files.Keys){
                 token.ThrowIfCancellationRequested();if(documents.ContainsKey(name)||WorkspaceArchiveMetadata.IsRoom(name))continue;

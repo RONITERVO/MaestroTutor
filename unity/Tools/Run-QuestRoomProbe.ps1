@@ -4,6 +4,7 @@
 param(
  [Parameter(Mandatory)][string]$Editor,
  [Parameter(Mandatory)][string]$BuildMirror,
+ [string]$EvidenceRoot,
  [string]$Prompt,
  [string]$Profile = 'quest-probe',
  [ValidateSet('ContextCreateEdit','LiveVisual','ObserverVisual','EventProgram','AvatarAnimation','CompositeModule','PhysicsLaunch','TaskSteering','WorldPresentation','WorldLighting','WorldTime','WorldWeather','LiquidMedium','WaterTraversal','LiquidContacts','ImportedAudio','ImportedImage','GeneratedImage','ModelGeometry','PassthroughWindow','LearnerConversation')][string]$ProviderScenario,
@@ -83,6 +84,8 @@ $fullJourneyTimeout=$(if($fullJourney){$FullJourneyTimeoutMinutes}else{0})
 $repoRoot=[IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../..'))
 $mirror=(Resolve-Path -LiteralPath $BuildMirror).Path
 $editorPath=(Resolve-Path -LiteralPath $Editor).Path
+. (Join-Path $PSScriptRoot 'QuestProbeEvidence.ps1')
+$evidencePlan=Get-QuestProbeEvidencePlan $EvidenceRoot $repoRoot $mirror
 $source=Join-Path $repoRoot 'unity/MaestroQuest'
 $runner=Join-Path $repoRoot 'node_modules/.bin/tsx.cmd'
 if(!(Test-Path -LiteralPath $runner)){throw 'Install the repository npm dependencies before starting a room probe.'}
@@ -113,21 +116,21 @@ foreach($file in Get-ChildItem -LiteralPath (Join-Path $source 'Assets/Maestro')
 foreach($running in Get-CimInstance Win32_Process -Filter "Name='Unity.exe'"){
  if($running.CommandLine -and $running.CommandLine.Contains($mirror)){throw 'The mirror already has a running Editor.'}
 }
-$id=[Guid]::NewGuid().ToString('N');$directory=Join-Path $repoRoot ".quest-evidence/native-room/$id"
-New-Item -ItemType Directory -Path $directory | Out-Null
-@{version=1;id=$id;journey=$Journey;fullJourneyTimeoutMinutes=$fullJourneyTimeout;providerUsed=![string]::IsNullOrWhiteSpace($Prompt);providerScenario=$ProviderScenario;resumedFrom=$(if($ResumeIdentityRun){$ResumeIdentityRun}else{$ResumeLearnerRun});firstLearner=[bool]$FirstLearner;liveContinuity=[bool]$LiveContinuity;nativeRestart=[bool]$restarting;actionInterruption=[bool]$ActionInterruption;sparseObjectView=[bool]$SparseObjectView;motionOnly=[bool]$MotionOnly;steeringOnly=[bool]$SteeringOnly;identityOnly=[bool]$IdentityOnly;transportOnly=[bool]$TransportOnly} | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $directory 'owner.json') -Encoding utf8
+$id=[Guid]::NewGuid().ToString('N');$directory=New-QuestProbeEvidenceRun $evidencePlan $id
+@{version=1;id=$id;evidenceRoot=$evidencePlan.root;evidenceOwnership=$evidencePlan.ownership;workspacePathEnvelope=$evidencePlan.envelope;journey=$Journey;fullJourneyTimeoutMinutes=$fullJourneyTimeout;providerUsed=![string]::IsNullOrWhiteSpace($Prompt);providerScenario=$ProviderScenario;resumedFrom=$(if($ResumeIdentityRun){$ResumeIdentityRun}else{$ResumeLearnerRun});firstLearner=[bool]$FirstLearner;liveContinuity=[bool]$LiveContinuity;nativeRestart=[bool]$restarting;actionInterruption=[bool]$ActionInterruption;sparseObjectView=[bool]$SparseObjectView;motionOnly=[bool]$MotionOnly;steeringOnly=[bool]$SteeringOnly;identityOnly=[bool]$IdentityOnly;transportOnly=[bool]$TransportOnly} | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $directory 'owner.json') -Encoding utf8
 if($ResumeIdentityRun){
- $previousRun=Join-Path $repoRoot ".quest-evidence/native-room/$ResumeIdentityRun"
+ $previousRun=Get-QuestProbeResumeDirectory $evidencePlan $ResumeIdentityRun
  $previousOwner=Get-Content -LiteralPath (Join-Path $previousRun 'owner.json') -Raw | ConvertFrom-Json
  $previousVerified=Get-Content -LiteralPath (Join-Path $previousRun 'verified.json') -Raw | ConvertFrom-Json
  $identity=Get-Content -LiteralPath (Join-Path $previousRun 'native-object-identity.json') -Raw | ConvertFrom-Json
  if($previousOwner.id -ne $ResumeIdentityRun -or $previousVerified.id -ne $ResumeIdentityRun -or $previousVerified.clientExit -ne 0 -or $previousVerified.editorExit -ne 0 -or $previousVerified.outcome -ne 'passed' -or $previousVerified.providerUsed){throw 'Identity resume requires a cleanly closed, owned offline native run.'}
  if($identity.source -ne 'explicit-native-object-directory' -or $identity.version -ne 1 -or !$identity.ids){throw 'Identity resume requires explicit final saved-object evidence.'}
+ Assert-QuestProbeResumeTree (Join-Path $previousRun 'workspace')
  Copy-Item -LiteralPath (Join-Path $previousRun 'workspace') -Destination (Join-Path $directory 'workspace') -Recurse
  @{version=1;sourceRun=$ResumeIdentityRun;nativeIdentity=$identity;boundary='Copied closed offline workspace for an identity-only native restart. No provider or old operation is replayed.'} | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath (Join-Path $directory 'learner-resume.json') -Encoding utf8
 }
 if($ResumeLearnerRun){
- $previousRun=Join-Path $repoRoot ".quest-evidence/native-room/$ResumeLearnerRun"
+ $previousRun=Get-QuestProbeResumeDirectory $evidencePlan $ResumeLearnerRun
  $previousOwner=Get-Content -LiteralPath (Join-Path $previousRun 'owner.json') -Raw | ConvertFrom-Json
  $previousVerified=Get-Content -LiteralPath (Join-Path $previousRun 'verified.json') -Raw | ConvertFrom-Json
  $previousSession=Get-Content -LiteralPath (Join-Path $previousRun 'learner-session.json') -Raw | ConvertFrom-Json
@@ -140,7 +143,9 @@ if($ResumeLearnerRun){
  if(!$previousProfile.StartsWith($tempPrefix,[StringComparison]::OrdinalIgnoreCase) -and !$previousProfile.StartsWith($profilePrefix,[StringComparison]::OrdinalIgnoreCase)){throw 'Unexpected learner profile location.'}
  $profileCopy=Join-Path $directory 'profiles/learner'
  New-Item -ItemType Directory -Path (Split-Path -Parent $profileCopy) | Out-Null
+ Assert-QuestProbeResumeTree $previousProfile
  Copy-Item -LiteralPath $previousProfile -Destination $profileCopy -Recurse
+ Assert-QuestProbeResumeTree (Join-Path $previousRun 'workspace')
  Copy-Item -LiteralPath (Join-Path $previousRun 'workspace') -Destination (Join-Path $directory 'workspace') -Recurse
  @{version=1;sourceRun=$ResumeLearnerRun;accessMode=$previousSession.accessMode;nativeIdentity=$previousSession.finalIdentity;profileSha256=(Get-FileHash -LiteralPath (Join-Path $previousProfile 'profile.json')).Hash;boundary='Copied closed diagnostic profile and saved room; new native session. No old operations are replayed.'} | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath (Join-Path $directory 'learner-resume.json') -Encoding utf8
 }
@@ -222,7 +227,7 @@ try{
  }
  if($restarting){& (Join-Path $PSScriptRoot 'Assert-QuestUnityLog.ps1') -LogPath $initialLog -RejectFactReadFailures}
  & (Join-Path $PSScriptRoot 'Assert-QuestUnityLog.ps1') -LogPath $log -RejectFactReadFailures
- @{version=1;id=$id;clientExit=$clientExit;editorExit=$process.ExitCode;directory=$directory;providerUsed=![string]::IsNullOrWhiteSpace($Prompt);journey=$Journey;fullJourneyTimeoutMinutes=$fullJourneyTimeout;firstLearner=[bool]$FirstLearner;liveContinuity=[bool]$LiveContinuity;nativeRestart=[bool]$restarting;actionInterruption=[bool]$ActionInterruption;sparseObjectView=[bool]$SparseObjectView;motionOnly=[bool]$MotionOnly;steeringOnly=[bool]$SteeringOnly;identityOnly=[bool]$IdentityOnly;transportOnly=[bool]$TransportOnly;providerScenario=$ProviderScenario;outcome=$(if($ProviderScenario -eq 'LearnerConversation'){'collected-requires-semantic-review'}else{'passed'});resumedFrom=$(if($ResumeIdentityRun){$ResumeIdentityRun}else{$ResumeLearnerRun})} | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $directory 'verified.json')
+ @{version=1;id=$id;evidenceRoot=$evidencePlan.root;evidenceOwnership=$evidencePlan.ownership;workspacePathEnvelope=$evidencePlan.envelope;clientExit=$clientExit;editorExit=$process.ExitCode;directory=$directory;providerUsed=![string]::IsNullOrWhiteSpace($Prompt);journey=$Journey;fullJourneyTimeoutMinutes=$fullJourneyTimeout;firstLearner=[bool]$FirstLearner;liveContinuity=[bool]$LiveContinuity;nativeRestart=[bool]$restarting;actionInterruption=[bool]$ActionInterruption;sparseObjectView=[bool]$SparseObjectView;motionOnly=[bool]$MotionOnly;steeringOnly=[bool]$SteeringOnly;identityOnly=[bool]$IdentityOnly;transportOnly=[bool]$TransportOnly;providerScenario=$ProviderScenario;outcome=$(if($ProviderScenario -eq 'LearnerConversation'){'collected-requires-semantic-review'}else{'passed'});resumedFrom=$(if($ResumeIdentityRun){$ResumeIdentityRun}else{$ResumeLearnerRun})} | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $directory 'verified.json')
  if($ProviderScenario -eq 'LearnerConversation'){Write-Output "Learner session collected (manual outcome review required): $directory"}else{Write-Output "Native room probe passed: $directory"}
 }finally{
  $env:MAESTRO_ROOM_PROBE_PROMPT=$previousPrompt;$env:MAESTRO_ROOM_PROBE_PROFILE=$previousProfile;$env:MAESTRO_ROOM_PROBE_SCENARIO=$previousScenario;$env:MAESTRO_ROOM_PROBE_SPEECH=$previousSpeech

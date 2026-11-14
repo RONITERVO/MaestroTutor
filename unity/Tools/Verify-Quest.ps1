@@ -4,6 +4,7 @@
 param(
     [Parameter(Mandatory)][string]$Editor,
     [Parameter(Mandatory)][string]$BuildMirror,
+    [string]$EvidenceRoot,
     [switch]$UpdateBehaviourCatalog,
     [switch]$RenderArt,
     [switch]$RenderRecipes,
@@ -29,6 +30,9 @@ if ($mirrorRoot.Length -gt 80 -or $mirrorRoot.StartsWith($repoRoot, [StringCompa
     throw 'Use a short, dedicated build directory outside the repository.'
 }
 if ($mirrorRoot -eq [IO.Path]::GetPathRoot($mirrorRoot).TrimEnd('\','/')) { throw 'The drive root cannot be a build mirror.' }
+. (Join-Path $PSScriptRoot 'QuestProbeEvidence.ps1')
+# Fail before mirror preparation or native tests when later full journeys cannot fit.
+[void](Get-QuestProbeEvidencePlan $EvidenceRoot $repoRoot $mirrorRoot)
 $receiptPath = Join-Path $mirrorRoot '.maestro-build-mirror.json'
 if (Test-Path -LiteralPath $mirrorRoot) {
     if (!(Test-Path -LiteralPath $receiptPath)) { throw 'Existing directory has no Maestro build receipt; choose a new empty path.' }
@@ -185,12 +189,12 @@ Write-Output "Unity checks passed: $($editCoverage.passed) EditMode and $($playC
 
 # The complete app can advertise combinations absent from small test fixtures.
 # Exercise its real room inbox with the same shared client used by the book.
-& (Join-Path $PSScriptRoot 'Run-QuestRoomProbe.ps1') -Editor $editorPath -BuildMirror $mirrorRoot -SyntheticModel -SyntheticGait -SyntheticLiveSound -SparseObjectView
+& (Join-Path $PSScriptRoot 'Run-QuestRoomProbe.ps1') -Editor $editorPath -BuildMirror $mirrorRoot -EvidenceRoot $EvidenceRoot -SyntheticModel -SyntheticGait -SyntheticLiveSound -SparseObjectView
 
 # Exercise the original two-page chat and editors against a separate real native room.
 # Chrome/Vite are owned by the journey; provider responses are local scripted SSE.
-& (Join-Path $PSScriptRoot 'Run-QuestRoomProbe.ps1') -Editor $editorPath -BuildMirror $mirrorRoot -Journey Book -SyntheticSound -SyntheticImage -SyntheticModel -SyntheticGait -SyntheticLiveSound -SparseObjectView
+& (Join-Path $PSScriptRoot 'Run-QuestRoomProbe.ps1') -Editor $editorPath -BuildMirror $mirrorRoot -EvidenceRoot $EvidenceRoot -Journey Book -SyntheticSound -SyntheticImage -SyntheticModel -SyntheticGait -SyntheticLiveSound -SparseObjectView
 
 # Exercise fresh onboarding and the original App's agent handoff against real Unity.
 # The production-entry browser still scripts provider HTTP; room actions are native.
-& (Join-Path $PSScriptRoot 'Run-QuestRoomProbe.ps1') -Editor $editorPath -BuildMirror $mirrorRoot -Journey Book -FirstLearner
+& (Join-Path $PSScriptRoot 'Run-QuestRoomProbe.ps1') -Editor $editorPath -BuildMirror $mirrorRoot -EvidenceRoot $EvidenceRoot -Journey Book -FirstLearner

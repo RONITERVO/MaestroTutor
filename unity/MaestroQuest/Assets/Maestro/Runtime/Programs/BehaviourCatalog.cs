@@ -183,7 +183,7 @@ namespace Maestro.Quest.Programs
             WorkspaceRetentionFacts.Status(),WorkspaceRetentionFacts.Entry(),WorkspaceRetentionFacts.Removal(),
             WorkspaceEvidenceFacts.Status(),WorkspaceEvidenceFacts.Entry(),
             WorkspaceHistoryFacts.Status(),
-            WorkspaceSelectionFacts.Selection(),
+            WorkspaceSelectionFacts.Selection(),WorkspacePackFacts.Catalogue(),WorkspacePackFacts.Preview(),WorkspacePackFacts.Instance(),
             WorkspaceActivationFacts.Current(),
             WorkspaceActivationFacts.Activation(),
             WorkspaceReviewFacts.Status(),

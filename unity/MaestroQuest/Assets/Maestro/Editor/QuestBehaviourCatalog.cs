@@ -26,6 +26,7 @@ namespace Maestro.Quest.Editor
                 .Concat(new[]{"Assets/Maestro/Resources/MaestroRoomAudio.mixer","Assets/Maestro/Resources/RoomGuides.json"})
                 .Concat(Directory.GetFiles("Assets/Maestro/Resources/Creation/Templates","*",SearchOption.AllDirectories).Where(path=>string.Equals(Path.GetExtension(path),".json",StringComparison.OrdinalIgnoreCase)))
                 .Concat(Directory.GetFiles("Assets/Maestro/Resources/Programs/Modules","*",SearchOption.AllDirectories).Where(path=>string.Equals(Path.GetExtension(path),".json",StringComparison.OrdinalIgnoreCase)))
+                .Concat(Directory.GetFiles("Assets/Maestro/Resources/WorldPacks","*",SearchOption.AllDirectories).Where(path=>string.Equals(Path.GetExtension(path),".json",StringComparison.OrdinalIgnoreCase)))
                 .Select(path=>path.Replace("\\","/").Substring("Assets/Maestro/".Length))
                 .Distinct(StringComparer.Ordinal).OrderBy(path=>path,StringComparer.Ordinal).ToArray();
             using var sha=SHA256.Create();

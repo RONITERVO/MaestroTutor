@@ -1,7 +1,12 @@
 # Editable default-world integration
 
-Status: source review and implementation contract, **not an installed world pack**.
-Reviewed on 2026-11-14 against Maestro `7a406b97` and the proposed
+Status: the bounded bundled-world source, preview and new/open path are implemented.
+Final focused native checks, full offline Headless and rendered Book journeys,
+and unsigned Android compilation pass. Exact evidence and earlier
+broad-regression boundaries are in the [current status](../../QUEST_STATUS.md#latest-verified-proof).
+This is not headset installation or completion of the wider living-world scope.
+The original source review on
+2026-11-14 compared Maestro `7a406b97` with the proposed
 [HyperCosmos world commit](https://github.com/RONITERVO/MaestroTutor/commit/74086a9e077c8612db78e449a8ff7e52704f55e8).
 Keep the full [accepted v1 scope](../../QUEST_V1_SCOPE.md) and
 [current release gates](../../QUEST_STATUS.md). This work does not relax device,
@@ -56,7 +61,7 @@ licenses/attribution when adapting content; review actual imported bytes and tex
   remapped resources/links, one accepted save and Undo. Included program modules
   already expose editable constructor functions. Use this path for adding a
   bounded construction to the current room.
-- `WorkspaceArchiveSnapshot` / archive v34 validate complete room47, rules,
+- `WorkspaceArchiveSnapshot` / archive v35 validate complete room47, rules,
   controls, activities, modules, assets and remembered state. Generation staging
   and activation preserve the previous accepted workspace. Reuse these for an
   explicitly chosen new/open world; they are not an additive merge API.
@@ -75,43 +80,133 @@ See [world authoring](../../QUEST_WORLD_AUTHORING.md),
 [creation templates](../../QUEST_CREATION_TEMPLATES.md),
 [static support](STATIC_SUPPORT.md) and [audio ownership](../../../unity/AUDIO.md).
 
-## Missing shared foundation
+## Implemented bounded first slice
 
-A complete bundled-world installer does not currently exist. Implement a generic
-immutable pack descriptor and detached expansion/preview using existing canonical
-object/resource/program schemas, not another executable DSL. A manifest records
-pack ID, version, exact source hash, available entry IDs, required features, asset
-hashes and provenance. Preview reports the complete proposed changes, missing
-inputs/dependencies and saved/native/render/physics/audio costs before application.
+[WorldPackCatalog](../../../unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorldPackCatalog.cs)
+reads a bounded immutable source whose selected identity is the exact pack
+ID/version/SHA-256, with one named entry. Descriptor version 1 strictly validates
+its schema, source variants, required features and closed local dependencies.
+It reuses canonical `CreationBatch` data, not a second executable language.
+
+The initial source supports inline recipes and non-model prototypes with supported
+native components, local appearances, tone sources, environment profiles and
+visibility layers. External assets, model/template/motion dependencies, imported
+material bindings, image appearances and non-tone sources are explicitly refused;
+`dependencies` and `assets` must be empty. This boundary does not remove those
+features from ordinary authoring or the accepted later pack scope. The actual
+bundled Maestro avatar and motions still come from the existing baseline and their
+exact payloads are validated with the prepared archive.
+
+The included [Observatory workshop source](../../../unity/MaestroQuest/Assets/Maestro/Resources/WorldPacks/observatory.json)
+contains three ordinary editable recipe objects: a low deck, a contiguous bridge,
+and a globe with editable parts. Deck and bridge opt into shared fixed-primary
+static support. One shared visibility layer groups the exhibits independently of
+collision policy. These are 7 recipe parts and 5 reserved collision pieces; these
+counts are structural admission information, not measured performance or route
+acceptance. The sample starts idle and adds no narration, lesson, program, language
+choice, movement mode or private audio/render/collider owner.
+
+[WorldPackPreparation](../../../unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorldPackPreparation.cs)
+expands once into a detached snapshot using `WorkspaceDefaults.Snapshot` with the
+actual bundled content. It preserves the familiar book, Maestro, baseline controls,
+activities and presentation. New world, instance, object and resource identities
+are retained from that expansion; typed local links/sharing are remapped, while
+ordinary text is unchanged. All missing-asset/program counters must be zero. The
+same prepared snapshot is staged and opened; acceptance does not expand it again.
+
+The shared user/agent path is explicit:
+
+1. Read `workspace.packs` and `workspace.current`; select the exact descriptor and
+   current workspace revision with `workspace.pack.prepare`.
+2. Follow `workspace.archive.selection` to its completed preparation and inspect
+   `workspace.pack.preview`. Counts and verified archive bytes describe this exact
+   candidate. Preview and `workspace.archive.cancel` leave live content unchanged.
+3. Open only through the existing `workspace.archive.activate` request, generation,
+   manifest and revision guards. A changed workspace invalidates the pack preview.
+   Activation preserves the accepted previous workspace and opens under the
+   existing activity-review hold. Review acceptance remains a separate action.
+4. Inspect and edit the resulting objects with ordinary facts/actions and Undo.
+   Use existing previous-workspace preparation/restoration to return; opening a
+   world is not an additive batch or a whole-world object Undo operation.
+
+[world-packs.v1.json](../../../unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorldPackDocument.cs)
+records world/instance identity, exact descriptor identity and object/resource slot
+mappings. Archive v35 carries it, while retaining read compatibility for v32–v34;
+old archives have no fabricated pack provenance. This is historical origin, not
+ongoing ownership or proof that every original object still exists. Ordinary saves,
+exports and restores keep it after user edits or deletion. Deletion never causes
+reinstallation; a version update does not silently replace an accepted instance.
+
+The provenance document is optional for ordinary worlds and older archives. If
+present, it must be strict version 1 and match the accepted room world ID;
+malformed, future, unrecognized or mismatched evidence is preserved and refused.
+Archive v35 can carry it; older v32–v34 manifests cannot introduce it. A declared
+archive entry must still be present and match its hash. Document bounds remain
+sixteen instances, 256 historical object mappings in total, canonical per-kind
+resource limits and 1 MiB of metadata. These limits do not enlarge authored-world
+capacity or make deleted mapped objects into live dependencies.
+
+Catalog and installed-origin pages use their declared schemas, including valid
+empty and past-end pages. After returning to an ordinary world without provenance,
+the installed-origin page is available and empty; no success value is substituted.
+Activation changes the native session, so clients reconcile the exact tracked
+status through bounded read-only polling. They do not replay activation or edits
+to recover a missing reply. Preparation, committed activation, opened content and
+activity-review completion remain distinct states.
+
+## Remaining shared foundation
 
 Keep these operations distinct:
 
-1. **Create/open a new themed world:** instantiate fresh world/entity/resource/
-   program/region IDs, remap typed references, stage a fully validated generation,
-   then activate it through the existing workspace lifecycle. Preserve the previous
-   generation and make post-commit/lost-response outcomes discoverable. Exact archive
-   restore still preserves the archived identities rather than creating a new copy.
-2. **Add to this world:** use a bounded construction batch where sufficient. A
-   larger multi-document pack needs a shared transaction/merge implementation with
-   conflict, cancellation, rollback and Undo semantics. Do not replace the current
-   workspace, silently delete objects to free capacity, or call a partially completed
-   sequence of small operations an atomic whole-pack install.
+- **Create/open a new themed world:** use the implemented detached preparation and
+  existing generation activation lifecycle. Future asset/program/region expansion
+  must retain exact typed mappings and dependency closure. Exact archive restore
+  preserves archived identities rather than creating a new copy.
+- **Add to this world:** use a bounded construction batch where sufficient. A
+  larger multi-document pack still needs shared merge/transaction semantics for
+  conflict, cancellation, rollback and Undo. Do not replace the current workspace,
+  silently delete objects to free capacity, or call a partially completed sequence
+  of small operations an atomic whole-pack install.
 
-Persist pack-instance provenance and exact slot mappings in a versioned,
-archive-covered contract. A PlayerPrefs flag or separate unarchived file is not a
-sufficient install receipt. Missing scenery is not permission to reinstall it.
-Pack upgrades require explicit conflict-aware import/copy/merge; preserve user edits.
-Do not rewrite arbitrary JSON strings to remap IDs: typed references and ordinary
-lesson text must remain distinguishable. Require dependency closure and zero
-unavailable programs for shipped defaults.
+Broader Cosmos assets, programs, lessons and region residency are not included in
+this first descriptor subset. Explicit conflict-aware import/copy/merge is still
+needed for upgrades that preserve user edits. Later previews need honest measured
+native/render/physics/audio costs in addition to structural admission counts.
 
 Current first-run `StarterDocument` includes the book, Maestro and three ordinary
 practice objects. Explicit fresh recovery intentionally creates only the book and
-Maestro plus baseline documents/included content. Preserve that recovery behavior;
-choosing a themed new world is a separate source choice, not a change to what
-“recover fresh” means. Corrupt/newer/missing-pointer stores must remain protected.
+Maestro plus baseline documents/included content. Neither is changed by this pack.
+Choosing a themed new world is a separate source choice, not a change to what
+“recover fresh” means. Corrupt/newer/missing-pointer stores remain protected.
 
 ## Interaction, lessons and larger scope
+
+The initial human surface is the schema-generated book catalog. The next planned,
+unimplemented increment is a learner-facing **Worlds** chooser in the familiar
+Book, paired with natural-language selection: choose, preview, open, edit together
+and return. It must use the exact native catalog and preparation/activation/review
+workflow above, retaining identities internally rather than asking learners to copy
+IDs or hashes. Preserve the conversation, active languages and presentation choices.
+
+The [current probe](../../../scripts/probe-world-pack.ts) explicitly reconciles an
+expected new session. The application still needs a shared transition presenter:
+the [native lease](../../../src/core-sdk/room/roomAgentClient.ts) and
+[chat task scope](../../../src/features/chat/services/roomAgentTasks.ts) correctly
+invalidate on workspace replacement. Keep those protections. Retain the exact
+acknowledged activation request, origin revision and prepared generation/hash;
+observe the new ready session and reconcile that same native outcome read-only.
+Do not replay activation, broadly weaken leases or silently authorize subsequent
+edits in the new world. Fresh scoped work may continue after reconciliation;
+unknown outcomes remain explicit, and Stop after commit must report what committed.
+The chooser and chat should present the same progress, cancellation, review and
+previous-world return states without becoming another persistence owner.
+
+Before gaze automation, add an explicit **Ask Maestro about this** entry for a
+selected exhibit, carrying its actual object identity/revision into the original
+chat path. This is planned interaction, not a separate lesson player: use the
+learner's current conversation/languages and existing speech route. A bounded
+content revision may then add ordinary editable exhibits and opt-in shared ambience;
+it must not silently replace or reinstall a user's accepted world.
 
 Every supporting or interactive exhibit must be discoverable and editable through
 ordinary world/object/part/resource facts and the same human/agent controls. A
@@ -136,9 +231,9 @@ roles, emitters and mix own ambience; they do not replace the existing speech/we
 players' volume ownership. Completion needs actual playback evidence from each
 route, including interruption and an accurately labeled caption-only fallback.
 
-The first complete integrated observatory can prove this path using a deck,
-reachable bridge, editable exhibits, ambient source and an explicit request-to-learn
-interaction. Continue the rest of the proposed content through the same path.
+A complete integrated observatory still needs verified reachable routes, ambient
+sources and an explicit request-to-learn interaction beyond the current editable
+deck/bridge/globe entry. Continue the rest of the proposed content through the same path.
 Do not increase limits or hide hundreds of objects inside one opaque scene merely
 to claim coverage: current 256 saved creations, 128 native roots, 256 total recipe
 parts, 512 reserved collision pieces, four terrain fields and other per-kind limits
@@ -167,6 +262,18 @@ work and needs measured admission rather than a smaller redefinition of success.
   observation/context, depth/stereo, comfort, long-session resources and performance.
   Pure shader/math tests alone cannot establish these outcomes.
 
+Focused and full desktop Unity Headless and rendered Book journeys have exercised
+the shared source through preparation, cancellation, opening, activity review,
+a mapped object edit, Undo and restoration of the original world. They verify the
+actual included avatar/motion payloads and provenance identities. The [current status](../../QUEST_STATUS.md#latest-verified-proof)
+and [dated checkpoint](../checkpoints/2026-11.md#included-editable-world-lifecycle--2026-11-14)
+record the exact source boundaries and verified unsigned Android compilation. The Book
+visual review covers advanced catalog pages, not a 3D world scene or novice
+chooser. Desktop execution does not establish Quest optics, comfort, sustained
+resource budgets or real-provider lesson reliability.
+
 Private source-review reports are under
 `.quest-evidence/default-world-review-20261114/`; they are not public artifacts or
-runtime verification. No proposed branch code has been merged by this review.
+runtime verification. The proposed Cosmos runtime remains unmerged. Keep broader
+integration and physical acceptance open until their own evidence is complete;
+these passing workflows do not establish the full Cosmos or living-world experience.

@@ -38,7 +38,7 @@ namespace Maestro.Quest.Persistence
     /// download, activate a restore, migrate data, rebind IDs, or restore execution receipts/room scans.</summary>
     public static class WorkspaceArchive
     {
-        internal const int FormatVersion=34;
+        internal const int FormatVersion=35;
         public const int MaximumEntries=1536,MaximumManifestBytes=512*1024;
         public const long MaximumArchiveBytes=512L*1024*1024;
         static readonly UTF8Encoding Utf8=new(false,true);
@@ -98,7 +98,7 @@ namespace Maestro.Quest.Persistence
         {
             using var reader=new JsonTextReader(new StringReader(Utf8.GetString(bytes))) {MaxDepth=8,DateParseHandling=DateParseHandling.None};
             var root=JObject.Load(reader,new JsonLoadSettings {DuplicatePropertyNameHandling=DuplicatePropertyNameHandling.Error});
-            if(reader.Read()||root.Count!=3||(string)root["format"]!="maestro-native-workspace"||root["version"]?.Type!=JTokenType.Integer||((int)root["version"] is not (32 or 33 or FormatVersion))||root["entries"] is not JArray array||array.Count>MaximumEntries)throw Invalid("Unsupported workspace archive manifest.");
+            if(reader.Read()||root.Count!=3||(string)root["format"]!="maestro-native-workspace"||root["version"]?.Type!=JTokenType.Integer||((int)root["version"] is not (32 or 33 or 34 or FormatVersion))||root["entries"] is not JArray array||array.Count>MaximumEntries)throw Invalid("Unsupported workspace archive manifest.");
             formatVersion=(int)root["version"];var entries=new List<Entry>();var budget=new Budget();
             foreach(var value in array){
                 if(value is not JObject item||item.Count!=3||item["path"]?.Type!=JTokenType.String||item["bytes"]?.Type!=JTokenType.Integer||item["sha256"]?.Type!=JTokenType.String||!ModelLibrary.ValidHash((string)item["sha256"]))throw Invalid("Invalid manifest entry.");

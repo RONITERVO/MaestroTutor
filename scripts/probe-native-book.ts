@@ -1,3 +1,4 @@
+import {probeBookWorldPack} from './probe-book-world-pack';
 import {probeBookAssetInventory} from './probe-book-asset-inventory';
 import {probeBookImageMaintenance} from './probe-book-image-maintenance';
 import {probeBookAudioMaintenance} from './probe-book-audio-maintenance';
@@ -49,7 +50,7 @@ try{
  page=await context.newPage();page.setDefaultTimeout(20000);page.on('pageerror',error=>errors.push(error.stack||error.message));
  await page.exposeBinding('maestroNativeExchange',async(source,snapshot)=>{
   if(source.frame!==page!.mainFrame()||source.frame.url()!==base+'/test-fixtures/browser/quest-native-book.html')throw new Error('Only the owned top-level book can use this native channel.');
-  if(snapshot.request)requests.set(snapshot.clientId+':'+snapshot.request.sequence,structuredClone(snapshot.request));
+  if(snapshot.request)requests.set(snapshot.clientId+':'+snapshot.request.session+':'+snapshot.request.sequence,structuredClone(snapshot.request));
   const result=await channel.exchange(snapshot);
   if(result.state){const state=result.state as RoomAgentState,previous=observations.at(-1);checkSparse(state);if(previous?.session!==state.session||previous.revision!==state.revision)observations.push(structuredClone(state));}
   return result;
@@ -1337,6 +1338,8 @@ try{
  await page.reload();await page.waitForFunction(()=>!!window.nativeBookEvidence?.().state);
  await page.getByText('The ball keeps your colour.',{exact:true}).waitFor();
  assert.equal(requests.size,commandCount,'Reload replayed a room command');assert.equal(plannerCalls,expectedPlans);assert.deepEqual(errors,[]);assert.deepEqual((await page.evaluate(()=>window.nativeBookEvidence!())).errors,[]);
+ await probeBookWorldPack(page,directory);
+ assert.equal(plannerCalls,expectedPlans);assert.deepEqual(errors,[]);assert.deepEqual((await page.evaluate(()=>window.nativeBookEvidence!())).errors,[]);
  const evidence={boundary:'Real QuestBookSurface, ChatInterface/useTutorConversation, verifier, task service/IndexedDB and Unity app; provider SSE responses are explicitly scripted offline, no real provider, Android texture, headset or scan acceptance.',providerUsed:false,sparseObjectView:!!owner.sparseObjectView,providerRequests,initialObjects,manual:true,importedSound,physicalTools:{shownAndHiddenViaSharedForm:true,savedSceneUnchanged:true},manualForm,portableCapture,presentation,mixedMovement,capture,capturePixelsVerified:true,humanEditPreserved:true,staleAgentPaintRefused:true,creationCompletionObserved:true,creationStartedOnce:true,discoveryBudgetPreservedActions:true,planningCalls:plannerCalls,reloadWithoutReplay:true,initial,working,human,completed,task,requests:[...requests.values()],observations,errors};
  await writeFile(join(directory,'book-journey.json'),JSON.stringify(evidence,null,2));
  console.log('Real native book and original-chat handoff journey passed.');

@@ -61,7 +61,17 @@ namespace Maestro.Quest.Creation
                 visibilityLayers=layers.Select(p=>{var a=visibilityLayers.Single(x=>x.id==p.Key).Copy();a.id=p.Value;return a;}).ToArray()};
             Bind(objects,styles,sounds,profiles,layers);return result;
         }
-        internal CreationResources Instantiate(RoomObjectData[] objects)=>Remap(objects,Map(appearances.Select(a=>a.id),true),Map(audioSources.Select(a=>a.id),true),Map(environmentProfiles.Select(p=>p.id),true),Map(visibilityLayers.Select(p=>p.id),true));
+        internal CreationResources Instantiate(RoomObjectData[] objects)=>Instantiate(objects,out _);
+        internal CreationResources Instantiate(RoomObjectData[] objects,out CreationResourceSlot[] slots) {
+            var styles=Map(appearances.Select(a=>a.id),true);var sounds=Map(audioSources.Select(a=>a.id),true);
+            var profiles=Map(environmentProfiles.Select(p=>p.id),true);var layers=Map(visibilityLayers.Select(p=>p.id),true);
+            var result=Remap(objects,styles,sounds,profiles,layers);
+            slots=styles.Select(p=>new CreationResourceSlot("appearance",p.Key,p.Value))
+                .Concat(sounds.Select(p=>new CreationResourceSlot("audio",p.Key,p.Value)))
+                .Concat(profiles.Select(p=>new CreationResourceSlot("environment",p.Key,p.Value)))
+                .Concat(layers.Select(p=>new CreationResourceSlot("visibility",p.Key,p.Value))).ToArray();
+            return result;
+        }
         internal static CreationResources Capture(RoomObjectData[] objects,RoomDocument room) {
             var source=new CreationResources{appearances=room.appearances,audioSources=room.audioSources,environmentProfiles=room.environmentProfiles,visibilityLayers=room.visibilityLayers};
             return source.Remap(objects,Map(objects.SelectMany(o=>o.appearanceBindings.OrderBy(b=>b.Key,StringComparer.Ordinal)).Select(b=>b.appearanceId),false),

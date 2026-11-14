@@ -60,7 +60,7 @@ namespace Maestro.Quest.Persistence
         // selects the highest present primary without falling back after invalid content.
         internal static string[] RequiredFor(IEnumerable<string> paths,int formatVersion=WorkspaceArchive.FormatVersion,bool retained=false)
         {
-            if(formatVersion is not (32 or 33 or WorkspaceArchive.FormatVersion))throw new InvalidDataException("Unsupported workspace archive format.");
+            if(formatVersion is not (32 or 33 or 34 or WorkspaceArchive.FormatVersion))throw new InvalidDataException("Unsupported workspace archive format.");
             var names=paths.ToHashSet(StringComparer.Ordinal);bool current=names.Contains(RoomStorage.FileName),legacy=names.Contains(LegacyRoomFileName);
             if(!current&&!legacy||current&&legacy&&!retained||formatVersion<34&&current)throw new InvalidDataException("Workspace requires one supported room document.");
             string room=current?RoomStorage.FileName:LegacyRoomFileName;
@@ -80,6 +80,7 @@ namespace Maestro.Quest.Persistence
         static bool HasHash(string path,string prefix,string suffix)=>path.Length==prefix.Length+64+suffix.Length&&path.StartsWith(prefix,StringComparison.Ordinal)&&path.EndsWith(suffix,StringComparison.Ordinal)&&ModelLibrary.ValidHash(path.Substring(prefix.Length,64));
         internal static int Limit(string path)=>path switch {
             ProgramMemoryStore.FileName=>ProgramMemoryDocument.MaximumBytes,
+            WorldPackDocument.FileName=>WorldPackDocument.MaximumBytes,
             _ when IsRoom(path)=>4*1024*1024,"behaviours.v2.json"=>512*1024,"controls.v2.json"=>8192,
             "avatar-activities.v2.json"=>256*1024,"motions/motions.v2.json"=>16*1024*1024,
             _ when HasHash(path,"images/",".image")=>SurfaceImage.MaximumBytes,
@@ -94,8 +95,9 @@ namespace Maestro.Quest.Persistence
         };
         internal static void CheckNames(IEnumerable<string> values,int formatVersion=WorkspaceArchive.FormatVersion)
         {
-            if(formatVersion is not (32 or 33 or WorkspaceArchive.FormatVersion))throw new InvalidDataException("Unsupported workspace archive format.");
+            if(formatVersion is not (32 or 33 or 34 or WorkspaceArchive.FormatVersion))throw new InvalidDataException("Unsupported workspace archive format.");
             var names=new HashSet<string>(StringComparer.Ordinal);foreach(var path in values){if(path==null||!names.Add(path))throw new InvalidDataException("Duplicate archive path.");_=Limit(path);}
+            if(formatVersion<35&&names.Contains(WorldPackDocument.FileName))throw new InvalidDataException("World-pack provenance requires archive format 35.");
             if(names.Count>WorkspaceArchive.MaximumEntries||RequiredFor(names,formatVersion).Any(x=>!names.Contains(x))||names.Count(IsImage)>ImageLibrary.MaximumFiles||names.Count(IsSound)>AudioLibrary.MaximumFiles||names.Count(IsModel)>32||names.Count(IsMotion)>MotionLibrary.MaximumEntries||names.Count(x=>x.StartsWith("program-modules.v1/",StringComparison.Ordinal))>ProgramModuleLibrary.MaximumEntries)throw new InvalidDataException("Missing or excessive workspace entries.");
             // Version 32 required each sidecar to accompany a downloaded payload.
             // Version 33 preserves metadata after guarded download cleanup as well.
@@ -131,6 +133,7 @@ namespace Maestro.Quest.Persistence
             var roomPath=RequiredFor(documents.Keys.Concat(assets),formatVersion)[0];
             var room=Document<RoomDocument>(documents,roomPath,"version","objects","structures","audioSources","viewpoint","world","environmentProfiles","appearances","visibilityLayers","lighting","worldTime","weather","regions");RoomStorage.Normalize(room);
             if(!room.Validate(out var issue))throw new InvalidDataException(issue);
+            if(documents.TryGetValue(WorldPackDocument.FileName,out var packs))WorldPackDocument.Decode(packs).ValidateWorld(room.world.worldId);
             var rules=Document<RuleDocument>(documents,"behaviours.v2.json","version","sequences","bindings","buttons");
             var ruleJson=Json(documents["behaviours.v2.json"],Limit("behaviours.v2.json"));
             if(ruleJson["sequences"] is not JArray sequences||!sequences.All(RuleSequence.ValidWire)||!rules.Validate(out issue,true))throw new InvalidDataException("Invalid behaviour snapshot.");

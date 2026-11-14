@@ -72,6 +72,9 @@ jobs:
       - name: Test offline full journey timeout guards
         shell: pwsh
         run: ./unity/Tools/Test-QuestProbeTimeout.ps1
+      - name: Test native probe evidence ownership and path guards
+        shell: pwsh
+        run: ./unity/Tools/Test-QuestProbeEvidence.ps1
       - name: Type-check native integration drivers
         run: npm run verify:quest-probes
       - name: Test app and shared core

@@ -36,6 +36,15 @@ namespace Maestro.Quest.Persistence
         internal WorkspaceSelection Selection {get;private set;}
         internal Imports.BundledAvatar IncludedAvatar {get;private set;}
         internal Imports.BundledMotions IncludedMotions {get;private set;}
+        WorldPackDocument packProvenance;
+        internal JObject ReadPackInstance(int offset)
+        {
+            if(!Current||Selection==null||Switching||Retiring||offset<0||offset>WorldPackDocument.MaximumInstances)return null;
+            var instances=packProvenance?.instances??Array.Empty<WorldPackInstance>();var entries=new JArray();
+            if(offset<instances.Length){var entry=instances[offset];entries.Add(new JObject {["instanceId"]=entry.instanceId,["packId"]=entry.packId,["packVersion"]=entry.packVersion,
+                ["packHash"]=entry.sourceHash,["entryId"]=entry.entryId,["objects"]=entry.objects.Length,["resources"]=entry.resources.Length});}
+            return new JObject {["worldId"]=Current.Editor.WorldIdentity.worldId,["offset"]=offset,["total"]=instances.Length,["next"]=offset+1<instances.Length?offset+1:-1,["entries"]=entries};
+        }
         public WorkspaceContent Current {get;private set;}
         public bool Switching {get;private set;}
         public string Status {get;private set;}="Opening workspace";
@@ -70,6 +79,7 @@ namespace Maestro.Quest.Persistence
         {
             // Resolve both paths before creating any content owner. No fallback to the original root.
             string data=store.DataDirectory(selected.Active),receipts=store.ReceiptDirectory(selected.Active);
+            var packBytes=WorldPackDocument.ReadOptional(data);
             Selection=selected;gate=new RoomRuntimeGate();
             if(selected.Active.ReviewRequired)review=gate.Hold("Review the selected workspace before starting activity");
             var root=new GameObject("Selected workspace content");root.transform.SetParent(origin,false);Current=root.AddComponent<WorkspaceContent>();
@@ -77,6 +87,7 @@ namespace Maestro.Quest.Persistence
                 build(Current,data,receipts,gate);
                 if(!Current.Editor||!Current.Rules||!Current.Controls)
                     throw new InvalidOperationException("Required workspace owners are unavailable.");
+                var packs=packBytes==null?null:WorldPackDocument.Decode(packBytes);packs?.ValidateWorld(Current.Editor.WorldIdentity.worldId);packProvenance=packs;
                 // Ordinary stores already preserve damaged/unsupported documents independently.
                 // A bad controls file must not hide a healthy room or its other tools.
                 bool partial=!Current.Editor.CanSaveRoom||Current.Rules.ReadOnly||Current.Editor.ActivityProfiles.ReadOnly||!Current.Controls.ArchiveReady;

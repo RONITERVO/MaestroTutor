@@ -1,3 +1,4 @@
+import {probeNativeWorldPack} from './probe-native-world-pack';
 import {probeAssetInventory} from './probe-asset-inventory';
 import {probeNativeImageMaintenance} from './probe-native-image-maintenance';
 import {probeNativeAudioMaintenance} from './probe-native-audio-maintenance';
@@ -84,10 +85,11 @@ const providerScenario=process.env.MAESTRO_ROOM_PROBE_SCENARIO;
 if(providerScenario && (!['ContextCreateEdit','LiveVisual','ObserverVisual','EventProgram','AvatarAnimation','CompositeModule','PhysicsLaunch','TaskSteering','WorldPresentation','WorldLighting','WorldTime','WorldWeather','LiquidMedium','WaterTraversal','LiquidContacts','ImportedAudio','ImportedImage','GeneratedImage','ModelGeometry','PassthroughWindow'].includes(providerScenario)||!prompt))throw new Error('Unknown or unconfigured provider scenario.');
 const transport=await HeadlessRoomTransport.connect(directory,120000);
 const observations:unknown[]=[];const readSets:unknown[]=[];
+let worldPack:Awaited<ReturnType<typeof probeNativeWorldPack>>|undefined;
 const probeOwner=JSON.parse(await readFile(join(directory,'owner.json'),'utf8'));
 const checkSparse=(state:RoomAgentState)=>{if(probeOwner.sparseObjectView&&state.objects.length)throw new Error('The sparse-view fixture leaked a complete object list');};
 try{
- const lease=transport.lease();let initial=structuredClone(lease.state());checkSparse(initial);
+ let lease=transport.lease();let initial=structuredClone(lease.state());checkSparse(initial);
  const execute=async<const C extends RoomCommand[]>(commands:C):Promise<NativeProbeState<C>>=>{
   if(probeOwner.identityOnly&&!commands.every(isNativeIdentityRead))throw new Error('IdentityOnly permits only explicit saved-object directory reads');
   const state=lease.state(),prepared=await transport.client.prepare(commands,state);
@@ -1551,8 +1553,9 @@ try{
  if(gripReset.execution?.selected?.phase!=='completed')throw new Error('Could not return grip snapping to off');
  await writeFile(join(directory,'grip-snapping.json'),JSON.stringify({boundary:'Real Unity shared configuration and preview facts. Actual grip matching, save, cancellation and Undo are tested separately in PlayMode; no headset proof.',before:gripBefore,search:gripSearch,definition:gripDefinition,read:gripRead,arguments:gripArguments,after:gripAfter,preview:gripPreview,reset:gripReset},null,2));
  }
+ if(!prompt&&!probeOwner.identityOnly&&!probeOwner.motionOnly&&!probeOwner.steeringOnly){worldPack=await probeNativeWorldPack(transport,directory,checkSparse);lease=transport.lease();}
  const finalIdentity=await readNativeObjectIdentity(execute);await writeFile(join(directory,'native-object-identity.json'),JSON.stringify(finalIdentity,null,2));
- await writeFile(join(directory,'journey.json'),JSON.stringify({version:1,boundary:'Real Unity Editor app and shared room protocol; no Quest input, WebView, scan or Store proof',providerUsed:!!prompt,sparseObjectView:!!probeOwner.sparseObjectView,motionOnly:!!probeOwner.motionOnly,steeringOnly:!!probeOwner.steeringOnly,identityOnly:!!probeOwner.identityOnly,initial,observations,readSets,outcome},null,2));
+ await writeFile(join(directory,'journey.json'),JSON.stringify({version:1,boundary:'Real Unity Editor app and shared room protocol; no Quest input, WebView, scan or Store proof',providerUsed:!!prompt,sparseObjectView:!!probeOwner.sparseObjectView,motionOnly:!!probeOwner.motionOnly,steeringOnly:!!probeOwner.steeringOnly,identityOnly:!!probeOwner.identityOnly,initial,observations,readSets,worldPack,outcome},null,2));
  console.log(JSON.stringify({providerUsed:!!prompt,observations:observations.length,output:join(directory,'journey.json')}));
 }catch(error){
  await writeFile(join(directory,'journey-failure.json'),JSON.stringify({error:error instanceof Error?error.stack:String(error),observations,readSets},null,2));

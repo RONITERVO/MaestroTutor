@@ -48,7 +48,8 @@ export function currentInputMapping(schema:CapabilitySchema,value:unknown):Curre
 export function currentInputRequest(schema:CapabilitySchema,value:unknown):CatalogRequest {
  const m=currentInputMapping(schema,value);need(m&&record(value),'Choose the action inputs first.');
  const args=Object.fromEntries(Object.entries(m!.arguments).map(([key,source])=>[key,(value as Record<string,unknown>)[source]]));
- const input=Object.keys(args).length?args:undefined;
+ // A declared empty object is still an input; only no-input facts omit arguments.
+ const input=behaviourFact(m!.fact)!.input?args:undefined;
  need(validateFactArguments(m!.fact,m!.version,input)===null,'Choose valid inputs for the current-value lookup.');
  return {operation:'inspect',category:'facts',capability:m!.fact,version:m!.version,...(input?{arguments:input}:{})};
 }
