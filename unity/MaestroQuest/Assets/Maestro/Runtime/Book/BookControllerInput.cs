@@ -13,6 +13,40 @@ using UnityEngine.XR.Interaction.Toolkit.Interactors;
 
 namespace Maestro.Quest.Book
 {
+    internal struct CosmosInputSnapshot
+    {
+        public bool LeftTracked, RightTracked;
+        public bool LeftUsingHand, RightUsingHand;
+        public Vector2 LeftStick, RightStick;
+        public bool LeftStickClick, RightStickClick;
+        public bool LeftPrimary, RightPrimary;
+        public bool LeftSecondary, RightSecondary;
+        public bool LeftGrip, RightGrip;
+        public bool LeftTrigger, RightTrigger;
+        public bool LeftTriggerJustPressed, RightTriggerJustPressed;
+        public bool LeftPinching, RightPinching;
+        public Vector3 LeftPinchPos, RightPinchPos;
+        public bool HasLeftWrist, HasLeftPalm, HasRightFingerTip;
+        public Vector3 LeftWristPos, LeftPalmPos, LeftPalmNormal, LeftForearmProximalDir;
+        public Quaternion LeftWristRot;
+        public Vector3 RightFingerTipPos;
+        public bool HasPointerRay;
+        public Vector3 PointerOrigin, PointerDir;
+        public bool PointerSelectJustPressed;
+        public Vector3 DesktopMove;
+        public bool DesktopSprint;
+        public Vector2 DesktopLookDelta;
+        public float DesktopScrollY;
+        public bool DesktopLookActive;
+        public bool DesktopTabJustPressed;
+        public bool DesktopRKeyHeld;
+        public bool DesktopRightMouseHeld;
+        public bool DesktopSpeedDownJustPressed;
+        public bool DesktopSpeedUpJustPressed;
+        public bool DesktopLocaleToggleJustPressed;
+        public bool DesktopHomeJustPressed;
+    }
+
     // Sample the tracked pose and select reader before XRI processes its frame.
     [DefaultExecutionOrder(-200)]
     public sealed partial class BookControllerInput : MonoBehaviour
@@ -28,6 +62,9 @@ namespace Maestro.Quest.Book
         readonly List<XRHandSubsystem> handSubsystems=new();XRHandSubsystem trackedHands;
         bool paused, focused = true;
         Material pointerMaterial;
+        int cosmosSnapshotFrame = -1;
+        CosmosInputSnapshot cosmosSnapshot;
+        bool prevLeftTrig, prevRightTrig, prevLeftPinch, prevRightPinch;
         public Transform ControllerAnchor(int index) => hands != null && index >= 0 && index < hands.Length && hands[index].WasTracked && !hands[index].UsingHand && hands[index].Root.activeSelf ? hands[index].Root.transform : null;
 
         internal Newtonsoft.Json.Linq.JObject ObserveContact(int index)=>hands!=null&&index>=0&&index<hands.Length&&hands[index].Pusher
@@ -210,6 +247,204 @@ namespace Maestro.Quest.Book
         };
         public void CancelAll() => CancelInputs();
         void RestoreRoom() => Room?.RestoreInFrontOfViewer();
+
+        internal bool TryReadCosmosInput(out CosmosInputSnapshot snapshot)
+        {
+            if (hands == null || hands.Length < 2 || paused || !focused)
+            {
+                snapshot = default;
+                return false;
+            }
+            if (cosmosSnapshotFrame == Time.frameCount)
+            {
+                snapshot = cosmosSnapshot;
+                return true;
+            }
+
+            cosmosSnapshotFrame = Time.frameCount;
+            var s = new CosmosInputSnapshot();
+            var lh = hands[0];
+            var rh = hands[1];
+
+            s.LeftTracked = lh.WasTracked && lh.Root.activeSelf;
+            s.RightTracked = rh.WasTracked && rh.Root.activeSelf;
+            s.LeftUsingHand = lh.UsingHand;
+            s.RightUsingHand = rh.UsingHand;
+
+            s.LeftStick = lh.Stick.ReadValue<Vector2>();
+            s.RightStick = rh.Stick.ReadValue<Vector2>();
+            s.LeftStickClick = lh.StickClick.IsPressed();
+            s.RightStickClick = rh.StickClick.IsPressed();
+            s.LeftPrimary = lh.Primary.IsPressed();
+            s.RightPrimary = rh.Primary.IsPressed();
+            s.LeftSecondary = lh.Restore.IsPressed();
+            s.RightSecondary = rh.Restore.IsPressed();
+            s.LeftGrip = !lh.UsingHand && lh.Grip.IsPressed();
+            s.RightGrip = !rh.UsingHand && rh.Grip.IsPressed();
+
+            var metaL = MetaAimHand.left;
+            var metaR = MetaAimHand.right;
+            bool leftTrig = lh.UsingHand ? (metaL != null && metaL.indexPressed.isPressed) : lh.Press.IsPressed();
+            bool rightTrig = rh.UsingHand ? (metaR != null && metaR.indexPressed.isPressed) : rh.Press.IsPressed();
+            s.LeftTrigger = leftTrig;
+            s.RightTrigger = rightTrig;
+            s.LeftTriggerJustPressed = leftTrig && !prevLeftTrig;
+            s.RightTriggerJustPressed = rightTrig && !prevRightTrig;
+            prevLeftTrig = leftTrig;
+            prevRightTrig = rightTrig;
+
+            // Default pinch state from controllers (grip or trigger) and refine with XRHand joints when tracked.
+            s.LeftPinching = s.LeftTracked && (s.LeftGrip || leftTrig);
+            s.RightPinching = s.RightTracked && (s.RightGrip || rightTrig);
+            if (s.LeftTracked) s.LeftPinchPos = lh.Root.transform.position;
+            if (s.RightTracked) s.RightPinchPos = rh.Root.transform.position;
+
+            if (TrackingSpace)
+            {
+                if (trackedHands == null || !trackedHands.running)
+                {
+                    SubsystemManager.GetSubsystems(handSubsystems);
+                    trackedHands = null;
+                    foreach (var candidate in handSubsystems)
+                        if (candidate.running) { trackedHands = candidate; break; }
+                }
+
+                if (trackedHands != null && trackedHands.running)
+                {
+                    ReadHandJoints(trackedHands.leftHand, isLeft: true, ref s);
+                    ReadHandJoints(trackedHands.rightHand, isLeft: false, ref s);
+                }
+            }
+
+            // Fallback wrist/forearm proxy when left controller is tracked without articulated XRHandSubsystem joints.
+            if (!s.HasLeftWrist && s.LeftTracked)
+            {
+                Transform lt = lh.Root.transform;
+                s.HasLeftWrist = true;
+                s.LeftWristPos = lt.position;
+                s.LeftWristRot = lt.rotation;
+                s.LeftForearmProximalDir = -lt.forward;
+                s.HasLeftPalm = true;
+                s.LeftPalmPos = lt.position;
+                s.LeftPalmNormal = lt.up;
+            }
+
+            // Active XR pointer ray (prefer right hand, fallback to left hand).
+            if (s.RightTracked)
+            {
+                s.HasPointerRay = true;
+                s.PointerOrigin = rh.Root.transform.position;
+                s.PointerDir = rh.Root.transform.forward;
+                s.PointerSelectJustPressed = s.RightTriggerJustPressed || (s.RightPinching && !prevRightPinch);
+            }
+            else if (s.LeftTracked)
+            {
+                s.HasPointerRay = true;
+                s.PointerOrigin = lh.Root.transform.position;
+                s.PointerDir = lh.Root.transform.forward;
+                s.PointerSelectJustPressed = s.LeftTriggerJustPressed || (s.LeftPinching && !prevLeftPinch);
+            }
+            prevLeftPinch = s.LeftPinching;
+            prevRightPinch = s.RightPinching;
+
+            var kb = Keyboard.current;
+            if (kb != null)
+            {
+                float x = (kb.dKey.isPressed ? 1f : 0f) - (kb.aKey.isPressed ? 1f : 0f);
+                float y = (kb.eKey.isPressed ? 1f : 0f) - (kb.qKey.isPressed ? 1f : 0f);
+                float z = (kb.wKey.isPressed ? 1f : 0f) - (kb.sKey.isPressed ? 1f : 0f);
+                s.DesktopMove = new Vector3(x, y, z);
+                s.DesktopSprint = kb.leftShiftKey.isPressed || kb.rightShiftKey.isPressed;
+                s.DesktopTabJustPressed = kb.tabKey.wasPressedThisFrame;
+                s.DesktopRKeyHeld = kb.rKey.isPressed;
+                s.DesktopSpeedDownJustPressed = kb.leftBracketKey.wasPressedThisFrame;
+                s.DesktopSpeedUpJustPressed = kb.rightBracketKey.wasPressedThisFrame;
+                s.DesktopLocaleToggleJustPressed = kb.lKey.wasPressedThisFrame;
+                s.DesktopHomeJustPressed = kb.homeKey.wasPressedThisFrame;
+            }
+
+            var mouse = Mouse.current;
+            if (mouse != null)
+            {
+                bool middleHeld = mouse.middleButton.isPressed;
+                bool altLook = kb != null && (kb.leftAltKey.isPressed || kb.rightAltKey.isPressed) && mouse.leftButton.isPressed;
+                s.DesktopRightMouseHeld = mouse.rightButton.isPressed;
+                s.DesktopLookActive = middleHeld || altLook || Cursor.lockState == CursorLockMode.Locked;
+                if (s.DesktopLookActive) s.DesktopLookDelta = mouse.delta.ReadValue();
+                s.DesktopScrollY = mouse.scroll.ReadValue().y;
+
+                if (!s.HasPointerRay && DesktopCamera)
+                {
+                    var ray = DesktopCamera.ScreenPointToRay(mouse.position.ReadValue());
+                    s.HasPointerRay = true;
+                    s.PointerOrigin = ray.origin;
+                    s.PointerDir = ray.direction;
+                    s.PointerSelectJustPressed = mouse.leftButton.wasPressedThisFrame;
+                }
+            }
+
+            cosmosSnapshot = s;
+            snapshot = s;
+            return true;
+        }
+
+        void ReadHandJoints(XRHand hand, bool isLeft, ref CosmosInputSnapshot s)
+        {
+            if (!hand.isTracked) return;
+            bool hasThumb = hand.GetJoint(XRHandJointID.ThumbTip).TryGetPose(out var thumbPose);
+            bool hasIndex = hand.GetJoint(XRHandJointID.IndexTip).TryGetPose(out var indexPose);
+            if (hasThumb && hasIndex)
+            {
+                Vector3 thumbW = TrackingSpace.TransformPoint(thumbPose.position);
+                Vector3 indexW = TrackingSpace.TransformPoint(indexPose.position);
+                float dist = Vector3.Distance(thumbW, indexW);
+                bool pinching = dist < 0.032f && float.IsFinite(dist);
+                Vector3 midW = (thumbW + indexW) * 0.5f;
+                if (isLeft)
+                {
+                    s.LeftPinching = pinching || s.LeftPinching;
+                    if (pinching) s.LeftPinchPos = midW;
+                }
+                else
+                {
+                    s.RightPinching = pinching || s.RightPinching;
+                    if (pinching) s.RightPinchPos = midW;
+                    s.HasRightFingerTip = true;
+                    s.RightFingerTipPos = indexW;
+                }
+            }
+            else if (!isLeft && hasIndex)
+            {
+                s.HasRightFingerTip = true;
+                s.RightFingerTipPos = TrackingSpace.TransformPoint(indexPose.position);
+            }
+
+            if (isLeft)
+            {
+                bool hasWrist = hand.GetJoint(XRHandJointID.Wrist).TryGetPose(out var wristPose);
+                bool hasPalm = hand.GetJoint(XRHandJointID.Palm).TryGetPose(out var palmPose);
+                if (hasWrist)
+                {
+                    s.HasLeftWrist = true;
+                    s.LeftWristPos = TrackingSpace.TransformPoint(wristPose.position);
+                    s.LeftWristRot = TrackingSpace.rotation * wristPose.rotation;
+                    if (hasPalm)
+                    {
+                        s.HasLeftPalm = true;
+                        s.LeftPalmPos = TrackingSpace.TransformPoint(palmPose.position);
+                        // In OpenXR XRHand left palm, palm rotation's -up points out of palm (+Y points back of hand).
+                        Vector3 palmUp = TrackingSpace.rotation * (palmPose.rotation * Vector3.down);
+                        s.LeftPalmNormal = palmUp.sqrMagnitude > 1e-6f ? palmUp.normalized : Vector3.up;
+                        Vector3 prox = s.LeftWristPos - s.LeftPalmPos;
+                        s.LeftForearmProximalDir = prox.sqrMagnitude > 1e-6f ? prox.normalized : -(s.LeftWristRot * Vector3.forward);
+                    }
+                    else
+                    {
+                        s.LeftForearmProximalDir = -(s.LeftWristRot * Vector3.forward);
+                    }
+                }
+            }
+        }
 
         static void DrawPointer(HandInput input, Ray ray, bool visible, Vector3 point)
         {

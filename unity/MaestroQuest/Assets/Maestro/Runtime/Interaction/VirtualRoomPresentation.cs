@@ -23,6 +23,7 @@ namespace Maestro.Quest.Interaction
         // Full virtual presentation never acquires room-shaped holes. The selected
         // depth preference is retained and becomes eligible again below full opacity.
         internal bool WantsRealDepth => RealDepth && BackdropOpacity < 1;
+        internal event Action<float,bool> PresentationApplied;
         internal bool PresentationChanged => presentationOwned;
         internal string PresentationId { get; private set; } = Guid.NewGuid().ToString("N");
         internal static bool ValidOpacity(float value) => float.IsFinite(value) && value >= 0 && value <= 1;
@@ -41,9 +42,11 @@ namespace Maestro.Quest.Interaction
             // This fades only the neutral backdrop: authored surfaces and the book
             // keep their independently configured materials and opacity.
             viewer.clearFlags=CameraClearFlags.SolidColor;
-            viewer.backgroundColor=new Color(.91f,.90f,.86f,opacity);
+            viewer.backgroundColor=new Color(0f,0f,0f,opacity);
             scan?.SetVirtualView(Active);
-            PresentationId=Guid.NewGuid().ToString("N");return true;
+            PresentationId=Guid.NewGuid().ToString("N");
+            PresentationApplied?.Invoke(BackdropOpacity,RealDepth);
+            return true;
         }
         void ResetPresentation()
         {
@@ -53,7 +56,7 @@ namespace Maestro.Quest.Interaction
                 if(passthrough)passthrough.enabled=passthroughWasEnabled;
             }
             presentationOwned=false;BackdropOpacity=0;RealDepth=true;scan?.SetVirtualView(false);
-            if(changed)PresentationId=Guid.NewGuid().ToString("N");
+            if(changed){PresentationId=Guid.NewGuid().ToString("N");PresentationApplied?.Invoke(0f,true);}
         }
     }
 }

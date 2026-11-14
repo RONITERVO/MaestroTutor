@@ -183,6 +183,22 @@ namespace Maestro.Quest.Editor
                 string path = "Assets/Maestro/Resources/Import-" + shaderName.Replace('/', '-') + ".mat";
                 if (!AssetDatabase.LoadAssetAtPath<Material>(path)) AssetDatabase.CreateAsset(new Material(shader), path);
             }
+            // Cosmos shaders and Resources materials stay retained across Quest/desktop player builds.
+            if (!Directory.Exists("Assets/Maestro/Resources/Cosmos")) Directory.CreateDirectory("Assets/Maestro/Resources/Cosmos");
+            foreach (var name in new[]
+            {
+                "FarShellSky", "EarthHero", "OrbitalPlanet", "AuroralCurtain", "TetherBridgeBeam",
+                "CrystallineIsland", "SpriteField", "MsdfLiveInk", "WristBead"
+            })
+            {
+                var shader = Shader.Find("Cosmos/" + name);
+                if (!shader) throw new InvalidOperationException("Missing Cosmos shader: Cosmos/" + name);
+                if (ShaderUtil.ShaderHasError(shader)) throw new InvalidOperationException("Cosmos shader has compile errors: Cosmos/" + name);
+                string matPath = "Assets/Maestro/Resources/Cosmos/Cosmos_" + name + ".mat";
+                var mat = AssetDatabase.LoadAssetAtPath<Material>(matPath);
+                if (!mat) AssetDatabase.CreateAsset(new Material(shader) { enableInstancing = true }, matPath);
+                else if (mat.shader != shader) mat.shader = shader;
+            }
             if (!File.Exists(ScenePath))
             {
                 var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);

@@ -42,7 +42,7 @@ namespace Maestro.Quest
             cameraObject.tag = "MainCamera";
             cameraObject.transform.SetParent(offset.transform, false);
             var camera = cameraObject.GetComponent<Camera>();
-            camera.nearClipPlane = .05f; camera.farClipPlane = 30;
+            camera.nearClipPlane = .05f; camera.farClipPlane = 1500;
             camera.clearFlags = CameraClearFlags.SolidColor;
             camera.backgroundColor = Color.clear;
             var origin = originObject.AddComponent<XROrigin>();
@@ -105,11 +105,29 @@ namespace Maestro.Quest
             var includedAvatar=Maestro.Quest.Imports.BundledAvatar.FromApplication();
             var includedMotions=Maestro.Quest.Imports.BundledMotions.FromApplication();
             string workspaceDirectory=Application.persistentDataPath;
+            bool allowCosmosAutoEnter = !Application.isBatchMode;
 #if UNITY_EDITOR
-            if(!string.IsNullOrEmpty(ProbeWorkspaceDirectory))workspaceDirectory=ProbeWorkspaceDirectory;
+            if(!string.IsNullOrEmpty(ProbeWorkspaceDirectory))
+            {
+                workspaceDirectory=ProbeWorkspaceDirectory;
+                allowCosmosAutoEnter = false;
+            }
 #endif
+            System.Func<bool> headTrackedProbe = () => headTracking == null || (headTracking.ReadValue<int>() & 3) == 3;
             workspace.Initialize(workspaceDirectory,room.transform,(session,directory,receipts,gate)=>session.Build(room,bookItem,browser,router,input,physics,navigation,scan,virtualView,
-                () => headTracking == null || (headTracking.ReadValue<int>() & 3) == 3,workspaceDirectory,directory,receipts,gate,includedAvatar,includedMotions),agent,includedAvatar,includedMotions);
+                headTrackedProbe,workspaceDirectory,directory,receipts,gate,includedAvatar,includedMotions),agent,includedAvatar,includedMotions);
+
+            var cosmosHost = new GameObject("HyperCosmos World");
+            cosmosHost.transform.SetParent(transform, false);
+            cosmosHost.AddComponent<Maestro.Quest.Cosmos.HyperCosmosWorld>().Initialize(
+                content.transform,
+                originObject.transform,
+                camera,
+                input,
+                virtualView,
+                workspace,
+                headTrackedProbe,
+                allowCosmosAutoEnter);
 
         }
 

@@ -52224,7 +52224,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Book/BookControllerInput.cs",
-      "sha256": "d6646e1190b41e52837bc9e28ce6a02b75f940a9f72bf8552f9f33b37d539d1c"
+      "sha256": "026ee8d05200c9d156386e206041ea9fd328ec45daff6f134aa506fb9da2c7b6"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Book/BookCoordinates.cs",
@@ -53025,6 +53025,46 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/WorldWeatherCapability.cs",
       "sha256": "efecf48bc8fc238c21587f2b258edac63dd6f53a30f045380de8b8e2c59c4445"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Cosmos/CosmosArchipelagoBuilder.cs",
+      "sha256": "4852ba53d1841164f8b2b390f60951cfd3ba35570adb6699970b6d68726c628d"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Cosmos/CosmosAudioEngine.cs",
+      "sha256": "2e2cb248797f65bf8cfe5a3d6c92cbca553c786dfacd4a868edea2d3bf62eb42"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Cosmos/CosmosCatalogData.cs",
+      "sha256": "52e7bb19aafe58a23bed6f1089813755c96202ace76dcf1af9eb2cb1a9f73b23"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Cosmos/CosmosContracts.cs",
+      "sha256": "cae5b2ca2a36c5f35fdd232524887752c1593c2fffb1cc3914ef4dbefe631e33"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Cosmos/CosmosFlightController.cs",
+      "sha256": "060a78ed50c1f2140d14169dba5304ff077cc7b1e4e1d2fc2d72dce3aadce5a2"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Cosmos/CosmosInkPresenter.cs",
+      "sha256": "17a8bddc22b513190bb973d5d91165c5ed0528952ccec86522be5d39136d7aef"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Cosmos/CosmosLandmarksPresenter.cs",
+      "sha256": "9bdbb6431aae128896057fab73e08ff9bf2a4cbb05ef5b85228dc565b8054c05"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Cosmos/CosmosNarrationFsm.cs",
+      "sha256": "cfdbb521c662460336f208edcf3d110be258f31d89879c35ffde82c7fd5cc748"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Cosmos/CosmosWristRing.cs",
+      "sha256": "43a22766c40efd40910241157399bfe1b0a910359398915d9979cdf0dec468eb"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Cosmos/HyperCosmosWorld.cs",
+      "sha256": "85ec826e771d828d64f78a513b18079ffa68c18135f1dbc70f1fffd3a60e65fc"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/AcceptedRoomPrimary.cs",
@@ -54848,7 +54888,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/VirtualRoomPresentation.cs",
-      "sha256": "64ba6fea9c1b65644db6b017f4a25a30f20968ddc4f3aa66f99482d2678e3085"
+      "sha256": "a1f47e2d6a266a1990e796ed70516126dba7046a167f78ed1c779f72364f8b8e"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/VirtualRoomView.Walking.cs",
@@ -54876,7 +54916,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/MaestroRoom.cs",
-      "sha256": "bb21f81457f21b7946338da29ba7d791415628bcd356d0f087583c6e1677e177"
+      "sha256": "ea54b32fc7c868763ba7a415de0d5271eedf22c60647ecac08862353a922cf72"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/AndroidWorkspacePicker.cs",
