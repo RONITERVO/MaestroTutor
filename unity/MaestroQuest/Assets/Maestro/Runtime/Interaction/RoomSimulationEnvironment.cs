@@ -39,11 +39,11 @@ namespace Maestro.Quest.Interaction
             foreach(var surface in ground)if(surface.Available)return true;
             return false;
         }
-        internal bool ContainsSimulation(Vector3 point,RoomItem item=null)=>ContainsEnvironment(point,IncludesRealRoom(item));
-        internal bool ContainsEnvironment(Vector3 point,bool real) {
+        internal bool ContainsSimulation(Vector3 point,RoomItem item=null)=>ContainsEnvironment(point,IncludesRealRoom(item),item);
+        internal bool ContainsEnvironment(Vector3 point,bool real,RoomItem item=null) {
             if(!CollisionReady||!float.IsFinite(point.sqrMagnitude))return false;
             if(real)return SurfacesReady&&(Contains==null||Contains(point));
-            if(!GatherGround())return false;
+            if(!GatherGround()||!VirtualGroundComplete(point,item))return false;
             // Until streamed region bounds exist, simulation is bounded to actual
             // accepted ground columns. A hidden scan/fallback plane is never used.
             foreach(var surface in ground) {
@@ -51,6 +51,14 @@ namespace Maestro.Quest.Interaction
                 if(new RoomGroundColumn(surface.Collision).Contains(point))return true;
             }
             return false;
+        }
+        internal bool VirtualGroundComplete(Vector3 point,RoomItem item=null) {
+            if(collisionAuthority is not Creation.RoomEditor editor)return true;
+            // Same vertical support band as RoomGroundColumn. Completeness may
+            // refuse a missing upper source; collider bounds never fill its holes.
+            var bounds=new Bounds(point-Vector3.up*7.875f,new Vector3(.002f,16.25f,.002f));
+            var extent=new Creation.RoomSpatialExtent{Known=true,HasBounds=true,Bounds=bounds}.Transform(editor.transform.worldToLocalMatrix);
+            return extent.Known&&extent.HasBounds&&editor.GroundComplete(extent.Bounds,editor.Identity(item));
         }
         internal JObject ObserveEnvironment()=>new() {
             ["stateId"]=stateId,["realCollisions"]=RealCollisions,["scanReady"]=SurfacesReady,
@@ -70,6 +78,7 @@ namespace Maestro.Quest.Interaction
         }
         void Update() {
             Creation.CollisionResources.Collect();
+            NavigationResources.Collect();
             RefreshCollisionAdmission();
             bool ready=AnySimulationReady;
             if(ready==observedReady)return;

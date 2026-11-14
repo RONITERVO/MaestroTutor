@@ -116,7 +116,10 @@ namespace Maestro.Quest.Tests
             // coverage before the broad-phase can safely reject them. Foot placement
             // is loaded presentation only: cold imports start in their rest pose;
             // native skin bounds capture the correction before retirement.
-            var expected="id name recipe environmentProfile visibilityLayer footPlacement waterTraversal modelGeometry appearanceBindings scanAnchors collision lights windows surfaces drawingTips connections snapPoints containers heightFields sculptTips materialStores audioEmitters kind position rotation scale color points radius joints motion modelHash physics collisionShape mass followDistance walkSpeed walkClip walkMotionId".Split(' ');
+            // Static support is a role over the existing primary collision; it adds
+            // no visual geometry. StaticSupportGroundBounds/Provider tests cover
+            // its separate cold collision envelope and exact native source parity.
+            var expected="id name recipe environmentProfile visibilityLayer footPlacement waterTraversal modelGeometry staticSupport appearanceBindings scanAnchors collision lights windows surfaces drawingTips connections snapPoints containers heightFields sculptTips materialStores audioEmitters kind position rotation scale color points radius joints motion modelHash physics collisionShape mass followDistance walkSpeed walkClip walkMotionId".Split(' ');
             CollectionAssert.AreEquivalent(expected,typeof(RoomObjectData).GetFields(System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.Public).Select(f=>f.Name));
         }
     }

@@ -107,7 +107,7 @@ namespace Maestro.Quest.Creation
                     using var geometry=preparedGeometry=new ModelGeometryPreparation(this,data.modelGeometry,collision);ApplyModelGeometry(data.modelGeometry);
                 } else if(library!=null) LoadModel(data.modelHash,library,collider);
             }
-            ApplyCollision(data.collision,preparation);SetCollisionShape(data.collisionShape);
+            ApplyCollision(data.collision,preparation);SetCollisionShape(data.collisionShape,true);ApplyStaticSupport(data);
             physicsBody.ReadyBody();objectInstance.Ready();return item;
         }
         internal void ApplyScanLayer(RoomObjectData data) {
@@ -158,6 +158,8 @@ namespace Maestro.Quest.Creation
                 else {var box=gameObject.AddComponent<BoxCollider>();box.center=geometryBounds.center;box.size=geometryBounds.size;chosenCollider=box;}
                 active=new[]{chosenCollider};
             }
+            SetSupportPrimary(shape==ItemCollider.Automatic&&customGeometry!=null&&importedCollision==null&&active.Length>0?customGeometry.SupportSources:
+                active.Select(c=>new RoomSupportPiece(c,shape==ItemCollider.Box?"primary.box":"primary.original")).ToArray());
             var field=GetComponent<HeightFieldView>();if(field&&field.Collision&&field.Collision.gameObject.activeSelf)active=active.Append(field.Collision).ToArray();
             foreach(var collider in active){collider.gameObject.layer=RoomPhysicsLayers.Item;collider.enabled=true;collider.sharedMaterial=originalCollider.sharedMaterial;}
             item.ReplaceSolidColliders(active);item.Grab.enabled=item.Grab.colliders.Count>0;
@@ -198,7 +200,7 @@ namespace Maestro.Quest.Creation
         bool nativeResourcesReleased;
         void OnDestroy()=>ReleaseNativeResources();
         void Maestro.Quest.Art.INativeResourceOwner.ReleaseNativeResources()=>ReleaseNativeResources();
-        void ReleaseNativeResources(){if(nativeResourcesReleased)return;nativeResourcesReleased=true;objectInstance?.Dispose();physicsBody?.Dispose();preparedGeometry?.Dispose();importedCollision?.Dispose();customGeometry?.Dispose();ArtResources.Release(pigment);}
+        void ReleaseNativeResources(){if(nativeResourcesReleased)return;nativeResourcesReleased=true;RetireStaticSupport();objectInstance?.Dispose();physicsBody?.Dispose();preparedGeometry?.Dispose();importedCollision?.Dispose();customGeometry?.Dispose();ArtResources.Release(pigment);}
         void LateUpdate() { if (pendingCollider && !GetComponent<RoomItem>().Grab.isSelected) SetCollisionShape(collisionShape,true); }
     }
 }

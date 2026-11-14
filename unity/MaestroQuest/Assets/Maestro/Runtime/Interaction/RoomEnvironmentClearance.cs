@@ -17,7 +17,7 @@ namespace Maestro.Quest.Interaction
             if(!world){error=requireGround?"The physics environment is unavailable":null;return error==null;}
             bool physical=world.RealCollisions&&real;
             error="The selected ground is unavailable or this object is outside its accepted bounds";
-            if(requireGround&&!world.ContainsEnvironment(item.transform.position,physical))return false;
+            if(requireGround&&!world.ContainsEnvironment(item.transform.position,physical,item))return false;
             if(!physical||!world.SurfacesReady){error=null;return true;}
             Physics.SyncTransforms();
             foreach(var own in item.SolidColliders){

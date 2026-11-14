@@ -16,6 +16,7 @@ namespace Maestro.Quest.Creation
         public CreationPrototype prototype;
         public CollisionRecipe collision;
         public ObjectPhysicsSettings physics;
+        public RoomStaticSupport staticSupport=new();
         internal bool Prepare(string name,Vector3 position,Quaternion rotation,float scale,out RoomObjectData data,out string error) {
             data=null;
             if(kind=="prototype") {
@@ -24,28 +25,30 @@ namespace Maestro.Quest.Creation
                 if(data.motion!=null&&!data.motion.Validate(data.kind)){data=null;error="Every transformed animation frame must stay within room placement and scale limits";return false;}
                 error=null;return true;
             }
-            if(!Resolve(out var recipe,out var collision,out var physics,out var defaultName,out error))return false;
-            if(!RoomEditor.PrepareRecipeObject(string.IsNullOrEmpty(name)?defaultName:name,position,scale,recipe,collision,physics,out data,out error))return false;
+            if(!Resolve(out var recipe,out var collision,out var physics,out var support,out var defaultName,out error))return false;
+            if(!RoomEditor.PrepareRecipeObject(string.IsNullOrEmpty(name)?defaultName:name,position,scale,recipe,collision,physics,out data,out error,staticSupport:support))return false;
             if(kind=="template"){var entry=CreationTemplates.Find(templateHash);data.surfaces=entry.Surfaces;data.drawingTips=entry.DrawingTips;data.snapPoints=entry.SnapPoints;data.containers=entry.Containers;data.heightFields=entry.HeightFields;data.sculptTips=entry.SculptTips;data.materialStores=entry.MaterialStores;}
             data.rotation=rotation;return true;
         }
         internal bool Validate(out string error) {
             error="Provide an editable creation source";
-            return kind=="prototype"?prototype!=null&&prototype.Validate(out error):Resolve(out _,out _,out _,out _,out error);
+            return kind=="prototype"?prototype!=null&&prototype.Validate(out error):Resolve(out _,out _,out _,out _,out _,out error);
         }
-        internal bool Resolve(out RoomRecipe geometry,out CollisionRecipe shapes,out ObjectPhysicsSettings settings,out string defaultName,out string error)
+        internal bool Resolve(out RoomRecipe geometry,out CollisionRecipe shapes,out ObjectPhysicsSettings settings,out RoomStaticSupport support,out string defaultName,out string error)
         {
-            geometry=null;shapes=null;settings=null;defaultName="Recipe piece";error="Choose an available template or an idle recipe";
+            geometry=null;shapes=null;settings=null;support=null;defaultName="Recipe piece";error="Choose an available template or an idle recipe";
             if(kind=="template") {
                 var entry=CreationTemplates.Find(templateHash);if(entry==null)return false;
-                geometry=entry.Recipe;shapes=entry.Collision;settings=entry.Physics;defaultName=entry.Name;
-            } else if(kind=="recipe") {geometry=recipe;shapes=collision;settings=physics;}
+                geometry=entry.Recipe;shapes=entry.Collision;settings=entry.Physics;support=entry.StaticSupport;defaultName=entry.Name;
+            } else if(kind=="recipe") {geometry=recipe;shapes=collision;settings=physics;support=staticSupport;}
             else return false;
             if(geometry==null||!geometry.Validate(out error))return false;
             if(geometry.playing){error="Create structure pieces idle, then explicitly start their animations";return false;}
             if(shapes!=null&&!shapes.Validate(out error))return false;
             if(settings!=null&&!RoomControls.ValidPhysics(settings)){error="Provide valid piece physics settings";return false;}
-            error=null;return true;
+            var owner=new RoomObjectData{kind=RoomObjectKind.Assembly,physics=ItemPhysics.Fixed,collision=shapes,staticSupport=support};
+            if(settings!=null&&!RoomControls.SetPhysics(owner,settings,out error))return false;
+            return RoomStaticSupport.Validate(owner,out error);
         }
     }
     [Serializable] public sealed class CreationPiece
@@ -108,8 +111,11 @@ namespace Maestro.Quest.Creation
             var batch=JsonUtility.FromJson<CreationBatch>(value.ToString());
             if(!((JObject)value["blueprint"]).ContainsKey("resources"))batch.blueprint.resources=null;
             else if((int?)value["blueprint"]["resources"]["version"]==1)batch.blueprint.resources.visibilityLayers=Array.Empty<RoomVisibilityLayer>();
-            for(int i=0;i<batch.blueprint.pieces.Length;i++)if(batch.blueprint.pieces[i].source.kind=="prototype")
-                batch.blueprint.pieces[i].source.prototype=CreationPrototype.Read((JObject)value["blueprint"]["pieces"][i]["source"]["prototype"]);
+            for(int i=0;i<batch.blueprint.pieces.Length;i++){
+                var source=batch.blueprint.pieces[i].source;var wire=(JObject)value["blueprint"]["pieces"][i]["source"];
+                if(source.kind=="prototype")source.prototype=CreationPrototype.Read((JObject)wire["prototype"]);
+                else if(!wire.ContainsKey("staticSupport"))source.staticSupport=new();
+            }
             return batch;
         }
         public bool Prepare(out RoomObjectData[] objects,out string error)=>Prepare(out objects,out _,out error);
@@ -141,11 +147,12 @@ namespace Maestro.Quest.Creation
     public sealed partial class RoomEditor
     {
         // Both single-object and multi-object creation expand into the same components.
-        internal static bool PrepareRecipeObject(string name,Vector3 position,float scale,RoomRecipe recipe,CollisionRecipe collision,ObjectPhysicsSettings physics,out RoomObjectData item,out string error,DrawingSurface[] surfaces=null,DrawingTip[] drawingTips=null,RoomSnapPoint[] snapPoints=null,RoomContainer[] containers=null,RoomHeightField[] heightFields=null,SculptTip[] sculptTips=null,RoomMaterialStore[] materialStores=null) {
+        internal static bool PrepareRecipeObject(string name,Vector3 position,float scale,RoomRecipe recipe,CollisionRecipe collision,ObjectPhysicsSettings physics,out RoomObjectData item,out string error,DrawingSurface[] surfaces=null,DrawingTip[] drawingTips=null,RoomSnapPoint[] snapPoints=null,RoomContainer[] containers=null,RoomHeightField[] heightFields=null,SculptTip[] sculptTips=null,RoomMaterialStore[] materialStores=null,RoomStaticSupport staticSupport=null) {
             item=null;error="Provide a valid construction recipe";if(recipe==null||!recipe.Validate(out error))return false;
             if(collision!=null&&!collision.Validate(out error))return false;
-            var data=new RoomObjectData {id=Guid.NewGuid().ToString("N"),name=name,kind=RoomObjectKind.Assembly,position=position,scale=scale,color=Color.white,physics=ItemPhysics.Fixed,recipe=recipe.Copy(),heightFields=heightFields?.Select(f=>f.Copy()).ToArray()??Array.Empty<RoomHeightField>(),sculptTips=sculptTips?.Select(t=>t.Copy()).ToArray()??Array.Empty<SculptTip>(),materialStores=materialStores?.Select(s=>s.Copy()).ToArray()??Array.Empty<RoomMaterialStore>(),containers=containers?.Select(c=>c.Copy()).ToArray()??Array.Empty<RoomContainer>(),snapPoints=snapPoints?.Select(p=>p.Copy()).ToArray()??Array.Empty<RoomSnapPoint>(),drawingTips=drawingTips?.Select(t=>t.Copy()).ToArray()??Array.Empty<DrawingTip>(),surfaces=surfaces?.Select(s=>s.Copy()).ToArray()??Array.Empty<DrawingSurface>(),collision=collision?.shapes.Length>0?collision.Copy():null};
+            var data=new RoomObjectData {id=Guid.NewGuid().ToString("N"),name=name,kind=RoomObjectKind.Assembly,position=position,scale=scale,color=Color.white,physics=ItemPhysics.Fixed,staticSupport=staticSupport?.Copy()??new(),recipe=recipe.Copy(),heightFields=heightFields?.Select(f=>f.Copy()).ToArray()??Array.Empty<RoomHeightField>(),sculptTips=sculptTips?.Select(t=>t.Copy()).ToArray()??Array.Empty<SculptTip>(),materialStores=materialStores?.Select(s=>s.Copy()).ToArray()??Array.Empty<RoomMaterialStore>(),containers=containers?.Select(c=>c.Copy()).ToArray()??Array.Empty<RoomContainer>(),snapPoints=snapPoints?.Select(p=>p.Copy()).ToArray()??Array.Empty<RoomSnapPoint>(),drawingTips=drawingTips?.Select(t=>t.Copy()).ToArray()??Array.Empty<DrawingTip>(),surfaces=surfaces?.Select(s=>s.Copy()).ToArray()??Array.Empty<DrawingSurface>(),collision=collision?.shapes.Length>0?collision.Copy():null};
             if(physics!=null&&!RoomControls.SetPhysics(data,physics,out error))return false;
+            if(!RoomStaticSupport.Validate(data,out error))return false;
             if(!DrawingSurface.ValidateCollection(data,out error)||!DrawingTip.ValidateCollection(data,out error)||!RoomSnapPoint.ValidateCollection(data,out error)||!RoomContainer.ValidateCollection(data,out error)||!RoomMaterialStore.ValidateCollection(data,out error))return false;item=data;error=null;return true;
         }
         bool PrepareCreationBatch(CreationBatch batch,out RoomObjectData[] objects,out CreationResources resources,out string error) {

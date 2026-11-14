@@ -14,6 +14,8 @@ namespace Maestro.Quest.Creation
         readonly CollisionResources.Lease resource;
         readonly List<Mesh> meshes=new();
         readonly List<Collider> colliders=new();
+        readonly List<RoomSupportPiece> sources=new();
+        internal RoomSupportPiece[] SupportSources=>sources.ToArray();
         internal readonly string Encoded;
         internal void Attach(Transform parent){if(!root)throw new InvalidOperationException("Collision preparation has ended");root.transform.SetParent(parent,false);}
         public Collider[] Colliders=>colliders.ToArray();
@@ -25,19 +27,19 @@ namespace Maestro.Quest.Creation
             try{root=new GameObject("Editable collision shapes");root.SetActive(false);root.transform.SetParent(parent,false);
             foreach(var s in recipe.shapes){
                 var node=new GameObject(s.id);node.transform.SetParent(root.transform,false);node.transform.SetLocalPositionAndRotation(s.position,s.rotation);node.transform.localScale=s.size;node.layer=RoomPhysicsLayers.Item;
-                if(s.shape=="box")colliders.Add(node.AddComponent<BoxCollider>());
-                else if(s.shape=="sphere"){var sphere=node.AddComponent<SphereCollider>();sphere.radius=.5f;colliders.Add(sphere);}
-                else if(s.shape=="cylinder")AddMesh(node,Prism(Circle(s.segments)));
+                if(s.shape=="box"){var box=node.AddComponent<BoxCollider>();colliders.Add(box);sources.Add(new(box,s.id));}
+                else if(s.shape=="sphere"){var sphere=node.AddComponent<SphereCollider>();sphere.radius=.5f;colliders.Add(sphere);sources.Add(new(sphere,s.id));}
+                else if(s.shape=="cylinder")AddMesh(node,Prism(Circle(s.segments)),s.id,0);
                 else for(int i=0;i<s.segments;i++){
                     float a=2*Mathf.PI*i/s.segments,b=2*Mathf.PI*(i+1)/s.segments;
                     Vector2 Point(float radius,float angle)=>new(radius*Mathf.Cos(angle),radius*Mathf.Sin(angle));
                     var sector=new GameObject("Wall "+i);sector.transform.SetParent(node.transform,false);sector.layer=RoomPhysicsLayers.Item;
-                    AddMesh(sector,Prism(new[]{Point(s.innerRadius,a),Point(.5f,a),Point(.5f,b),Point(s.innerRadius,b)}));
+                    AddMesh(sector,Prism(new[]{Point(s.innerRadius,a),Point(.5f,a),Point(.5f,b),Point(s.innerRadius,b)}),s.id,i);
                 }
             }resource.Ready(colliders);}catch{Dispose();throw;}
         }
-        void AddMesh(GameObject node,Mesh mesh) {
-            meshes.Add(mesh);resource.Own(mesh);var collider=node.AddComponent<MeshCollider>();collider.convex=true;collider.sharedMesh=mesh;colliders.Add(collider);
+        void AddMesh(GameObject node,Mesh mesh,string source,int piece) {
+            meshes.Add(mesh);resource.Own(mesh);var collider=node.AddComponent<MeshCollider>();collider.convex=true;collider.sharedMesh=mesh;colliders.Add(collider);sources.Add(new(collider,source,piece));
         }
         static Vector2[] Circle(int count){var p=new Vector2[count];for(int i=0;i<count;i++){float a=2*Mathf.PI*i/count;p[i]=new Vector2(.5f*Mathf.Cos(a),.5f*Mathf.Sin(a));}return p;}
         // Counter-clockwise X/Z footprint. Each ring sector is convex and leaves the centre empty.
@@ -48,6 +50,6 @@ namespace Maestro.Quest.Creation
             for(int i=0;i<count;i++){int j=(i+1)%count;t.AddRange(new[]{i,count+i,j,j,count+i,count+j});}
             var mesh=new Mesh {name="Collision convex prism",vertices=v,triangles=t.ToArray()};mesh.RecalculateBounds();return mesh;
         }
-        public void Dispose(){if(root){root.SetActive(false);ArtResources.Release(root);}foreach(var mesh in meshes)ArtResources.Release(mesh);meshes.Clear();resource?.Retire(colliders);colliders.Clear();}
+        public void Dispose(){if(root){root.SetActive(false);ArtResources.Release(root);}foreach(var mesh in meshes)ArtResources.Release(mesh);meshes.Clear();resource?.Retire(colliders);colliders.Clear();sources.Clear();}
     }
 }

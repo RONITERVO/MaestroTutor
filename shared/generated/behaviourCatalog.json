@@ -13385,6 +13385,27 @@
                   "creationComponents.v1"
                 ]
               },
+              "staticSupport": {
+                "type": "object",
+                "properties": {
+                  "version": {
+                    "type": "integer",
+                    "minimum": 1.0,
+                    "maximum": 1.0
+                  },
+                  "enabled": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "version",
+                  "enabled"
+                ],
+                "additionalProperties": false,
+                "x-features": [
+                  "staticSupport.v1"
+                ]
+              },
               "loading": {
                 "type": "string",
                 "enum": [
@@ -13419,8 +13440,9 @@
               "kind"
             ],
             "additionalProperties": false,
+            "format": "staticSupportSource",
             "title": "Create recipe object",
-            "description": "Create editable geometry and optional animation tracks from a bounded recipe. Returns objectId after saving; one room Undo edit. Set recipe.playing=false to create it idle and use animation.play with source.kind recipe on the returned ID for program-controlled playback. Setting playing=true explicitly starts the saved recipe animation. Geometry uses metres in room axes; scale is 0.1–4. Optional collision and physics components are validated and saved with the geometry as one creation/Undo. Omitted physics keeps the existing fixed default. Collision proxies stay root-local and do not follow animated parts; creating a dynamic object does not start room physics. Outside temporary play, prepares and publishes its save in the background with one Undo edit. Completion confirms native application and saving. Once preparation begins, newer authored changes invalidate its candidate. Cancellation before native acceptance leaves the requested edit unapplied. After acceptance, stopping cannot retract the edit or its pending save. A save conflict preserves files, blocks further saves and requires inspection; never blindly replay it. Runtime clock and viewer movement continue. Concurrent persisted object edits enter preparation in arrival order after earlier saves drain, without copying a waiting candidate. Stopping or invalidating a waiter releases its place; target changes while waiting require a new request. In a temporary room, changes the live room and local Undo; a kept snapshot makes it durable. Other objects keep running. Returns the exact new objectId only after successful completion. Waiting does not allocate a saved object or native geometry; room capacity is checked again before preparation and acceptance. Stopping an accepted creation leaves it in the room; inspect before retrying. Optional loading chooses now (the default, with native preparation) or onDemand (save the exact definitions and IDs without allocating visible objects). On-demand completion confirms saved existence, not visibility, simulation or animation playback. Nearby observation or a later native action acquires the object through the normal bounded loader; a program must wait for that action's readiness. No quota, permission or resource check is bypassed. Undo/Redo preserves unloaded existence; stopping a completed creation never erases it.",
+            "description": "Create editable geometry and optional animation tracks from a bounded recipe. Returns objectId after saving; one room Undo edit. Set recipe.playing=false to create it idle and use animation.play with source.kind recipe on the returned ID for program-controlled playback. Setting playing=true explicitly starts the saved recipe animation. Geometry uses metres in room axes; scale is 0.1–4. Optional staticSupport explicitly enables compatible fixed primary solids as ground; it defaults off and never infers support from an object name. Optional collision and physics components are validated and saved with the geometry as one creation/Undo. Omitted physics keeps the existing fixed default. Collision proxies stay root-local and do not follow animated parts; creating a dynamic object does not start room physics. Outside temporary play, prepares and publishes its save in the background with one Undo edit. Completion confirms native application and saving. Once preparation begins, newer authored changes invalidate its candidate. Cancellation before native acceptance leaves the requested edit unapplied. After acceptance, stopping cannot retract the edit or its pending save. A save conflict preserves files, blocks further saves and requires inspection; never blindly replay it. Runtime clock and viewer movement continue. Concurrent persisted object edits enter preparation in arrival order after earlier saves drain, without copying a waiting candidate. Stopping or invalidating a waiter releases its place; target changes while waiting require a new request. In a temporary room, changes the live room and local Undo; a kept snapshot makes it durable. Other objects keep running. Returns the exact new objectId only after successful completion. Waiting does not allocate a saved object or native geometry; room capacity is checked again before preparation and acceptance. Stopping an accepted creation leaves it in the room; inspect before retrying. Optional loading chooses now (the default, with native preparation) or onDemand (save the exact definitions and IDs without allocating visible objects). On-demand completion confirms saved existence, not visibility, simulation or animation playback. Nearby observation or a later native action acquires the object through the normal bounded loader; a program must wait for that action's readiness. No quota, permission or resource check is bypassed. Undo/Redo preserves unloaded existence; stopping a completed creation never erases it.",
             "examples": [
               {
                 "name": "Box robot",
@@ -14562,13 +14584,15 @@
                   "57489e508a5e05219e5f787c7c002dda1946e85704af0c0dc74984c10a56a382",
                   "69c83dbd4e28aeb4bb3f21f9f02263c21e24067f8df60464a2f8e48aecbc7f22",
                   "e716e1032377c1f793d21bc9f73ff6b92f26af50fdaefa7f21e8846f6a9f5316",
+                  "28106d7ecb04c6acf31c65e6e7071fe0cb668085aa87803f23e3679c6d9062eb",
                   "0d4f8af08ffa09f3cc332f1f3f805db4f87204a4b48388d5f4d0e89694375761",
                   "7e4532f9a67aea4a139543c775f5fb9334f6d4542073defc9018cfbb5bd29e71",
                   "f32abeda26d58da5bdd29e0124b86d904d97a8637edc6d1295789703c6bba7ae",
                   "b02ef81da57efdea6e530abe268e89caf7a38ecae739b43d1664c148dc11d42e",
                   "eaf70ab2071fd07f4ea555da3d0fdc326cef0cea1bec6a8d834b2337f34d4b0a",
                   "78ac47258c47968b7b69bdf8144e0e2076e40ffbd32f171317ce81883526f78c",
-                  "f0816594b495867263209db3b85bd9a32b70e2d44fbf1bdee1c219c025aacf45"
+                  "f0816594b495867263209db3b85bd9a32b70e2d44fbf1bdee1c219c025aacf45",
+                  "a9e067e40bdbfa2ba243df36a76e1a42f19ab4f379743b9cb67093dde6534c65"
                 ],
                 "x-enum-labels": {
                   "f837b493456586149e90a1f76e5c8ee0a50cb7dfdcb836ea2e1d9dcb08a14496": "Ball",
@@ -14590,13 +14614,15 @@
                   "57489e508a5e05219e5f787c7c002dda1946e85704af0c0dc74984c10a56a382": "Pawn",
                   "69c83dbd4e28aeb4bb3f21f9f02263c21e24067f8df60464a2f8e48aecbc7f22": "Pencil",
                   "e716e1032377c1f793d21bc9f73ff6b92f26af50fdaefa7f21e8846f6a9f5316": "Plate",
+                  "28106d7ecb04c6acf31c65e6e7071fe0cb668085aa87803f23e3679c6d9062eb": "Platform",
                   "0d4f8af08ffa09f3cc332f1f3f805db4f87204a4b48388d5f4d0e89694375761": "Queen",
                   "7e4532f9a67aea4a139543c775f5fb9334f6d4542073defc9018cfbb5bd29e71": "Box robot",
                   "f32abeda26d58da5bdd29e0124b86d904d97a8637edc6d1295789703c6bba7ae": "Rook",
                   "b02ef81da57efdea6e530abe268e89caf7a38ecae739b43d1664c148dc11d42e": "Sculpt brush",
                   "eaf70ab2071fd07f4ea555da3d0fdc326cef0cea1bec6a8d834b2337f34d4b0a": "Shallow pool",
                   "78ac47258c47968b7b69bdf8144e0e2076e40ffbd32f171317ce81883526f78c": "Snow patch",
-                  "f0816594b495867263209db3b85bd9a32b70e2d44fbf1bdee1c219c025aacf45": "Spoon"
+                  "f0816594b495867263209db3b85bd9a32b70e2d44fbf1bdee1c219c025aacf45": "Spoon",
+                  "a9e067e40bdbfa2ba243df36a76e1a42f19ab4f379743b9cb67093dde6534c65": "Low stairs"
                 },
                 "x-enum-images": {
                   "f837b493456586149e90a1f76e5c8ee0a50cb7dfdcb836ea2e1d9dcb08a14496": "quest/templates/f837b493456586149e90a1f76e5c8ee0a50cb7dfdcb836ea2e1d9dcb08a14496.png",
@@ -14618,13 +14644,15 @@
                   "57489e508a5e05219e5f787c7c002dda1946e85704af0c0dc74984c10a56a382": "quest/templates/57489e508a5e05219e5f787c7c002dda1946e85704af0c0dc74984c10a56a382.png",
                   "69c83dbd4e28aeb4bb3f21f9f02263c21e24067f8df60464a2f8e48aecbc7f22": "quest/templates/69c83dbd4e28aeb4bb3f21f9f02263c21e24067f8df60464a2f8e48aecbc7f22.png",
                   "e716e1032377c1f793d21bc9f73ff6b92f26af50fdaefa7f21e8846f6a9f5316": "quest/templates/e716e1032377c1f793d21bc9f73ff6b92f26af50fdaefa7f21e8846f6a9f5316.png",
+                  "28106d7ecb04c6acf31c65e6e7071fe0cb668085aa87803f23e3679c6d9062eb": "quest/templates/28106d7ecb04c6acf31c65e6e7071fe0cb668085aa87803f23e3679c6d9062eb.png",
                   "0d4f8af08ffa09f3cc332f1f3f805db4f87204a4b48388d5f4d0e89694375761": "quest/templates/0d4f8af08ffa09f3cc332f1f3f805db4f87204a4b48388d5f4d0e89694375761.png",
                   "7e4532f9a67aea4a139543c775f5fb9334f6d4542073defc9018cfbb5bd29e71": "quest/templates/7e4532f9a67aea4a139543c775f5fb9334f6d4542073defc9018cfbb5bd29e71.png",
                   "f32abeda26d58da5bdd29e0124b86d904d97a8637edc6d1295789703c6bba7ae": "quest/templates/f32abeda26d58da5bdd29e0124b86d904d97a8637edc6d1295789703c6bba7ae.png",
                   "b02ef81da57efdea6e530abe268e89caf7a38ecae739b43d1664c148dc11d42e": "quest/templates/b02ef81da57efdea6e530abe268e89caf7a38ecae739b43d1664c148dc11d42e.png",
                   "eaf70ab2071fd07f4ea555da3d0fdc326cef0cea1bec6a8d834b2337f34d4b0a": "quest/templates/eaf70ab2071fd07f4ea555da3d0fdc326cef0cea1bec6a8d834b2337f34d4b0a.png",
                   "78ac47258c47968b7b69bdf8144e0e2076e40ffbd32f171317ce81883526f78c": "quest/templates/78ac47258c47968b7b69bdf8144e0e2076e40ffbd32f171317ce81883526f78c.png",
-                  "f0816594b495867263209db3b85bd9a32b70e2d44fbf1bdee1c219c025aacf45": "quest/templates/f0816594b495867263209db3b85bd9a32b70e2d44fbf1bdee1c219c025aacf45.png"
+                  "f0816594b495867263209db3b85bd9a32b70e2d44fbf1bdee1c219c025aacf45": "quest/templates/f0816594b495867263209db3b85bd9a32b70e2d44fbf1bdee1c219c025aacf45.png",
+                  "a9e067e40bdbfa2ba243df36a76e1a42f19ab4f379743b9cb67093dde6534c65": "quest/templates/a9e067e40bdbfa2ba243df36a76e1a42f19ab4f379743b9cb67093dde6534c65.png"
                 }
               },
               "name": {
@@ -14687,7 +14715,7 @@
             ],
             "additionalProperties": false,
             "title": "Create starter object",
-            "description": "Expand an exact bundled template hash into ordinary editable recipe, collision, physics and optional flat drawing-surface, drawing-tip, snap-point and logical liquid-container data. Read creation.template for descriptions and cost counts; names and tags are display metadata, never executable instructions. Empty name keeps its template name. Creates one object and one Undo through the same recipe creation path; later template changes cannot alter existing objects. Templates start idle, do not start physics, install behaviours, snap bricks or simulate liquids. Robot tracks can be played explicitly with animation.play source.kind recipe. The hash is an exact choice: missing versions fail, never substitute by name. Optional user template publishing is not part of this bundled library. Outside temporary play, prepares and publishes its save in the background with one Undo edit. Completion confirms native application and saving. Once preparation begins, newer authored changes invalidate its candidate. Cancellation before native acceptance leaves the requested edit unapplied. After acceptance, stopping cannot retract the edit or its pending save. A save conflict preserves files, blocks further saves and requires inspection; never blindly replay it. Runtime clock and viewer movement continue. Concurrent persisted object edits enter preparation in arrival order after earlier saves drain, without copying a waiting candidate. Stopping or invalidating a waiter releases its place; target changes while waiting require a new request. In a temporary room, changes the live room and local Undo; a kept snapshot makes it durable. Other objects keep running. Returns the exact new objectId only after successful completion. Waiting does not allocate a saved object or native geometry; room capacity is checked again before preparation and acceptance. Stopping an accepted creation leaves it in the room; inspect before retrying. Optional loading chooses now (the default, with native preparation) or onDemand (save the exact definitions and IDs without allocating visible objects). On-demand completion confirms saved existence, not visibility, simulation or animation playback. Nearby observation or a later native action acquires the object through the normal bounded loader; a program must wait for that action's readiness. No quota, permission or resource check is bypassed. Undo/Redo preserves unloaded existence; stopping a completed creation never erases it.",
+            "description": "Expand an exact bundled template hash into ordinary editable recipe, collision, physics and optional flat drawing-surface, drawing-tip, snap-point logical liquid-container data and explicit static support. Read creation.template for descriptions and cost counts; names and tags are display metadata, never executable instructions. Empty name keeps its template name. Creates one object and one Undo through the same recipe creation path; later template changes cannot alter existing objects. Templates start idle, do not start physics, install behaviours, snap bricks or simulate liquids. Robot tracks can be played explicitly with animation.play source.kind recipe. The hash is an exact choice: missing versions fail, never substitute by name. Optional user template publishing is not part of this bundled library. Outside temporary play, prepares and publishes its save in the background with one Undo edit. Completion confirms native application and saving. Once preparation begins, newer authored changes invalidate its candidate. Cancellation before native acceptance leaves the requested edit unapplied. After acceptance, stopping cannot retract the edit or its pending save. A save conflict preserves files, blocks further saves and requires inspection; never blindly replay it. Runtime clock and viewer movement continue. Concurrent persisted object edits enter preparation in arrival order after earlier saves drain, without copying a waiting candidate. Stopping or invalidating a waiter releases its place; target changes while waiting require a new request. In a temporary room, changes the live room and local Undo; a kept snapshot makes it durable. Other objects keep running. Returns the exact new objectId only after successful completion. Waiting does not allocate a saved object or native geometry; room capacity is checked again before preparation and acceptance. Stopping an accepted creation leaves it in the room; inspect before retrying. Optional loading chooses now (the default, with native preparation) or onDemand (save the exact definitions and IDs without allocating visible objects). On-demand completion confirms saved existence, not visibility, simulation or animation playback. Nearby observation or a later native action acquires the object through the normal bounded loader; a program must wait for that action's readiness. No quota, permission or resource check is bypassed. Undo/Redo preserves unloaded existence; stopping a completed creation never erases it.",
             "examples": [
               {
                 "templateHash": "835aa751b583dc6b888b0f48f77ef2db154553d1b9a5bdc984508d10ee432278",
@@ -14884,13 +14912,15 @@
                                 "57489e508a5e05219e5f787c7c002dda1946e85704af0c0dc74984c10a56a382",
                                 "69c83dbd4e28aeb4bb3f21f9f02263c21e24067f8df60464a2f8e48aecbc7f22",
                                 "e716e1032377c1f793d21bc9f73ff6b92f26af50fdaefa7f21e8846f6a9f5316",
+                                "28106d7ecb04c6acf31c65e6e7071fe0cb668085aa87803f23e3679c6d9062eb",
                                 "0d4f8af08ffa09f3cc332f1f3f805db4f87204a4b48388d5f4d0e89694375761",
                                 "7e4532f9a67aea4a139543c775f5fb9334f6d4542073defc9018cfbb5bd29e71",
                                 "f32abeda26d58da5bdd29e0124b86d904d97a8637edc6d1295789703c6bba7ae",
                                 "b02ef81da57efdea6e530abe268e89caf7a38ecae739b43d1664c148dc11d42e",
                                 "eaf70ab2071fd07f4ea555da3d0fdc326cef0cea1bec6a8d834b2337f34d4b0a",
                                 "78ac47258c47968b7b69bdf8144e0e2076e40ffbd32f171317ce81883526f78c",
-                                "f0816594b495867263209db3b85bd9a32b70e2d44fbf1bdee1c219c025aacf45"
+                                "f0816594b495867263209db3b85bd9a32b70e2d44fbf1bdee1c219c025aacf45",
+                                "a9e067e40bdbfa2ba243df36a76e1a42f19ab4f379743b9cb67093dde6534c65"
                               ],
                               "x-enum-labels": {
                                 "f837b493456586149e90a1f76e5c8ee0a50cb7dfdcb836ea2e1d9dcb08a14496": "Ball",
@@ -14912,13 +14942,15 @@
                                 "57489e508a5e05219e5f787c7c002dda1946e85704af0c0dc74984c10a56a382": "Pawn",
                                 "69c83dbd4e28aeb4bb3f21f9f02263c21e24067f8df60464a2f8e48aecbc7f22": "Pencil",
                                 "e716e1032377c1f793d21bc9f73ff6b92f26af50fdaefa7f21e8846f6a9f5316": "Plate",
+                                "28106d7ecb04c6acf31c65e6e7071fe0cb668085aa87803f23e3679c6d9062eb": "Platform",
                                 "0d4f8af08ffa09f3cc332f1f3f805db4f87204a4b48388d5f4d0e89694375761": "Queen",
                                 "7e4532f9a67aea4a139543c775f5fb9334f6d4542073defc9018cfbb5bd29e71": "Box robot",
                                 "f32abeda26d58da5bdd29e0124b86d904d97a8637edc6d1295789703c6bba7ae": "Rook",
                                 "b02ef81da57efdea6e530abe268e89caf7a38ecae739b43d1664c148dc11d42e": "Sculpt brush",
                                 "eaf70ab2071fd07f4ea555da3d0fdc326cef0cea1bec6a8d834b2337f34d4b0a": "Shallow pool",
                                 "78ac47258c47968b7b69bdf8144e0e2076e40ffbd32f171317ce81883526f78c": "Snow patch",
-                                "f0816594b495867263209db3b85bd9a32b70e2d44fbf1bdee1c219c025aacf45": "Spoon"
+                                "f0816594b495867263209db3b85bd9a32b70e2d44fbf1bdee1c219c025aacf45": "Spoon",
+                                "a9e067e40bdbfa2ba243df36a76e1a42f19ab4f379743b9cb67093dde6534c65": "Low stairs"
                               },
                               "x-enum-images": {
                                 "f837b493456586149e90a1f76e5c8ee0a50cb7dfdcb836ea2e1d9dcb08a14496": "quest/templates/f837b493456586149e90a1f76e5c8ee0a50cb7dfdcb836ea2e1d9dcb08a14496.png",
@@ -14940,13 +14972,15 @@
                                 "57489e508a5e05219e5f787c7c002dda1946e85704af0c0dc74984c10a56a382": "quest/templates/57489e508a5e05219e5f787c7c002dda1946e85704af0c0dc74984c10a56a382.png",
                                 "69c83dbd4e28aeb4bb3f21f9f02263c21e24067f8df60464a2f8e48aecbc7f22": "quest/templates/69c83dbd4e28aeb4bb3f21f9f02263c21e24067f8df60464a2f8e48aecbc7f22.png",
                                 "e716e1032377c1f793d21bc9f73ff6b92f26af50fdaefa7f21e8846f6a9f5316": "quest/templates/e716e1032377c1f793d21bc9f73ff6b92f26af50fdaefa7f21e8846f6a9f5316.png",
+                                "28106d7ecb04c6acf31c65e6e7071fe0cb668085aa87803f23e3679c6d9062eb": "quest/templates/28106d7ecb04c6acf31c65e6e7071fe0cb668085aa87803f23e3679c6d9062eb.png",
                                 "0d4f8af08ffa09f3cc332f1f3f805db4f87204a4b48388d5f4d0e89694375761": "quest/templates/0d4f8af08ffa09f3cc332f1f3f805db4f87204a4b48388d5f4d0e89694375761.png",
                                 "7e4532f9a67aea4a139543c775f5fb9334f6d4542073defc9018cfbb5bd29e71": "quest/templates/7e4532f9a67aea4a139543c775f5fb9334f6d4542073defc9018cfbb5bd29e71.png",
                                 "f32abeda26d58da5bdd29e0124b86d904d97a8637edc6d1295789703c6bba7ae": "quest/templates/f32abeda26d58da5bdd29e0124b86d904d97a8637edc6d1295789703c6bba7ae.png",
                                 "b02ef81da57efdea6e530abe268e89caf7a38ecae739b43d1664c148dc11d42e": "quest/templates/b02ef81da57efdea6e530abe268e89caf7a38ecae739b43d1664c148dc11d42e.png",
                                 "eaf70ab2071fd07f4ea555da3d0fdc326cef0cea1bec6a8d834b2337f34d4b0a": "quest/templates/eaf70ab2071fd07f4ea555da3d0fdc326cef0cea1bec6a8d834b2337f34d4b0a.png",
                                 "78ac47258c47968b7b69bdf8144e0e2076e40ffbd32f171317ce81883526f78c": "quest/templates/78ac47258c47968b7b69bdf8144e0e2076e40ffbd32f171317ce81883526f78c.png",
-                                "f0816594b495867263209db3b85bd9a32b70e2d44fbf1bdee1c219c025aacf45": "quest/templates/f0816594b495867263209db3b85bd9a32b70e2d44fbf1bdee1c219c025aacf45.png"
+                                "f0816594b495867263209db3b85bd9a32b70e2d44fbf1bdee1c219c025aacf45": "quest/templates/f0816594b495867263209db3b85bd9a32b70e2d44fbf1bdee1c219c025aacf45.png",
+                                "a9e067e40bdbfa2ba243df36a76e1a42f19ab4f379743b9cb67093dde6534c65": "quest/templates/a9e067e40bdbfa2ba243df36a76e1a42f19ab4f379743b9cb67093dde6534c65.png"
                               }
                             }
                           },
@@ -17086,6 +17120,27 @@
                               "x-features": [
                                 "creationComponents.v1"
                               ]
+                            },
+                            "staticSupport": {
+                              "type": "object",
+                              "properties": {
+                                "version": {
+                                  "type": "integer",
+                                  "minimum": 1.0,
+                                  "maximum": 1.0
+                                },
+                                "enabled": {
+                                  "type": "boolean"
+                                }
+                              },
+                              "required": [
+                                "version",
+                                "enabled"
+                              ],
+                              "additionalProperties": false,
+                              "x-features": [
+                                "staticSupport.v1"
+                              ]
                             }
                           },
                           "required": [
@@ -17093,6 +17148,7 @@
                             "recipe"
                           ],
                           "additionalProperties": false,
+                          "format": "staticSupportSource",
                           "title": "Editable recipe"
                         },
                         {
@@ -17111,7 +17167,28 @@
                                 "version": {
                                   "type": "integer",
                                   "minimum": 1.0,
-                                  "maximum": 10.0
+                                  "maximum": 11.0
+                                },
+                                "staticSupport": {
+                                  "type": "object",
+                                  "properties": {
+                                    "version": {
+                                      "type": "integer",
+                                      "minimum": 1.0,
+                                      "maximum": 1.0
+                                    },
+                                    "enabled": {
+                                      "type": "boolean"
+                                    }
+                                  },
+                                  "required": [
+                                    "version",
+                                    "enabled"
+                                  ],
+                                  "additionalProperties": false,
+                                  "x-features": [
+                                    "staticSupport.v1"
+                                  ]
                                 },
                                 "footPlacement": {
                                   "type": "object",
@@ -22593,7 +22670,7 @@
         "storage.writable",
         "blueprint.valid"
       ],
-      "description": "Instantiate an editable version-1 independent version-3 physically connected, or version-4 resource-bundled blueprint of 1–16 independently grabbable physical pieces. Each named slot contains an exact bundled template hash, inline recipe/collision/physics source, or version-1/2 prototype preserving created geometry, paint, surfaces/ink, drawing tips and recorded root motion and a local pose/scale. The outer pose/scale transforms the entire arrangement in room axes. All final positions must be within 25 metres and all final scales 0.1–4; recipe, vertex, collision and room-object budgets apply to the whole candidate. Reserves every creation before a program starts the call, then saves once with one Undo; failure creates no partial structure. Returns objectIds and slots in matching blueprint order. Version 3 includes 1–15 slot-to-slot connection links, each using the ordinary connection definition. One outgoing connection per piece, no cycles or external IDs; authored frames must already align at the transformed pose. Links become exact new object IDs only after all pieces are prepared, within the shared 16-connection room budget. Objects retain editable source and no longer depend on the blueprint. Save this definition in ordinary reusable programs/modules; this does not install a separate blueprint library or persistent group, create snap joints, replace missing pieces, avoid overlaps, or start physics/animations. Pieces must start idle. Prototype motion is relative to each piece pose and transforms with it; every resulting frame must satisfy room bounds. Model prototypes keep exact local model hashes: bytes are verified before any member is committed; missing/damaged files fail without partial creation. Model rendering still loads asynchronously through the usual importer. No external file or replacement model is fetched. Version 4 bundles exactly the referenced appearances, tone sound definitions and environment collision profiles, including dormant appearance bindings. Version-2 prototypes carry these local references. All definition IDs are module-local symbols, remapped to fresh IDs on every instantiation; sharing within the construction survives, but existing room definitions are never reused or overwritten. Version 4 permits zero to fifteen links. Room resource budgets are checked before the single atomic save; Undo removes the new definitions with the pieces. Emitters are saved idle. Collision profiles remain subject to the global real-room collision switch. Temporary creation stays in the fork; Stop leaves accepted pieces and duplicate receipts do not create again. Use explicit returned IDs for later actions/reset; never identify pieces by display names. Optional loading chooses now (the default, with native preparation) or onDemand (save the exact definitions and IDs without allocating visible objects). On-demand completion confirms saved existence, not visibility, simulation or animation playback. Nearby observation or a later native action acquires the object through the normal bounded loader; a program must wait for that action's readiness. No quota, permission or resource check is bypassed. Undo/Redo preserves unloaded existence; stopping a completed creation never erases it.",
+      "description": "Instantiate an editable version-1 independent version-3 physically connected, or version-4 resource-bundled blueprint of 1–16 independently grabbable physical pieces. Each named slot contains an exact bundled template hash, inline recipe/collision/physics source, or version-1/2 prototype preserving created geometry, paint, surfaces/ink, drawing tips and recorded root motion and a local pose/scale. The outer pose/scale transforms the entire arrangement in room axes. All final positions must be within 25 metres and all final scales 0.1–4; recipe, vertex, collision and room-object budgets apply to the whole candidate. Reserves every creation before a program starts the call, then saves once with one Undo; failure creates no partial structure. Returns objectIds and slots in matching blueprint order. Version 3 includes 1–15 slot-to-slot connection links, each using the ordinary connection definition. One outgoing connection per piece, no cycles or external IDs; authored frames must already align at the transformed pose. Links become exact new object IDs only after all pieces are prepared, within the shared 16-connection room budget. Objects retain editable source and no longer depend on the blueprint. Save this definition in ordinary reusable programs/modules; this does not install a separate blueprint library or persistent group, create snap joints, replace missing pieces, avoid overlaps, or start physics/animations. Pieces must start idle. Optional staticSupport on an inline recipe is explicit fixed primary-solid support; omission keeps it off. Template support is copied from its exact definition; version-11 prototypes retain their saved support intent. Prototype motion is relative to each piece pose and transforms with it; every resulting frame must satisfy room bounds. Model prototypes keep exact local model hashes: bytes are verified before any member is committed; missing/damaged files fail without partial creation. Model rendering still loads asynchronously through the usual importer. No external file or replacement model is fetched. Version 4 bundles exactly the referenced appearances, tone sound definitions and environment collision profiles, including dormant appearance bindings. Version-2 prototypes carry these local references. All definition IDs are module-local symbols, remapped to fresh IDs on every instantiation; sharing within the construction survives, but existing room definitions are never reused or overwritten. Version 4 permits zero to fifteen links. Room resource budgets are checked before the single atomic save; Undo removes the new definitions with the pieces. Emitters are saved idle. Collision profiles remain subject to the global real-room collision switch. Temporary creation stays in the fork; Stop leaves accepted pieces and duplicate receipts do not create again. Use explicit returned IDs for later actions/reset; never identify pieces by display names. Optional loading chooses now (the default, with native preparation) or onDemand (save the exact definitions and IDs without allocating visible objects). On-demand completion confirms saved existence, not visibility, simulation or animation playback. Nearby observation or a later native action acquires the object through the normal bounded loader; a program must wait for that action's readiness. No quota, permission or resource check is bypassed. Undo/Redo preserves unloaded existence; stopping a completed creation never erases it.",
       "example": {
         "blueprint": {
           "version": 1,
@@ -34103,6 +34180,101 @@
         "mode": "bouncy",
         "shape": "sphere",
         "mass": 0.5
+      },
+      "output": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^(maestro|[a-fA-F0-9]{32})$",
+            "maxLength": 32,
+            "x-resource": "object"
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 1.0,
+            "maximum": 2147483647.0
+          },
+          "temporary": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "target",
+          "revision",
+          "temporary"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "id": "object.support.set",
+      "version": 1,
+      "label": "Use as walking support",
+      "input": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^[a-fA-F0-9]{32}$",
+            "maxLength": 32,
+            "x-resource": "object"
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 1.0,
+            "maximum": 2147483647.0
+          },
+          "enabled": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "target",
+          "revision",
+          "enabled"
+        ],
+        "additionalProperties": false,
+        "x-features": [
+          "spatialSettings.v1",
+          "staticSupport.v1"
+        ],
+        "x-current": {
+          "fact": "object.support",
+          "version": 1,
+          "arguments": {
+            "target": "target"
+          },
+          "fields": {
+            "revision": [
+              "revision"
+            ],
+            "enabled": [
+              "enabled"
+            ]
+          },
+          "guards": [
+            "revision"
+          ]
+        }
+      },
+      "duration": "completion",
+      "ownership": "exclusiveTargetAndProp",
+      "channels": [
+        "wholeTarget"
+      ],
+      "requirements": [
+        "target.exists",
+        "target.unheld",
+        "authoring.inactive",
+        "object.revision.current",
+        "storage.writable"
+      ],
+      "description": "Choose whether a fixed creation's complete selected primary collision supports walking and virtual-world physics. Uses its real box or compatible compound mesh colliders, including their holes; never adds an invisible floor. Requires fixed physics and no saved root recording. A sphere/capsule or mixed unsupported collision set is refused. Imported models need an explicit compatible automatic collision recipe; imported rigid meshes retain their separate walkable setting. For stairs author separate tread collision boxes; a decorative assembly's enclosing box is not a staircase. Grip, carried motion, manipulation and restoration suspend availability without deleting the setting. Reading object.support exposes saved intent and current readiness. This does not change real-room collision policy, visibility, terrain, physics playback or collision shapes. Read the matching fact and pass the exact object revision. Changed settings save before success with one Undo outside temporary play; already identical settings add no Undo; temporary changes stay in the fork until Keep. Unrequested settings, poses and recorded animations are preserved. Refuses held targets, active authoring and competing motion instead of stopping them; physical tools keep manual interruption priority. Does not start playback, following or physics. Duplicate receipts do not save twice. Stop cannot undo an already completed save; use Undo or explicit settings with a fresh revision. Outside temporary play, prepares and publishes its save in the background with one Undo edit. Completion confirms native application and saving. Once preparation begins, newer authored changes invalidate its candidate. Cancellation before native acceptance leaves the requested edit unapplied. After acceptance, stopping cannot retract the edit or its pending save. A save conflict preserves files, blocks further saves and requires inspection; never blindly replay it. Runtime clock and viewer movement continue. Concurrent persisted object edits enter preparation in arrival order after earlier saves drain, without copying a waiting candidate. Stopping or invalidating a waiter releases its place; target changes while waiting require a new request. In a temporary room, changes the live room and local Undo; a kept snapshot makes it durable. Other objects keep running.",
+      "example": {
+        "target": "00000000000000000000000000000000",
+        "revision": 1,
+        "enabled": true
       },
       "output": {
         "type": "object",
@@ -46420,6 +46592,44 @@
       ]
     },
     {
+      "id": "object.support",
+      "version": 1,
+      "type": {
+        "record": {
+          "target": "text",
+          "revision": "number",
+          "enabled": "boolean",
+          "ready": "boolean",
+          "reason": "text",
+          "temporary": "boolean"
+        }
+      },
+      "label": "Walking support",
+      "description": "Saved primary static support intent and exact object revision, plus live readiness and bounded reason. Readable while native content is unloaded; never activates geometry, changes collision or starts physics. ready does not prove a route, clearance, supported slope or step. Terrain and imported rigid mesh support keep their own settings.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^[a-fA-F0-9]{32}$",
+            "maxLength": 32,
+            "x-resource": "object"
+          }
+        },
+        "required": [
+          "target"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "target": "00000000000000000000000000000000"
+      },
+      "features": [
+        "factQueries.v1",
+        "staticSupport.v1"
+      ]
+    },
+    {
       "id": "object.water.traversal.settings",
       "version": 1,
       "type": {
@@ -51826,6 +52036,7 @@
             "recipe": "recipe",
             "collision": "collision",
             "physics": "physics",
+            "staticSupport": "staticSupport",
             "loading": "loading"
           }
         }
@@ -51939,6 +52150,10 @@
       "sha256": "e716e1032377c1f793d21bc9f73ff6b92f26af50fdaefa7f21e8846f6a9f5316"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Resources/Creation/Templates/platform.json",
+      "sha256": "28106d7ecb04c6acf31c65e6e7071fe0cb668085aa87803f23e3679c6d9062eb"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Resources/Creation/Templates/queen.json",
       "sha256": "0d4f8af08ffa09f3cc332f1f3f805db4f87204a4b48388d5f4d0e89694375761"
     },
@@ -51965,6 +52180,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Resources/Creation/Templates/spoon.json",
       "sha256": "f0816594b495867263209db3b85bd9a32b70e2d44fbf1bdee1c219c025aacf45"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Resources/Creation/Templates/stairs.json",
+      "sha256": "a9e067e40bdbfa2ba243df36a76e1a42f19ab4f379743b9cb67093dde6534c65"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Resources/MaestroRoomAudio.mixer",
@@ -52164,7 +52383,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Avatar/HumanoidGroundPose.cs",
-      "sha256": "749075bf39567fe665ec829b7e4f19b8eabb80296802268f38fce5b8c778df51"
+      "sha256": "42c1ff20e8bb0b05beb2ab775c4d84f818a8581b8c66677960e7ef0b0df54fd4"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Avatar/HumanoidRetargeter.cs",
@@ -52452,7 +52671,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/BatchCreationCapability.cs",
-      "sha256": "8e039a4564d3188ea1e01a40918b624dcd2646130a42442b9b9e5feec49d617e"
+      "sha256": "22ad07e7c4af0da87496641a98293ce2241d3fbd600c9b1ea92e8474a053be55"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilityModule.cs",
@@ -52460,7 +52679,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilityModules.cs",
-      "sha256": "6ecea961b78f9190baf3752aa9925960b1a529f44262408f82645ae877f6b7d7"
+      "sha256": "4cc262557cc2346e28c70a858ccf1e1c8fcb8e8b7df37044f8a93e8f94ea08fb"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilitySchema.cs",
@@ -52536,7 +52755,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CreateTemplateCapability.cs",
-      "sha256": "2b1ce02251933b264840817d6467e36912b1d02014455a5dd864f784e0a29350"
+      "sha256": "be627316c18fceaaab191355adffaa88e67fbc2df8727d0615bb34cab55e933b"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CreationLoading.cs",
@@ -52544,7 +52763,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CreationPrototypeSchema.cs",
-      "sha256": "bc44ef151d0761c19b5c4856e3a13f24edf69b51ccd039b38a5baea8a0fc72d8"
+      "sha256": "37ec8d7523d894edcc2d0b4db00d1ed74a0902413763ef7509bdc8c767b07625"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CreationResourcesSchema.cs",
@@ -52744,7 +52963,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ObjectCapabilities.cs",
-      "sha256": "2a3211deb3a0968a2e927176b404836e1e2480504af60c49e3fad80fc0357471"
+      "sha256": "b4a22e10521bc3328762fc973ef869d2e118268ed122d9e1dea6067b0b50ed8c"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ObjectFeetCapability.cs",
@@ -52915,6 +53134,10 @@
       "sha256": "0b445222475942a6408f8b7fb830039aca004ab11c5b1abc95cf6f065a4839d4"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/StaticSupportCapability.cs",
+      "sha256": "91ece8acb05bccf775f05e791d82d26e746fe531b62d6ccd11c432405ece07f5"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/StructureCapabilities.cs",
       "sha256": "df7eb8d797d4243178abdf2b351b39faaafec4015396341569a33421efb76d0e"
     },
@@ -53080,7 +53303,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CollisionGeometry.cs",
-      "sha256": "74d45ab2ec0a9ea6f121f28e6fe39b53fb5370c368ec05156bdcfa1d10f2d0ce"
+      "sha256": "894753fde73bf01e83022bee3671a5884d9c3b09ecc55c395df3705ccb02dc37"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CollisionRecipe.cs",
@@ -53135,16 +53358,20 @@
       "sha256": "595b3a33da71e9d8fcfdc67344f4f885d703c5a212493080703470b3b3a0a23e"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreatedRoomObject.Support.cs",
+      "sha256": "49b414cfb9f83d3e9aaa1cf02ac2b0f113a1a4179df991258f0fbcf539b72369"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreatedRoomObject.cs",
-      "sha256": "458dad7f8f9d83fef02fd7ad856cd9260e121181794ee52cfbf6c05cce4661d8"
+      "sha256": "2c382a34b7720e007c8ef2853a588537261e33ee17253d441a37aa6d3f5fd5dd"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreationBatch.cs",
-      "sha256": "4b5d414c36680e310c0ae33d729a21d081dc4e45647c006cb114acaf912982e3"
+      "sha256": "0cd717c35e7338352dca74aa353dfe7c810493c2e62224a930ddbae31ec66c54"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreationPrototype.cs",
-      "sha256": "054ab2354c2db6d8dc593e102288f53599b41d5f38dacd32e292779b1abecd5d"
+      "sha256": "e527531a6112bddcff9e4f306d39d0f97462932511f8a203600a12b682f069e5"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreationResources.cs",
@@ -53152,7 +53379,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreationTemplates.cs",
-      "sha256": "fa2d4bd5e53ab94cf6a23055d27623af8d6ffea8027ace58662e8d26273e9fb2"
+      "sha256": "bcadfd8d37769986b29a4c2f48af4c850e1bad2b1574ec9c40d2884d1b72d1df"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/DrawingSurface.cs",
@@ -53360,7 +53587,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/PendingRoomCreation.cs",
-      "sha256": "9a2c128ac725f4d0330e65be37ee85705dad984870bc1270dcce92e04c7c8d1f"
+      "sha256": "38c57517f4b47156ef2d218b40d8280ae03a49d5433bc686402fa7e243fea302"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/PendingRoomEdit.cs",
@@ -53568,7 +53795,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomControls.cs",
-      "sha256": "6ccd8b0580d47fc3c3e0cf792af91c4b12ca1cd655fb2547ad71b8480540ccdd"
+      "sha256": "f6ee2aa1103d562a1ea75f031b8bc4e7ec9a0f78fdf3ef792ede24b7497225ed"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomCreationBudget.cs",
@@ -53584,7 +53811,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomDocument.cs",
-      "sha256": "f2956fdb10aaa7b1cd7eb5f8cdc0edf525da8b2a40e0cd3086aa724bc503ecd2"
+      "sha256": "1728f5b1df0edc531dde91e61e460d86a56fe99f2c7e8e28274e75d422e2a1bc"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomDormantRecovery.cs",
@@ -53624,7 +53851,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditor.cs",
-      "sha256": "43fc8a442e51ccbffc57914c296b32645338a2c8446d1d19de7dcadaeb38b2a0"
+      "sha256": "a4c85c0db544476f7fdf61ce3ec934fbd95b8315d4072aab841ece03e7b02b95"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEnvironmentEdits.cs",
@@ -53648,7 +53875,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomFootGround.cs",
-      "sha256": "110dc92cdd79daded62f279811bdff814aec24586db5c0f7f09986074d952158"
+      "sha256": "a658ec0877e6eb3805ac3c00dee3147627e03207b74c439e4392937f2a3579fa"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomFootPlacement.cs",
@@ -53660,15 +53887,19 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomGroundAvailability.cs",
-      "sha256": "f45a5f38973a0927afbc7a5932d63bedebac4536f1fc1effccf16c478d4a73a8"
+      "sha256": "f16a83e1f4d638950c3c5c779af1b328008ac9e42586a99c9948980fe28c335f"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomGroundBounds.cs",
-      "sha256": "a34e53bb8213cde2e68079a2d867d6198b03ee7ca4e051fc041761b6f997b495"
+      "sha256": "693e4920fc212cda0a37d464a4dc496647814d75321d8e68aa86c537710883b8"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomGroundDefinition.cs",
+      "sha256": "2ea1d654ffe7acf11739acb1f3f408785f3aa90fddda54b98b8e15398b06d76e"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomGroundDirectory.cs",
-      "sha256": "13f27802f1a975ae339de91903aee80548cf2f21e0709b1a8147da2296da2072"
+      "sha256": "953319293da489b6d602e8322b8823143053f73a9f6e148b240a302ace1eb330"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomGroupTransform.cs",
@@ -53816,7 +54047,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomNativeObject.cs",
-      "sha256": "be481697e2999dea9cd5e3cd2f28214fc96fe96169bf8172ac72ba65adf41b59"
+      "sha256": "6f3c2bbae10b06c2cdc96f315477ce45aa3c83576d648f7fd68943ddc476f0f7"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomNativeResidency.cs",
@@ -53832,7 +54063,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomNavigationInputs.cs",
-      "sha256": "8f7314c20a03ad6bb0930069de6325bb3143566eede417f09c16214c8e0860bc"
+      "sha256": "68eb7b9243061782ff4a02e7d4afe720b994108453541ee5d349ee72b01539d5"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomObjectCopy.cs",
@@ -54004,15 +54235,23 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomSpatialReadiness.cs",
-      "sha256": "26bd43d4b76c10356b552ba510292c45cc69c27e4f2bdd6f054b7a28b587eaeb"
+      "sha256": "ada6171dfd3b91de648a99b953e2d23b83449c85c11bfddfc375de0ff92d2d68"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomStagingMaintenance.cs",
       "sha256": "b3ef1f383b770f03327c3d6f7cfcc53c8e408128597008d749a2c35d4eabec89"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomStaticSupport.cs",
+      "sha256": "a97beb840d3a9998d12694f089defe9726123e485f3769b76b1d8e7b00fa45ed"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomStaticSupportEdits.cs",
+      "sha256": "28786ba4cfad7891681efa8ef23efd07eb45978e6fa351c7913476ec28504d68"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomStorage.cs",
-      "sha256": "56c023e8ac61386d7f9b1043b230fc3d8953704e2bfa591295762a89ffdc913f"
+      "sha256": "ca3833fa2191ade43aa43ad5f73388d16d9d78215bdb9f44132be9a36625e2ed"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomStructure.cs",
@@ -54021,6 +54260,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomStructureEdits.cs",
       "sha256": "6cf332c2a391c6e1792a13735fe71d3b331ba20f1d28ef859aed0ef9ea77ba05"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomSupportPiece.cs",
+      "sha256": "f077f60b7c6c2f859acd6738dbab61b392b6b2e1b5dbb79f339fbbdc309709fc"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomSurfaceEdits.cs",
@@ -54571,6 +54814,18 @@
       "sha256": "fc1c8bd63057ca91f9a19739a77c3d855c2333a7d27c5eeb30228eaaa203384f"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/NavigationBuildInput.cs",
+      "sha256": "a6d846463109323e633d2149c51da311ce718bb12c0138cd6849106840bfb672"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/NavigationResources.cs",
+      "sha256": "58b4bd08dd2ceddc02d8e729de2763e9a8b4f4a407423c6ff9bbf0445dee38ab"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/NavigationSourceCost.cs",
+      "sha256": "26a2300606484e0e2caf8669daf8d183658e63136935a9a4551c5a64612089ad"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/PalmRecoveryButton.cs",
       "sha256": "6c2cece9ba304d45812140415cd306a80269cdbef0dc2379a021c2633fd8a197"
     },
@@ -54592,7 +54847,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RigidRoomItem.cs",
-      "sha256": "f9e74a78210416381041f6e7c671ccca1037bc7832883138960d9b7dd96bbd9c"
+      "sha256": "2e4dc393c5c156c9400b8173b495c46a2da576791442c83f5b9c3452b5b20af2"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomAnchorProbe.cs",
@@ -54640,7 +54895,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomEnvironmentBinding.Recovery.cs",
-      "sha256": "d9c15e65106c45f24fa593bcc27a58c76715f58c28b40039867d98dd7a1eab4b"
+      "sha256": "dd83748c24a9edf78a08cb314fe5d1981b371903a7bde22d22a3bd013ea29404"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomEnvironmentBinding.cs",
@@ -54648,11 +54903,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomEnvironmentClearance.cs",
-      "sha256": "aafac55c183ca39ffa6e4dfc898234f92d86edaf1f6979efda1db4f62cdd6f6e"
+      "sha256": "aa5f655fd523821972d1748b25a7f0669807a8ee6754ac64da058d12f095c340"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomEnvironmentQueries.cs",
-      "sha256": "506d1d35c0fe01e360aa7b82882c3bf8da4ca242be3c0d49171f96be7281929e"
+      "sha256": "67e417436035cd916de6ea48e6d1f015745b076b6640d749e4bdac0ba9600802"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomGrabContactInputs.cs",
@@ -54664,7 +54919,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomGroundQuery.cs",
-      "sha256": "43c337949157105eb516556da3a053e5d370af712cee124ccab0b8b05f354d54"
+      "sha256": "90cb08ba6479e7dcd6e6d4b2ae1f1cf82ca77e924c5e1bcfe6dac5e239ab763f"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomInteraction.cs",
@@ -54672,7 +54927,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomItem.cs",
-      "sha256": "122af8c7f61a07046b6829299b6ee9e583dd5fc6ce2f8f87db450e743312326f"
+      "sha256": "db7a11c3dca3ef0c1dc1484dfc4923a096c711ca7d55bff7c54598d3a9087b26"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomLocomotionBudget.cs",
@@ -54680,23 +54935,27 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomLocomotionOwner.cs",
-      "sha256": "0e773f7089d898d7228aab574dc49073eb602df7b6cedf5010f1fcaaa0a191a6"
+      "sha256": "44b06634c6a28728cf6b840809caad186eebfe96e759a216f44ca8c31789c908"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomNavigation.cs",
-      "sha256": "9c52ab4d56623aa261cc4cf5d87c0eba8584cf4f82e2e38c319e924858841bbf"
+      "sha256": "87e0eb6fb1b159e0fc68470ccf0173ebfdcb24081aaebf3d078126d19ec0318a"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomNavigationBuild.cs",
-      "sha256": "b8e773a37a65032ea71421434026b4549bae30f44b142a9d1511968472d3a149"
+      "sha256": "e3d488ebe96f860137a5d93cccc79652f77723f664848e7860730a5d2c01b9a9"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomNavigationGeometry.cs",
-      "sha256": "412bb9c8bc3698b9b1c3d4bef247843593ea0c667a376bc77abc0613c265a3d2"
+      "sha256": "8cc0f01f269a775e685dbb96153b269b5ac16b409b35f255a07d29542b7f254b"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomNavigationInputs.cs",
       "sha256": "e2064804409d2640cdb624c13fc3dbfd6c716bb4b51638fdce11e7e0d4800e4e"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomNavigationMap.cs",
+      "sha256": "a9e50ef077835bf360f3e960cc66c1911df59090cd8c0d5651dae3a08ad6521d"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomNavigationObstacle.cs",
@@ -54716,7 +54975,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomNavigationWaterRoutes.cs",
-      "sha256": "4cbee8378b8ee00b704df8ac761298b6512c1219ece92419ec7e44512e697bbb"
+      "sha256": "df5b878c86a8b1f62591a1d4199bcd70075e7fdc1091904552a1e8c008ea9158"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomOwnership.cs",
@@ -54756,7 +55015,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomShoreClearance.cs",
-      "sha256": "dfd95a72f5bd788c53591c554ddb85604a189cdededd4e774bc0fa5840e71ea6"
+      "sha256": "5e614cc5ddaa18d90679ca267002739c068e5ca8846937a76fb92d457c1b2eff"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomShoreMotor.cs",
@@ -54768,7 +55027,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomSimulationEnvironment.cs",
-      "sha256": "5fb412f1285205ec9194739e350cf2a093bc06a92bcc1b56f468a4a004783697"
+      "sha256": "16aacece0a919a79aaf641936a26bd2b07ebbccf5a75ec5ca0770e9060318ad9"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomSpatialInputs.cs",
@@ -54788,7 +55047,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomWalkableSurface.cs",
-      "sha256": "5430f10771cb4b4cb42e77ed2405e273cceb9ba11afe6e30435a0345705d5357"
+      "sha256": "53297bc073881852a7f7e564c990fef7b9dc6111928cef4d99bcaa7215d08169"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomWalkingObstacle.cs",
@@ -54900,7 +55159,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/RoomSnapshotTransaction.cs",
-      "sha256": "6b499755a832c76e4abfb7fc1b475c5fad563012bdf3d0363fe021701c9fca3c"
+      "sha256": "dca8686e1d0e169e14deb496b7402d169ab927f970f7bbaf8906081a0ac2c70d"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/SavedAssetReferences.cs",
@@ -54916,7 +55175,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceArchive.cs",
-      "sha256": "afe09765707c52845b8075af8908845176edb5e20ef2fd06ea124effadd63d39"
+      "sha256": "60fb65eece983df1c3f8bb7cbdd350fd020a987aee582beb43259a6339cfa377"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceArchiveCapture.cs",
@@ -54924,7 +55183,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceArchiveSnapshot.cs",
-      "sha256": "702091266e6b364c398e138c7d1d4bec0eed1d52c9d20cf3ece7f76f4e6da9a9"
+      "sha256": "662c5515a0b63fd24df925c00073fe01c163137a22d27d4c5489dbeb653697b3"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceAssetFence.cs",
@@ -54968,7 +55227,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceGenerationStore.Retention.cs",
-      "sha256": "4ca6efb3ce978b4dda6e611d8040174dc44297b809842932ea0cf7797ab9dc89"
+      "sha256": "2cbe4df130c9c9ee36c1bfe266d4bb8d4e9245e070a053148ed3b6e9dc83204d"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceGenerationStore.cs",
@@ -55044,7 +55303,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "f5518a7437027e25e033dc1523fc5c8c253d2e2ce2bccf78b2601c95d54bdc30"
+      "sha256": "6bb670401ffd0fb97089c9d48e76d8d13b5df571b33b01d89c387c0aad94302d"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourProgram.cs",
@@ -55056,7 +55315,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/CapabilityArguments.cs",
-      "sha256": "d9aa29453a070220db37234a653491ccbcf0701f27a08511dfc3e96e5d6ee02d"
+      "sha256": "102f7bde282d9fc0ddc9ba840f692159a03c6aaf1e26756ddb610faaffa31b22"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/ConditionSubscription.cs",

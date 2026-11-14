@@ -52,7 +52,20 @@ namespace Maestro.Quest.Persistence
     }
     internal sealed class WorkspaceArchiveMetadata
     {
-        internal static int DocumentVersion(string path)=>path==RoomStorage.FileName?RoomDocument.CurrentVersion:2;
+        internal const string LegacyRoomFileName="room.v46.json";
+        internal static bool IsRoom(string path)=>path==RoomStorage.FileName||path==LegacyRoomFileName;
+        internal static int DocumentVersion(string path)=>path==LegacyRoomFileName?46:path==RoomStorage.FileName?RoomDocument.CurrentVersion:2;
+        // One selection policy serves strict archive readers and saved-generation capture.
+        // Capture may retain a previous room file after a newer primary was saved; it
+        // selects the highest present primary without falling back after invalid content.
+        internal static string[] RequiredFor(IEnumerable<string> paths,int formatVersion=WorkspaceArchive.FormatVersion,bool retained=false)
+        {
+            if(formatVersion is not (32 or 33 or WorkspaceArchive.FormatVersion))throw new InvalidDataException("Unsupported workspace archive format.");
+            var names=paths.ToHashSet(StringComparer.Ordinal);bool current=names.Contains(RoomStorage.FileName),legacy=names.Contains(LegacyRoomFileName);
+            if(!current&&!legacy||current&&legacy&&!retained||formatVersion<34&&current)throw new InvalidDataException("Workspace requires one supported room document.");
+            string room=current?RoomStorage.FileName:LegacyRoomFileName;
+            return new[]{room}.Concat(Required.Where(name=>name!=RoomStorage.FileName)).ToArray();
+        }
         internal static readonly string[] Required={RoomStorage.FileName,"behaviours.v2.json","controls.v2.json","avatar-activities.v2.json","motions/motions.v2.json"};
         internal readonly Dictionary<string,MotionEntry> Motions=new(StringComparer.Ordinal);
         internal WorkspaceArchiveSummary Summary;
@@ -67,7 +80,7 @@ namespace Maestro.Quest.Persistence
         static bool HasHash(string path,string prefix,string suffix)=>path.Length==prefix.Length+64+suffix.Length&&path.StartsWith(prefix,StringComparison.Ordinal)&&path.EndsWith(suffix,StringComparison.Ordinal)&&ModelLibrary.ValidHash(path.Substring(prefix.Length,64));
         internal static int Limit(string path)=>path switch {
             ProgramMemoryStore.FileName=>ProgramMemoryDocument.MaximumBytes,
-            _ when path==RoomStorage.FileName=>4*1024*1024,"behaviours.v2.json"=>512*1024,"controls.v2.json"=>8192,
+            _ when IsRoom(path)=>4*1024*1024,"behaviours.v2.json"=>512*1024,"controls.v2.json"=>8192,
             "avatar-activities.v2.json"=>256*1024,"motions/motions.v2.json"=>16*1024*1024,
             _ when HasHash(path,"images/",".image")=>SurfaceImage.MaximumBytes,
             _ when HasHash(path,"images/",".txt")=>1024,
@@ -81,9 +94,9 @@ namespace Maestro.Quest.Persistence
         };
         internal static void CheckNames(IEnumerable<string> values,int formatVersion=WorkspaceArchive.FormatVersion)
         {
-            if(formatVersion is not (32 or WorkspaceArchive.FormatVersion))throw new InvalidDataException("Unsupported workspace archive format.");
+            if(formatVersion is not (32 or 33 or WorkspaceArchive.FormatVersion))throw new InvalidDataException("Unsupported workspace archive format.");
             var names=new HashSet<string>(StringComparer.Ordinal);foreach(var path in values){if(path==null||!names.Add(path))throw new InvalidDataException("Duplicate archive path.");_=Limit(path);}
-            if(names.Count>WorkspaceArchive.MaximumEntries||Required.Any(x=>!names.Contains(x))||names.Count(IsImage)>ImageLibrary.MaximumFiles||names.Count(IsSound)>AudioLibrary.MaximumFiles||names.Count(IsModel)>32||names.Count(IsMotion)>MotionLibrary.MaximumEntries||names.Count(x=>x.StartsWith("program-modules.v1/",StringComparison.Ordinal))>ProgramModuleLibrary.MaximumEntries)throw new InvalidDataException("Missing or excessive workspace entries.");
+            if(names.Count>WorkspaceArchive.MaximumEntries||RequiredFor(names,formatVersion).Any(x=>!names.Contains(x))||names.Count(IsImage)>ImageLibrary.MaximumFiles||names.Count(IsSound)>AudioLibrary.MaximumFiles||names.Count(IsModel)>32||names.Count(IsMotion)>MotionLibrary.MaximumEntries||names.Count(x=>x.StartsWith("program-modules.v1/",StringComparison.Ordinal))>ProgramModuleLibrary.MaximumEntries)throw new InvalidDataException("Missing or excessive workspace entries.");
             // Version 32 required each sidecar to accompany a downloaded payload.
             // Version 33 preserves metadata after guarded download cleanup as well.
             if(formatVersion==32){
@@ -103,7 +116,7 @@ namespace Maestro.Quest.Persistence
         {
             var bytes=documents[path];var json=Json(bytes,Limit(path));
             if(json.Count!=fields.Length||fields.Any(x=>!json.ContainsKey(x))||json["version"]?.Type!=JTokenType.Integer||(int)json["version"]!=DocumentVersion(path))throw new InvalidDataException("Unsupported workspace document: "+path);
-            if(path==RoomStorage.FileName&&(!RoomRegion.ValidWire(json)||!RoomViewpoint.ValidWire(json)||!RoomWorldIdentity.ValidWire(json)||!RoomEnvironmentProfile.ValidWire(json)||!RoomAppearance.ValidWire(json)||!RoomVisibilityLayer.ValidWire(json)||!RoomLighting.ValidWire(json)||!RoomWorldTime.ValidWire(json)||!RoomWeather.ValidWire(json)||!RoomAudioDefinition.ValidWire(json)||!RoomWindow.ValidWire(json)||!RoomModelGeometry.ValidWire(json)))throw new InvalidDataException("Invalid workspace viewpoint or world identity.");
+            if(IsRoom(path)&&(!RoomStaticSupport.ValidWire(json)||!RoomRegion.ValidWire(json)||!RoomViewpoint.ValidWire(json)||!RoomWorldIdentity.ValidWire(json)||!RoomEnvironmentProfile.ValidWire(json)||!RoomAppearance.ValidWire(json)||!RoomVisibilityLayer.ValidWire(json)||!RoomLighting.ValidWire(json)||!RoomWorldTime.ValidWire(json)||!RoomWeather.ValidWire(json)||!RoomAudioDefinition.ValidWire(json)||!RoomWindow.ValidWire(json)||!RoomModelGeometry.ValidWire(json)))throw new InvalidDataException("Invalid workspace viewpoint or world identity.");
             var result=JsonUtility.FromJson<T>(Utf8.GetString(bytes));
             // Validate measured quantities from the original numbers, before
             // normalization or capacity checks can observe a lossy field decode.
@@ -115,7 +128,8 @@ namespace Maestro.Quest.Persistence
             var assets=assetNames.ToHashSet(StringComparer.Ordinal);CheckNames(documents.Keys.Concat(assets),formatVersion);
             foreach(var pair in documents){if(pair.Value.Length<1||pair.Value.Length>Limit(pair.Key))throw new InvalidDataException("Workspace document exceeds its limit.");}
             if(documents.TryGetValue(ProgramMemoryStore.FileName,out var memory))_=ProgramMemoryDocument.Decode(memory);
-            var room=Document<RoomDocument>(documents,RoomStorage.FileName,"version","objects","structures","audioSources","viewpoint","world","environmentProfiles","appearances","visibilityLayers","lighting","worldTime","weather","regions");RoomStorage.Normalize(room);
+            var roomPath=RequiredFor(documents.Keys.Concat(assets),formatVersion)[0];
+            var room=Document<RoomDocument>(documents,roomPath,"version","objects","structures","audioSources","viewpoint","world","environmentProfiles","appearances","visibilityLayers","lighting","worldTime","weather","regions");RoomStorage.Normalize(room);
             if(!room.Validate(out var issue))throw new InvalidDataException(issue);
             var rules=Document<RuleDocument>(documents,"behaviours.v2.json","version","sequences","bindings","buttons");
             var ruleJson=Json(documents["behaviours.v2.json"],Limit("behaviours.v2.json"));

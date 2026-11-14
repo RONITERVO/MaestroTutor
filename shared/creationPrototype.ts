@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 // Geometry checks after the catalog's strict structural validation.
 import {validSurfaceGeometry,surfaceRenderedPointCount,type SurfaceGeometry} from './surfaceGeometry';
+import {validStaticSupportSource} from './staticSupport';
 import {validPrototypeResources,type PrototypeResources} from './creationResources';
 import {validTerrainReservoirs,type ReservoirBed,type ReservoirContainer} from './terrainReservoir';
 import {length2,normalized,rotate,multiply,type ConnectionPose} from './roomConnection';
@@ -10,6 +11,7 @@ type Q=V&{w:number};
 interface Frame {time:number;position:V;rotation:Q;scale:number}
 interface Surface extends SurfaceGeometry {version:number;id:string;part:string;position:V;width:number;height:number;strokes:{id:string;radius:number;points:V[]}[]}
 export interface CreationPrototype extends PrototypeResources {
+ staticSupport?:{version:number;enabled:boolean};
  footPlacement?:{version:number;enabled:boolean;modelHash:string;leftClearance:number;rightClearance:number};
  walking?:{source:'embedded';clipIndex:number}|{source:'library';motionId:string};
  physics:{mode:string;shape?:string};collision?:{shapes:unknown[]};modelGeometry?:{version:number;scaleMode:string;metresPerUnit:number;pivot:string;meshCollision:boolean;walkable:boolean};heightFields?:ReservoirBed[];containers?:ReservoirContainer[];sculptTips?:{part:string;enabled:boolean}[];
@@ -31,6 +33,7 @@ export function validCreationPrototypeGeometry(value:Record<string,unknown>):boo
   if(feet.version!==1||typeof feet.enabled!=='boolean'||typeof feet.modelHash!=='string'||![feet.leftClearance,feet.rightClearance].every(n=>Number.isFinite(n)&&Math.abs(n)<=.1))return false;
   if(!defaults&&((p.version??0)<9||g.kind!=='model'||!feet.enabled||! /^[a-f0-9]{64}$/.test(feet.modelHash)))return false;
  }
+ if(!validStaticSupportSource(p,g.kind)||p.staticSupport?.enabled&&(p.version??0)<11)return false;
  const model=p.modelGeometry;
  if(model){
   const defaults=model.version===1&&model.scaleMode==='fitted'&&model.metresPerUnit===1&&model.pivot==='center'&&!model.meshCollision&&!model.walkable;

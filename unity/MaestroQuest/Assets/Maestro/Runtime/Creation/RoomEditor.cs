@@ -203,7 +203,7 @@ namespace Maestro.Quest.Creation
             return true;
         }
         public bool CanCreateRecipe(RoomRecipe recipe,out string error)=>CanCreateRecipe(recipe,null,null,out error);
-        public bool CanCreateRecipe(RoomRecipe recipe,CollisionRecipe collision,ObjectPhysicsSettings physics,out string error,DrawingSurface[] surfaces=null,DrawingTip[] drawingTips=null,RoomSnapPoint[] snapPoints=null,RoomContainer[] containers=null,RoomHeightField[] heightFields=null,SculptTip[] sculptTips=null,RoomMaterialStore[] materialStores=null) {
+        public bool CanCreateRecipe(RoomRecipe recipe,CollisionRecipe collision,ObjectPhysicsSettings physics,out string error,DrawingSurface[] surfaces=null,DrawingTip[] drawingTips=null,RoomSnapPoint[] snapPoints=null,RoomContainer[] containers=null,RoomHeightField[] heightFields=null,SculptTip[] sculptTips=null,RoomMaterialStore[] materialStores=null,RoomStaticSupport staticSupport=null) {
             if(!CanCreatePrimitive(out error))return false;
             if(recipe==null) {error="Provide a construction recipe";return false;}
             if(!recipe.Validate(out error))return false;
@@ -221,15 +221,18 @@ namespace Maestro.Quest.Creation
             if(!RoomHeightField.ValidateCollection(new RoomObjectData{kind=RoomObjectKind.Assembly,heightFields=heightFields,physics=physics==null||physics.mode=="fixed"?ItemPhysics.Fixed:ItemPhysics.Solid},out error))return false;
             if(Snapshot().objects.Sum(x=>x.heightFields?.Length??0)+(heightFields?.Length??0)>RoomHeightField.MaximumPerRoom){error="Keep at most four height surfaces in this room";return false;}
             if(physics!=null&&!RoomControls.ValidPhysics(physics)){error="Provide valid fixed/solid/bouncy physics, collision mode and mass";return false;}
+            var supportOwner=new RoomObjectData{kind=RoomObjectKind.Assembly,physics=ItemPhysics.Fixed,collision=collision,staticSupport=staticSupport??new()};
+            if(physics!=null&&!RoomControls.SetPhysics(supportOwner,physics,out error))return false;
+            if(!RoomStaticSupport.Validate(supportOwner,out error))return false;
             if(journal.Snapshot().objects.Sum(CollisionRecipe.ReservedPieces)+Math.Max(1,collision?.Pieces??0)>CollisionRecipe.MaximumRoomPieces){error="Collision shapes exceed the room piece budget";return false;}
             if(journal.Snapshot().objects.Sum(x=>RecipeGeometry.VertexCost(x.recipe))+RecipeGeometry.VertexCost(recipe)>RecipeGeometry.MaximumRoomVertices){error="Generated recipe geometry exceeds the room vertex budget";return false;}
             if(journal.Snapshot().objects.Sum(x=>x.recipe?.parts.Length??0)+recipe.parts.Length>256) {error="Keep at most 256 recipe parts in this room";return false;}
             return true;
         }
         public bool CreateRecipe(string name,Vector3 position,float scale,RoomRecipe recipe,out string id,out string error)=>CreateRecipe(name,position,scale,recipe,null,null,out id,out error);
-        public bool CreateRecipe(string name,Vector3 position,float scale,RoomRecipe recipe,CollisionRecipe collision,ObjectPhysicsSettings physics,out string id,out string error,DrawingSurface[] surfaces=null,DrawingTip[] drawingTips=null,RoomSnapPoint[] snapPoints=null,RoomContainer[] containers=null,RoomHeightField[] heightFields=null,SculptTip[] sculptTips=null,RoomMaterialStore[] materialStores=null) {
-            id=null;if(!CanCreateRecipe(recipe,collision,physics,out error,surfaces,drawingTips,snapPoints,containers,heightFields,sculptTips,materialStores))return false;
-            if(!PrepareRecipeObject(name,position,scale,recipe,collision,physics,out var item,out error,surfaces,drawingTips,snapPoints,containers,heightFields,sculptTips,materialStores))return false;
+        public bool CreateRecipe(string name,Vector3 position,float scale,RoomRecipe recipe,CollisionRecipe collision,ObjectPhysicsSettings physics,out string id,out string error,DrawingSurface[] surfaces=null,DrawingTip[] drawingTips=null,RoomSnapPoint[] snapPoints=null,RoomContainer[] containers=null,RoomHeightField[] heightFields=null,SculptTip[] sculptTips=null,RoomMaterialStore[] materialStores=null,RoomStaticSupport staticSupport=null) {
+            id=null;if(!CanCreateRecipe(recipe,collision,physics,out error,surfaces,drawingTips,snapPoints,containers,heightFields,sculptTips,materialStores,staticSupport))return false;
+            if(!PrepareRecipeObject(name,position,scale,recipe,collision,physics,out var item,out error,surfaces,drawingTips,snapPoints,containers,heightFields,sculptTips,materialStores,staticSupport))return false;
             return CommitCreatedObject(item,out id,out error);
         }
         bool CommitCreatedObject(RoomObjectData item,out string id,out string error) {

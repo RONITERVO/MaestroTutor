@@ -11,14 +11,15 @@ namespace Maestro.Quest.Interaction {
     internal sealed class RoomEnvironmentQueries {
         readonly List<RoomWalkableSurface> surfaces=new(64);
         readonly List<RoomGroundColumn> columns=new(64);
-        RoomPhysicsWorld world;uint generation;bool active,collected,valid;int frame;double step;
+        RoomPhysicsWorld world;uint generation;bool active,collected,valid;int frame;double step;ulong sourceRevision;
         internal Batch Begin(RoomPhysicsWorld value){
-            world=value;generation++;active=true;collected=valid=false;frame=Time.frameCount;step=Time.fixedTimeAsDouble;surfaces.Clear();columns.Clear();return new(this,generation);
+            world=value;generation++;active=true;collected=valid=false;frame=Time.frameCount;step=Time.fixedTimeAsDouble;sourceRevision=RoomWalkableSurface.ChangeRevision;surfaces.Clear();columns.Clear();return new(this,generation);
         }
-        bool Live(uint token)=>active&&token==generation&&world&&frame==Time.frameCount&&step==Time.fixedTimeAsDouble;
+        bool Live(uint token)=>active&&token==generation&&world&&frame==Time.frameCount&&step==Time.fixedTimeAsDouble&&sourceRevision==RoomWalkableSurface.ChangeRevision;
         void End(uint token){if(token!=generation)return;active=false;world=null;surfaces.Clear();columns.Clear();}
-        bool Contains(Vector3 point,bool real){
+        bool Contains(Vector3 point,bool real,RoomItem participant){
             if(real)return world.SurfacesReady&&(world.Contains==null||world.Contains(point));
+            if(!world.VirtualGroundComplete(point,participant))return false;
             if(!collected){
                 collected=true;valid=world.GatherGround(surfaces);
                 if(valid)foreach(var surface in surfaces)if(surface&&surface.Available)columns.Add(new(surface.Collision));
@@ -34,9 +35,10 @@ namespace Maestro.Quest.Interaction {
             // including paused traversal, instead of borrowing the other's readiness.
             if(!RoomEnvironmentBinding.RestorationReady(first)||!RoomEnvironmentBinding.RestorationReady(second))return false;
             bool a=world.IncludesRealRoom(first),b=world.IncludesRealRoom(second);
-            // Two participants using the same environment need one spatial proof.
-            // Mixed policies require both; a virtual actor cannot borrow scan readiness.
-            return Contains(point,a)&&(a==b||Contains(point,b));
+            // Real-room policy shares one scan proof. Each virtual participant
+            // needs its own completeness check: only its own ordinary support
+            // obligation can be suspended, never another participant's source.
+            return Contains(point,a,first)&&(a&&b||ReferenceEquals(first,second)&&a==b||Contains(point,b,second));
         }
         internal readonly ref struct Batch {
             readonly RoomEnvironmentQueries owner;readonly uint token;
@@ -48,11 +50,11 @@ namespace Maestro.Quest.Interaction {
     }
     // Live and batched queries use exactly the same support-column proof.
     internal readonly struct RoomGroundColumn {
-        readonly Collider collision;readonly Bounds bounds;
-        internal RoomGroundColumn(Collider value){collision=value;bounds=value.bounds;}
+        readonly Collider collision;readonly Bounds bounds;readonly RoomGroundHandle handle;readonly ulong sourceRevision;readonly RoomWalkableSurface provider;
+        internal RoomGroundColumn(Collider value){collision=value;bounds=value.bounds;provider=RoomWalkableSurface.Find(value);handle=new(value,provider);sourceRevision=RoomWalkableSurface.ChangeRevision;}
         internal bool Contains(Vector3 point){
             if(point.x<bounds.min.x||point.x>bounds.max.x||point.z<bounds.min.z||point.z>bounds.max.z)return false;
-            if(!collision||!collision.enabled||!collision.gameObject.activeInHierarchy)return false;
+            if(sourceRevision!=RoomWalkableSurface.ChangeRevision||!handle.Valid||!provider||!provider.Available)return false;
             // Search beneath this point, including the existing small below-ground
             // allowance. Starting above the entire mesh finds the roof instead of
             // an interior floor when a building has several storeys in one collider.

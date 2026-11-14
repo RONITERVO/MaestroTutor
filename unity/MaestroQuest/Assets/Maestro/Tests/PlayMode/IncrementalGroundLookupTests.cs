@@ -287,9 +287,9 @@ namespace Maestro.Quest.Tests {
             var candidateType=typeof(RoomEditor).GetNestedType("GroundCandidate",BindingFlags.NonPublic);var flags=BindingFlags.Instance|BindingFlags.NonPublic;
             foreach(var bounds in new[]{new Bounds(new(float.NaN,0,0),Vector3.one),new Bounds(Vector3.zero,new(-1,1,1))}){
                 var bad=new RoomSpatialExtent{Known=true,HasBounds=true,Bounds=bounds};
-                var candidate=Activator.CreateInstance(candidateType,flags,null,new object[]{(id,true,false),bad,true},null);
+                var candidate=Activator.CreateInstance(candidateType,flags,null,new object[]{new RoomGroundDefinition(id,true,false),bad,true},null);
                 var normalized=(RoomSpatialExtent)candidateType.GetField("Extent",flags).GetValue(candidate);Assert.That(normalized.Known,Is.False);
-                var args=new object[]{candidate,far,null,false};
+                var args=new object[]{candidate,far,null,false,null};
                 Assert.That((bool)typeof(RoomEditor).GetMethod("MissingGround",flags).Invoke(editor,args),Is.True);Assert.That((bool)args[3],Is.False);
             }
         }

@@ -8,6 +8,7 @@ namespace Maestro.Quest.Creation
     {
         readonly RoomGroundQuery physicalFootGround=new(),virtualFootGround=new();
         int footGroundFrame=-1,footGroundRevision=-1;
+        ulong footGroundSources;
         internal bool SampleFootGround(RoomItem actor,Vector3 expected,float band,out RaycastHit hit)
         {
             hit=default;
@@ -17,9 +18,9 @@ namespace Maestro.Quest.Creation
             // Rig contacts and the raycast are in world space; authored ground
             // dependencies live in room coordinates, including after locomotion.
             var support=new RoomSpatialExtent{Known=true,HasBounds=true,Bounds=RoomGroundQuery.SupportEnvelope(expected,.025f,band,band)}.Transform(transform.worldToLocalMatrix);
-            if(!support.Known||!support.HasBounds||!GroundComplete(support.Bounds))return false;
-            if(footGroundFrame!=Time.frameCount||footGroundRevision!=Revision){
-                footGroundFrame=Time.frameCount;footGroundRevision=Revision;Physics.SyncTransforms();
+            if(!support.Known||!support.HasBounds||!GroundComplete(support.Bounds,Identity(actor)))return false;
+            if(footGroundFrame!=Time.frameCount||footGroundRevision!=Revision||footGroundSources!=RoomWalkableSurface.ChangeRevision){
+                footGroundFrame=Time.frameCount;footGroundRevision=Revision;footGroundSources=RoomWalkableSurface.ChangeRevision;Physics.SyncTransforms();
                 physicalFootGround.Capture(PhysicsWorld.transform,true);virtualFootGround.Capture(PhysicsWorld.transform,false);
             }
             return (PhysicsWorld.IncludesRealRoom(actor)?physicalFootGround:virtualFootGround).Sample(expected,band,band,out hit);

@@ -16,17 +16,18 @@ namespace Maestro.Quest.Avatar
             internal float Weight;
             Collider support;
             uint revision;
+            RoomWalkableSurface provider;
             Vector3 anchor;
             bool planted;
             internal void Clear(){Weight=0;support=null;planted=false;}
             internal bool Target(HumanoidFootRig.Leg leg,RaycastHit ground,float baseline,float clearance,float scale,float dt,bool walking,Probe probe,
                 out Vector3 ankle,out Quaternion rotation)
             {
-                var sole=leg.Contact;var surface=ground.collider.GetComponent<RoomWalkableSurface>();
+                var sole=leg.Contact;var surface=RoomWalkableSurface.Find(ground.collider);
                 uint current=surface?surface.Revision:0;
-                bool same=support==ground.collider&&revision==current;
+                bool same=support==ground.collider&&provider==surface&&revision==current;
                 bool stance=sole.y-baseline<=(walking ? (planted&&same ? .075f : .035f) : .16f)*scale;
-                if(!same){support=ground.collider;revision=current;planted=false;Weight=0;}
+                if(!same){support=ground.collider;provider=surface;revision=current;planted=false;Weight=0;}
                 if(stance&&!planted){anchor=support.transform.InverseTransformPoint(ground.point);planted=true;}
                 var point=planted?support.transform.TransformPoint(anchor):ground.point;
                 // Never drag a leg behind a teleported or badly mismatched gait.

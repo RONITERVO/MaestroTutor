@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Maestro.Quest.Avatar;
 using Maestro.Quest.Creation;
 using UnityEngine;
@@ -43,7 +44,7 @@ namespace Maestro.Quest.Interaction {
             error="Release this object and stop authoring before movement";
             if(item.Grab.isSelected||item.PoseLocked||editor.GetComponent<AnimationWorkshop>()?.ControlsTarget(editor.Identity(item))==true)return false;
             error="A physical anchor, terrain owner or connected assembly cannot move as one actor";
-            if(item.GetComponent<IPhysicalRoomBinding>()?.PhysicalFrame==true||item.GetComponentsInChildren<RoomWalkableSurface>(true).Length>0||editor.PhysicsIslandMembers(item).Length>1)return false;
+            if(item.GetComponent<IPhysicalRoomBinding>()?.PhysicalFrame==true||item.GetComponentsInChildren<RoomWalkableSurface>(true).Any(surface=>!surface.Ordinary)||editor.PhysicsIslandMembers(item).Length>1)return false;
             error="Stop the object's root animation or attachment before movement";
             if(item.GetComponent<RigidRoomItem>()?.AnimationOwned==true&&!(owner?.owned??false)||item.GetComponent<HeldRoomProp>()?.Holding==true)return false;
             error=null;return true;

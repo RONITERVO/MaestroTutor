@@ -58,16 +58,26 @@ namespace Maestro.Quest.Tests
         static string[] Missing(WorkspaceArchiveSummary summary,string kind)=>kind switch{"models"=>summary.MissingModels,"audio"=>summary.MissingSounds,"images"=>summary.MissingImages,_=>throw new ArgumentException()};
         static Dictionary<string,byte[]> Entries(byte[] bytes){using var input=new MemoryStream(bytes);using var zip=new ZipArchive(input,ZipArchiveMode.Read);return zip.Entries.ToDictionary(x=>x.FullName,x=>{using var data=new MemoryStream();using var entry=x.Open();entry.CopyTo(data);return data.ToArray();});}
         static byte[] Zip(Dictionary<string,byte[]> entries){using var output=new MemoryStream();using(var zip=new ZipArchive(output,ZipArchiveMode.Create,true))foreach(var pair in entries){using var stream=zip.CreateEntry(pair.Key).Open();stream.Write(pair.Value,0,pair.Value.Length);}return output.ToArray();}
-        static byte[] WithVersion(byte[] bytes,int version){var entries=Entries(bytes);var manifest=JObject.Parse(Encoding.UTF8.GetString(entries["manifest.json"]));manifest["version"]=version;entries["manifest.json"]=Utf8(manifest.ToString(Formatting.None));return Zip(entries);}
+        static byte[] WithVersion(byte[] bytes,int version){
+            var entries=Entries(bytes);var manifest=JObject.Parse(Encoding.UTF8.GetString(entries["manifest.json"]));manifest["version"]=version;
+            // Historical archive formats carried room 46, before static support existed.
+            if(version is 32 or 33){
+                var room=JObject.Parse(Encoding.UTF8.GetString(entries[RoomStorage.FileName]));room["version"]=46;
+                foreach(var item in room["objects"].Cast<JObject>())item.Remove("staticSupport");
+                entries.Remove(RoomStorage.FileName);var legacy=Utf8(room.ToString(Formatting.None));entries[WorkspaceArchiveMetadata.LegacyRoomFileName]=legacy;
+                var entry=manifest["entries"].Single(x=>(string)x["path"]==RoomStorage.FileName);entry["path"]=WorkspaceArchiveMetadata.LegacyRoomFileName;entry["bytes"]=legacy.Length;entry["sha256"]=ModelLibrary.Hash(legacy);
+            }
+            entries["manifest.json"]=Utf8(manifest.ToString(Formatting.None));return Zip(entries);
+        }
         static byte[] ForgedArchive(Dictionary<string,byte[]> entries,Action<JArray> change=null){
-            var list=new JArray(entries.Select(pair=>new JObject{["path"]=pair.Key,["bytes"]=pair.Value.Length,["sha256"]=ModelLibrary.Hash(pair.Value)}));change?.Invoke(list);var copy=entries.ToDictionary(x=>x.Key,x=>x.Value);copy["manifest.json"]=Utf8(new JObject{["format"]="maestro-native-workspace",["version"]=33,["entries"]=list}.ToString(Formatting.None));return Zip(copy);
+            var list=new JArray(entries.Select(pair=>new JObject{["path"]=pair.Key,["bytes"]=pair.Value.Length,["sha256"]=ModelLibrary.Hash(pair.Value)}));change?.Invoke(list);var copy=entries.ToDictionary(x=>x.Key,x=>x.Value);copy["manifest.json"]=Utf8(new JObject{["format"]="maestro-native-workspace",["version"]=WorkspaceArchive.FormatVersion,["entries"]=list}.ToString(Formatting.None));return Zip(copy);
         }
         void NoStages()=>Assert.That(Directory.GetDirectories(directory,"workspace-import-*"),Is.Empty);
         [TestCase("models")][TestCase("audio")][TestCase("images")]
         public void CleanupCaptureExportStageAndExactReimportKeepCompleteBomMetadata(string kind){
             byte[] payload=Payload(kind),metadata=BomMetadata(kind);string hash=ModelLibrary.Hash(payload),relative=Relative(kind,hash,true),path=Path.Combine(source,relative);Save(kind,source,payload);File.WriteAllBytes(path,metadata);Remove(kind,source,hash);
             Assert.That(File.Exists(Path.Combine(source,Relative(kind,hash))),Is.False);Assert.That(File.ReadAllBytes(path),Is.EqualTo(metadata));var captured=CaptureArchive(kind);Assert.That(Count(captured.Receipt.Summary,kind),Is.Zero);
-            Assert.That((int)JObject.Parse(Encoding.UTF8.GetString(Entries(captured.Bytes)["manifest.json"]))["version"],Is.EqualTo(33));
+            Assert.That((int)JObject.Parse(Encoding.UTF8.GetString(Entries(captured.Bytes)["manifest.json"]))["version"],Is.EqualTo(WorkspaceArchive.FormatVersion));
             using(var staged=WorkspaceArchive.Stage(new MemoryStream(captured.Bytes),directory)){
                 Assert.That(staged.Receipt.ManifestHash,Is.EqualTo(captured.Receipt.ManifestHash));Assert.That(staged.Receipt.Summary.Files,Is.EqualTo(WorkspaceArchiveMetadata.Required.Length+1));Assert.That(Count(staged.Receipt.Summary,kind),Is.Zero);Assert.That(Missing(staged.Receipt.Summary,kind),Is.Empty);Assert.That(File.ReadAllBytes(Path.Combine(staged.DirectoryPath,relative)),Is.EqualTo(metadata));
                 Save(kind,staged.DirectoryPath,payload,"A different picker name");Assert.That(File.ReadAllBytes(Path.Combine(staged.DirectoryPath,Relative(kind,hash))),Is.EqualTo(payload));Assert.That(File.ReadAllBytes(Path.Combine(staged.DirectoryPath,relative)),Is.EqualTo(metadata));Assert.That(Count(staged.Receipt.Summary,kind),Is.Zero,"The earlier archive receipt remains historical");
@@ -116,7 +126,7 @@ namespace Maestro.Quest.Tests
             byte[] payload=Payload(kind);string hash=ModelLibrary.Hash(payload),relative=Relative(kind,hash,true);Save(kind,source,payload);byte[] metadata=File.ReadAllBytes(Path.Combine(source,relative));var paired=CaptureArchive(kind);
             byte[] old=WithVersion(paired.Bytes,32);using(var staged=WorkspaceArchive.Stage(new MemoryStream(old),directory)){Assert.That(Count(staged.Receipt.Summary,kind),Is.EqualTo(1));Assert.That(File.ReadAllBytes(Path.Combine(staged.DirectoryPath,relative)),Is.EqualTo(metadata));Assert.That(WorkspaceArchive.VerifyPreparedDirectory(staged.DirectoryPath,staged.ManifestBytes).ManifestHash,Is.EqualTo(staged.Receipt.ManifestHash));}
             var store=new WorkspaceGenerationStore(Path.Combine(directory,"old-store"));var prepared=store.Prepare(new MemoryStream(old));Assert.That(store.InspectPrepared(prepared.Id,prepared.Receipt.ManifestHash).Receipt.ManifestHash,Is.EqualTo(prepared.Receipt.ManifestHash));
-            Remove(kind,source,hash);var orphan=CaptureArchive(kind);Assert.Throws<InvalidDataException>(()=>WorkspaceArchive.Stage(new MemoryStream(WithVersion(orphan.Bytes,32)),directory));Assert.Throws<InvalidDataException>(()=>WorkspaceArchive.Stage(new MemoryStream(WithVersion(orphan.Bytes,34)),directory));Assert.That(File.ReadAllBytes(Path.Combine(source,relative)),Is.EqualTo(metadata));NoStages();
+            Remove(kind,source,hash);var orphan=CaptureArchive(kind);Assert.Throws<InvalidDataException>(()=>WorkspaceArchive.Stage(new MemoryStream(WithVersion(orphan.Bytes,32)),directory));Assert.Throws<InvalidDataException>(()=>WorkspaceArchive.Stage(new MemoryStream(WithVersion(orphan.Bytes,WorkspaceArchive.FormatVersion+1)),directory));Assert.That(File.ReadAllBytes(Path.Combine(source,relative)),Is.EqualTo(metadata));NoStages();
         }
         [TestCase("models")][TestCase("audio")][TestCase("images")]
         public void MalformedMetadataNamesCannotBeSilentlyOmittedOrEscapeArchive(string kind){

@@ -12,7 +12,11 @@ namespace Maestro.Quest.Tests
 {
     public sealed partial class AvatarSpatialTests
     {
-        T NavigationField<T>(string name)=>(T)typeof(RoomNavigation).GetField(name,BindingFlags.Instance|BindingFlags.NonPublic).GetValue(navigation);
+        T NavigationField<T>(string name){
+            const BindingFlags flags=BindingFlags.Instance|BindingFlags.NonPublic;
+            var field=typeof(RoomNavigation).GetField(name,flags);
+            return (T)(field!=null?field.GetValue(navigation):typeof(RoomNavigation).GetProperty(name,flags).GetValue(navigation));
+        }
         NavMeshQueryFilter NavigationFilter()=>new(){agentTypeID=NavigationField<int>("agentType"),areaMask=NavMesh.AllAreas};
         void EmptyNavigationCapture()
         {

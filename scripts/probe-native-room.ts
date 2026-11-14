@@ -2,6 +2,7 @@ import {probeAssetInventory} from './probe-asset-inventory';
 import {probeNativeImageMaintenance} from './probe-native-image-maintenance';
 import {probeNativeAudioMaintenance} from './probe-native-audio-maintenance';
 import {probeNativeModelMaintenance} from './probe-native-model-maintenance';
+import {probeNativeStaticSupport} from './probe-native-static-support';
 import {validFactValue} from '../shared/behaviourFacts';
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
@@ -502,6 +503,11 @@ try{
   if(!(environmentRestored.catalog?.value as {realCollisions:boolean}).realCollisions||physicalEnvironment.physics?.running)throw new Error('Restored physical collision policy did not remain paused');
   await writeFile(join(directory,'physics-environment.json'),JSON.stringify({boundary:'Full native shared transport and editable terrain readiness; actual collisions are tested in PlayMode. No provider or headset proof.',before:environmentBefore,disabled:virtualEnvironment,virtual:environmentVirtual,enabled:physicalEnvironment,restored:environmentRestored},null,2));
 
+  await probeNativeStaticSupport(execute,async commands=>{
+   const prepared=await transport.client.prepare(commands,lease.state());if(!lease.valid())throw new Error('Static support room changed while preparing refused action');
+   readSets.push({commands:structuredClone(commands),session:prepared.state.session,sceneRevision:prepared.state.sceneRevision,objects:structuredClone(prepared.objects)});
+   const result=await lease.execute(commands,prepared.state.sceneRevision,prepared.objects);checkSparse(result);observations.push(structuredClone(result));return result;
+  },directory);
   await probeWorldPresentation(execute,directory);
   await probeWorldLighting(execute,directory);
   await probeObjectLights(execute,directory);

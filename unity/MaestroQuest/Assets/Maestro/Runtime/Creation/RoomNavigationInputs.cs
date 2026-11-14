@@ -16,7 +16,7 @@ namespace Maestro.Quest.Creation {
         }
         internal RoomSpatialReadiness SpatialInputsReady(string[] targets,Bounds body,Bounds ground,bool water,string actor,out string error){
             if(!Frame.Valid){error="The navigation frame is unavailable";return RoomSpatialReadiness.Unavailable;}
-            var state=SpatialMovementReady(targets,SpatialInputRoomBounds(ground),out error);if(state!=RoomSpatialReadiness.Ready)return state;
+            var state=SpatialMovementReady(targets,SpatialInputRoomBounds(ground),out error,actor);if(state!=RoomSpatialReadiness.Ready)return state;
             if(water&&Liquids){
                 var missing=Liquids.NavigationAvailability(body,actor);
                 if(!missing.Ready){error=missing.Reason;return missing.State=="pending"?RoomSpatialReadiness.Preparing:RoomSpatialReadiness.Unavailable;}

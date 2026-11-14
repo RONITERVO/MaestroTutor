@@ -23,10 +23,11 @@ namespace Maestro.Quest.Programs
             Object(new JObject{["source"]=Choice("library"),["motionId"]=Text("^[a-f0-9]{32}$",32)}))};
             foreach(JObject variant in (JArray)schema["oneOf"])variant["properties"]["source"]["x-static"]=true;
             schema["x-features"]=new JArray(ObjectWalkSettingsCapability.Feature);return schema;}
+        internal static JObject StaticSupport(){var schema=Object(new JObject{["version"]=Number(1,1,true),["enabled"]=new JObject{["type"]="boolean"}});schema["x-features"]=new JArray("staticSupport.v1");return schema;}
         internal static JObject Schema() {
             var fields=(JObject)new CreateRecipeCapability().InputSchema["properties"];
             var tip=(JObject)DrawingTipCapability.DefinitionSchema()["properties"];tip["version"]=Number(1,2,true);
-            var common=new JObject {["version"]=Number(1,10,true),["footPlacement"]=ObjectFeetCapability.SavedSchema(),["lights"]=Lights(),["walking"]=Walking(),["modelGeometry"]=ModelGeometryCapability.SettingsSchema(),["waterTraversal"]=WaterTraversalCapability.SettingsSchema(true),["color"]=Color(),["appearanceBindings"]=CreationResourcesSchema.Bindings(),["audioEmitters"]=CreationResourcesSchema.Emitters(),["environmentProfile"]=CreationResourcesSchema.Featured(Text("^(|[a-f0-9]{32})$",32)),["visibilityLayer"]=VisibilityLayerCapability.Featured(VisibilityLayerCapability.LayerId(true)),["physics"]=fields["physics"].DeepClone(),
+            var common=new JObject {["version"]=Number(1,11,true),["staticSupport"]=StaticSupport(),["footPlacement"]=ObjectFeetCapability.SavedSchema(),["lights"]=Lights(),["walking"]=Walking(),["modelGeometry"]=ModelGeometryCapability.SettingsSchema(),["waterTraversal"]=WaterTraversalCapability.SettingsSchema(true),["color"]=Color(),["appearanceBindings"]=CreationResourcesSchema.Bindings(),["audioEmitters"]=CreationResourcesSchema.Emitters(),["environmentProfile"]=CreationResourcesSchema.Featured(Text("^(|[a-f0-9]{32})$",32)),["visibilityLayer"]=VisibilityLayerCapability.Featured(VisibilityLayerCapability.LayerId(true)),["physics"]=fields["physics"].DeepClone(),
                 ["collision"]=fields["collision"].DeepClone(),["surfaces"]=List(Surface(),0,4),["windows"]=Windows(),["drawingTips"]=List(Object(tip,"mode"),0,1),["snapPoints"]=List(SnapPointCapability.SavedSchema(),0,64),["containers"]=List(ContainerCapability.SavedSchema(),0,1),["heightFields"]=List(HeightFieldCapability.SavedSchema(),0,1),["sculptTips"]=List(SculptTipCapability.SavedSchema(),0,1),["materialStores"]=List(MaterialStoreCapability.SavedSchema(),0,1),
                 ["motion"]=Object(new JObject {["loop"]=new JObject {["type"]="boolean"},["frames"]=List(Object(new JObject {
                     ["time"]=Number(0,30),["position"]=Point(500.001),["rotation"]=Vector(true),["scale"]=Number(.024999,40.00001)}),1,301)})};
@@ -39,7 +40,7 @@ namespace Maestro.Quest.Programs
                 var variant=Object(p);variant["title"]=kind;variants.Add(variant);
             }
             common["geometry"]=new JObject {["type"]="object",["oneOf"]=variants,["x-discriminators"]=new JArray("kind")};
-            var schema=Object(common,"footPlacement","lights","walking","modelGeometry","windows","waterTraversal","appearanceBindings","audioEmitters","environmentProfile","visibilityLayer","collision","motion","snapPoints","containers","heightFields","sculptTips","materialStores");schema["format"]="creationPrototype";schema["x-features"]=new JArray(Feature);return schema;
+            var schema=Object(common,"staticSupport","footPlacement","lights","walking","modelGeometry","windows","waterTraversal","appearanceBindings","audioEmitters","environmentProfile","visibilityLayer","collision","motion","snapPoints","containers","heightFields","sculptTips","materialStores");schema["format"]="creationPrototype";schema["x-features"]=new JArray(Feature);return schema;
         }
         // JsonUtility emits all default fields, including fields belonging to other variants.
         // Public source includes only fields belonging to its explicit kind.
@@ -56,6 +57,7 @@ namespace Maestro.Quest.Programs
             if(!string.IsNullOrEmpty(prototype.walkMotionId))value["walking"]=new JObject{["source"]="library",["motionId"]=prototype.walkMotionId};
             else if(prototype.walkClip>0)value["walking"]=new JObject{["source"]="embedded",["clipIndex"]=prototype.walkClip-1};
             value["geometry"]=geometry;
+            if(prototype.staticSupport.Default)value.Remove("staticSupport");
             if(prototype.footPlacement.Default)value.Remove("footPlacement");
             if(prototype.version<8)value.Remove("lights");
             foreach(var surface in ((JArray)value["surfaces"]).OfType<JObject>())if((int)surface["version"]==1){surface.Remove("shape");surface.Remove("curvatureRadius");}

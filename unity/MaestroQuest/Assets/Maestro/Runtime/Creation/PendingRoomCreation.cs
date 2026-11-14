@@ -19,14 +19,14 @@ namespace Maestro.Quest.Creation
         }
         internal bool BeginCreateRecipe(string name,Vector3 position,float scale,RoomRecipe recipe,CollisionRecipe collision,ObjectPhysicsSettings physics,
             out string id,out PendingPersistedEdit pending,out string error,Action<string> publicationCheckpoint=null,
-            DrawingSurface[] surfaces=null,DrawingTip[] drawingTips=null,RoomSnapPoint[] snapPoints=null,RoomContainer[] containers=null,RoomHeightField[] heightFields=null,SculptTip[] sculptTips=null,RoomMaterialStore[] materialStores=null,bool deferCreations=false)
+            DrawingSurface[] surfaces=null,DrawingTip[] drawingTips=null,RoomSnapPoint[] snapPoints=null,RoomContainer[] containers=null,RoomHeightField[] heightFields=null,SculptTip[] sculptTips=null,RoomMaterialStore[] materialStores=null,bool deferCreations=false,RoomStaticSupport staticSupport=null)
         {
             id=null;pending=null;
-            if(!CanCreateRecipe(recipe,collision,physics,out error,surfaces,drawingTips,snapPoints,containers,heightFields,sculptTips,materialStores))return false;
+            if(!CanCreateRecipe(recipe,collision,physics,out error,surfaces,drawingTips,snapPoints,containers,heightFields,sculptTips,materialStores,staticSupport))return false;
             string created=null;
             bool started=BeginContentEdit(()=>CanCreatePrimitive(out var issue)?null:issue,
                 (out RoomObjectData[] values,out string issue)=>{
-                    values=null;if(!PrepareRecipeObject(name,position,scale,recipe,collision,physics,out var data,out issue,surfaces,drawingTips,snapPoints,containers,heightFields,sculptTips,materialStores))return false;
+                    values=null;if(!PrepareRecipeObject(name,position,scale,recipe,collision,physics,out var data,out issue,surfaces,drawingTips,snapPoints,containers,heightFields,sculptTips,materialStores,staticSupport))return false;
                     values=new[]{data};created=data.id;return true;
                 },Array.Empty<string>(),"Assembly added",out pending,out error,publicationCheckpoint,deferCreations);
             id=started?created:null;return started;

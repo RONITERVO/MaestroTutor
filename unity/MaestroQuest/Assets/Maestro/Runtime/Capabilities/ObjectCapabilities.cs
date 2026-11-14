@@ -17,6 +17,7 @@ namespace Maestro.Quest.Programs
         public static RoomRecipe Recipe(JObject arguments)=>JsonUtility.FromJson<RoomRecipe>(arguments["recipe"].ToString());
         public static CollisionRecipe Collision(JObject arguments)=>arguments["collision"] is JObject value?JsonUtility.FromJson<CollisionRecipe>(value.ToString()):null;
         public static ObjectPhysicsSettings Physics(JObject arguments)=>arguments["physics"] is JObject value?JsonUtility.FromJson<ObjectPhysicsSettings>(value.ToString()):null;
+        public static RoomStaticSupport StaticSupport(JObject arguments)=>arguments["staticSupport"] is JObject value?JsonUtility.FromJson<RoomStaticSupport>(value.ToString()):new();
         public static JObject RobotExample() {var recipe=RecipeTemplates.BoxRobot(true);recipe.playing=false;return JObject.Parse(JsonUtility.ToJson(recipe));}
     }
     internal sealed class WaitCapability : CapabilityModule
@@ -62,13 +63,13 @@ namespace Maestro.Quest.Programs
     {
         public override string Id=>"object.create.recipe";
         public override string Label=>"Create recipe object";
-        public override string Description=>"Create editable geometry and optional animation tracks from a bounded recipe. Returns objectId after saving; one room Undo edit. Set recipe.playing=false to create it idle and use animation.play with source.kind recipe on the returned ID for program-controlled playback. Setting playing=true explicitly starts the saved recipe animation. Geometry uses metres in room axes; scale is 0.1–4. Optional collision and physics components are validated and saved with the geometry as one creation/Undo. Omitted physics keeps the existing fixed default. Collision proxies stay root-local and do not follow animated parts; creating a dynamic object does not start room physics."+PersistedEditOperation.CreationPersistence;
+        public override string Description=>"Create editable geometry and optional animation tracks from a bounded recipe. Returns objectId after saving; one room Undo edit. Set recipe.playing=false to create it idle and use animation.play with source.kind recipe on the returned ID for program-controlled playback. Setting playing=true explicitly starts the saved recipe animation. Geometry uses metres in room axes; scale is 0.1–4. Optional staticSupport explicitly enables compatible fixed primary solids as ground; it defaults off and never infers support from an object name. Optional collision and physics components are validated and saved with the geometry as one creation/Undo. Omitted physics keeps the existing fixed default. Collision proxies stay root-local and do not follow animated parts; creating a dynamic object does not start room physics."+PersistedEditOperation.CreationPersistence;
         public override string Duration=>"completion";
         public override IReadOnlyList<string> Requirements=>new[] {"room.capacity","storage.writable","recipe.valid"};
         public override JObject InputSchema {get {
             var collision=CollisionCapability.RecipeSchema();((JArray)collision["x-features"]).Add("creationComponents.v1");
             var physics=PhysicsSettingsCapability.SettingsSchema();physics["x-features"]=new JArray("creationComponents.v1");
-            return CreationLoading.Inputs(Object(new JObject {["name"]=Text("^.{0,80}$",80),["x"]=Number(-25,25),["y"]=Number(-25,25),["z"]=Number(-25,25),["scale"]=Number(.1,4),["recipe"]=RecipeSchema(),["collision"]=collision,["physics"]=physics},"collision","physics"));
+            var schema=Object(new JObject {["name"]=Text("^.{0,80}$",80),["x"]=Number(-25,25),["y"]=Number(-25,25),["z"]=Number(-25,25),["scale"]=Number(.1,4),["recipe"]=RecipeSchema(),["collision"]=collision,["physics"]=physics,["staticSupport"]=CreationPrototypeSchema.StaticSupport()},"collision","physics","staticSupport");schema["format"]="staticSupportSource";return CreationLoading.Inputs(schema);
         }}
         public override JObject OutputSchema=>Object(new JObject {["objectId"]=Resource(Text("^[a-f0-9]{32}$",32))});
         public override JObject Example=>new JObject {["name"]="Box robot",["x"]=.3f,["y"]=1.3f,["z"]=.65f,["scale"]=1,["recipe"]=ObjectCapabilityData.RobotExample()};
@@ -76,13 +77,13 @@ namespace Maestro.Quest.Programs
             error="Position must be within 25 metres of the room origin";if(ObjectCapabilityData.Position(arguments).sqrMagnitude>625)return false;
             error=null;return true;
         }
-        public override bool CanRun(CapabilityContext context,JObject arguments,out string error)=>context.Editor.CanCreateRecipe(ObjectCapabilityData.Recipe(arguments),ObjectCapabilityData.Collision(arguments),ObjectCapabilityData.Physics(arguments),out error);
+        public override bool CanRun(CapabilityContext context,JObject arguments,out string error)=>context.Editor.CanCreateRecipe(ObjectCapabilityData.Recipe(arguments),ObjectCapabilityData.Collision(arguments),ObjectCapabilityData.Physics(arguments),out error,staticSupport:ObjectCapabilityData.StaticSupport(arguments));
         public override bool Start(CapabilityContext context,string runId,JObject arguments,out CapabilityOperation operation,out string error) {
             var editor=context.Editor;string name=(string)arguments["name"],id=null;var position=ObjectCapabilityData.Position(arguments);float scale=(float)arguments["scale"];
             var recipe=ObjectCapabilityData.Recipe(arguments);var collision=ObjectCapabilityData.Collision(arguments);var physics=ObjectCapabilityData.Physics(arguments);
             bool deferCreations=CreationLoading.Deferred(arguments);
             return PersistedEditOperation.StartCreation(editor,
-                (out RoomEditor.PendingPersistedEdit pending,out string issue)=>editor.BeginCreateRecipe(name,position,scale,recipe,collision,physics,out id,out pending,out issue,deferCreations:deferCreations),
+                (out RoomEditor.PendingPersistedEdit pending,out string issue)=>editor.BeginCreateRecipe(name,position,scale,recipe,collision,physics,out id,out pending,out issue,deferCreations:deferCreations,staticSupport:ObjectCapabilityData.StaticSupport(arguments)),
                 ()=>new JObject {["objectId"]=id},out operation,out error);
         }
     }

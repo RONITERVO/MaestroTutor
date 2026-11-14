@@ -28,7 +28,7 @@ namespace Maestro.Quest.Interaction {
             var targets=editor.SpatialMovementTargets(editor.SpatialInputRoomBounds(extent),local)
                 .Concat(editor.Liquids.NavigationCavities(extent)).Append(habitat).Where(x=>x!=id).Distinct(StringComparer.Ordinal).OrderBy(x=>x,StringComparer.Ordinal).ToArray();
             if(!targets.SequenceEqual(inputs.Targets))Generation++;
-            if(!inputs.Require(targets,(string[] ids,out string issue)=>editor.SpatialMovementReady(ids,local,out issue),out error))return false;
+            if(!inputs.Require(targets,(string[] ids,out string issue)=>editor.SpatialMovementReady(ids,local,out issue,id),out error))return false;
             if(!editor.Liquids.ShoreSurface(actor,habitat,foot,body,immersion,out float height,out error))return false;
             FloatFoot=height;
             var world=editor.PhysicsWorld;

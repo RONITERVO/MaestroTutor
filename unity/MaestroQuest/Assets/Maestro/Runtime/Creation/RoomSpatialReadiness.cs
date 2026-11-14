@@ -66,7 +66,7 @@ namespace Maestro.Quest.Creation
             }else state=AuthoredCollisionReadiness(Find(target),out reason);
             return new JObject{["target"]=target,["state"]=state==RoomSpatialReadiness.Ready?"ready":state==RoomSpatialReadiness.Preparing?"pending":"unavailable",["reason"]=reason};
         }
-        internal RoomSpatialReadiness SpatialMovementReady(string[] targets,Bounds? ground,out string error)
+        internal RoomSpatialReadiness SpatialMovementReady(string[] targets,Bounds? ground,out string error,string actor=null)
         {
             error="The movement workspace is unavailable";if(!this||!isActiveAndEnabled||journal==null)return RoomSpatialReadiness.Unavailable;
             foreach(var target in targets){
@@ -81,7 +81,7 @@ namespace Maestro.Quest.Creation
                 return RoomSpatialReadiness.Unavailable;
             }
             if(ground.HasValue){
-                var missing=GroundDependencies(ground.Value);
+                var missing=GroundDependencies(ground.Value,actor);
                 if(missing.Count>0){
                     bool pending=missing.All(x=>(string)x["state"]=="pending");
                     error=pending?"Preparing accepted ground":"Required accepted ground is unavailable";

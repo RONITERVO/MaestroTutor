@@ -21,6 +21,7 @@ namespace Maestro.Quest.Creation
         public RoomFootPlacement footPlacement=new();
         public RoomWaterTraversal waterTraversal=new();
         public RoomModelGeometry modelGeometry=new();
+        public RoomStaticSupport staticSupport=new();
         public AppearanceBinding[] appearanceBindings=Array.Empty<AppearanceBinding>();
         public ScanDrawingAnchor[] scanAnchors=Array.Empty<ScanDrawingAnchor>();
         public CollisionRecipe collision;
@@ -55,13 +56,13 @@ namespace Maestro.Quest.Creation
         public int walkClip;
         public string walkMotionId;
         public bool IsBuiltIn => kind == RoomObjectKind.Book || kind == RoomObjectKind.Maestro;
-        public RoomObjectData Copy() => new() { id = id, name = name, footPlacement=footPlacement?.Copy(), modelGeometry=modelGeometry?.Copy(), waterTraversal=waterTraversal?.Copy(), appearanceBindings=(appearanceBindings??Array.Empty<AppearanceBinding>()).Select(x=>x.Copy()).ToArray(),visibilityLayer=visibilityLayer,environmentProfile=environmentProfile, scanAnchors=scanAnchors?.Select(a=>a?.Copy()).ToArray(), recipe = recipe?.Copy(), collision=collision?.Copy(), lights=lights?.Select(l=>l?.Copy()).ToArray(),windows=windows?.Select(w=>w?.Copy()).ToArray(), surfaces=surfaces?.Select(s=>s?.Copy()).ToArray(), drawingTips=drawingTips?.Select(t=>t?.Copy()).ToArray(), connections=connections?.Select(h=>h?.Copy()).ToArray(), snapPoints=snapPoints?.Select(p=>p?.Copy()).ToArray(), containers=containers?.Select(c=>c?.Copy()).ToArray(), heightFields=heightFields?.Select(f=>f?.Copy()).ToArray(), sculptTips=sculptTips?.Select(t=>t?.Copy()).ToArray(), materialStores=materialStores?.Select(s=>s?.Copy()).ToArray(), audioEmitters=audioEmitters?.Select(s=>s?.Copy()).ToArray(), kind = kind, position = position, rotation = rotation, scale = scale, color = color, radius = radius, points = points == null ? null : (Vector3[])points.Clone(), joints = MotionFrame.CopyJoints(joints), motion = motion?.Copy(), modelHash = modelHash, physics = physics, mass = mass, collisionShape = collisionShape, followDistance = followDistance, walkSpeed = walkSpeed, walkClip = walkClip, walkMotionId = walkMotionId };
+        public RoomObjectData Copy() => new() { id = id, name = name, staticSupport=staticSupport?.Copy(), footPlacement=footPlacement?.Copy(), modelGeometry=modelGeometry?.Copy(), waterTraversal=waterTraversal?.Copy(), appearanceBindings=(appearanceBindings??Array.Empty<AppearanceBinding>()).Select(x=>x.Copy()).ToArray(),visibilityLayer=visibilityLayer,environmentProfile=environmentProfile, scanAnchors=scanAnchors?.Select(a=>a?.Copy()).ToArray(), recipe = recipe?.Copy(), collision=collision?.Copy(), lights=lights?.Select(l=>l?.Copy()).ToArray(),windows=windows?.Select(w=>w?.Copy()).ToArray(), surfaces=surfaces?.Select(s=>s?.Copy()).ToArray(), drawingTips=drawingTips?.Select(t=>t?.Copy()).ToArray(), connections=connections?.Select(h=>h?.Copy()).ToArray(), snapPoints=snapPoints?.Select(p=>p?.Copy()).ToArray(), containers=containers?.Select(c=>c?.Copy()).ToArray(), heightFields=heightFields?.Select(f=>f?.Copy()).ToArray(), sculptTips=sculptTips?.Select(t=>t?.Copy()).ToArray(), materialStores=materialStores?.Select(s=>s?.Copy()).ToArray(), audioEmitters=audioEmitters?.Select(s=>s?.Copy()).ToArray(), kind = kind, position = position, rotation = rotation, scale = scale, color = color, radius = radius, points = points == null ? null : (Vector3[])points.Clone(), joints = MotionFrame.CopyJoints(joints), motion = motion?.Copy(), modelHash = modelHash, physics = physics, mass = mass, collisionShape = collisionShape, followDistance = followDistance, walkSpeed = walkSpeed, walkClip = walkClip, walkMotionId = walkMotionId };
     }
 
     [Serializable]
     public sealed class RoomDocument
     {
-        public const int CurrentVersion=46;
+        public const int CurrentVersion=47;
         public const int MaximumObjects = 256;
         internal const int LegacyMaximumObjects = 64;
         public const int MaximumStrokePoints = 2048;
@@ -88,7 +89,7 @@ namespace Maestro.Quest.Creation
         public bool Validate(out string error)
         {
             error = null;
-            if (version != 1 && version != 2 && version != 3 && version != 4 && version != 5 && version != 7 && version != 8 && version != 9 && version != 10 && version != 11 && version != 12 && version != 13 && version != 14 && version != 15 && version != 16 && version != 17 && version != 18 && version != 19 && version != 20 && version != 21 && version != 22 && version != 23 && version != 24 && version != 25 && version != 26 && version != 27 && version != 28 && version != 29 && version != 30 && version != 33 && version != 34 && version != 35 && version != 36 && version != 37 && version != 38 && version != 39 && version != 40 && version != 41 && version != 42 && version != 43 && version != 44 && version != 45 && version != CurrentVersion || objects == null || objects.Length < 2 || objects.Length > (version>=42?MaximumObjects:LegacyMaximumObjects) + 2)
+            if (version != 1 && version != 2 && version != 3 && version != 4 && version != 5 && version != 7 && version != 8 && version != 9 && version != 10 && version != 11 && version != 12 && version != 13 && version != 14 && version != 15 && version != 16 && version != 17 && version != 18 && version != 19 && version != 20 && version != 21 && version != 22 && version != 23 && version != 24 && version != 25 && version != 26 && version != 27 && version != 28 && version != 29 && version != 30 && version != 33 && version != 34 && version != 35 && version != 36 && version != 37 && version != 38 && version != 39 && version != 40 && version != 41 && version != 42 && version != 43 && version != 44 && version != 45 && version != 46 && version != CurrentVersion || objects == null || objects.Length < 2 || objects.Length > (version>=42?MaximumObjects:LegacyMaximumObjects) + 2)
                 return Fail("This room file has an unsupported version or object count.", out error);
             if(world!=null&&!world.Valid||version>=23&&world==null)return Fail("This room has an invalid world or region identity.",out error);
             if(version>=22&&(viewpoint==null||!viewpoint.Valid))return Fail("This room has an invalid saved viewpoint.",out error);
@@ -97,6 +98,8 @@ namespace Maestro.Quest.Creation
             {
                 if (item == null || !Enum.IsDefined(typeof(RoomObjectKind), item.kind) || string.IsNullOrEmpty(item.id) || !ids.Add(item.id))
                     return Fail("This room contains invalid or duplicate objects.", out error);
+                if(!RoomStaticSupport.Validate(item,out error))return false;
+                if(version<47&&!item.staticSupport.Default)return Fail("Static support needs the current room format.",out error);
                 if(!RoomModelGeometry.Validate(item,out error))return false;
                 if(version<35&&!item.modelGeometry.Default)return Fail("Imported model geometry needs the current room format.",out error);
                 if(item.waterTraversal==null||!item.waterTraversal.Valid||version<31&&!item.waterTraversal.Default)return Fail("An object has invalid or unsupported water traversal settings.",out error);

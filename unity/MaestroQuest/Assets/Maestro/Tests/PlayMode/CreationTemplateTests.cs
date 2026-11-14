@@ -21,7 +21,7 @@ namespace Maestro.Quest.Tests
         // Named template creation is exercised below and by PendingCreationTests.
         string CreateTemplateFixture(JObject call){
             var args=(JObject)call["arguments"];var entry=CreationTemplates.Find((string)args["templateHash"]);Assert.IsNotNull(entry);
-            string name=(string)args["name"];Assert.IsTrue(editor.CreateRecipe(string.IsNullOrEmpty(name)?entry.Name:name,ObjectCapabilityData.Position(args),(float)args["scale"],entry.Recipe,entry.Collision,entry.Physics,out var id,out var error,entry.Surfaces,entry.DrawingTips,entry.SnapPoints,entry.Containers,entry.HeightFields,entry.SculptTips,entry.MaterialStores),error);return id;
+            string name=(string)args["name"];Assert.IsTrue(editor.CreateRecipe(string.IsNullOrEmpty(name)?entry.Name:name,ObjectCapabilityData.Position(args),(float)args["scale"],entry.Recipe,entry.Collision,entry.Physics,out var id,out var error,entry.Surfaces,entry.DrawingTips,entry.SnapPoints,entry.Containers,entry.HeightFields,entry.SculptTips,entry.MaterialStores,entry.StaticSupport),error);return id;
         }
         JObject TemplateCall(string id,Vector3 position)=>new() {["id"]="object.create",["version"]=1,["arguments"]=new JObject {["kind"]="template",["templateHash"]=CreationTemplates.All.First(e=>e.Id==id).Hash,["name"]="",["x"]=position.x,["y"]=position.y,["z"]=position.z,["scale"]=1}};
         [UnityTest] public IEnumerator TemplateCreationSavesCompleteEditableObjectInOneUndoAndReceiptReplayDoesNotDuplicate() {

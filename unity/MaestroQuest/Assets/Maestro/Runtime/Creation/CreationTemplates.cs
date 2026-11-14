@@ -44,6 +44,7 @@ namespace Maestro.Quest.Creation
                 RoomLiquidCodec.Containers(result,items,false);return result;
             }}
             public CollisionRecipe Collision=>JsonUtility.FromJson<CollisionRecipe>(source["definition"]["collision"].ToString());
+            public RoomStaticSupport StaticSupport=>source["definition"]["staticSupport"] is JObject settings?JsonUtility.FromJson<RoomStaticSupport>(settings.ToString()):new();
             public ObjectPhysicsSettings Physics=>JsonUtility.FromJson<ObjectPhysicsSettings>(source["definition"]["physics"].ToString());
             internal Entry(byte[] bytes) {
                 if(bytes==null||bytes.Length>131072)throw new InvalidOperationException("Invalid bundled template size");
@@ -51,6 +52,7 @@ namespace Maestro.Quest.Creation
                 source=JObject.Load(reader,new JsonLoadSettings {DuplicatePropertyNameHandling=DuplicatePropertyNameHandling.Error});
                 if(reader.Read())throw new InvalidOperationException("Unexpected trailing creation-template data");
                 if(!CapabilityArguments.Validate(source,Schema(),out var error))throw new InvalidOperationException("Invalid bundled creation template " + (string)source["id"] + ": " + error);
+                if(!RoomEditor.PrepareRecipeObject(Name,Vector3.zero,1,Recipe,Collision,Physics,out _,out error,Surfaces,DrawingTips,SnapPoints,Containers,HeightFields,SculptTips,MaterialStores,StaticSupport))throw new InvalidOperationException("Invalid bundled template components: "+error);
                 Hash=ModelLibrary.Hash(bytes);
             }
             public JObject Summary(int index,int total)=>new() {
@@ -74,7 +76,7 @@ namespace Maestro.Quest.Creation
         internal static JObject Schema()=>Object(new JObject {
             ["format"]=Choice("maestro-creation-template"),["version"]=Number(1,1,true),["id"]=Text("^[a-z][a-z0-9-]{0,31}$",32),["name"]=Text("^.{1,80}$",80),
             ["description"]=Text("^.{1,128}$",128),["tags"]=List(Text("^[a-z][a-z0-9-]{0,23}$",24),1,8),["author"]=Text("^.{1,80}$",80),["license"]=Text("^.{1,64}$",64),
-            ["definition"]=Object(new JObject {["version"]=Number(1,1,true),["recipe"]=RecipeSchema(),["collision"]=CollisionCapability.RecipeSchema(),["physics"]=PhysicsSettingsCapability.SettingsSchema(),["surfaces"]=List(SurfaceSchema(),0,4),["drawingTips"]=List(TipSchema(),0,1),["snapPoints"]=List(SnapPointCapability.SavedSchema(),0,64),["containers"]=List(ContainerCapability.SavedSchema(),0,1),["heightFields"]=List(HeightFieldCapability.SavedSchema(),0,1),["sculptTips"]=List(SculptTipCapability.SavedSchema(),0,1),["materialStores"]=List(MaterialStoreCapability.SavedSchema(),0,1)},"surfaces","drawingTips","snapPoints","containers","heightFields","sculptTips","materialStores")
+            ["definition"]=Object(new JObject {["staticSupport"]=CreationPrototypeSchema.StaticSupport(),["version"]=Number(1,1,true),["recipe"]=RecipeSchema(),["collision"]=CollisionCapability.RecipeSchema(),["physics"]=PhysicsSettingsCapability.SettingsSchema(),["surfaces"]=List(SurfaceSchema(),0,4),["drawingTips"]=List(TipSchema(),0,1),["snapPoints"]=List(SnapPointCapability.SavedSchema(),0,64),["containers"]=List(ContainerCapability.SavedSchema(),0,1),["heightFields"]=List(HeightFieldCapability.SavedSchema(),0,1),["sculptTips"]=List(SculptTipCapability.SavedSchema(),0,1),["materialStores"]=List(MaterialStoreCapability.SavedSchema(),0,1)},"staticSupport","surfaces","drawingTips","snapPoints","containers","heightFields","sculptTips","materialStores")
         });
     }
 }

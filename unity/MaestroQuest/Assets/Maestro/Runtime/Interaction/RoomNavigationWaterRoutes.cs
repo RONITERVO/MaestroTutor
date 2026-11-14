@@ -55,7 +55,7 @@ namespace Maestro.Quest.Interaction {
         }
         internal bool FollowRoute(Vector3 from,Vector3 to,Func<Collider,bool> obstacle,out Vector3[] points,bool avoidSolids=false){
             points=Array.Empty<Vector3>();WaterBlocker=null;TraversalBlocker=null;
-            if(obstacle==null||!Ready||PathsPending){CancelFollowRoute();FollowRouteStatus="Waiting for accepted walking surfaces";return false;}
+            if(obstacle==null||!Ready||PathsPending){CancelFollowRoute();FollowRouteStatus=NavigationIssue??"Waiting for accepted walking surfaces";return false;}
             BeginRouteInputs(to);
             if(routeSearch!=null&&(routeGeometry!=SurfaceRevision||routeChecksBody!=avoidSolids||!SolidRouteBodiesCurrent()||routeMode!=actor?.WaterTraversal.mode||routeDepth!=(actor?.WaterTraversal.maxDepthMetres??0)||
                 (routeSearch.From-from).sqrMagnitude>.01f||(routeSearch.To-to).sqrMagnitude>.04f))CancelFollowRoute();

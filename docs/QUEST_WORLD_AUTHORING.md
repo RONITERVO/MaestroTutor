@@ -4177,6 +4177,28 @@ completed request does not delete a model that was reimported later.
 
 Portable workspace archives retain valid metadata even when its model, image or
 sound payload was removed. Metadata alone does not count as an available asset
-or satisfy a missing reference. Archive format 33 adds this retention and reads
-format 32 archives as well. Archive entry and byte limits still apply; exceeding
-them fails explicitly and leaves the workspace unchanged.
+or satisfy a missing reference. Archive format 33 introduced this retention;
+current format 34 preserves it and accepts bounded format 32/33 archives. Archive
+entry and byte limits still apply; exceeding them fails explicitly and leaves
+the workspace unchanged.
+
+## Ordinary static support and editable stairs — 2026-11-14
+
+Users and agents can enable the same support component on compatible fixed
+creations. The platform and stairs templates author actual primary collision and
+support together; their tread boxes match editable visual parts. Dependency
+loading, physics columns, foot sampling and navigation reuse accepted source
+identities. Moving or gripping a support suspends its availability while preserving
+its saved intent. A moving actor still needs another valid floor.
+
+Real-room collision participation remains separate for each entity. Maestro can
+use virtual terrain below the scanned floor when its policy opts out of that
+floor, while another object can continue colliding with the real room. Support
+readiness alone does not promise a route.
+
+Room 47, prototype 11 and archive 34 preserve this intent through ordinary saved
+workflows and bounded prior-archive compatibility. Navigation reserves source,
+copy, work and map capacity through native completion and deferred destruction.
+See the [support contract](quest/plans/STATIC_SUPPORT.md) for eligibility, limits
+and remaining acceptance. Existing authored caps remain unchanged; this increment
+does not establish moving-platform transport, streaming or city-scale performance.

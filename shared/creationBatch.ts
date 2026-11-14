@@ -3,8 +3,9 @@
 // Called after structural schema validation; the connected native room checks aggregate capacity.
 import {alignedConnection,validConnectionDefinition,length2,normalized,rotate,multiply,type ConnectionDefinition,type ConnectionPose} from './roomConnection';
 import {validConstructionResources,type ConstructionResources} from './creationResources';
+import {validStaticSupportSource,type StaticSupportSource} from './staticSupport';
 import {validPrototypePlacement,type CreationPrototype} from './creationPrototype';
-interface Piece extends ConnectionPose {slot:string;name:string;source:{kind:string;recipe?:{playing:boolean};prototype?:CreationPrototype}}
+interface Piece extends ConnectionPose {slot:string;name:string;source:StaticSupportSource&{kind:string;recipe?:{playing:boolean};prototype?:CreationPrototype}}
 interface Batch extends ConnectionPose {blueprint:{version:number;resources?:ConstructionResources;pieces:Piece[];connections?:{owner:string;connected:string;definition:ConnectionDefinition}[]}}
 export function validCreationBatchGeometry(value:Record<string,unknown>):boolean {
  const b=value as unknown as Batch,pieces=b.blueprint.pieces,links=b.blueprint.connections??[];
@@ -14,6 +15,7 @@ export function validCreationBatchGeometry(value:Record<string,unknown>):boolean
  const slots=new Map<string,ConnectionPose>(),q=normalized(b.rotation);
  for(const p of pieces){
   if(/\p{Cc}/u.test(p.name)||/\p{Cc}/u.test(p.slot)||length2(p.position)>100||p.scale*b.scale<.1||p.scale*b.scale>4||p.source.kind==='recipe'&&p.source.recipe?.playing)return false;
+  if(p.source.kind==='recipe'&&!validStaticSupportSource(p.source))return false;
   const v=rotate(q,{x:p.position.x*b.scale,y:p.position.y*b.scale,z:p.position.z*b.scale});
   const position={x:b.position.x+v.x,y:b.position.y+v.y,z:b.position.z+v.z};if(length2(position)>625)return false;
   const pose={position,rotation:normalized(multiply(q,normalized(p.rotation))),scale:p.scale*b.scale};

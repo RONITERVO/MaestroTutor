@@ -21,6 +21,7 @@ namespace Maestro.Quest.Interaction
         void SetRestoration(bool held,string reason)
         {
             RestorationHeld=held;RestorationReason=Imports.ImportObservation.Text(reason);RestorationState=Guid.NewGuid().ToString("N");
+            item?.GetComponent<CreatedRoomObject>()?.InvalidateStaticSupport();
         }
         internal bool CanRetry(out string error)
         {

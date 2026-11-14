@@ -56,7 +56,7 @@ namespace Maestro.Quest.Persistence
             var files=inventory.OfType<JObject>().Where(n=>(string)n["kind"]=="file").ToDictionary(n=>(string)n["path"],StringComparer.Ordinal);
             var documents=new Dictionary<string,byte[]>(StringComparer.Ordinal);var assets=new Dictionary<string,Func<Stream>>(StringComparer.Ordinal);
             byte[] ReadDocument(string name){if(!files.ContainsKey(name))throw Invalid("A required retained document is missing.");var bytes=WorkspaceLibraryCapture.ReadDocument(Path.Combine(data,name.Replace('/',Path.DirectorySeparatorChar)),WorkspaceArchiveMetadata.Limit(name));if(WorkspaceFileInventory.Hash(bytes)!=(string)files[name]["sha256"])throw Invalid("Retained document changed during capture.");return bytes;}
-            foreach(string name in WorkspaceArchiveMetadata.Required){
+            foreach(string name in WorkspaceArchiveMetadata.RequiredFor(files.Keys,retained:true)){
                 string source=Path.Combine(data,name.Replace('/',Path.DirectorySeparatorChar)),file=Path.GetFileName(source),stem=file.Substring(0,file.LastIndexOf(".v",StringComparison.Ordinal));
                 if(VersionedRoomFile<RoomDocument>.HasNewerFiles(Path.GetDirectoryName(source),stem,WorkspaceArchiveMetadata.DocumentVersion(name)))throw Invalid("Retained content needs a newer app version; original files remain preserved.");
                 documents.Add(name,ReadDocument(name));
@@ -66,7 +66,7 @@ namespace Maestro.Quest.Persistence
             _=Programs.ProgramMemoryStore.ReadSaved(data);
             var motionNames=MotionLibrary.DecodeSnapshot(documents["motions/motions.v2.json"]).entries.Where(x=>!x.removed).Select(x=>"motions/"+x.hash+".motion.glb").ToHashSet(StringComparer.Ordinal);
             foreach(string name in files.Keys){
-                token.ThrowIfCancellationRequested();if(documents.ContainsKey(name))continue;
+                token.ThrowIfCancellationRequested();if(documents.ContainsKey(name)||WorkspaceArchiveMetadata.IsRoom(name))continue;
                 try{_=WorkspaceArchiveMetadata.Limit(name);}catch(InvalidDataException){continue;}
                 if(name.StartsWith("motions/",StringComparison.Ordinal)&&!motionNames.Contains(name))continue;
                 if(WorkspaceArchiveMetadata.IsAsset(name)){string source=Path.Combine(data,name.Replace('/',Path.DirectorySeparatorChar));assets.Add(name,()=>{WorkspaceFileInventory.Parents(Path.GetDirectoryName(source));return WorkspaceLibraryCapture.Open(source);});}

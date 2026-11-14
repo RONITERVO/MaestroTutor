@@ -2,6 +2,7 @@ import {probeBookAssetInventory} from './probe-book-asset-inventory';
 import {probeBookImageMaintenance} from './probe-book-image-maintenance';
 import {probeBookAudioMaintenance} from './probe-book-audio-maintenance';
 import {probeBookModelMaintenance} from './probe-book-model-maintenance';
+import {probeBookStaticSupport} from './probe-book-static-support';
 import {validFactValue} from '../shared/behaviourFacts';
 import {nativeBookObjects,readNativeBookObjects} from './native-book-objects';
 import {probeBookEnvironmentRecovery} from './probe-book-environment-recovery';
@@ -1325,6 +1326,7 @@ try{
  await page.screenshot({path:join(directory,'book-native-physics.png')});
  await writeFile(join(directory,'book-native-physics.json'),JSON.stringify({boundary:'Original generated book Start/Pause controls, current state guard, completion receipts and actual native simulation state. Synthetic aligned floor; no real scan, provider or headset proof. Dormant loading is covered separately by native regressions.',physicsBefore,physicsStarted,physicsPaused,physicsInputs,physicsAfter},null,2));
 
+ await probeBookStaticSupport(page,directory);
  await probeBookAssetInventory(page,directory);
  await probeBookImageMaintenance(page,directory);
  await probeBookAudioMaintenance(page,directory);

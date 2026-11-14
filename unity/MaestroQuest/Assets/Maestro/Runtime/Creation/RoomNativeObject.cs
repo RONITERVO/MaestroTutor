@@ -35,6 +35,7 @@ namespace Maestro.Quest.Creation
                 item.GetComponent<CreatedRoomObject>()?.ApplyCollision(data.collision,preparation);
                 item.GetComponent<CreatedRoomObject>()?.SetCollisionShape(data.collisionShape,field!=null);
                 item.GetComponent<RigidRoomItem>()?.Configure(PhysicsWorld,data.physics,data.mass);
+                item.GetComponent<CreatedRoomObject>()?.ApplyStaticSupport(data);
                 item.GetComponent<MaestroAvatar>()?.SetSavedPose(data.joints);
                 var avatar = item.GetComponent<MaestroAvatar>(); if (avatar) { avatar.ConfigureActivityProfiles(ActivityProfiles,Motions); avatar.SetWalkReference(data.walkClip-1,data.walkMotionId,Motions); _ = avatar.SetModel(data.modelHash,Models); }
             }

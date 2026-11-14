@@ -40,6 +40,7 @@ namespace Maestro.Quest.Interaction
             Grab = gameObject.AddComponent<XRGrabInteractable>();
             Grab.enabled = false;
             Grab.colliders.Clear(); Grab.colliders.AddRange(handles);
+            registeredSolids.Clear();foreach(var handle in handles)registeredSolids.Add(handle);SolidRevision++;
             Grab.movementType = XRBaseInteractable.MovementType.Instantaneous;
             Grab.selectMode = InteractableSelectMode.Multiple;
             Grab.useDynamicAttach = true;
@@ -68,6 +69,11 @@ namespace Maestro.Quest.Interaction
             (!surface||surface.GetComponentInParent<RoomItem>(true)==this);
         internal static bool IsPointerOnly(Collider surface)=>surface&&
             surface.GetComponentInParent<RoomItem>(true) is RoomItem owner&&owner.IsPointerSurface(surface);
+        // Exact owned solid registration. Only Configure/Replace may mutate it;
+        // pointer additions/removals are a separate role and never become support.
+        readonly HashSet<Collider> registeredSolids=new();
+        internal uint SolidRevision {get;private set;}
+        internal bool HasSolid(Collider collision)=>collision&&registeredSolids.Contains(collision);
         internal SolidColliderView SolidColliders=>new(this);
         internal int SolidColliderCount=>SolidColliders.Count;
         // A value enumerator keeps physical sampling allocation-free. The
@@ -113,6 +119,8 @@ namespace Maestro.Quest.Interaction
             var retained=new List<Collider>();
             foreach(var surface in Grab.colliders)if(surface&&IsPointerSurface(surface))retained.Add(surface);
             Grab.colliders.Clear();pointerSurfaces.Clear();Grab.colliders.AddRange(handles);
+            registeredSolids.Clear();foreach(var handle in handles)registeredSolids.Add(handle);SolidRevision++;
+            GetComponent<Creation.CreatedRoomObject>()?.InvalidateStaticSupport();
             foreach(var surface in retained)if(!Grab.colliders.Contains(surface)){
                 pointerSurfaces.Add(surface);Grab.colliders.Add(surface);
             }

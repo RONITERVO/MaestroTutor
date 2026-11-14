@@ -16,10 +16,11 @@ namespace Maestro.Quest.Interaction
         {
             readonly Collider collider;
             readonly uint revision;
+            readonly RoomWalkableSurface provider;
             internal readonly NavMeshBuildSource Source;
-            internal Entry(Collider value, uint version, NavMeshBuildSource source)
-            { collider=value; revision=version; Source=source; }
-            internal bool Same(Entry other) => collider==other.collider && revision==other.revision &&
+            internal Entry(Collider value, uint version, NavMeshBuildSource source,RoomWalkableSurface surface)
+            { collider=value; revision=version; Source=source;provider=surface; }
+            internal bool Same(Entry other) => collider==other.collider && provider==other.provider && revision==other.revision &&
                 SameMatrix(Source.transform,other.Source.transform) && Source.shape==other.Source.shape &&
                 Source.size.Equals(other.Source.size) && Source.sourceObject==other.Source.sourceObject && Source.area==other.Source.area;
             static bool SameMatrix(Matrix4x4 a,Matrix4x4 b) {
@@ -65,7 +66,7 @@ namespace Maestro.Quest.Interaction
                     Mathf.Abs(x.x)+Mathf.Abs(y.x)+Mathf.Abs(z.x),Mathf.Abs(x.y)+Mathf.Abs(y.y)+Mathf.Abs(z.y),Mathf.Abs(x.z)+Mathf.Abs(y.z)+Mathf.Abs(z.z)));
                 if(sources.Count==0)Bounds=boundsInFrame;else {var bounds=Bounds;bounds.Encapsulate(boundsInFrame);Bounds=bounds;}
                 if(ground){Ground.Add(collider);grounds++;}
-                sources.Add(source);entries.Add(new Entry(collider,ground?(surface?surface.Revision:0):structure.Revision,source));
+                sources.Add(source);entries.Add(new Entry(collider,ground?(surface?surface.Revision:0):structure.Revision,source,surface));
                 // Capture identity with the geometry. A destroyed/replaced collider
                 // cannot silently release an existing map's canonical dependency.
                 var item=collider.GetComponentInParent<RoomItem>(true);
@@ -81,6 +82,10 @@ namespace Maestro.Quest.Interaction
             for(int i=0;i<dependencies.Count;i++)if(dependencies[i]!=other.dependencies[i])return false;
             for(int i=0;i<entries.Count;i++)if(!entries[i].Same(other.entries[i]))return false;
             return true;
+        }
+        internal void RefreshGroundCapture(RoomNavigationGeometry other) {
+            if(!Same(other))throw new InvalidOperationException("Only identical accepted sources can refresh the ground capture");
+            Ground.RefreshFrom(other.Ground);
         }
         internal void Retain(Creation.RoomEditor editor,Creation.RoomRetentionGraph graph)
         {

@@ -11,10 +11,16 @@ namespace Maestro.Quest.Interaction
         internal const float MaximumSlope=25,MaximumStep=.10f,Skin=.04f;
         static readonly float MinimumNormal=Mathf.Cos(MaximumSlope*Mathf.Deg2Rad);
         static readonly float Gradient=Mathf.Tan(MaximumSlope*Mathf.Deg2Rad);
-        readonly List<Collider> discovered=new(),surfaces=new();
-        internal void Clear(){surfaces.Clear();discovered.Clear();}
-        internal void Add(Collider collision)=>surfaces.Add(collision);
-        internal bool Contains(Collider collision)=>surfaces.Contains(collision);
+        readonly List<Collider> discovered=new();
+        readonly List<RoomGroundHandle> surfaces=new();
+        ulong captureRevision;
+        internal void Clear(){surfaces.Clear();discovered.Clear();captureRevision=RoomWalkableSurface.ChangeRevision;}
+        internal void RefreshFrom(RoomGroundQuery other){
+            if(captureRevision==other.captureRevision)return;
+            surfaces.Clear();surfaces.AddRange(other.surfaces);captureRevision=other.captureRevision;
+        }
+        internal void Add(Collider collision){if(surfaces.Count==0)captureRevision=RoomWalkableSurface.ChangeRevision;if(Accepted(collision,true,out var provider))surfaces.Add(new(collision,provider,!provider));}
+        internal bool Contains(Collider collision){if(captureRevision!=RoomWalkableSurface.ChangeRevision)return false;foreach(var handle in surfaces)if(handle.Collision==collision&&handle.Valid)return true;return false;}
         internal static bool Accepted(Collider collision,bool includeScan,out RoomWalkableSurface surface)
         {
             surface=null;
@@ -22,7 +28,7 @@ namespace Maestro.Quest.Interaction
                 collision.attachedRigidbody&&!collision.attachedRigidbody.isKinematic)return false;
             if(collision is BoxCollider box ? box.size.x<=0||box.size.y<=0||box.size.z<=0 :
                 collision is not MeshCollider mesh||!mesh.sharedMesh||mesh.sharedMesh.vertexCount==0)return false;
-            surface=collision.GetComponent<RoomWalkableSurface>();
+            surface=RoomWalkableSurface.Find(collision);
             bool authored=surface&&surface.Available&&surface.Collision==collision;
             if(authored&&collision.attachedRigidbody?.GetComponent<IPhysicalRoomBinding>()?.PhysicalFrame==true)return false;
             if(!authored)surface=null;
@@ -30,17 +36,21 @@ namespace Maestro.Quest.Interaction
         }
         internal void Capture(Transform owner,bool includeScan=false)
         {
-            surfaces.Clear();discovered.Clear();if(!owner)return;
+            Clear();if(!owner)return;
             owner.GetComponentsInChildren(false,discovered);
-            foreach(var collision in discovered)if(Accepted(collision,includeScan,out _))surfaces.Add(collision);
+            foreach(var collision in discovered)if(Accepted(collision,includeScan,out var provider))surfaces.Add(new(collision,provider,!provider));
         }
         internal bool Sample(Vector3 expected,float above,float below,out RaycastHit result)
         {
             result=default;
+            if(captureRevision!=RoomWalkableSurface.ChangeRevision)return false;
             if(!Creation.RoomRecipe.Finite(expected)||!float.IsFinite(above)||!float.IsFinite(below)||above<0||below<0)return false;
             var ray=new Ray(expected+Vector3.up*(above+.002f),Vector3.down);float distance=above+below+.004f;bool found=false;
-            foreach(var surface in surfaces){
-                if(!surface||!surface.enabled||!surface.gameObject.activeInHierarchy)continue;
+            // A stale upper source cannot disappear from this capture and expose a
+            // lower floor. A fresh capture plus completeness is required.
+            foreach(var handle in surfaces)if(!handle.Valid)return false;
+            foreach(var handle in surfaces){
+                var surface=handle.Collision;
                 if(surface.Raycast(ray,out var hit,distance)&&(!found||hit.distance<result.distance)){result=hit;found=true;}
             }
             // A steep surface above a floor is an obstruction, not permission to

@@ -15,6 +15,7 @@ namespace Maestro.Quest.Tests
         {
             var ground=new GameObject("Ground");var box=ground.AddComponent<BoxCollider>();box.size=new(4,.1f,4);
             ground.transform.SetPositionAndRotation(new(0,-.05f,0),Quaternion.Euler(0,0,degrees));
+            ground.AddComponent<RoomWalkableSurface>().Publish(box);
             var rig=Measure();var source=new HumanoidFootRig.Pose(rig);var contacts=new HumanoidGroundPose();var query=new RoomGroundQuery();query.Add(box);
             bool Probe(Vector3 p,float b,out RaycastHit hit)=>query.Sample(p,b,b,out hit);
             var original=hips.localPosition;var upper=leftUpper.localRotation;var rootPosition=root.transform.position;

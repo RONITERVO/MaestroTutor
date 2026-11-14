@@ -7,10 +7,10 @@ using UnityEngine;
 namespace Maestro.Quest.Creation {
     public sealed partial class RoomEditor {
         readonly struct GroundCandidate {
-            internal readonly (string target,bool terrain,bool imported) Definition;
+            internal readonly RoomGroundDefinition Definition;
             internal readonly RoomSpatialExtent Extent;
             internal readonly bool Cached;
-            internal GroundCandidate((string target,bool terrain,bool imported) definition,RoomSpatialExtent extent,bool cached){
+            internal GroundCandidate(RoomGroundDefinition definition,RoomSpatialExtent extent,bool cached){
                 Definition=definition;Cached=cached;
                 Extent=extent.Known&&extent.HasBounds&&!RoomSpatialLookup.Valid(extent.Bounds)?default:extent;
             }
@@ -26,9 +26,22 @@ namespace Maestro.Quest.Creation {
         internal (long reads,long build,long nodes,long candidates,long dormantReads,long overlayUpdates,long compactions,int overrides) GroundQueryWork=>
             (groundReads,groundBuildWork,groundNodeVisits,groundQueryCandidates,groundDormantReads,groundOverlayUpdates,groundCompactions,groundDormant?.OverrideCount??0);
         void ClearGroundDirectory(){groundDirectoryState=null;groundDormant=null;groundDynamic=Array.Empty<GroundCandidate>();groundMatches.Clear();groundScratch.Clear();}
-        RoomSpatialExtent ReadGroundExtent(string id,bool dormant=false){
+        RoomSpatialExtent ReadGroundExtent(RoomGroundDefinition definition,bool dormant=false){
             groundReads++;if(dormant)groundDormantReads++;
-            var spatial=ReadSpatialBounds(id,out var source);return RoomGroundBounds.ForReadiness(spatial,source=="authored");
+            string id=definition.target;var spatial=ReadSpatialBounds(id,out var source);
+            if(!definition.ordinary)return RoomGroundBounds.ForReadiness(spatial,source=="authored");
+            Matrix4x4? placement=null;
+            if(dormantNative.TryGetValue(id,out var retained))placement=retained.SpatialPlacement;
+            else if(Find(id) is var item&&item){
+                if(!Frame.Read(item.transform,out var position,out var rotation,out var scale))return default;
+                placement=Matrix4x4.TRS(position,rotation,Vector3.one*scale);
+            }
+            var ordinary=journal.GroundSupportExtent(id,placement);
+            // Cold primary collision is bounded from its accepted source rather
+            // than visual metadata. Retained/live declared collision can widen it.
+            if(source is "native" or "retained")ordinary=RoomGroundBounds.Union(ordinary,spatial.Collision);
+            return definition.terrain||definition.imported?
+                RoomGroundBounds.Union(ordinary,RoomGroundBounds.ForReadiness(spatial,source=="authored")):ordinary;
         }
         void RefreshGroundDirectory(){
             // Keep warm support checks allocation-free. Current native readiness
@@ -46,7 +59,7 @@ namespace Maestro.Quest.Creation {
                     // absent from the previous ground partition.
                     bool ground=journal.GroundCandidate(id,out var definition);
                     if(ground&&NativeEntityDormant(id)&&!journal.ScanAnchored(id)){
-                        var candidate=new GroundCandidate(definition,ReadGroundExtent(id,true),true);
+                        var candidate=new GroundCandidate(definition,ReadGroundExtent(definition,true),true);
                         changes.Add(new(new RoomSpatialOverlay<GroundCandidate>.Entry(id,candidate.Extent,candidate)));live.Remove(id);
                     }else{
                         if(groundDormant.Contains(id))changes.Add(new(id));
@@ -63,7 +76,7 @@ namespace Maestro.Quest.Creation {
                     // Expected-but-missing native instances and scan bindings
                     // remain fresh leaf reads, never cached absence/readiness.
                     if(!NativeEntityDormant(definition.target)||journal.ScanAnchored(definition.target)){live.Add(new(definition,default,false));continue;}
-                    var candidate=new GroundCandidate(definition,ReadGroundExtent(definition.target,true),true);
+                    var candidate=new GroundCandidate(definition,ReadGroundExtent(definition,true),true);
                     stable.Add(new(definition.target,candidate.Extent,candidate));
                 }
                 snapshot=new(stable);build=snapshot.BuildWork;liveEntries=live.ToArray();

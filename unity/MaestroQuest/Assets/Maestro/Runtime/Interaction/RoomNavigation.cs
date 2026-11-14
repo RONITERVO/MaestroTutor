@@ -1,7 +1,6 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 using System;
-using Maestro.Quest.Art;
 using UnityEngine;
 using UnityEngine.AI;
 
@@ -14,9 +13,12 @@ namespace Maestro.Quest.Interaction
         RoomItem actor;
         Transform virtualFrame;
         internal void SetVirtualFrame(Transform value){virtualFrame=value;observedFrame=false;Clear();}
-        NavMeshData data;
-        NavMeshDataInstance installed;
-        int agentType = -1;
+        RoomNavigationMap map;
+        NavMeshData data=>map?.Data;
+        int agentType=>map?.AgentType??-1;
+        readonly string resourceOwner=Guid.NewGuid().ToString("N");
+        uint resourceGeneration;
+        internal string NavigationIssue {get;private set;}
         float radius, height;
         NavMeshQueryFilter Filter => new() { agentTypeID = agentType, areaMask = NavMesh.AllAreas };
         RoomNavigationGeometry accepted=new(), candidate=new(), building=new();
@@ -52,8 +54,6 @@ namespace Maestro.Quest.Interaction
         }
         internal uint SurfaceRevision { get; private set; }
         internal uint BuildRevision { get; private set; }
-        Vector3 installedPosition;
-        Quaternion installedRotation;
         public bool Ready => configured && RefreshGeometry(out _);
         // A bound actor that was destroyed is not an intentionally actorless query.
         bool ActorAvailable=>!actorBound||actor&&actor.isActiveAndEnabled&&world&&actor.transform.IsChildOf(world.transform);
@@ -80,11 +80,12 @@ namespace Maestro.Quest.Interaction
             if(!configured||Mathf.Abs(radius-bodyRadius)>=.005f||Mathf.Abs(height-bodyHeight)>=.01f)Clear();
             radius=bodyRadius;height=bodyHeight;configured=true;
             if(RefreshGeometry(out error))return true;
+            if(NavigationIssue!=null){error=NavigationIssue;return false;}
             return InitialInputsNeeded(out error);
         }
         bool RefreshGeometry(out string error)
         {
-            error="Room navigation needs active physics and accepted surfaces";
+            NavigationIssue=null;error="Room navigation needs active physics and accepted surfaces";
             if(!ContextOwned){Clear();return false;}
             if(!RoomEnvironmentBinding.RestorationReady(actor)){ReleaseMap();candidate.Clear();error=actor.GetComponent<RoomEnvironmentBinding>().RestorationReason;return false;}
             if(!world.EnvironmentReady(actor)){ReleaseMap();candidate.Clear();return false;}
@@ -98,18 +99,20 @@ namespace Maestro.Quest.Interaction
             Physics.SyncTransforms();
             if(!candidate.Capture(world.transform,world.IncludesRealRoom(actor),!world.IncludesRealRoom(actor)&&virtualFrame?virtualFrame:world.transform,structuralObstacle??=StructuralObstacle)) { Clear();error="No accepted scanned or authored floor is available for walking";return false; }
             StartingGeometryAccepted();
-            if(data&&installed.valid&&candidate.Same(accepted)){
-                Install(candidate.Position,candidate.Rotation);candidate.Clear();error=null;return installed.valid;
+            if(data&&map.Installed&&candidate.Same(accepted)){
+                accepted.RefreshGroundCapture(candidate);
+                if(!Install(candidate.Position,candidate.Rotation)){Clear();NavigationIssue=error="The accepted walking area could not be installed; retry after resources release";return false;}
+                candidate.Clear();error=null;return true;
             }
             if(pendingBuild!=null){
                 if(!candidate.Same(building))ReleaseMap();
-                else if(!pendingBuild.Done){error=null;return true;}
+                else if(!pendingBuild.Done){building.RefreshGroundCapture(candidate);error=null;return true;}
                 else{
-                    pendingBuild.Take(out data,out agentType);pendingBuild=null;building.Clear();
-                    Install(candidate.Position,candidate.Rotation);BuildRevision++;
-                    (accepted,candidate)=(candidate,accepted);candidate.Clear();PathsPending=false;
-                    error=installed.valid?null:"The accepted walking area could not be installed";
-                    if(!installed.valid){Clear();return false;}return true;
+                    building.RefreshGroundCapture(candidate);
+                    map=pendingBuild.Take();pendingBuild=null;building.Clear();
+                    if(!Install(candidate.Position,candidate.Rotation)){Clear();NavigationIssue=error="The accepted walking area could not be installed; retry after resources release";return false;}
+                    BuildRevision++;(accepted,candidate)=(candidate,accepted);candidate.Clear();PathsPending=false;
+                    error=null;return true;
                 }
             }
             // Old routes disappear before another step. Current accepted colliders
@@ -117,19 +120,20 @@ namespace Maestro.Quest.Interaction
             if(data)ReleaseMap();PathsPending=true;
             if(frameChangedOn>=0&&(Time.frameCount-frameChangedOn<2||Time.unscaledTime-frameChangedAt<FrameSettleSeconds)){error=null;return true;}
             try{
-                if(RoomNavigationBuild.TryStart(candidate,radius,height,out pendingBuild)){
+                string owner=resourceOwner+":"+world.GetInstanceID()+":"+(actor?actor.GetInstanceID():0)+":"+resourceGeneration;
+                var admission=RoomNavigationBuild.TryStart(candidate,radius,height,owner,out pendingBuild,out var reason);
+                if(admission==NavigationAdmission.Rejected){PathsPending=false;NavigationIssue=error=reason;return false;}
+                if(admission==NavigationAdmission.WaitingForOperation)NavigationIssue=reason;
+                if(admission==NavigationAdmission.Started){
                     (building,candidate)=(candidate,building);
                     candidate.Capture(world.transform,world.IncludesRealRoom(actor),!world.IncludesRealRoom(actor)&&virtualFrame?virtualFrame:world.transform,structuralObstacle??=StructuralObstacle);
                 }
-            }catch(Exception failure){Clear();error="The walking map could not be prepared: "+failure.Message;return false;}
+            }catch(Exception){Clear();NavigationIssue=error="The walking map could not be prepared; retry after changing the walking geometry";return false;}
             error=null;return true;
         }
-        void Install(Vector3 position,Quaternion rotation)
+        bool Install(Vector3 position,Quaternion rotation)
         {
-            if(installed.valid&&installedPosition.Equals(position)&&installedRotation.Equals(rotation))return;
-            if(installed.valid)installed.Remove();
-            installed=NavMesh.AddNavMeshData(data,position,rotation);
-            installedPosition=position;installedRotation=rotation;SurfaceRevision++;
+            bool ready=map.TryInstall(position,rotation,out var changed);if(changed)SurfaceRevision++;return ready;
         }
         public bool Sample(Vector3 point, float maximumDistance, out Vector3 floor)
         {
@@ -176,7 +180,7 @@ namespace Maestro.Quest.Interaction
         internal bool Traverse(Vector3 from,Vector3 to,Func<Collider,bool> obstacle,out Vector3 floor,out string error)
         {
             TraversalBlocker=null;WaterBlocker=null;floor=default;error="No connected accepted ground is available for this step";
-            if(!Ready)return false;
+            if(!Ready){error=NavigationIssue??error;return false;}
             if(!StepInputsReady(from,to,0,out var inputError)){error=inputError;return false;}
             if(!PathsPending&&!DirectStep(from,to,out _))return false;
             int mask=world.CollisionMask((1<<RoomPhysicsLayers.Scanned)|(1<<RoomPhysicsLayers.Item)|(1<<RoomPhysicsLayers.Environment),actor);
@@ -207,10 +211,9 @@ namespace Maestro.Quest.Interaction
         void ReleaseMap()
         {
             PathsPending=false;ReleaseFollowRoute();groundMotor.Clear();TraversalBlocker=null;WaterBlocker=null;
-            if(installed.valid){installed.Remove();SurfaceRevision++;}installed=default;
+            if(map?.Installed==true)SurfaceRevision++;
             pendingBuild?.Dispose();pendingBuild=null;building.Clear();
-            ArtResources.Release(data);data=null;accepted.Clear();
-            if(agentType!=-1)NavMesh.RemoveSettings(agentType);agentType=-1;
+            map?.Dispose();map=null;accepted.Clear();resourceGeneration++;NavigationIssue=null;
         }
         void Clear(){ReleaseMovementInputs();ReleaseMap();candidate.Clear();observedFrame=false;frameChangedOn=-1;}
         internal void ReleaseActor(RoomItem target){if(actorBound&&ReferenceEquals(actor,target))ResetBinding();}

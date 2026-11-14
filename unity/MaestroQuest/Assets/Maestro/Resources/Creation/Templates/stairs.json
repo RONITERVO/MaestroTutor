@@ -1,0 +1,228 @@
+{
+  "format": "maestro-creation-template",
+  "version": 1,
+  "id": "stairs",
+  "name": "Low stairs",
+  "description": "Four editable solid treads with static support. Each rises 2 cm at scale 1; 8 cm at scale 4. Starts fixed and idle.",
+  "tags": [
+    "building",
+    "ground",
+    "static-support"
+  ],
+  "author": "Roni Tervo / Maestro",
+  "license": "Apache-2.0",
+  "definition": {
+    "version": 1,
+    "recipe": {
+      "version": 1,
+      "parts": [
+        {
+          "id": "Tread1",
+          "shape": "box",
+          "position": {
+            "x": 0,
+            "y": 0.01,
+            "z": -0.225
+          },
+          "size": {
+            "x": 0.8,
+            "y": 0.02,
+            "z": 0.15
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "parent": null,
+          "color": {
+            "r": 0.62,
+            "g": 0.42,
+            "b": 0.2,
+            "a": 1
+          }
+        },
+        {
+          "id": "Tread2",
+          "shape": "box",
+          "position": {
+            "x": 0,
+            "y": 0.02,
+            "z": -0.075
+          },
+          "size": {
+            "x": 0.8,
+            "y": 0.04,
+            "z": 0.15
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "parent": null,
+          "color": {
+            "r": 0.645,
+            "g": 0.44,
+            "b": 0.21500000000000002,
+            "a": 1
+          }
+        },
+        {
+          "id": "Tread3",
+          "shape": "box",
+          "position": {
+            "x": 0,
+            "y": 0.03,
+            "z": 0.075
+          },
+          "size": {
+            "x": 0.8,
+            "y": 0.06,
+            "z": 0.15
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "parent": null,
+          "color": {
+            "r": 0.67,
+            "g": 0.45999999999999996,
+            "b": 0.23,
+            "a": 1
+          }
+        },
+        {
+          "id": "Tread4",
+          "shape": "box",
+          "position": {
+            "x": 0,
+            "y": 0.04,
+            "z": 0.225
+          },
+          "size": {
+            "x": 0.8,
+            "y": 0.08,
+            "z": 0.15
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "parent": null,
+          "color": {
+            "r": 0.6950000000000001,
+            "g": 0.48,
+            "b": 0.245,
+            "a": 1
+          }
+        }
+      ],
+      "tracks": [],
+      "duration": 2,
+      "playing": false,
+      "loop": false
+    },
+    "collision": {
+      "version": 1,
+      "shapes": [
+        {
+          "id": "Tread1",
+          "shape": "box",
+          "position": {
+            "x": 0,
+            "y": 0.01,
+            "z": -0.225
+          },
+          "size": {
+            "x": 0.8,
+            "y": 0.02,
+            "z": 0.15
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        {
+          "id": "Tread2",
+          "shape": "box",
+          "position": {
+            "x": 0,
+            "y": 0.02,
+            "z": -0.075
+          },
+          "size": {
+            "x": 0.8,
+            "y": 0.04,
+            "z": 0.15
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        {
+          "id": "Tread3",
+          "shape": "box",
+          "position": {
+            "x": 0,
+            "y": 0.03,
+            "z": 0.075
+          },
+          "size": {
+            "x": 0.8,
+            "y": 0.06,
+            "z": 0.15
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        {
+          "id": "Tread4",
+          "shape": "box",
+          "position": {
+            "x": 0,
+            "y": 0.04,
+            "z": 0.225
+          },
+          "size": {
+            "x": 0.8,
+            "y": 0.08,
+            "z": 0.15
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        }
+      ]
+    },
+    "physics": {
+      "mode": "fixed",
+      "shape": "automatic",
+      "mass": 1
+    },
+    "staticSupport": {
+      "version": 1,
+      "enabled": true
+    }
+  }
+}
