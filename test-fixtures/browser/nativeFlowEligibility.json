@@ -1,0 +1,139 @@
+{
+  "cascade": {
+    "waitingSource": {
+      "sessionId": "a3e8e9f6acb34975ae6530969d469a07",
+      "phase": "waiting",
+      "contents": {
+        "amountMl": 400.0,
+        "savedAmountMl": 400.0,
+        "capacityMl": 500.0,
+        "transferredMl": 0.0,
+        "spilledMl": 0.0
+      },
+      "temporary": false,
+      "error": "Preparing liquid flow ground, obstacles and water"
+    },
+    "waitingReceiver": {
+      "sessionId": "a3e8e9f6acb34975ae6530969d469a07",
+      "phase": "waiting",
+      "contents": {
+        "amountMl": 0.0,
+        "savedAmountMl": 0.0,
+        "capacityMl": 100.0,
+        "transferredMl": 0.0,
+        "spilledMl": 0.0
+      },
+      "temporary": false,
+      "error": "Preparing liquid flow ground, obstacles and water"
+    },
+    "flowingSource": {
+      "sessionId": "f1236af61761407089d7c15ec569fa39",
+      "phase": "flowing",
+      "contents": {
+        "amountMl": 383.96169419066121,
+        "savedAmountMl": 400.0,
+        "capacityMl": 500.0,
+        "transferredMl": 16.038305809338777,
+        "spilledMl": 0.0
+      },
+      "temporary": false,
+      "error": ""
+    },
+    "flowingReceiver": {
+      "sessionId": "f1236af61761407089d7c15ec569fa39",
+      "phase": "flowing",
+      "contents": {
+        "amountMl": 14.900554670593191,
+        "savedAmountMl": 0.0,
+        "capacityMl": 100.0,
+        "transferredMl": 0.0,
+        "spilledMl": 1.1377511387455856
+      },
+      "temporary": false,
+      "error": ""
+    },
+    "acceptedSource": {
+      "sessionId": "f1236af61761407089d7c15ec569fa39",
+      "phase": "idle",
+      "contents": {
+        "amountMl": 383.96169419066121,
+        "savedAmountMl": 383.96169419066121,
+        "capacityMl": 500.0,
+        "transferredMl": 0.0,
+        "spilledMl": 0.0
+      },
+      "temporary": false,
+      "error": ""
+    },
+    "acceptedReceiver": {
+      "sessionId": "f1236af61761407089d7c15ec569fa39",
+      "phase": "idle",
+      "contents": {
+        "amountMl": 14.900554670593191,
+        "savedAmountMl": 14.900554670593191,
+        "capacityMl": 100.0,
+        "transferredMl": 0.0,
+        "spilledMl": 0.0
+      },
+      "temporary": false,
+      "error": ""
+    }
+  },
+  "rain": {
+    "waiting": {
+      "sessionId": "99a088295ed943578eaf3d4f8ec838c5",
+      "phase": "waiting",
+      "contents": {
+        "amountMl": 500.0,
+        "savedAmountMl": 500.0,
+        "capacityMl": 500.0,
+        "transferredMl": 0.0,
+        "spilledMl": 0.0
+      },
+      "temporary": false,
+      "error": "Preparing liquid flow ground, obstacles and water"
+    },
+    "waitingRain": {
+      "sessionId": "99a088295ed943578eaf3d4f8ec838c5",
+      "phase": "waiting",
+      "collectedMl": 0.0,
+      "exposure": 0.0,
+      "ready": false,
+      "reason": "Preparing liquid flow ground, obstacles and water"
+    },
+    "flowing": {
+      "sessionId": "940693e012a84154bbcec2db38204da5",
+      "phase": "flowing",
+      "contents": {
+        "amountMl": 481.90194056454266,
+        "savedAmountMl": 500.0,
+        "capacityMl": 500.0,
+        "transferredMl": 0.0,
+        "spilledMl": 18.098059435457319
+      },
+      "temporary": false,
+      "error": ""
+    },
+    "flowingRain": {
+      "sessionId": "940693e012a84154bbcec2db38204da5",
+      "phase": "flowing",
+      "collectedMl": 0.0,
+      "exposure": 0.0,
+      "ready": false,
+      "reason": "Opening is covered"
+    },
+    "accepted": {
+      "sessionId": "940693e012a84154bbcec2db38204da5",
+      "phase": "idle",
+      "contents": {
+        "amountMl": 481.90194056454266,
+        "savedAmountMl": 481.90194056454266,
+        "capacityMl": 500.0,
+        "transferredMl": 0.0,
+        "spilledMl": 0.0
+      },
+      "temporary": false,
+      "error": ""
+    }
+  }
+}

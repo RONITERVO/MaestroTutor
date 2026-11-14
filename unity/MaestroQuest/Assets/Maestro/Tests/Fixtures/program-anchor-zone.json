@@ -1,0 +1,125 @@
+{
+  "version": 3,
+  "entry": "main",
+  "resources": [
+    "00000000000000000000000000000000",
+    "11111111111111111111111111111111"
+  ],
+  "state": [],
+  "events": [],
+  "functions": [
+    {
+      "name": "main",
+      "returns": "void",
+      "parameters": [],
+      "locals": [
+        {
+          "name": "received",
+          "initial": false
+        },
+        {
+          "name": "objectId",
+          "initial": ""
+        },
+        {
+          "name": "inside",
+          "initial": false
+        },
+        {
+          "name": "distance",
+          "initial": 0
+        }
+      ],
+      "body": [
+        {
+          "id": "zone",
+          "op": "awaitEvent",
+          "event": "object.anchor.proximity.changed",
+          "source": "",
+          "version": 2,
+          "arguments": {
+            "target": "00000000000000000000000000000000",
+            "holder": {
+              "kind": "recipePart",
+              "objectId": "11111111111111111111111111111111",
+              "part": "RightHand",
+              "revision": 1
+            },
+            "offset": {
+              "x": 0,
+              "y": 0,
+              "z": 0.35
+            },
+            "radius": 0.25,
+            "hysteresis": 0.03,
+            "transition": "enter",
+            "initial": "baseline",
+            "physics": true
+          },
+          "bindings": {},
+          "timeout": {
+            "value": 5
+          },
+          "received": "received",
+          "value": "objectId",
+          "fields": {
+            "inside": "inside",
+            "distance": "distance"
+          }
+        },
+        {
+          "id": "ifCaught",
+          "op": "if",
+          "test": {
+            "op": "and",
+            "args": [
+              {
+                "var": "received"
+              },
+              {
+                "var": "inside"
+              }
+            ]
+          },
+          "then": [
+            {
+              "id": "pickup",
+              "op": "invoke",
+              "capability": "object.hold",
+              "version": 1,
+              "arguments": {
+                "target": "00000000000000000000000000000000",
+                "holder": {
+                  "kind": "recipePart",
+                  "objectId": "11111111111111111111111111111111",
+                  "part": "RightHand",
+                  "revision": 1
+                },
+                "offset": {
+                  "x": 0,
+                  "y": 0,
+                  "z": 0.35
+                },
+                "rotation": {
+                  "x": 0,
+                  "y": 0,
+                  "z": 0,
+                  "w": 1
+                },
+                "seconds": 1,
+                "release": "drop",
+                "releaseAt": 1,
+                "reach": {
+                  "radius": 0.25,
+                  "physics": true
+                }
+              },
+              "bindings": {}
+            }
+          ],
+          "else": []
+        }
+      ]
+    }
+  ]
+}

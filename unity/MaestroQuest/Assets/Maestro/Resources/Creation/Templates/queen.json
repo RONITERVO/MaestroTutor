@@ -1,0 +1,156 @@
+{
+  "format": "maestro-creation-template",
+  "version": 1,
+  "id": "queen",
+  "name": "Queen",
+  "description": "Editable chess queen. Grip to move; Foot aligns with board squares. Game rules are optional programs.",
+  "tags": [
+    "game",
+    "chess",
+    "lathe"
+  ],
+  "author": "Roni Tervo / Maestro",
+  "license": "Apache-2.0",
+  "definition": {
+    "version": 1,
+    "recipe": {
+      "version": 1,
+      "parts": [
+        {
+          "id": "Body",
+          "shape": "lathe",
+          "position": {
+            "x": 0,
+            "y": 0.058,
+            "z": 0
+          },
+          "size": {
+            "x": 0.056,
+            "y": 0.116,
+            "z": 0.056
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "parent": null,
+          "color": {
+            "r": 1,
+            "g": 1,
+            "b": 1,
+            "a": 1
+          },
+          "profile": [
+            {
+              "x": 0,
+              "y": -0.5
+            },
+            {
+              "x": 0.5,
+              "y": -0.5
+            },
+            {
+              "x": 0.5,
+              "y": -0.42
+            },
+            {
+              "x": 0.32,
+              "y": -0.32
+            },
+            {
+              "x": 0.19,
+              "y": 0.04
+            },
+            {
+              "x": 0.35,
+              "y": 0.15
+            },
+            {
+              "x": 0.24,
+              "y": 0.22
+            },
+            {
+              "x": 0.36,
+              "y": 0.36
+            },
+            {
+              "x": 0.3,
+              "y": 0.4
+            },
+            {
+              "x": 0.12,
+              "y": 0.42
+            },
+            {
+              "x": 0.12,
+              "y": 0.48
+            },
+            {
+              "x": 0,
+              "y": 0.5
+            }
+          ],
+          "segments": 24
+        }
+      ],
+      "tracks": [],
+      "duration": 2,
+      "playing": false,
+      "loop": true
+    },
+    "collision": {
+      "version": 1,
+      "shapes": [
+        {
+          "id": "Body",
+          "shape": "cylinder",
+          "position": {
+            "x": 0,
+            "y": 0.058,
+            "z": 0
+          },
+          "size": {
+            "x": 0.052,
+            "y": 0.116,
+            "z": 0.052
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "segments": 12
+        }
+      ]
+    },
+    "physics": {
+      "mode": "solid",
+      "shape": "automatic",
+      "mass": 0.06
+    },
+    "snapPoints": [
+      {
+        "version": 1,
+        "id": "Foot",
+        "name": "Foot",
+        "family": "ChessSquare",
+        "frame": {
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        }
+      }
+    ]
+  }
+}

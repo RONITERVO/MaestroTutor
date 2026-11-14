@@ -4,8 +4,10 @@ import { useEffect, useRef, useState } from 'react';
 import { useMaestroStore } from '../../../store';
 import { createBrowserLiveRuntime } from '../live/browserRuntime';
 import { createLiveConversationController } from '../live/controller';
+import { sessionActivity } from '../../../platform/browser/sessionActivity';
+import type { StartLiveConversationOptions } from '../live/types';
 import type { LiveSessionState, UseGeminiLiveConversationCallbacks } from '../live/types';
-export type { LiveSessionState, LiveTurnTranscriptUpdateReason, LiveTurnTranscriptUpdate, UseGeminiLiveConversationCallbacks, StartLiveConversationOptions } from '../live/types';
+export type { LiveTurnContext, LiveSessionState, LiveTurnTranscriptUpdateReason, LiveTurnTranscriptUpdate, UseGeminiLiveConversationCallbacks, StartLiveConversationOptions } from '../live/types';
 
 /** React binding for one Live session owner. Provider/capture/playback callbacks
  * read the latest committed callback set without rebuilding the active session. */
@@ -22,5 +24,7 @@ export function useGeminiLiveConversation(callbacks: UseGeminiLiveConversationCa
   const controller = controllerRef.current;
   useEffect(() => { controller.setCallbacks(callbacks); }, [callbacks, controller]);
   useEffect(() => () => { controller.dispose(); }, [controller]);
-  return { start: controller.start, stop: controller.stop, updateVideoInput: controller.updateVideoInput };
+  useEffect(() => sessionActivity.onSuspend(controller.stop), [controller]);
+  const start = useRef((options: StartLiveConversationOptions) => sessionActivity.isActive() ? controller.start(options) : Promise.resolve()).current;
+  return { start, stop: controller.stop, updateVideoInput: controller.updateVideoInput };
 }

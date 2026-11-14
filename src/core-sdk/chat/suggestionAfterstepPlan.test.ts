@@ -51,3 +51,10 @@ describe('explicit afterstep mode policies', () => {
     expect(planSuggestionAftersteps({ ...common, mode: 'headless' }).assistantPatches).toEqual([{ isLoadingArtifact: false }]);
   });
 });
+
+it.each([null, { dataUrl: 'data:text/html;base64,PGI+aGk8L2I+', mimeType: 'text/html', fileName: 'lesson.html' }])('preserves the source transcript for a spoken agent handoff with artifact %j', artifact => {
+  const plan = planSuggestionAftersteps({ mode: 'browser-live', contextText: 'I will ask the agent.', artifact, toolRequest: { tool: 'agent' } });
+  expect(plan.splitToolMessage).toBeNull();
+  expect(plan.assistantPatches.some(patch => patch.maestroToolKind === 'agent')).toBe(true);
+  expect(plan.assistantPatches.some(patch => 'llmRawResponse' in patch)).toBe(false);
+});

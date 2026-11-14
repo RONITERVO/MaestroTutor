@@ -180,11 +180,11 @@ export const createManagedLiveGatewayTicket = async (params: {
     appConfig.managedAllowedLiveModels,
     'live audio',
   );
-  const config = requireSafeManagedLiveConfig(params.config);
+  const config = requireSafeManagedLiveConfig(params.config, { allowRoomTools: appConfig.managedLiveRoomToolsEnabled });
   const windowSeconds = appConfig.managedLiveTokenLifetimeSeconds;
-  const estimatedCredits = calculateManagedLiveGatewayWindowCredits(windowSeconds);
-  const estimatedUsd = calculateManagedLiveGatewayWindowUsd(windowSeconds);
-  const budget = getManagedLiveGatewayTokenBudget(windowSeconds);
+  const estimatedCredits = calculateManagedLiveGatewayWindowCredits(windowSeconds, Boolean(config?.tools));
+  const estimatedUsd = calculateManagedLiveGatewayWindowUsd(windowSeconds, Boolean(config?.tools));
+  const budget = getManagedLiveGatewayTokenBudget(windowSeconds, Boolean(config?.tools));
   const ticketId = randomUUID();
   const secret = randomBytes(TICKET_SECRET_BYTES).toString('base64url');
   const currentTime = Date.now();
@@ -206,7 +206,7 @@ export const createManagedLiveGatewayTicket = async (params: {
       model,
       estimatedCredits,
       estimatedUsd,
-      admissionUsd: calculateManagedLiveSpendAdmissionUsd(),
+      admissionUsd: calculateManagedLiveSpendAdmissionUsd(Boolean(config?.tools)),
       metadata: {
         purpose: 'live',
         leaseId: lease.leaseId,
@@ -452,6 +452,8 @@ export const finalizeManagedLiveGatewaySession = async (
             providerUsageTurnCount: session.checkpoint.providerTurnUsage?.length || 0,
             clientTurnBoundaryCount: session.checkpoint.clientTurnBoundaryCount || 0,
             inputAudioBytes: session.checkpoint.inputAudioBytes,
+            inputToolResponseBytes: session.checkpoint.inputToolResponseBytes || 0,
+            outputToolCallBytes: session.checkpoint.outputToolCallBytes || 0,
             inputVideoBytes: session.checkpoint.inputVideoBytes || 0,
             inputVideoFrameCount: session.checkpoint.inputVideoFrameCount || 0,
             outputAudioBytes: session.checkpoint.outputAudioBytes,

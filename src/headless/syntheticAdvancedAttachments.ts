@@ -34,6 +34,9 @@ export const createAdvancedSyntheticAttachment = async (
   const zip = new JSZip();
   zip.file('[Content_Types].xml', '<?xml version="1.0"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>');
   zip.file('word/document.xml', '<?xml version="1.0"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body><w:p><w:r><w:t>Maestro synthetic office lesson: red apple vocabulary.</w:t></w:r></w:p></w:body></w:document>');
+  // Include JSZip's automatically created directories: fixture bytes must not
+  // depend on when a replay or test constructs this document.
+  zip.forEach((_path, entry) => { entry.date = new Date('2000-01-01T00:00:00Z'); });
   const bytes = await zip.generateAsync({ type: 'uint8array' });
   const mimeType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
   return {

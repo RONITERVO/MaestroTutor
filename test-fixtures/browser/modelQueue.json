@@ -1,0 +1,38 @@
+{
+  "queued": {
+    "reservationId": "f5450394e8a44e9fa695b88187fcaa02",
+    "worldId": "b67b416b300948f59a649c1d0d204bd7",
+    "regionId": "aa89e9a7e5804b83adedd4ba3b8f4837",
+    "target": "dddddddddddddddddddddddddddddddd",
+    "role": "object",
+    "modelHash": "c0073bf66211b8d020eed2a70a06c83c5e8b19f0d13b3f6439f7ec244001709c",
+    "state": "queued",
+    "vertices": 3,
+    "textureMiPixels": 0.0,
+    "morphMillionVertices": 0.0
+  },
+  "loading": {
+    "reservationId": "f5450394e8a44e9fa695b88187fcaa02",
+    "worldId": "b67b416b300948f59a649c1d0d204bd7",
+    "regionId": "aa89e9a7e5804b83adedd4ba3b8f4837",
+    "target": "dddddddddddddddddddddddddddddddd",
+    "role": "object",
+    "modelHash": "c0073bf66211b8d020eed2a70a06c83c5e8b19f0d13b3f6439f7ec244001709c",
+    "state": "loading",
+    "vertices": 3,
+    "textureMiPixels": 0.0,
+    "morphMillionVertices": 0.0
+  },
+  "ready": {
+    "reservationId": "f5450394e8a44e9fa695b88187fcaa02",
+    "worldId": "b67b416b300948f59a649c1d0d204bd7",
+    "regionId": "aa89e9a7e5804b83adedd4ba3b8f4837",
+    "target": "dddddddddddddddddddddddddddddddd",
+    "role": "object",
+    "modelHash": "c0073bf66211b8d020eed2a70a06c83c5e8b19f0d13b3f6439f7ec244001709c",
+    "state": "ready",
+    "vertices": 3,
+    "textureMiPixels": 0.0,
+    "morphMillionVertices": 0.0
+  }
+}

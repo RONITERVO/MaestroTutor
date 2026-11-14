@@ -1,0 +1,111 @@
+{
+  "version": 3,
+  "entry": "repeat_entry_1",
+  "resources": [
+    "maestro"
+  ],
+  "functions": [
+    {
+      "name": "main",
+      "returns": "void",
+      "parameters": [],
+      "locals": [
+        {
+          "name": "count",
+          "initial": 0
+        }
+      ],
+      "body": [
+        {
+          "id": "count_cycle",
+          "op": "set",
+          "variable": "count",
+          "value": {
+            "op": "add",
+            "args": [
+              {
+                "var": "count"
+              },
+              {
+                "value": 1
+              }
+            ]
+          }
+        },
+        {
+          "id": "wave",
+          "op": "invoke",
+          "capability": "animation.play",
+          "version": 1,
+          "arguments": {
+            "target": "maestro",
+            "source": {
+              "kind": "gesture",
+              "gesture": "greeting"
+            },
+            "channel": "upperBody",
+            "seconds": 1
+          },
+          "bindings": {
+            "seconds": {
+              "var": "count"
+            }
+          }
+        },
+        {
+          "id": "finish_cycle",
+          "op": "return"
+        },
+        {
+          "id": "never_reached",
+          "op": "invoke",
+          "capability": "animation.play",
+          "version": 1,
+          "arguments": {
+            "target": "maestro",
+            "source": {
+              "kind": "gesture",
+              "gesture": "greeting"
+            },
+            "channel": "upperBody",
+            "seconds": 1
+          },
+          "bindings": {
+            "seconds": {
+              "var": "count"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "repeat_entry_1",
+      "returns": "void",
+      "parameters": [],
+      "locals": [],
+      "body": [
+        {
+          "id": "repeat_loop_1",
+          "op": "forever",
+          "body": [
+            {
+              "id": "repeat_cycle_1",
+              "op": "call",
+              "function": "main",
+              "args": []
+            },
+            {
+              "id": "repeat_delay_1",
+              "op": "sleep",
+              "seconds": {
+                "value": 0.5
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "state": [],
+  "events": []
+}

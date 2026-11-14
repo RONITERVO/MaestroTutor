@@ -31,7 +31,7 @@ export type CompactAssistantArtifact = {
 };
 
 export type CompactAssistantToolRequest = {
-  tool: 'image' | 'audio-note' | 'music';
+  tool: 'image' | 'audio-note' | 'music' | 'agent';
   prompt?: string;
   text?: string;
   durationSeconds?: number;
@@ -171,7 +171,7 @@ const extractLastToolRequestFromRaw = (rawText?: string | null): CompactAssistan
   if (!lastPayload) return null;
   const parsed = tryParseJsonObject(lastPayload);
   const tool = typeof parsed?.tool === 'string' ? parsed.tool.trim().toLowerCase() : '';
-  if (tool !== 'image' && tool !== 'audio-note' && tool !== 'music') return null;
+  if (tool !== 'image' && tool !== 'audio-note' && tool !== 'music' && tool !== 'agent') return null;
 
   const prompt = typeof parsed?.prompt === 'string' ? parsed.prompt.trim() : '';
   const text = typeof parsed?.text === 'string' ? parsed.text.trim() : '';
@@ -323,7 +323,7 @@ export const serializeCompactAssistantToolBlock = (toolRequest: CompactAssistant
   const compactPayload: Record<string, unknown> = {
     tool: toolRequest.tool,
     compactHistory: true,
-    alreadyUsed: true,
+    ...(toolRequest.tool === 'agent' ? { handoffOnly: true } : { alreadyUsed: true }),
   };
 
   if (toolRequest.tool === 'audio-note') {

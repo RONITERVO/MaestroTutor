@@ -1,0 +1,40 @@
+// Human authoring through the real book. Simulated command acknowledgements; Unity execution is separate.
+import {chromium} from 'playwright-core';
+import {mkdir,readFile,writeFile} from 'node:fs/promises';
+import {resolve} from 'node:path';
+import assert from 'node:assert/strict';
+const base=process.env.MAESTRO_HANDOFF_FIXTURE_URL||'http://127.0.0.1:5184';
+if(!['localhost','127.0.0.1'].includes(new URL(base).hostname))throw new Error('Local fixture required');
+const out=resolve('.quest-evidence/declarations');await mkdir(out,{recursive:true});
+const expected=JSON.parse(await readFile('unity/MaestroQuest/Assets/Maestro/Tests/Fixtures/program-declarations.json','utf8'));
+const native=JSON.parse(await readFile(resolve(out,'native/received.json'),'utf8'));
+const browser=await chromium.launch({channel:'chrome',headless:true});
+try {
+ const context=await browser.newContext({viewport:{width:1536,height:1024}});
+ await context.route('**/*',r=>['localhost','127.0.0.1'].includes(new URL(r.request().url()).hostname)?r.continue():r.abort());
+ const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(String(e)));
+ await page.goto(base+'/test-fixtures/browser/quest-workspace.html?visualBlocks&structured');
+ const click=name=>page.getByRole('button',{name,exact:true}).click(),input=label=>page.getByLabel(label,{exact:true});
+ const save=()=>click('Update draft');
+ const add=async(location,kind)=>{const summary=input('Add block in '+location);if(!await summary.evaluate(e=>e.parentElement.open))await summary.click();await click('+ '+kind+' in '+location);};
+ await click('Functions & code');await click('Edit state & signals');await click('Add state variable');await input('State 1 name').fill('counter');
+ await click('Add state variable');await input('State 2 name').fill('history');await input('State 2 type').selectOption('list');await input('State 2 type item type').selectOption('number');
+ await click('Add named signal');await input('Signal 1 name').fill('user.input');await click('Add named signal');await input('Signal 2 name').fill('user.output');await save();
+ await click('+ Function');await input('Function name').fill('remember');await click('Add parameter');await input('Parameter 1 name').fill('amount');await save();
+ await add('remember','Set state');await click('Edit values block_1');await input('Assigned value source').selectOption('op:add');await input('Assigned value left source').selectOption('state:counter');await input('Assigned value right source').selectOption('var:amount');await save();
+ await add('remember','Set state');await click('Edit values block_2');await input('Assignment destination').selectOption('history');
+ const append=await input('Assigned value source').locator('option').filter({hasText:'append in history'}).getAttribute('value');await input('Assigned value source').selectOption(append);await input('Assigned value item source').selectOption('var:amount');await save();
+ await add('remember','Send event');await click('Edit values block_3');await input('Send named event').selectOption('user.output');await input('Event payload source').selectOption('state:counter');await save();
+ await click('Edit function main');await click('Add local variable');await input('Variable 1 name').fill('amount');await save();
+ await add('main','Event wait');await click('Edit values block_4');await input('Await event').selectOption('user.input');await save();
+ await add('main','If');await click('Edit values block_5');await input('Condition source').selectOption('var:received');await save();
+ await add('block_5 Then','Call function');await click('Edit values block_6');await input('Argument amount source').selectOption('var:amount');await save();await add('main','Forever');
+ await click('Edit state & signals');await input('State 1 name').fill('total');await input('State 2 name').fill('amounts');await input('Signal 1 name').fill('user.add');await input('Signal 2 name').fill('user.stored');
+ await input('State 1 name').evaluate(e=>e.scrollIntoView({block:'center'}));await page.screenshot({path:resolve(out,'state-declarations.png')});
+ await input('Signal 1 name').evaluate(e=>e.scrollIntoView({block:'center'}));await page.screenshot({path:resolve(out,'signal-declarations.png')});await save();assert.equal(await input('Program JSON').count(),0);
+ await click('Apply changes');await page.waitForFunction(()=>window.maestroWorkspaceRequests.some(r=>r.commands.some(c=>c.rule?.action==='edit')));
+ const request=await page.evaluate(()=>window.maestroWorkspaceRequests.find(r=>r.commands.some(c=>c.rule?.action==='edit')));assert.deepEqual(JSON.parse(request.commands[0].rule.edits[0].sequence.program),expected);assert.equal(request.commands.some(c=>c.rule?.action==='play'||c.rule?.action==='signal'),false);
+ await page.evaluate(rules=>window.maestroWorkspaceRulesEvidence(rules),native.rules);const live=page.getByLabel('Live program values');await live.waitFor();const values=await live.textContent();assert(values.includes('state.total = 6'));assert(values.includes('[2.0,4.0]')||values.includes('[2,4]'));await live.evaluate(e=>e.scrollIntoView({block:'center'}));await page.screenshot({path:resolve(out,'native-state-and-signal.png')});
+ const paused=JSON.parse(await readFile(resolve(out,'native/paused.json'),'utf8'));await page.evaluate(rules=>window.maestroWorkspaceRulesEvidence(rules),paused.rules);await live.waitFor({state:'detached'});
+ assert.deepEqual(errors,[]);await writeFile(resolve(out,'browser.json'),JSON.stringify({request,sourceMatchesNativeFixture:true,nativeRuleObservations:true,surroundingRoom:'fixture',acknowledgements:'simulated',browserNativeExecution:false,errors},null,2)+'\n');console.log('Book-authored state/signals match the Unity fixture and display actual native reaction/pause values.');
+}finally{await browser.close();}

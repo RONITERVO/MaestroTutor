@@ -1,0 +1,142 @@
+{
+  "version": 3,
+  "entry": "main",
+  "resources": [],
+  "functions": [
+    {
+      "name": "main",
+      "returns": "void",
+      "parameters": [],
+      "locals": [
+        {
+          "name": "amount",
+          "initial": 0
+        },
+        {
+          "name": "received",
+          "initial": false
+        },
+        {
+          "name": "eventValue",
+          "initial": ""
+        }
+      ],
+      "body": [
+        {
+          "id": "block_7",
+          "op": "forever",
+          "body": [
+            {
+              "id": "block_4",
+              "op": "awaitEvent",
+              "event": "user.add",
+              "source": "",
+              "timeout": {
+                "value": 0
+              },
+              "received": "received",
+              "value": "amount"
+            },
+            {
+              "id": "block_5",
+              "op": "if",
+              "test": {
+                "var": "received"
+              },
+              "then": [
+                {
+                  "id": "block_6",
+                  "op": "call",
+                  "function": "remember",
+                  "args": [
+                    {
+                      "var": "amount"
+                    }
+                  ]
+                }
+              ],
+              "else": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "remember",
+      "returns": "void",
+      "parameters": [
+        {
+          "name": "amount",
+          "type": "number"
+        }
+      ],
+      "locals": [],
+      "body": [
+        {
+          "id": "block_1",
+          "op": "setState",
+          "variable": "total",
+          "value": {
+            "op": "add",
+            "args": [
+              {
+                "state": "total"
+              },
+              {
+                "var": "amount"
+              }
+            ]
+          }
+        },
+        {
+          "id": "block_2",
+          "op": "setState",
+          "variable": "amounts",
+          "value": {
+            "op": "append",
+            "args": [
+              {
+                "state": "amounts"
+              },
+              {
+                "var": "amount"
+              }
+            ]
+          }
+        },
+        {
+          "id": "block_3",
+          "op": "emitEvent",
+          "event": "user.stored",
+          "value": {
+            "state": "total"
+          }
+        }
+      ]
+    }
+  ],
+  "state": [
+    {
+      "name": "total",
+      "initial": 0
+    },
+    {
+      "name": "amounts",
+      "initial": [],
+      "type": {
+        "list": "number"
+      }
+    }
+  ],
+  "events": [
+    {
+      "name": "user.add",
+      "type": "number"
+    },
+    {
+      "name": "user.stored",
+      "type": "number"
+    }
+  ],
+  "dataVersion": 1
+}

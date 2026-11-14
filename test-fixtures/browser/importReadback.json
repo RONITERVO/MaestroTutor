@@ -1,0 +1,247 @@
+{
+  "execution": {
+    "selected": {
+      "id": "b2671272ce584c70802ccd0e064ad21c",
+      "capability": "model.import",
+      "version": 1,
+      "resources": [],
+      "phase": "completed",
+      "status": "Action completed",
+      "output": {
+        "destination": "motions",
+        "objectId": "",
+        "revision": 0,
+        "temporary": false,
+        "motionIds": [
+          "b837a1cf073b4270883397b15ff177f3",
+          "3847f28b8f1b47419517d7ab851b867f",
+          "2ae2a42c7c344d4c85c28e1b05093242",
+          "cec4f5062a32405e97a2bbd05e075021",
+          "bd83e9af77fa416fbe51f29b8f39573b",
+          "183484a5b4924f34bc0246988ea66926",
+          "8ab0df94baa8434e8d537df999f59069",
+          "2ca3d2d7869549549e3315ce60343f62",
+          "1e72666d119540e7a8011d6807984d65",
+          "7f4bf4581eb442e9a8da239084b6bd19",
+          "6e666211812840edb201f27d2c4d315d",
+          "da198706e5464e9fb7f1193660ad26e6",
+          "b3259c37ad0f43b899829311a0b8eab4",
+          "45d66ac6d0ed4fc085ca129c1434657e",
+          "0986a77f46f84cb0b8d81dbe9c9b6591",
+          "af79320c79164ca29f37315bcbe2b920",
+          "9173085f560247e588b97e458bd1a534",
+          "ef4199c9daf24be1a8f46d82575a45db",
+          "4ee220d31e8045bfb4bfbf3b67e7476c",
+          "ada8d8e939cc403280a139fbbfcd32ff",
+          "c0d86cfe675d4313a247acfa6d196680",
+          "12c9472ad95f48e0bbd6ac15aa51aeff",
+          "ebd5f16b254d468fa233361f0544ba9f",
+          "d201c79d9d2e44afb74b4e1a2909d4d6",
+          "539cc018d2df48ea9cceca18bbf5de98",
+          "11cd2b0bb65d4b3a8c7815baf7263c56",
+          "7d7fae309b4348ce916516af1ca66ebb",
+          "f3884485db0b4d5cbbe5d6d6dc57226d",
+          "a49243f3748c4692834d6ad8ea54c72b",
+          "fec09db0bd4549ff8e5f7710aeb27ffd",
+          "31821b623639441183f00b917f58de5a",
+          "fa760ab227204f47ba47318a7d9c069f"
+        ],
+        "requestId": "ccb3394864294cc1b4481574f1c21d49",
+        "modelHash": "b63ea8f15153413c2dc9174882f7fbca23d5ac5909ae1379cadd29eaf780764d"
+      },
+      "call": {
+        "id": "model.import",
+        "version": 1,
+        "arguments": {
+          "operation": "motions",
+          "requestId": "ccb3394864294cc1b4481574f1c21d49",
+          "modelHash": "b63ea8f15153413c2dc9174882f7fbca23d5ac5909ae1379cadd29eaf780764d"
+        }
+      }
+    },
+    "running": [],
+    "outcomes": [
+      {
+        "id": "06188ec0f53744c38656831b2a34852c",
+        "capability": "model.import",
+        "version": 1,
+        "resources": [],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "requestId": "ccb3394864294cc1b4481574f1c21d49",
+          "modelHash": "",
+          "destination": "",
+          "objectId": "",
+          "revision": 0,
+          "temporary": false,
+          "motionIds": []
+        }
+      },
+      {
+        "id": "b2671272ce584c70802ccd0e064ad21c",
+        "capability": "model.import",
+        "version": 1,
+        "resources": [],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "destination": "motions",
+          "objectId": "",
+          "revision": 0,
+          "temporary": false,
+          "motionIds": [
+            "b837a1cf073b4270883397b15ff177f3",
+            "3847f28b8f1b47419517d7ab851b867f",
+            "2ae2a42c7c344d4c85c28e1b05093242",
+            "cec4f5062a32405e97a2bbd05e075021",
+            "bd83e9af77fa416fbe51f29b8f39573b",
+            "183484a5b4924f34bc0246988ea66926",
+            "8ab0df94baa8434e8d537df999f59069",
+            "2ca3d2d7869549549e3315ce60343f62",
+            "1e72666d119540e7a8011d6807984d65",
+            "7f4bf4581eb442e9a8da239084b6bd19",
+            "6e666211812840edb201f27d2c4d315d",
+            "da198706e5464e9fb7f1193660ad26e6",
+            "b3259c37ad0f43b899829311a0b8eab4",
+            "45d66ac6d0ed4fc085ca129c1434657e",
+            "0986a77f46f84cb0b8d81dbe9c9b6591",
+            "af79320c79164ca29f37315bcbe2b920",
+            "9173085f560247e588b97e458bd1a534",
+            "ef4199c9daf24be1a8f46d82575a45db",
+            "4ee220d31e8045bfb4bfbf3b67e7476c",
+            "ada8d8e939cc403280a139fbbfcd32ff",
+            "c0d86cfe675d4313a247acfa6d196680",
+            "12c9472ad95f48e0bbd6ac15aa51aeff",
+            "ebd5f16b254d468fa233361f0544ba9f",
+            "d201c79d9d2e44afb74b4e1a2909d4d6",
+            "539cc018d2df48ea9cceca18bbf5de98",
+            "11cd2b0bb65d4b3a8c7815baf7263c56",
+            "7d7fae309b4348ce916516af1ca66ebb",
+            "f3884485db0b4d5cbbe5d6d6dc57226d",
+            "a49243f3748c4692834d6ad8ea54c72b",
+            "fec09db0bd4549ff8e5f7710aeb27ffd",
+            "31821b623639441183f00b917f58de5a",
+            "fa760ab227204f47ba47318a7d9c069f"
+          ],
+          "requestId": "ccb3394864294cc1b4481574f1c21d49",
+          "modelHash": "b63ea8f15153413c2dc9174882f7fbca23d5ac5909ae1379cadd29eaf780764d"
+        }
+      }
+    ],
+    "nextRunId": "1554ce2e275f44399d1948bbc7639860",
+    "storageError": null,
+    "recovery": null
+  },
+  "summary": {
+    "requestId": "ccb3394864294cc1b4481574f1c21d49",
+    "phase": "completed",
+    "error": "",
+    "preview": {
+      "modelHash": "b63ea8f15153413c2dc9174882f7fbca23d5ac5909ae1379cadd29eaf780764d",
+      "name": "My model.glb",
+      "kibibytes": 10.0,
+      "vertices": 3,
+      "triangles": 1,
+      "clips": 32,
+      "humanoid": false
+    },
+    "accepted": {
+      "destination": "motions",
+      "objectId": "",
+      "revision": 0,
+      "temporary": false,
+      "motionCount": 32
+    }
+  },
+  "pages": [
+    {
+      "arguments": {
+        "requestId": "ccb3394864294cc1b4481574f1c21d49",
+        "motionOffset": 0
+      },
+      "value": {
+        "requestId": "ccb3394864294cc1b4481574f1c21d49",
+        "modelHash": "b63ea8f15153413c2dc9174882f7fbca23d5ac5909ae1379cadd29eaf780764d",
+        "motionCount": 32,
+        "motionOffset": 0,
+        "motionIds": [
+          "b837a1cf073b4270883397b15ff177f3",
+          "3847f28b8f1b47419517d7ab851b867f",
+          "2ae2a42c7c344d4c85c28e1b05093242",
+          "cec4f5062a32405e97a2bbd05e075021",
+          "bd83e9af77fa416fbe51f29b8f39573b",
+          "183484a5b4924f34bc0246988ea66926",
+          "8ab0df94baa8434e8d537df999f59069",
+          "2ca3d2d7869549549e3315ce60343f62"
+        ]
+      }
+    },
+    {
+      "arguments": {
+        "requestId": "ccb3394864294cc1b4481574f1c21d49",
+        "motionOffset": 8
+      },
+      "value": {
+        "requestId": "ccb3394864294cc1b4481574f1c21d49",
+        "modelHash": "b63ea8f15153413c2dc9174882f7fbca23d5ac5909ae1379cadd29eaf780764d",
+        "motionCount": 32,
+        "motionOffset": 8,
+        "motionIds": [
+          "1e72666d119540e7a8011d6807984d65",
+          "7f4bf4581eb442e9a8da239084b6bd19",
+          "6e666211812840edb201f27d2c4d315d",
+          "da198706e5464e9fb7f1193660ad26e6",
+          "b3259c37ad0f43b899829311a0b8eab4",
+          "45d66ac6d0ed4fc085ca129c1434657e",
+          "0986a77f46f84cb0b8d81dbe9c9b6591",
+          "af79320c79164ca29f37315bcbe2b920"
+        ]
+      }
+    },
+    {
+      "arguments": {
+        "requestId": "ccb3394864294cc1b4481574f1c21d49",
+        "motionOffset": 16
+      },
+      "value": {
+        "requestId": "ccb3394864294cc1b4481574f1c21d49",
+        "modelHash": "b63ea8f15153413c2dc9174882f7fbca23d5ac5909ae1379cadd29eaf780764d",
+        "motionCount": 32,
+        "motionOffset": 16,
+        "motionIds": [
+          "9173085f560247e588b97e458bd1a534",
+          "ef4199c9daf24be1a8f46d82575a45db",
+          "4ee220d31e8045bfb4bfbf3b67e7476c",
+          "ada8d8e939cc403280a139fbbfcd32ff",
+          "c0d86cfe675d4313a247acfa6d196680",
+          "12c9472ad95f48e0bbd6ac15aa51aeff",
+          "ebd5f16b254d468fa233361f0544ba9f",
+          "d201c79d9d2e44afb74b4e1a2909d4d6"
+        ]
+      }
+    },
+    {
+      "arguments": {
+        "requestId": "ccb3394864294cc1b4481574f1c21d49",
+        "motionOffset": 24
+      },
+      "value": {
+        "requestId": "ccb3394864294cc1b4481574f1c21d49",
+        "modelHash": "b63ea8f15153413c2dc9174882f7fbca23d5ac5909ae1379cadd29eaf780764d",
+        "motionCount": 32,
+        "motionOffset": 24,
+        "motionIds": [
+          "539cc018d2df48ea9cceca18bbf5de98",
+          "11cd2b0bb65d4b3a8c7815baf7263c56",
+          "7d7fae309b4348ce916516af1ca66ebb",
+          "f3884485db0b4d5cbbe5d6d6dc57226d",
+          "a49243f3748c4692834d6ad8ea54c72b",
+          "fec09db0bd4549ff8e5f7710aeb27ffd",
+          "31821b623639441183f00b917f58de5a",
+          "fa760ab227204f47ba47318a7d9c069f"
+        ]
+      }
+    }
+  ]
+}

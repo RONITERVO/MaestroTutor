@@ -12,6 +12,8 @@ import NotebookTextPreview from './NotebookTextPreview';
 import { isRunnableMiniGameAttachment } from '../utils/miniGameAttachment';
 import { useAppTranslations } from '../../../shared/hooks/useAppTranslations';
 import type { EmbedBox } from '../../../core/types';
+import { useBookPresentation } from '../../../platform/quest/BookPresentationContext';
+import { BookArtifactPreview } from '../../../platform/quest/BookArtifactPreview';
 
 interface TextFileViewerProps {
   src: string;
@@ -39,6 +41,7 @@ const TextFileViewer: React.FC<TextFileViewerProps> = React.memo(({
   onEmbedBoxChange,
 }) => {
   const { t } = useAppTranslations();
+  const book = useBookPresentation();
   const decodedText = useMemo(() => decodeTextFromDataUrl(src), [src]);
   const shouldRenderMiniGame = useMemo(() => {
     // Without a stable id the activation manager cannot arbitrate this embed,
@@ -70,6 +73,7 @@ const TextFileViewer: React.FC<TextFileViewerProps> = React.memo(({
   }
 
   if (shouldRenderMiniGame) {
+    if (book?.layout === 'practice') return <BookArtifactPreview messageId={embedId!} title={metaLabel} />;
     return (
       <MiniGameErrorBoundary
         failedText={t('miniGame.failedToRender') || 'Mini-game failed to render.'}

@@ -1,0 +1,46 @@
+{
+  "version": 1,
+  "kind": "offline-synthetic-speech-fixture",
+  "text": "Please remove only our apple tree. Keep our separate apple and everything else.",
+  "humanRecording": false,
+  "personalContent": false,
+  "networkUsed": false,
+  "providerUsed": false,
+  "engine": "Windows SAPI through System.Speech.Synthesis.SpeechSynthesizer",
+  "systemSpeechAssemblyVersion": "4.0.0.0",
+  "voice": {
+    "name": "Microsoft Zira Desktop",
+    "culture": "en-US",
+    "id": "TTS_MS_EN-US_ZIRA_11.0",
+    "defaultInstalledVoice": true
+  },
+  "synthesis": {
+    "rate": 0,
+    "volume": 100,
+    "input": "plain text Speak(string), no SSML or extra text"
+  },
+  "format": {
+    "container": "RIFF/WAVE",
+    "encoding": "PCM signed 16-bit little-endian",
+    "formatTag": 1,
+    "channels": 1,
+    "sampleRate": 48000,
+    "bitsPerSample": 16,
+    "blockAlign": 2,
+    "byteRate": 96000
+  },
+  "durationSeconds": 5.7395,
+  "sampleCount": 275496,
+  "waveform": {
+    "nonzeroSamples": 196128,
+    "peakAbsolute": 18149,
+    "rms": 2955.2306873774933,
+    "clippedSamples": 0
+  },
+  "file": "first-learner-apple-request.wav",
+  "sha256": "399531c9efe75068736cbc59649d87dbee36b20806e42ea987b16828ec0ac211",
+  "fileBytes": 551036,
+  "sourceSapiSha256": "16208e81016856b820e12c3aae3432a13c7bedc49d1fa91d759c0f9f0e6ef047",
+  "normalization": "Canonical 44-byte PCM WAV header; identical audio sample bytes from offline SAPI source.",
+  "recognitionQualityQualified": false
+}

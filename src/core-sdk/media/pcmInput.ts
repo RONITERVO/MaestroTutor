@@ -26,9 +26,10 @@ export class PcmCaptureHandoff {
   private bufferedPackets: Int16Array[] = [];
   private sink: ((pcm: Int16Array) => void) | null = null;
   private transferred = false;
+  private closed = false;
 
   push(pcm: Int16Array): void {
-    if (!(pcm instanceof Int16Array) || pcm.length === 0) return;
+    if (this.closed || !(pcm instanceof Int16Array) || pcm.length === 0) return;
     if (this.sink) {
       this.sink(pcm);
       return;
@@ -37,16 +38,26 @@ export class PcmCaptureHandoff {
   }
 
   transferTo(sink: (pcm: Int16Array) => void): PcmCaptureHandoffStats {
+    if (this.closed) throw new Error('PCM capture handoff is closed.');
     if (this.transferred) throw new Error('PCM capture has already been transferred.');
     this.transferred = true;
     this.sink = sink;
     const queued = this.bufferedPackets;
     this.bufferedPackets = [];
-    for (const packet of queued) sink(packet);
+    for (const packet of queued) {
+      if (this.closed) packet.fill(0);
+      else sink(packet);
+    }
     return {
       bufferedPackets: queued.length,
       bufferedSamples: queued.reduce((total, packet) => total + packet.length, 0),
     };
+  }
+  close(): void {
+    this.closed = true;
+    this.sink = null;
+    for (const packet of this.bufferedPackets) packet.fill(0);
+    this.bufferedPackets = [];
   }
 }
 

@@ -1,0 +1,44 @@
+{
+  "loading": {
+    "reservationId": "d4434d1ab1b646e6827b51eddffa73b4",
+    "imageHash": "e376570bd87de483c394c3d3356656bbe8da983e826068ce7135e1ef868eaa6d",
+    "state": "loading",
+    "owners": 2,
+    "textureBytes": 0
+  },
+  "ready": {
+    "reservationId": "d4434d1ab1b646e6827b51eddffa73b4",
+    "imageHash": "e376570bd87de483c394c3d3356656bbe8da983e826068ce7135e1ef868eaa6d",
+    "state": "ready",
+    "owners": 2,
+    "textureBytes": 28
+  },
+  "budget": {
+    "entries": 1,
+    "owners": 2,
+    "textureBytes": 28,
+    "entryLimit": 128,
+    "ownerLimitPerImage": 132,
+    "textureByteLimit": 67108864
+  },
+  "owners": [
+    {
+      "reservationId": "d4434d1ab1b646e6827b51eddffa73b4",
+      "leaseId": "42987be08fba47c6b90be8d42c9bb579",
+      "imageHash": "e376570bd87de483c394c3d3356656bbe8da983e826068ce7135e1ef868eaa6d",
+      "worldId": "e434b801d249463cbe019a4d96ccdff3",
+      "regionId": "e8047695137548fca59e2bfd3c53e556",
+      "target": "794e2b6ff15c40b69b084b9541e89d20",
+      "role": "appearance"
+    },
+    {
+      "reservationId": "d4434d1ab1b646e6827b51eddffa73b4",
+      "leaseId": "fe5939a052394d54a767f7243dd2bf19",
+      "imageHash": "e376570bd87de483c394c3d3356656bbe8da983e826068ce7135e1ef868eaa6d",
+      "worldId": "e434b801d249463cbe019a4d96ccdff3",
+      "regionId": "e8047695137548fca59e2bfd3c53e556",
+      "target": "2f91aade8b1a45aab6c7ef13288b9c4c",
+      "role": "appearance"
+    }
+  ]
+}

@@ -1,0 +1,467 @@
+{
+  "before": {
+    "stateId": "7291b5c960b649dc88107916a4df0f7b",
+    "requestId": "",
+    "phase": "idle",
+    "busy": false,
+    "status": "Load a saved room or request a new scan",
+    "reason": "",
+    "availability": {
+      "supported": true,
+      "active": true,
+      "virtualView": false,
+      "canLoad": true,
+      "canScan": true,
+      "canCancel": false
+    },
+    "surfaces": {
+      "showing": false,
+      "visible": false,
+      "ready": true,
+      "physicsRunning": true
+    }
+  },
+  "loadRequest": {
+    "operation": "start",
+    "runId": "d652c86764d04344a2fe461baa842c02",
+    "call": {
+      "id": "room.environment.set",
+      "version": 1,
+      "arguments": {
+        "operation": "load",
+        "stateId": "7291b5c960b649dc88107916a4df0f7b"
+      }
+    }
+  },
+  "loadReceipt": {
+    "selected": {
+      "id": "d652c86764d04344a2fe461baa842c02",
+      "capability": "room.environment.set",
+      "version": 1,
+      "resources": [],
+      "phase": "completed",
+      "status": "Action completed",
+      "output": {
+        "stateId": "adab0516c111474b820969e86a1aebf3",
+        "requestId": "917a5a1c4d79424a9980c896d7db6d52",
+        "phase": "permission",
+        "busy": true,
+        "status": "Waiting for room access permission",
+        "reason": "A room setup request is still pending or draining",
+        "availability": {
+          "supported": true,
+          "active": true,
+          "virtualView": false,
+          "canLoad": false,
+          "canScan": false,
+          "canCancel": true
+        },
+        "surfaces": {
+          "showing": false,
+          "visible": false,
+          "ready": false,
+          "physicsRunning": false
+        }
+      },
+      "call": {
+        "id": "room.environment.set",
+        "version": 1,
+        "arguments": {
+          "operation": "load",
+          "stateId": "7291b5c960b649dc88107916a4df0f7b"
+        }
+      }
+    },
+    "running": [],
+    "outcomes": [
+      {
+        "id": "d652c86764d04344a2fe461baa842c02",
+        "capability": "room.environment.set",
+        "version": 1,
+        "resources": [],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "stateId": "adab0516c111474b820969e86a1aebf3",
+          "requestId": "917a5a1c4d79424a9980c896d7db6d52",
+          "phase": "permission",
+          "busy": true,
+          "status": "Waiting for room access permission",
+          "reason": "A room setup request is still pending or draining",
+          "availability": {
+            "supported": true,
+            "active": true,
+            "virtualView": false,
+            "canLoad": false,
+            "canScan": false,
+            "canCancel": true
+          },
+          "surfaces": {
+            "showing": false,
+            "visible": false,
+            "ready": false,
+            "physicsRunning": false
+          }
+        }
+      }
+    ],
+    "nextRunId": "01a36cf74b4f44a3a4754f87f8f7f787",
+    "storageError": null,
+    "recovery": null
+  },
+  "loading": {
+    "stateId": "7cf6b57ba41e43a5a4743eec546c9b83",
+    "requestId": "917a5a1c4d79424a9980c896d7db6d52",
+    "phase": "loading",
+    "busy": true,
+    "status": "Loading saved room geometry; physics remains paused",
+    "reason": "A room setup request is still pending or draining",
+    "availability": {
+      "supported": true,
+      "active": true,
+      "virtualView": false,
+      "canLoad": false,
+      "canScan": false,
+      "canCancel": true
+    },
+    "surfaces": {
+      "showing": false,
+      "visible": false,
+      "ready": false,
+      "physicsRunning": false
+    }
+  },
+  "loaded": {
+    "stateId": "15427e03ae7446b3b793efda96f96718",
+    "requestId": "917a5a1c4d79424a9980c896d7db6d52",
+    "phase": "loaded",
+    "busy": false,
+    "status": "Room data loaded; show surfaces and check floor and wall alignment",
+    "reason": "",
+    "availability": {
+      "supported": true,
+      "active": true,
+      "virtualView": false,
+      "canLoad": true,
+      "canScan": true,
+      "canCancel": false
+    },
+    "surfaces": {
+      "showing": false,
+      "visible": false,
+      "ready": false,
+      "physicsRunning": false
+    }
+  },
+  "showRequest": {
+    "operation": "start",
+    "runId": "01a36cf74b4f44a3a4754f87f8f7f787",
+    "call": {
+      "id": "room.environment.set",
+      "version": 1,
+      "arguments": {
+        "operation": "show",
+        "stateId": "15427e03ae7446b3b793efda96f96718"
+      }
+    }
+  },
+  "showReceipt": {
+    "selected": {
+      "id": "01a36cf74b4f44a3a4754f87f8f7f787",
+      "capability": "room.environment.set",
+      "version": 1,
+      "resources": [],
+      "phase": "completed",
+      "status": "Action completed",
+      "output": {
+        "stateId": "57c83653ef674e97a6ccb28002ac8adc",
+        "requestId": "917a5a1c4d79424a9980c896d7db6d52",
+        "phase": "loaded",
+        "busy": false,
+        "status": "Room data loaded; show surfaces and check floor and wall alignment",
+        "reason": "",
+        "availability": {
+          "supported": true,
+          "active": true,
+          "virtualView": false,
+          "canLoad": true,
+          "canScan": true,
+          "canCancel": false
+        },
+        "surfaces": {
+          "showing": true,
+          "visible": true,
+          "ready": false,
+          "physicsRunning": false
+        }
+      },
+      "call": {
+        "id": "room.environment.set",
+        "version": 1,
+        "arguments": {
+          "operation": "show",
+          "stateId": "15427e03ae7446b3b793efda96f96718"
+        }
+      }
+    },
+    "running": [],
+    "outcomes": [
+      {
+        "id": "d652c86764d04344a2fe461baa842c02",
+        "capability": "room.environment.set",
+        "version": 1,
+        "resources": [],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "stateId": "adab0516c111474b820969e86a1aebf3",
+          "requestId": "917a5a1c4d79424a9980c896d7db6d52",
+          "phase": "permission",
+          "busy": true,
+          "status": "Waiting for room access permission",
+          "reason": "A room setup request is still pending or draining",
+          "availability": {
+            "supported": true,
+            "active": true,
+            "virtualView": false,
+            "canLoad": false,
+            "canScan": false,
+            "canCancel": true
+          },
+          "surfaces": {
+            "showing": false,
+            "visible": false,
+            "ready": false,
+            "physicsRunning": false
+          }
+        }
+      },
+      {
+        "id": "01a36cf74b4f44a3a4754f87f8f7f787",
+        "capability": "room.environment.set",
+        "version": 1,
+        "resources": [],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "stateId": "57c83653ef674e97a6ccb28002ac8adc",
+          "requestId": "917a5a1c4d79424a9980c896d7db6d52",
+          "phase": "loaded",
+          "busy": false,
+          "status": "Room data loaded; show surfaces and check floor and wall alignment",
+          "reason": "",
+          "availability": {
+            "supported": true,
+            "active": true,
+            "virtualView": false,
+            "canLoad": true,
+            "canScan": true,
+            "canCancel": false
+          },
+          "surfaces": {
+            "showing": true,
+            "visible": true,
+            "ready": false,
+            "physicsRunning": false
+          }
+        }
+      }
+    ],
+    "nextRunId": "433aa35a91804415ac2a91cf05edaaa4",
+    "storageError": null,
+    "recovery": null
+  },
+  "showing": {
+    "stateId": "57c83653ef674e97a6ccb28002ac8adc",
+    "requestId": "917a5a1c4d79424a9980c896d7db6d52",
+    "phase": "loaded",
+    "busy": false,
+    "status": "Room data loaded; show surfaces and check floor and wall alignment",
+    "reason": "",
+    "availability": {
+      "supported": true,
+      "active": true,
+      "virtualView": false,
+      "canLoad": true,
+      "canScan": true,
+      "canCancel": false
+    },
+    "surfaces": {
+      "showing": true,
+      "visible": true,
+      "ready": false,
+      "physicsRunning": false
+    }
+  },
+  "hideRequest": {
+    "operation": "start",
+    "runId": "433aa35a91804415ac2a91cf05edaaa4",
+    "call": {
+      "id": "room.environment.set",
+      "version": 1,
+      "arguments": {
+        "operation": "hide",
+        "stateId": "57c83653ef674e97a6ccb28002ac8adc"
+      }
+    }
+  },
+  "hideReceipt": {
+    "selected": {
+      "id": "433aa35a91804415ac2a91cf05edaaa4",
+      "capability": "room.environment.set",
+      "version": 1,
+      "resources": [],
+      "phase": "completed",
+      "status": "Action completed",
+      "output": {
+        "stateId": "e3881d1f934a439b87b241305a4236bc",
+        "requestId": "917a5a1c4d79424a9980c896d7db6d52",
+        "phase": "loaded",
+        "busy": false,
+        "status": "Room data loaded; show surfaces and check floor and wall alignment",
+        "reason": "",
+        "availability": {
+          "supported": true,
+          "active": true,
+          "virtualView": false,
+          "canLoad": true,
+          "canScan": true,
+          "canCancel": false
+        },
+        "surfaces": {
+          "showing": false,
+          "visible": false,
+          "ready": false,
+          "physicsRunning": false
+        }
+      },
+      "call": {
+        "id": "room.environment.set",
+        "version": 1,
+        "arguments": {
+          "operation": "hide",
+          "stateId": "57c83653ef674e97a6ccb28002ac8adc"
+        }
+      }
+    },
+    "running": [],
+    "outcomes": [
+      {
+        "id": "d652c86764d04344a2fe461baa842c02",
+        "capability": "room.environment.set",
+        "version": 1,
+        "resources": [],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "stateId": "adab0516c111474b820969e86a1aebf3",
+          "requestId": "917a5a1c4d79424a9980c896d7db6d52",
+          "phase": "permission",
+          "busy": true,
+          "status": "Waiting for room access permission",
+          "reason": "A room setup request is still pending or draining",
+          "availability": {
+            "supported": true,
+            "active": true,
+            "virtualView": false,
+            "canLoad": false,
+            "canScan": false,
+            "canCancel": true
+          },
+          "surfaces": {
+            "showing": false,
+            "visible": false,
+            "ready": false,
+            "physicsRunning": false
+          }
+        }
+      },
+      {
+        "id": "01a36cf74b4f44a3a4754f87f8f7f787",
+        "capability": "room.environment.set",
+        "version": 1,
+        "resources": [],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "stateId": "57c83653ef674e97a6ccb28002ac8adc",
+          "requestId": "917a5a1c4d79424a9980c896d7db6d52",
+          "phase": "loaded",
+          "busy": false,
+          "status": "Room data loaded; show surfaces and check floor and wall alignment",
+          "reason": "",
+          "availability": {
+            "supported": true,
+            "active": true,
+            "virtualView": false,
+            "canLoad": true,
+            "canScan": true,
+            "canCancel": false
+          },
+          "surfaces": {
+            "showing": true,
+            "visible": true,
+            "ready": false,
+            "physicsRunning": false
+          }
+        }
+      },
+      {
+        "id": "433aa35a91804415ac2a91cf05edaaa4",
+        "capability": "room.environment.set",
+        "version": 1,
+        "resources": [],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "stateId": "e3881d1f934a439b87b241305a4236bc",
+          "requestId": "917a5a1c4d79424a9980c896d7db6d52",
+          "phase": "loaded",
+          "busy": false,
+          "status": "Room data loaded; show surfaces and check floor and wall alignment",
+          "reason": "",
+          "availability": {
+            "supported": true,
+            "active": true,
+            "virtualView": false,
+            "canLoad": true,
+            "canScan": true,
+            "canCancel": false
+          },
+          "surfaces": {
+            "showing": false,
+            "visible": false,
+            "ready": false,
+            "physicsRunning": false
+          }
+        }
+      }
+    ],
+    "nextRunId": "eeae336e6f3548e59365d7b83b622e73",
+    "storageError": null,
+    "recovery": null
+  },
+  "hidden": {
+    "stateId": "e3881d1f934a439b87b241305a4236bc",
+    "requestId": "917a5a1c4d79424a9980c896d7db6d52",
+    "phase": "loaded",
+    "busy": false,
+    "status": "Room data loaded; show surfaces and check floor and wall alignment",
+    "reason": "",
+    "availability": {
+      "supported": true,
+      "active": true,
+      "virtualView": false,
+      "canLoad": true,
+      "canScan": true,
+      "canCancel": false
+    },
+    "surfaces": {
+      "showing": false,
+      "visible": false,
+      "ready": false,
+      "physicsRunning": false
+    }
+  },
+  "platformBoundary": "controlled OS/SDK source; no headset scan"
+}

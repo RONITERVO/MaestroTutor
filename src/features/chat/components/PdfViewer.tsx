@@ -149,9 +149,11 @@ interface PdfViewerProps {
   bottomInset?: number;
   /** Stable identity for the activation slot — normally the message id. */
   embedId?: string;
+  /** The dedicated book page owns this viewer independently of chat embeds. */
+  activeOnBook?: boolean;
 }
 
-const PdfViewer: React.FC<PdfViewerProps> = React.memo(({ src, compact = false, bottomInset = 0, embedId }) => {
+const PdfViewer: React.FC<PdfViewerProps> = React.memo(({ src, compact = false, bottomInset = 0, embedId, activeOnBook = false }) => {
   const { t } = useAppTranslations();
   const budgets = useMaestroStore(selectDeviceBudgets);
 
@@ -186,11 +188,11 @@ const PdfViewer: React.FC<PdfViewerProps> = React.memo(({ src, compact = false, 
   const slot = useEmbedSlot({
     id: embedId ?? '',
     kind: 'pdf',
-    enabled: !compact && !!embedId,
+    enabled: !activeOnBook && !compact && !!embedId,
   });
   // Without an id there is nothing to arbitrate, so fall back to always-live
   // rather than silently rendering a blank document.
-  const isLive = compact || !embedId || slot.isLive;
+  const isLive = activeOnBook || compact || !embedId || slot.isLive;
 
   const { pin, setRef: setSlotRef } = slot;
 
@@ -212,9 +214,9 @@ const PdfViewer: React.FC<PdfViewerProps> = React.memo(({ src, compact = false, 
    * engages a different embed.
    */
   useEffect(() => {
-    if (compact || !embedId) return;
+    if (activeOnBook || compact || !embedId) return;
     if (isPdfScrollEnabled) pin();
-  }, [compact, embedId, isPdfScrollEnabled, pin]);
+  }, [activeOnBook, compact, embedId, isPdfScrollEnabled, pin]);
 
   const releaseRenderedPages = useCallback((keep?: Set<number>) => {
     const current = renderedPagesRef.current;
@@ -402,9 +404,9 @@ const PdfViewer: React.FC<PdfViewerProps> = React.memo(({ src, compact = false, 
   const iconColor = 'text-deep-ink';
   const effectiveBottomInset = !compact ? Math.max(0, Math.round(bottomInset)) : 0;
   const pdfScrollStyle: React.CSSProperties = {
-    maxHeight: '60vh',
-    overflowY: isPdfScrollEnabled ? 'auto' : 'hidden',
-    overscrollBehavior: isPdfScrollEnabled ? 'contain' : 'auto',
+    maxHeight: activeOnBook ? '100vh' : '60vh',
+    overflowY: activeOnBook || isPdfScrollEnabled ? 'auto' : 'hidden',
+    overscrollBehavior: activeOnBook || isPdfScrollEnabled ? 'contain' : 'auto',
     touchAction: 'pan-y',
     WebkitOverflowScrolling: 'touch' as any,
     scrollPaddingBottom: `${effectiveBottomInset}px`,
@@ -489,7 +491,7 @@ const PdfViewer: React.FC<PdfViewerProps> = React.memo(({ src, compact = false, 
           })}
         </div>
       </div>
-      <div className="absolute left-2 top-2 z-20 pointer-events-auto">
+      {!activeOnBook && <div className="absolute left-2 top-2 z-20 pointer-events-auto">
         <AttachmentInteractionToggle
           isAttachmentModeEnabled={isPdfScrollEnabled}
           attachmentLabel="PDF scroll"
@@ -497,8 +499,8 @@ const PdfViewer: React.FC<PdfViewerProps> = React.memo(({ src, compact = false, 
           groupLabel="PDF interaction mode"
           onToggle={() => setIsPdfScrollEnabled((prev) => !prev)}
         />
-      </div>
-      {pageCount > 1 && (
+      </div>}
+      {!activeOnBook && pageCount > 1 && (
         <div className={`absolute bottom-2 right-2 ${indicatorBg} text-xs px-2 py-0.5 rounded-full pointer-events-none`}>
           {visiblePage} / {pageCount}
         </div>

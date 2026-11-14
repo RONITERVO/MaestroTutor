@@ -1,0 +1,75 @@
+{
+  "before": {
+    "stateId": "3bb4356c64fd4b9b9f161422e59412ac",
+    "revision": 1,
+    "ready": true,
+    "reason": ""
+  },
+  "receipt": {
+    "selected": {
+      "id": "ae6db35188824b9ab0a3bf364a21acae",
+      "capability": "room.tools.recall",
+      "version": 1,
+      "resources": [],
+      "phase": "completed",
+      "status": "Action completed",
+      "output": {
+        "stateId": "27088fb0a583437eae4979c001da1bcb",
+        "revision": 7,
+        "recovered": 8,
+        "temporary": false
+      },
+      "call": {
+        "id": "room.tools.recall",
+        "version": 1,
+        "arguments": {
+          "stateId": "3bb4356c64fd4b9b9f161422e59412ac",
+          "revision": 1
+        }
+      }
+    },
+    "running": [
+      {
+        "id": "251e82e028c64484bdfd1a65f831d692",
+        "capability": "time.wait",
+        "version": 1,
+        "resources": [],
+        "phase": "running",
+        "status": "Action running"
+      }
+    ],
+    "outcomes": [
+      {
+        "id": "ae6db35188824b9ab0a3bf364a21acae",
+        "capability": "room.tools.recall",
+        "version": 1,
+        "resources": [],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "stateId": "27088fb0a583437eae4979c001da1bcb",
+          "revision": 7,
+          "recovered": 8,
+          "temporary": false
+        }
+      }
+    ],
+    "nextRunId": "96f415f7e0fb4c668320f3af05cb0ae6",
+    "storageError": null,
+    "recovery": null,
+    "workspace": {
+      "selected": null,
+      "running": [],
+      "outcomes": [],
+      "nextRunId": "9d1f4dc047e94871a0aadc70b5886ff0",
+      "storageError": null,
+      "recovery": null
+    }
+  },
+  "after": {
+    "stateId": "27088fb0a583437eae4979c001da1bcb",
+    "revision": 7,
+    "ready": true,
+    "reason": ""
+  }
+}

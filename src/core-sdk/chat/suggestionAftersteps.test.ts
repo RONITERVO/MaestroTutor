@@ -3,6 +3,7 @@
 
 import { describe, expect, it, vi } from 'vitest';
 import {
+  hasAgentHandoffProposal,
   executeSuggestionToolRequest,
   normalizeSuggestionCreatorArtifact,
   normalizeSuggestionCreatorToolRequest,
@@ -36,4 +37,24 @@ describe('suggestion creator aftersteps', () => {
     await expect(executeSuggestionToolRequest({ tool: 'music', prompt: 'scale' }, handlers)).resolves.toBe('music');
     expect(handlers.music).toHaveBeenCalledOnce();
   });
+});
+
+it('keeps the handoff capability-gated and never accepts a rewritten request', async () => {
+  expect(normalizeSuggestionCreatorToolRequest({ tool: 'agent' }, 'short fallback')).toBeNull();
+  expect(normalizeSuggestionCreatorToolRequest({ tool: 'agent' }, 'short fallback', { allowAgent: true })).toEqual({ tool: 'agent' });
+  expect(normalizeSuggestionCreatorToolRequest({ tool: 'agent', prompt: 'different request' }, '', { allowAgent: true })).toBeNull();
+  expect(hasAgentHandoffProposal('Reply.\n```maestro-tool {"tool":"agent"}```')).toBe(true);
+  expect(hasAgentHandoffProposal('```maestro-tool {"tool":"agent","alreadyUsed":true}```')).toBe(false);
+  const handlers = { image: vi.fn(), audioNote: vi.fn(), music: vi.fn() };
+  await expect(executeSuggestionToolRequest({ tool: 'agent' }, handlers)).rejects.toThrow('unavailable');
+  expect(handlers.music).not.toHaveBeenCalled();
+});
+
+it('accepts only host-listed task control and rejects rewritten prompts or stale targets', () => {
+  const target = { id: 'task', phase: 'working' as const, requestPreview: 'Make a robot', replyPreview: '', running: true };
+  const options = { allowAgent: true, agentTargets: [target] };
+  expect(normalizeSuggestionCreatorToolRequest({ tool: 'agent', task: { action: 'stop', taskId: 'task' } }, '', options)).toEqual({ tool: 'agent', task: { action: 'stop', taskId: 'task' } });
+  for (const task of [{ action: 'stop', taskId: 'other' }, { action: 'continue', taskId: 'task' }, { action: 'revise', taskId: 'task', prompt: 'rewritten' }])
+    expect(normalizeSuggestionCreatorToolRequest({ tool: 'agent', task }, '', options)).toBeNull();
+  expect(normalizeSuggestionCreatorToolRequest({ tool: 'agent', task: { action: 'stop', taskId: 'task' } }, '', { allowAgent: true })).toBeNull();
 });

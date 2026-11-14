@@ -250,7 +250,13 @@ requireText(attachmentUploadPlans.includes('resolveAttachmentStrategy'), 'Attach
 requireText(tutorConversation.includes('extractOfficeTextForUpload'), 'The visual UI must use shared Office upload extraction.');
 requireText(headlessAttachmentAdapters.includes('extractOfficeTextForUpload'), 'The headless client must use shared Office upload extraction.');
 requireText(officeTextExtraction.includes('JSZip.loadAsync'), 'Shared Office extraction must inspect the real OpenXML/ODF package.');
-requireText(replySuggestions.includes('responseJsonSchema: REPLY_SUGGESTIONS_RESPONSE_SCHEMA'), 'Suggestion creation must enforce provider-side JSON structure for artifact-bearing replies.');
+requireText(
+  /responseJsonSchema:\s*input\.agentRequest === undefined \? REPLY_SUGGESTIONS_RESPONSE_SCHEMA : \{/.test(replySuggestions)
+    && replySuggestions.includes('...REPLY_SUGGESTIONS_RESPONSE_SCHEMA,')
+    && replySuggestions.includes('...REPLY_SUGGESTIONS_RESPONSE_SCHEMA.properties, toolRequest:')
+    && replySuggestions.includes('...REPLY_SUGGESTIONS_RESPONSE_SCHEMA.properties.toolRequest.anyOf,'),
+  'Normal and agent-enabled suggestions must enforce the base provider JSON schema, preserving its artifact and tool alternatives.',
+);
 requireText(liveSystemInstruction.includes('buildCoreLiveSystemInstruction'), 'The visual UI must use shared Live context serialization.');
 requireText(liveStt.includes('buildLiveSttSystemInstruction'), 'The visual UI must use the shared STT instruction contract.');
 requireText(

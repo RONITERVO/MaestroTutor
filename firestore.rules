@@ -66,6 +66,22 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
+    // Short-lived, server-owned Quest bootstrap state. These confer no identity.
+    match /questAttestationChallenges/{challengeId} {
+      allow read, write: if false;
+    }
+    match /questAttestationRateWindows/{windowId} {
+      allow read, write: if false;
+    }
+
+    // Pairing secrets and approvals are exclusively server-owned.
+    match /questAccountLinks/{linkId} {
+      allow read, write: if false;
+    }
+    match /questAccountLinkRateWindows/{windowId} {
+      allow read, write: if false;
+    }
+
     match /rateLimitWindows/{windowId} {
       allow read, write: if false;
     }

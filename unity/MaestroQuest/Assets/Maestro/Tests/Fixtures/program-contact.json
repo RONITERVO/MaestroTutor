@@ -1,0 +1,133 @@
+{
+  "version": 3,
+  "entry": "main",
+  "resources": [],
+  "state": [
+    {
+      "name": "contacts",
+      "initial": 0
+    },
+    {
+      "name": "lastSpeed",
+      "initial": 0
+    },
+    {
+      "name": "lastKind",
+      "initial": ""
+    },
+    {
+      "name": "lastOther",
+      "initial": ""
+    }
+  ],
+  "events": [],
+  "functions": [
+    {
+      "name": "main",
+      "returns": "void",
+      "parameters": [],
+      "locals": [
+        {
+          "name": "received",
+          "initial": false
+        },
+        {
+          "name": "source",
+          "initial": ""
+        },
+        {
+          "name": "speed",
+          "initial": 0
+        },
+        {
+          "name": "kind",
+          "initial": ""
+        },
+        {
+          "name": "other",
+          "initial": ""
+        },
+        {
+          "name": "height",
+          "initial": 0
+        }
+      ],
+      "body": [
+        {
+          "id": "watch",
+          "op": "forever",
+          "body": [
+            {
+              "id": "contact",
+              "op": "awaitEvent",
+              "event": "object.collided",
+              "source": "",
+              "timeout": {
+                "value": 0
+              },
+              "received": "received",
+              "value": "source",
+              "fields": {
+                "speed": "speed",
+                "otherKind": "kind",
+                "otherId": "other",
+                "y": "height"
+              },
+              "version": 2
+            },
+            {
+              "id": "record",
+              "op": "if",
+              "test": {
+                "var": "received"
+              },
+              "then": [
+                {
+                  "id": "count",
+                  "op": "setState",
+                  "variable": "contacts",
+                  "value": {
+                    "op": "add",
+                    "args": [
+                      {
+                        "state": "contacts"
+                      },
+                      {
+                        "value": 1
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "speed",
+                  "op": "setState",
+                  "variable": "lastSpeed",
+                  "value": {
+                    "var": "speed"
+                  }
+                },
+                {
+                  "id": "kind",
+                  "op": "setState",
+                  "variable": "lastKind",
+                  "value": {
+                    "var": "kind"
+                  }
+                },
+                {
+                  "id": "other",
+                  "op": "setState",
+                  "variable": "lastOther",
+                  "value": {
+                    "var": "other"
+                  }
+                }
+              ],
+              "else": []
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

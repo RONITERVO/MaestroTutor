@@ -71,6 +71,7 @@ export const runCli = async (argv = process.argv.slice(2)) => {
     });
     return;
   }
+  if (parsed.method === 'room.connect') throw new Error('Use the rpc session for room.connect so subsequent turns share its native transport.');
   const client = await createHeadlessClient({
     profileName: parsed.profileName,
     backendBaseUrl: parsed.backendBaseUrl,

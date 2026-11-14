@@ -1,0 +1,61 @@
+{
+  "budget": {
+    "textureInstances": 1,
+    "textureBytes": 56,
+    "decodeScratchBytes": 28,
+    "payloadReads": 1,
+    "payloadBytes": 16777216,
+    "queuedDecodes": 0,
+    "textureInstanceLimit": 128,
+    "textureByteLimit": 134217728,
+    "decodeScratchByteLimit": 134217728,
+    "payloadReadLimit": 4,
+    "payloadByteLimit": 67108864,
+    "decodesPerFrame": 1
+  },
+  "payload": {
+    "reservationId": "994f21af52f348bbb87118c8c6168708",
+    "worldId": "16bca1e5dfd548cda2901f59fffe97ee",
+    "regionId": "1e3a2de4891e4e859f2259b30a36a083",
+    "target": "book",
+    "role": "appearance",
+    "imageHash": "703e24f23c9a0882b807eb222b006f2b8c3ed8c40c78fe2c35b417d54b562d47",
+    "kind": "payload",
+    "phase": "held",
+    "textureBytes": 0,
+    "payloadBytes": 16777216,
+    "decodeScratchBytes": 0,
+    "textureCount": 0,
+    "workPending": false
+  },
+  "ready": {
+    "reservationId": "a9110427e21a434db8e3cf432621217b",
+    "worldId": "16bca1e5dfd548cda2901f59fffe97ee",
+    "regionId": "1e3a2de4891e4e859f2259b30a36a083",
+    "target": "book",
+    "role": "appearance",
+    "imageHash": "703e24f23c9a0882b807eb222b006f2b8c3ed8c40c78fe2c35b417d54b562d47",
+    "kind": "texture",
+    "phase": "ready",
+    "textureBytes": 56,
+    "payloadBytes": 0,
+    "decodeScratchBytes": 28,
+    "textureCount": 2,
+    "workPending": false
+  },
+  "retiring": {
+    "reservationId": "a9110427e21a434db8e3cf432621217b",
+    "worldId": "16bca1e5dfd548cda2901f59fffe97ee",
+    "regionId": "1e3a2de4891e4e859f2259b30a36a083",
+    "target": "book",
+    "role": "appearance",
+    "imageHash": "703e24f23c9a0882b807eb222b006f2b8c3ed8c40c78fe2c35b417d54b562d47",
+    "kind": "texture",
+    "phase": "retiring",
+    "textureBytes": 56,
+    "payloadBytes": 0,
+    "decodeScratchBytes": 28,
+    "textureCount": 2,
+    "workPending": false
+  }
+}

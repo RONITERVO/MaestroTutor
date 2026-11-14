@@ -22,7 +22,7 @@ export interface ManagedAccountBackendPort {
 }
 
 export interface ManagedIdentityPort {
-  beginSignIn(): Promise<unknown>;
+  beginSignIn(signal?: AbortSignal): Promise<unknown>;
   signOut(): Promise<void>;
 }
 
@@ -37,7 +37,7 @@ export interface StripeReturnPoll {
 }
 
 export interface ManagedAccountController {
-  signIn(operationId?: string): Promise<ManagedAccountSummaryResponse>;
+  signIn(operationId?: string, signal?: AbortSignal): Promise<ManagedAccountSummaryResponse>;
   signOut(operationId?: string): Promise<void>;
   refreshAccount(operationId?: string): Promise<ManagedAccountSummaryResponse>;
   listLedgers(limit?: number, operationId?: string, cursors?: { usageAfter?: string; billingAfter?: string }): Promise<{
@@ -132,11 +132,11 @@ export const createManagedAccountController = (dependencies: {
   };
 
   return {
-    async signIn(givenOperationId) {
+    async signIn(givenOperationId, signal) {
       const id = operationId(givenOperationId, 'access-sign-in');
       emit(id, 'access', 'signIn.started');
       try {
-        await dependencies.identity.beginSignIn();
+        await dependencies.identity.beginSignIn(signal);
         emit(id, 'access', 'signIn.identityReady');
         const response = await refreshAccount(id);
         emit(id, 'access', 'signIn.succeeded', { userId: response.account.user.id });

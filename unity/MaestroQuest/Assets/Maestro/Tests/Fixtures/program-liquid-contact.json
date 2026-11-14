@@ -1,0 +1,64 @@
+{
+  "version": 3,
+  "entry": "main",
+  "resources": [],
+  "state": [
+    {
+      "name": "participant",
+      "initial": ""
+    }
+  ],
+  "events": [],
+  "functions": [
+    {
+      "name": "main",
+      "returns": "void",
+      "parameters": [],
+      "locals": [
+        {
+          "name": "received",
+          "initial": false
+        },
+        {
+          "name": "value",
+          "initial": ""
+        },
+        {
+          "name": "who",
+          "initial": ""
+        }
+      ],
+      "body": [
+        {
+          "id": "wait",
+          "op": "awaitEvent",
+          "event": "object.medium.contact",
+          "source": "",
+          "timeout": {
+            "value": 0
+          },
+          "received": "received",
+          "value": "value",
+          "fields": {
+            "participantId": "who"
+          }
+        },
+        {
+          "id": "remember",
+          "op": "setState",
+          "variable": "participant",
+          "value": {
+            "var": "who"
+          }
+        },
+        {
+          "id": "hold",
+          "op": "sleep",
+          "seconds": {
+            "value": 20
+          }
+        }
+      ]
+    }
+  ]
+}

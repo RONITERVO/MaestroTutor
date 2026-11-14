@@ -1,0 +1,84 @@
+{
+  "cases": [
+    {
+      "name": "compatible name search",
+      "valid": true,
+      "json": "{\"commands\":[{\"action\":\"motions\",\"target\":\"maestro\",\"motionQuery\":{\"query\":\"wave\",\"offset\":0,\"includeShort\":false,\"favouritesOnly\":false,\"archivedOnly\":false}}]}"
+    },
+    {
+      "name": "last page with all filters",
+      "valid": true,
+      "json": "{\"commands\":[{\"action\":\"motions\",\"target\":\"maestro\",\"motionQuery\":{\"query\":\"\",\"offset\":1024,\"includeShort\":true,\"favouritesOnly\":true,\"archivedOnly\":true}}]}"
+    },
+    {
+      "name": "imported object target",
+      "valid": true,
+      "json": "{\"commands\":[{\"action\":\"motions\",\"target\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"motionQuery\":{\"query\":\"wave\",\"offset\":0,\"includeShort\":false,\"favouritesOnly\":false,\"archivedOnly\":false}}]}"
+    },
+    {
+      "name": "missing query",
+      "valid": false,
+      "json": "{\"commands\":[{\"action\":\"motions\",\"target\":\"maestro\"}]}"
+    },
+    {
+      "name": "unknown query field",
+      "valid": false,
+      "json": "{\"commands\":[{\"action\":\"motions\",\"target\":\"maestro\",\"motionQuery\":{\"query\":\"wave\",\"offset\":0,\"includeShort\":false,\"favouritesOnly\":false,\"archivedOnly\":false,\"code\":\"run()\"}}]}"
+    },
+    {
+      "name": "missing filter",
+      "valid": false,
+      "json": "{\"commands\":[{\"action\":\"motions\",\"target\":\"maestro\",\"motionQuery\":{\"query\":\"wave\",\"offset\":0,\"favouritesOnly\":false,\"archivedOnly\":false}}]}"
+    },
+    {
+      "name": "nonboolean filter",
+      "valid": false,
+      "json": "{\"commands\":[{\"action\":\"motions\",\"target\":\"maestro\",\"motionQuery\":{\"query\":\"wave\",\"offset\":0,\"includeShort\":\"true\",\"favouritesOnly\":false,\"archivedOnly\":false}}]}"
+    },
+    {
+      "name": "fractional offset",
+      "valid": false,
+      "json": "{\"commands\":[{\"action\":\"motions\",\"target\":\"maestro\",\"motionQuery\":{\"query\":\"wave\",\"offset\":1.5,\"includeShort\":false,\"favouritesOnly\":false,\"archivedOnly\":false}}]}"
+    },
+    {
+      "name": "negative offset",
+      "valid": false,
+      "json": "{\"commands\":[{\"action\":\"motions\",\"target\":\"maestro\",\"motionQuery\":{\"query\":\"wave\",\"offset\":-1,\"includeShort\":false,\"favouritesOnly\":false,\"archivedOnly\":false}}]}"
+    },
+    {
+      "name": "offset too large",
+      "valid": false,
+      "json": "{\"commands\":[{\"action\":\"motions\",\"target\":\"maestro\",\"motionQuery\":{\"query\":\"wave\",\"offset\":1025,\"includeShort\":false,\"favouritesOnly\":false,\"archivedOnly\":false}}]}"
+    },
+    {
+      "name": "numeric search",
+      "valid": false,
+      "json": "{\"commands\":[{\"action\":\"motions\",\"target\":\"maestro\",\"motionQuery\":{\"query\":5,\"offset\":0,\"includeShort\":false,\"favouritesOnly\":false,\"archivedOnly\":false}}]}"
+    },
+    {
+      "name": "oversized search",
+      "valid": false,
+      "json": "{\"commands\":[{\"action\":\"motions\",\"target\":\"maestro\",\"motionQuery\":{\"query\":\"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\",\"offset\":0,\"includeShort\":false,\"favouritesOnly\":false,\"archivedOnly\":false}}]}"
+    },
+    {
+      "name": "control characters",
+      "valid": false,
+      "json": "{\"commands\":[{\"action\":\"motions\",\"target\":\"maestro\",\"motionQuery\":{\"query\":\"a\\u0085b\",\"offset\":0,\"includeShort\":false,\"favouritesOnly\":false,\"archivedOnly\":false}}]}"
+    },
+    {
+      "name": "extra command field",
+      "valid": false,
+      "json": "{\"commands\":[{\"action\":\"motions\",\"target\":\"maestro\",\"motionQuery\":{\"query\":\"wave\",\"offset\":0,\"includeShort\":false,\"favouritesOnly\":false,\"archivedOnly\":false},\"visible\":true}]}"
+    },
+    {
+      "name": "missing target",
+      "valid": false,
+      "json": "{\"commands\":[{\"action\":\"motions\",\"motionQuery\":{\"query\":\"wave\",\"offset\":0,\"includeShort\":false,\"favouritesOnly\":false,\"archivedOnly\":false}}]}"
+    },
+    {
+      "name": "mixed mutation",
+      "valid": false,
+      "json": "{\"commands\":[{\"action\":\"motions\",\"target\":\"maestro\",\"motionQuery\":{\"query\":\"wave\",\"offset\":0,\"includeShort\":false,\"favouritesOnly\":false,\"archivedOnly\":false}},{\"action\":\"undo\"}]}"
+    }
+  ]
+}

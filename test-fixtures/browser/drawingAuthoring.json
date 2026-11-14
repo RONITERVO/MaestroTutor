@@ -1,0 +1,197 @@
+{
+  "createCall": {
+    "id": "object.create",
+    "version": 1,
+    "arguments": {
+      "name": "Pencil arch",
+      "x": 0.3,
+      "y": 1.3,
+      "z": 0.65,
+      "scale": 1,
+      "red": 0.2,
+      "green": 0.6,
+      "blue": 0.9,
+      "radius": 0.003,
+      "points": [
+        {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        {
+          "x": 0.08,
+          "y": 0.14,
+          "z": 0
+        },
+        {
+          "x": 0.16,
+          "y": 0,
+          "z": 0
+        }
+      ],
+      "kind": "drawing"
+    }
+  },
+  "creation": {
+    "selected": {
+      "id": "081d7613632e4e9283c2084e32c5ef99",
+      "capability": "object.create",
+      "version": 1,
+      "resources": [],
+      "phase": "completed",
+      "status": "Action completed",
+      "output": {
+        "objectId": "a15d424a5feb44c78ac7dc32a54956fc"
+      },
+      "call": {
+        "id": "object.create",
+        "version": 1,
+        "arguments": {
+          "name": "Pencil arch",
+          "x": 0.3,
+          "y": 1.3,
+          "z": 0.65,
+          "scale": 1,
+          "red": 0.2,
+          "green": 0.6,
+          "blue": 0.9,
+          "radius": 0.003,
+          "points": [
+            {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            {
+              "x": 0.08,
+              "y": 0.14,
+              "z": 0
+            },
+            {
+              "x": 0.16,
+              "y": 0,
+              "z": 0
+            }
+          ],
+          "kind": "drawing"
+        }
+      }
+    },
+    "running": [],
+    "outcomes": [
+      {
+        "id": "081d7613632e4e9283c2084e32c5ef99",
+        "capability": "object.create",
+        "version": 1,
+        "resources": [],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "objectId": "a15d424a5feb44c78ac7dc32a54956fc"
+        }
+      }
+    ],
+    "nextRunId": "3fe0a6a1141d40a096984a639dc43d92",
+    "storageError": null,
+    "recovery": null
+  },
+  "before": {
+    "target": "a15d424a5feb44c78ac7dc32a54956fc",
+    "revision": 7,
+    "points": 3,
+    "radius": 0.003
+  },
+  "editCall": {
+    "id": "object.drawing.edit",
+    "version": 1,
+    "arguments": {
+      "operation": "splice",
+      "target": "a15d424a5feb44c78ac7dc32a54956fc",
+      "revision": 7,
+      "index": 3,
+      "deleteCount": 0,
+      "points": [
+        {
+          "x": 0.22,
+          "y": 0.15,
+          "z": 0.0
+        }
+      ]
+    }
+  },
+  "edit": {
+    "selected": {
+      "id": "3fe0a6a1141d40a096984a639dc43d92",
+      "capability": "object.drawing.edit",
+      "version": 1,
+      "resources": [
+        "a15d424a5feb44c78ac7dc32a54956fc"
+      ],
+      "phase": "completed",
+      "status": "Action completed",
+      "output": {
+        "target": "a15d424a5feb44c78ac7dc32a54956fc",
+        "revision": 8,
+        "points": 4,
+        "radius": 0.003
+      },
+      "call": {
+        "id": "object.drawing.edit",
+        "version": 1,
+        "arguments": {
+          "operation": "splice",
+          "target": "a15d424a5feb44c78ac7dc32a54956fc",
+          "revision": 7,
+          "index": 3,
+          "deleteCount": 0,
+          "points": [
+            {
+              "x": 0.22,
+              "y": 0.15,
+              "z": 0.0
+            }
+          ]
+        }
+      }
+    },
+    "running": [],
+    "outcomes": [
+      {
+        "id": "081d7613632e4e9283c2084e32c5ef99",
+        "capability": "object.create",
+        "version": 1,
+        "resources": [],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "objectId": "a15d424a5feb44c78ac7dc32a54956fc"
+        }
+      },
+      {
+        "id": "3fe0a6a1141d40a096984a639dc43d92",
+        "capability": "object.drawing.edit",
+        "version": 1,
+        "resources": [
+          "a15d424a5feb44c78ac7dc32a54956fc"
+        ],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "target": "a15d424a5feb44c78ac7dc32a54956fc",
+          "revision": 8,
+          "points": 4,
+          "radius": 0.003
+        }
+      }
+    ],
+    "nextRunId": "4ef0fda918474234bcbc8e17ff8c4db8",
+    "storageError": null,
+    "recovery": null
+  },
+  "after": {
+    "target": "a15d424a5feb44c78ac7dc32a54956fc",
+    "revision": 8,
+    "points": 4,
+    "radius": 0.003
+  }
+}

@@ -1,0 +1,107 @@
+{
+  "call": {
+    "id": "object.appearance.bind",
+    "version": 1,
+    "arguments": {
+      "operation": "assign",
+      "target": "0b822e63eeb04a80afdeee0b73649073",
+      "revision": 12,
+      "appearanceRevision": 15,
+      "binding": {
+        "version": 1,
+        "appearanceId": "4ddf19da0e6a4c1c88230e7696a6b2bf",
+        "kind": "nativePart",
+        "partId": "liquid_surface",
+        "modelHash": "",
+        "tint": "",
+        "materialIndex": -1
+      }
+    }
+  },
+  "receipt": {
+    "id": "12624aa12eee48cd8a81779bb8ece447",
+    "capability": "object.appearance.bind",
+    "version": 1,
+    "resources": [
+      "0b822e63eeb04a80afdeee0b73649073"
+    ],
+    "phase": "completed",
+    "status": "Action completed",
+    "output": {
+      "target": "0b822e63eeb04a80afdeee0b73649073",
+      "revision": 16,
+      "appearanceId": "4ddf19da0e6a4c1c88230e7696a6b2bf",
+      "appearanceRevision": 15,
+      "temporary": false
+    },
+    "call": {
+      "id": "object.appearance.bind",
+      "version": 1,
+      "arguments": {
+        "operation": "assign",
+        "target": "0b822e63eeb04a80afdeee0b73649073",
+        "revision": 12,
+        "appearanceRevision": 15,
+        "binding": {
+          "version": 1,
+          "appearanceId": "4ddf19da0e6a4c1c88230e7696a6b2bf",
+          "kind": "nativePart",
+          "partId": "liquid_surface",
+          "modelHash": "",
+          "tint": "",
+          "materialIndex": -1
+        }
+      }
+    }
+  },
+  "targets": {
+    "target": "0b822e63eeb04a80afdeee0b73649073",
+    "revision": 16,
+    "offset": 0,
+    "total": 3,
+    "pageSize": 3,
+    "targets": [
+      {
+        "kind": "root",
+        "partId": "",
+        "modelHash": "",
+        "materialIndex": -1,
+        "state": "active"
+      },
+      {
+        "kind": "nativePart",
+        "partId": "liquid_surface",
+        "modelHash": "",
+        "materialIndex": -1,
+        "state": "active"
+      },
+      {
+        "kind": "nativePart",
+        "partId": "liquid_stream",
+        "modelHash": "",
+        "materialIndex": -1,
+        "state": "active"
+      }
+    ]
+  },
+  "bindings": {
+    "target": "0b822e63eeb04a80afdeee0b73649073",
+    "revision": 16,
+    "offset": 0,
+    "total": 1,
+    "pageSize": 2,
+    "bindings": [
+      {
+        "appearanceId": "4ddf19da0e6a4c1c88230e7696a6b2bf",
+        "appearanceRevision": 15,
+        "kind": "nativePart",
+        "partId": "liquid_surface",
+        "modelHash": "",
+        "materialIndex": -1,
+        "tint": "",
+        "state": "active"
+      }
+    ],
+    "temporary": false
+  }
+}

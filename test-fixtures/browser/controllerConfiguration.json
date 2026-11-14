@@ -1,0 +1,217 @@
+{
+  "before": {
+    "configurationId": "8287f2f0751c44c89de33f84432f8548",
+    "storageReady": true,
+    "avatarStick": "right",
+    "userStick": "left",
+    "deadZone": 0.2,
+    "userSpeed": 0.65,
+    "buttons": [
+      {
+        "button": "x",
+        "command": "snapLeft",
+        "programId": "",
+        "available": true
+      },
+      {
+        "button": "a",
+        "command": "snapRight",
+        "programId": "",
+        "available": true
+      },
+      {
+        "button": "leftStickClick",
+        "command": "none",
+        "programId": "",
+        "available": true
+      },
+      {
+        "button": "rightStickClick",
+        "command": "none",
+        "programId": "",
+        "available": true
+      }
+    ],
+    "live": {
+      "avatarEnabled": false,
+      "userEnabled": false,
+      "virtualView": false
+    }
+  },
+  "movement": {
+    "selected": {
+      "id": "b374380754a04f29b626ee03136a13a1",
+      "capability": "controller.configure",
+      "version": 1,
+      "resources": [],
+      "phase": "completed",
+      "status": "Action completed",
+      "output": {
+        "configurationId": "b53e2d09d5354f30b6e21a110bc56c0a",
+        "saved": true
+      },
+      "call": {
+        "id": "controller.configure",
+        "version": 1,
+        "arguments": {
+          "operation": "movement.left",
+          "configurationId": "8287f2f0751c44c89de33f84432f8548",
+          "userStick": "right",
+          "deadZone": 0.3,
+          "userSpeed": 0.8
+        }
+      }
+    },
+    "running": [],
+    "outcomes": [
+      {
+        "id": "b374380754a04f29b626ee03136a13a1",
+        "capability": "controller.configure",
+        "version": 1,
+        "resources": [],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "configurationId": "b53e2d09d5354f30b6e21a110bc56c0a",
+          "saved": true
+        }
+      }
+    ],
+    "nextRunId": "915e5153045b4586925713a49a89fd32",
+    "storageError": null,
+    "recovery": null
+  },
+  "afterMovement": {
+    "configurationId": "b53e2d09d5354f30b6e21a110bc56c0a",
+    "storageReady": true,
+    "avatarStick": "left",
+    "userStick": "right",
+    "deadZone": 0.3,
+    "userSpeed": 0.8,
+    "buttons": [
+      {
+        "button": "x",
+        "command": "snapLeft",
+        "programId": "",
+        "available": true
+      },
+      {
+        "button": "a",
+        "command": "snapRight",
+        "programId": "",
+        "available": true
+      },
+      {
+        "button": "leftStickClick",
+        "command": "none",
+        "programId": "",
+        "available": true
+      },
+      {
+        "button": "rightStickClick",
+        "command": "none",
+        "programId": "",
+        "available": true
+      }
+    ],
+    "live": {
+      "avatarEnabled": false,
+      "userEnabled": false,
+      "virtualView": false
+    }
+  },
+  "button": {
+    "selected": {
+      "id": "915e5153045b4586925713a49a89fd32",
+      "capability": "controller.configure",
+      "version": 1,
+      "resources": [],
+      "phase": "completed",
+      "status": "Action completed",
+      "output": {
+        "configurationId": "0ee511ee81ef4bd08b4536f3a80b1879",
+        "saved": true
+      },
+      "call": {
+        "id": "controller.configure",
+        "version": 1,
+        "arguments": {
+          "operation": "button.program",
+          "configurationId": "b53e2d09d5354f30b6e21a110bc56c0a",
+          "button": "a",
+          "programId": "b99d17ea7b834527ba9b82879efaa2db"
+        }
+      }
+    },
+    "running": [],
+    "outcomes": [
+      {
+        "id": "b374380754a04f29b626ee03136a13a1",
+        "capability": "controller.configure",
+        "version": 1,
+        "resources": [],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "configurationId": "b53e2d09d5354f30b6e21a110bc56c0a",
+          "saved": true
+        }
+      },
+      {
+        "id": "915e5153045b4586925713a49a89fd32",
+        "capability": "controller.configure",
+        "version": 1,
+        "resources": [],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "configurationId": "0ee511ee81ef4bd08b4536f3a80b1879",
+          "saved": true
+        }
+      }
+    ],
+    "nextRunId": "4789c7e025eb44deb704f13231d5dc44",
+    "storageError": null,
+    "recovery": null
+  },
+  "after": {
+    "configurationId": "0ee511ee81ef4bd08b4536f3a80b1879",
+    "storageReady": true,
+    "avatarStick": "left",
+    "userStick": "right",
+    "deadZone": 0.3,
+    "userSpeed": 0.8,
+    "buttons": [
+      {
+        "button": "x",
+        "command": "snapLeft",
+        "programId": "",
+        "available": true
+      },
+      {
+        "button": "a",
+        "command": "program",
+        "programId": "b99d17ea7b834527ba9b82879efaa2db",
+        "available": true
+      },
+      {
+        "button": "leftStickClick",
+        "command": "none",
+        "programId": "",
+        "available": true
+      },
+      {
+        "button": "rightStickClick",
+        "command": "none",
+        "programId": "",
+        "available": true
+      }
+    ],
+    "live": {
+      "avatarEnabled": false,
+      "userEnabled": false,
+      "virtualView": false
+    }
+  },
+  "programId": "b99d17ea7b834527ba9b82879efaa2db"
+}

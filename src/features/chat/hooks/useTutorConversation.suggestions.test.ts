@@ -1,5 +1,7 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
+import { LiveInputContext } from '../../../core-sdk/media/liveInputContext';
+const sentMedia = () => { const input = new LiveInputContext(() => 0); input.recordAudio('AAA='); input.recordFrame('/9j/2Q=='); return input.finish(); };
 // @vitest-environment jsdom
 import { act, cleanup, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -10,7 +12,7 @@ const ports = vi.hoisted(() => ({
   saveHistory: vi.fn(), saveSettings: vi.fn(), usage: vi.fn(),
   audioNote: vi.fn(), upload: vi.fn(), optimize: vi.fn(),
   runText: vi.fn(), runImage: vi.fn(), sanitizeHistory: vi.fn(), fileStatuses: vi.fn(), avatar: vi.fn(),
-  translate: vi.fn(),
+  translate: vi.fn(), roomLease: vi.fn(), roomKey: vi.fn(), roomSource: vi.fn(), roomClaim: vi.fn(), roomSave: vi.fn(),
 }));
 vi.mock('../../../api/gemini/journeys', () => ({
   runReplySuggestions: ports.runSuggestions, runTutorTextTurn: ports.runText, runMaestroImageGeneration: ports.runImage,
@@ -34,6 +36,13 @@ vi.mock('../../vision', () => ({ processMediaForUpload: ports.optimize, createKe
 vi.mock('../../speech/services/geminiLiveAudioNote', () => ({ synthesizeGeminiAudioNote: ports.audioNote }));
 vi.mock('../../../shared/utils/costTracker', () => ({ trackGeminiUsage: ports.usage, hasShownCostWarning: vi.fn(() => true), setCostWarningShown: vi.fn() }));
 
+vi.mock('../../../platform/quest/roomAgentBridge', () => ({ currentRoomAgentLease: ports.roomLease }));
+vi.mock('../../../core/security/apiKeyStorage', () => ({ loadApiKey: ports.roomKey }));
+vi.mock('../../../api/gemini/browserClientSource', () => ({ browserClientSource: ports.roomSource }));
+vi.mock('../services/roomTaskSummaries', () => ({ isRoomTaskHidden: () => false, loadRoomTaskSummaries: async () => [] }));
+vi.mock('../services/roomTaskStore', () => ({ roomTaskStore: { claim: ports.roomClaim, save: ports.roomSave, get: vi.fn() } }));
+vi.mock('../services/chatHistory', () => ({ safeSaveChatHistoryDB: ports.saveHistory }));
+import { prepareLiveRoomAgentContext, captureLiveRoomAgentHandoff } from '../services/roomAgentTasks';
 import { useMaestroStore, initialSettings, allGeneratedLanguagePairs } from '../../../store';
 import { selectIsLoadingSuggestions } from '../../../store/slices/uiSlice';
 import { useTutorConversation, type UseTutorConversationConfig } from './useTutorConversation';
@@ -82,7 +91,7 @@ beforeEach(() => {
   useMaestroStore.setState({
     settings: { ...initialSettings, selectedLanguagePairId: pair.id }, selectedLanguagePair: pair,
     messages: [], activityTokens: new Set(), replySuggestions: [], suggestionsLoadingStreamText: '',
-    lastFetchedSuggestionsFor: null, imageLoadDurations: [],
+    lastFetchedSuggestionsFor: null, imageLoadDurations: [], isLoadingHistory: false,
   });
   ports.getProfile.mockResolvedValue({ text: 'Existing profile' });
   ports.runSuggestions.mockResolvedValue({ suggestions: [suggestion] });
@@ -396,9 +405,9 @@ describe('actual tutor hook send contract before coordinator extraction', () => 
     const h = harness([]);
     expect(await send(h, 'Draw this')).toBe(true);
     expect(ports.runImage.mock.calls[0][0]).toMatchObject({ contextText: 'Draw this', maestroAvatarUri: undefined, maestroAvatarMimeType: undefined });
-    expect(useMaestroStore.getState().messages[0]).toMatchObject({ imageUrl: 'data:image/png;base64,AQID', isGeneratingImage: false, imageGenError: null });
+    expect(useMaestroStore.getState().messages[0]).toMatchObject({ imageUrl: 'data:image/png;base64,AQID', imageOrigin: 'generated', isGeneratingImage: false, imageGenError: null });
     expect(useMaestroStore.getState().messages[0]).toMatchObject({ storageOptimizedImageUrl: 'data:image/webp;base64,AQ==', storageOptimizedImageMimeType: 'image/webp' });
-    expect(ports.runText.mock.calls[0][0].currentFileParts).toEqual(fails ? undefined : [{ fileUri: 'https://files/generated', mimeType: 'image/png' }]);
+    expect(ports.runText.mock.calls[0][0].currentFileParts).toEqual(fails ? undefined : [{ fileUri: 'https://files/generated', mimeType: 'image/png', origin: 'generated' }]);
   });
 
   it('keeps a generated audio note visible when its upload fails', async () => {
@@ -418,7 +427,7 @@ describe('actual tutor hook send contract before coordinator extraction', () => 
     await harness([message('a')]).fetch();
     expect(useMaestroStore.getState().messages[0]).toMatchObject({
       imageUrl: 'data:image/png;base64,AQID', storageOptimizedImageUrl: 'data:image/webp;base64,AQ==',
-      storageOptimizedImageMimeType: 'image/webp', isGeneratingImage: false,
+      storageOptimizedImageMimeType: 'image/webp', imageOrigin: 'generated', isGeneratingImage: false,
     });
   });
 
@@ -442,3 +451,34 @@ describe('actual tutor hook send contract before coordinator extraction', () => 
   });
 });
 
+
+it.each([false, true])('dispatches a verified spoken handoff through the actual tutor hook, with artifact %s', async withArtifact => {
+  const user = 'Make a small blue robot.', reply = 'I will ask the agent to make that.';
+  const scene = { version: 1, session: 'live-room', revision: 1, sceneRevision: 1, ack: 0,
+    ok: true, status: 'Ready', objects: [], created: [], canUndo: false, canRedo: false, physicsRunning: false };
+  const execute = vi.fn(async () => ({ ...scene, ack: 1, status: 'Created robot' }));
+  ports.roomLease.mockReturnValue({ state: () => scene, valid: () => true, execute });
+  ports.roomKey.mockResolvedValue('synthetic-byok-key');
+  ports.roomClaim.mockImplementation(async record => ({ claimed: true, record }));
+  ports.roomSave.mockResolvedValue(undefined);
+  const outputs = ['{"commands":[{"action":"create","reference":"r","name":"Robot","kind":"boxRobot"}]}', '{"commands":[]}', 'Listo.\nReady.'];
+  const requests: any[] = [];
+  ports.roomSource.mockReturnValue({ aiClient: { models: { generateContentStream: async (request: any) => {
+    requests.push(request); const text = outputs.shift();
+    return (async function* () { yield { text }; })();
+  } } } });
+  ports.runSuggestions.mockResolvedValue({ suggestions: [suggestion], toolRequest: { tool: 'agent' },
+    artifact: withArtifact ? { mimeType: 'text/html', fileName: 'lesson.html', encoding: 'text', content: '<b>Lesson</b>' } : null });
+  const h = harness([message('live-agent-u', { role: 'user', text: user }), message('live-agent-a', { text: reply, llmRawResponse: reply })]);
+  const context = await prepareLiveRoomAgentContext('The original Live history and profile.');
+  await captureLiveRoomAgentHandoff(context.handoffId!, { sourceUserId: 'live-agent-u', sourceAssistantId: 'live-agent-a', conversationId: pair.id }, user, reply, sentMedia());
+  await h.fetch('live-agent-a', reply, 'live');
+  expect(ports.runSuggestions.mock.calls[0][0]).toMatchObject({ agentRequest: user, responseSource: 'live' });
+  expect(useMaestroStore.getState().messages.find(item => item.id === 'live-agent-a')?.llmRawResponse).toBe(reply);
+  expect(execute).toHaveBeenCalledOnce(); expect(requests).toHaveLength(3);
+  expect(JSON.stringify(requests[0])).toContain('The original Live history and profile.');
+  expect(useMaestroStore.getState().messages.find(item => item.id === 'room-task:live-agent-a')).toMatchObject({
+    role: 'assistant', translations: [{ target: 'Listo.', native: 'Ready.' }], agentTask: { phase: 'completed' },
+  });
+  expect(selectIsLoadingSuggestions(useMaestroStore.getState())).toBe(false);
+});

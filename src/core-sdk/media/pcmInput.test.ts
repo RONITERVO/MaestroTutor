@@ -54,4 +54,15 @@ describe('PCM input timing', () => {
     expect(received).toEqual([1, 2, 3, 4, 5]);
     expect(() => handoff.transferTo(vi.fn())).toThrow('already been transferred');
   });
+  it('discards retained handoff audio on close and stops delivery during a reentrant close', () => {
+    const unused = new PcmCaptureHandoff();
+    unused.push(new Int16Array([1])); unused.close(); unused.push(new Int16Array([2]));
+    expect(() => unused.transferTo(vi.fn())).toThrow('closed');
+    const handoff = new PcmCaptureHandoff(), received: number[] = [];
+    handoff.push(new Int16Array([3])); handoff.push(new Int16Array([4]));
+    handoff.transferTo(pcm => { received.push(...pcm); handoff.close(); });
+    handoff.push(new Int16Array([5]));
+    expect(received).toEqual([3]);
+  });
+
 });

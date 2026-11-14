@@ -1,0 +1,515 @@
+{
+  "format": "maestro-bundled-world",
+  "version": 1,
+  "packId": "maestro.observatory",
+  "packVersion": 1,
+  "entryId": "observatory",
+  "name": "Observatory workshop",
+  "description": "An editable small deck, bridge and globe made from shared native construction data. Starts idle with your familiar book and Maestro; no lesson, language, audio or movement mode is selected for you.",
+  "author": "Roni Tervo / Maestro",
+  "license": "Apache-2.0",
+  "features": [
+    "actionResults.v1",
+    "batchCreation.v1",
+    "collisionShapes.v1",
+    "constructionResources.v1",
+    "creationComponents.v1",
+    "creationPrototypes.v1",
+    "staticSupport.v1",
+    "visibilityLayers.v1"
+  ],
+  "dependencies": [],
+  "assets": [],
+  "creation": {
+    "blueprint": {
+      "version": 4,
+      "pieces": [
+        {
+          "slot": "Deck",
+          "name": "Observatory deck",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 2.6
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "scale": 1,
+          "source": {
+            "kind": "prototype",
+            "prototype": {
+              "version": 11,
+              "geometry": {
+                "kind": "recipe",
+                "recipe": {
+                  "version": 1,
+                  "parts": [
+                    {
+                      "id": "Deck",
+                      "shape": "box",
+                      "position": {
+                        "x": 0,
+                        "y": 0.04,
+                        "z": 0
+                      },
+                      "size": {
+                        "x": 2,
+                        "y": 0.08,
+                        "z": 2
+                      },
+                      "rotation": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0,
+                        "w": 1
+                      },
+                      "parent": null,
+                      "color": {
+                        "r": 0.48,
+                        "g": 0.31,
+                        "b": 0.19,
+                        "a": 1
+                      }
+                    }
+                  ],
+                  "tracks": [],
+                  "duration": 2,
+                  "playing": false,
+                  "loop": false
+                }
+              },
+              "color": {
+                "r": 1,
+                "g": 1,
+                "b": 1,
+                "a": 1
+              },
+              "physics": {
+                "mode": "fixed",
+                "shape": "automatic",
+                "mass": 1
+              },
+              "collision": {
+                "version": 1,
+                "shapes": [
+                  {
+                    "id": "Deck",
+                    "shape": "box",
+                    "position": {
+                      "x": 0,
+                      "y": 0.04,
+                      "z": 0
+                    },
+                    "size": {
+                      "x": 2,
+                      "y": 0.08,
+                      "z": 2
+                    },
+                    "rotation": {
+                      "x": 0,
+                      "y": 0,
+                      "z": 0,
+                      "w": 1
+                    }
+                  }
+                ]
+              },
+              "surfaces": [],
+              "drawingTips": [],
+              "visibilityLayer": "00000000000000000000000000000001",
+              "staticSupport": {
+                "version": 1,
+                "enabled": true
+              }
+            }
+          }
+        },
+        {
+          "slot": "Bridge",
+          "name": "Observatory bridge",
+          "position": {
+            "x": 1.6,
+            "y": 0,
+            "z": 2.6
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "scale": 1,
+          "source": {
+            "kind": "prototype",
+            "prototype": {
+              "version": 11,
+              "geometry": {
+                "kind": "recipe",
+                "recipe": {
+                  "version": 1,
+                  "parts": [
+                    {
+                      "id": "Bridge",
+                      "shape": "box",
+                      "position": {
+                        "x": 0,
+                        "y": 0.04,
+                        "z": 0
+                      },
+                      "size": {
+                        "x": 1.2,
+                        "y": 0.08,
+                        "z": 0.6
+                      },
+                      "rotation": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0,
+                        "w": 1
+                      },
+                      "parent": null,
+                      "color": {
+                        "r": 0.48,
+                        "g": 0.31,
+                        "b": 0.19,
+                        "a": 1
+                      }
+                    }
+                  ],
+                  "tracks": [],
+                  "duration": 2,
+                  "playing": false,
+                  "loop": false
+                }
+              },
+              "color": {
+                "r": 1,
+                "g": 1,
+                "b": 1,
+                "a": 1
+              },
+              "physics": {
+                "mode": "fixed",
+                "shape": "automatic",
+                "mass": 1
+              },
+              "collision": {
+                "version": 1,
+                "shapes": [
+                  {
+                    "id": "Bridge",
+                    "shape": "box",
+                    "position": {
+                      "x": 0,
+                      "y": 0.04,
+                      "z": 0
+                    },
+                    "size": {
+                      "x": 1.2,
+                      "y": 0.08,
+                      "z": 0.6
+                    },
+                    "rotation": {
+                      "x": 0,
+                      "y": 0,
+                      "z": 0,
+                      "w": 1
+                    }
+                  }
+                ]
+              },
+              "surfaces": [],
+              "drawingTips": [],
+              "visibilityLayer": "00000000000000000000000000000001",
+              "staticSupport": {
+                "version": 1,
+                "enabled": true
+              }
+            }
+          }
+        },
+        {
+          "slot": "Globe",
+          "name": "Editable globe",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 3.1
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "scale": 1,
+          "source": {
+            "kind": "prototype",
+            "prototype": {
+              "version": 3,
+              "geometry": {
+                "kind": "recipe",
+                "recipe": {
+                  "version": 1,
+                  "parts": [
+                    {
+                      "id": "Base",
+                      "shape": "cylinder",
+                      "position": {
+                        "x": 0,
+                        "y": 0.06,
+                        "z": 0
+                      },
+                      "size": {
+                        "x": 0.5,
+                        "y": 0.12,
+                        "z": 0.5
+                      },
+                      "rotation": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0,
+                        "w": 1
+                      },
+                      "parent": null,
+                      "color": {
+                        "r": 0.27,
+                        "g": 0.18,
+                        "b": 0.4,
+                        "a": 1
+                      }
+                    },
+                    {
+                      "id": "Stand",
+                      "shape": "cylinder",
+                      "position": {
+                        "x": 0,
+                        "y": 0.35,
+                        "z": 0
+                      },
+                      "size": {
+                        "x": 0.08,
+                        "y": 0.5,
+                        "z": 0.08
+                      },
+                      "rotation": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0,
+                        "w": 1
+                      },
+                      "parent": null,
+                      "color": {
+                        "r": 0.8,
+                        "g": 0.62,
+                        "b": 0.23,
+                        "a": 1
+                      }
+                    },
+                    {
+                      "id": "Globe",
+                      "shape": "sphere",
+                      "position": {
+                        "x": 0,
+                        "y": 0.9,
+                        "z": 0
+                      },
+                      "size": {
+                        "x": 0.7,
+                        "y": 0.7,
+                        "z": 0.7
+                      },
+                      "rotation": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0,
+                        "w": 1
+                      },
+                      "parent": null,
+                      "color": {
+                        "r": 0.15,
+                        "g": 0.44,
+                        "b": 0.72,
+                        "a": 1
+                      }
+                    },
+                    {
+                      "id": "LandWest",
+                      "shape": "sphere",
+                      "position": {
+                        "x": -0.17,
+                        "y": 0.94,
+                        "z": -0.24
+                      },
+                      "size": {
+                        "x": 0.22,
+                        "y": 0.32,
+                        "z": 0.12
+                      },
+                      "rotation": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0,
+                        "w": 1
+                      },
+                      "parent": null,
+                      "color": {
+                        "r": 0.33,
+                        "g": 0.64,
+                        "b": 0.29,
+                        "a": 1
+                      }
+                    },
+                    {
+                      "id": "LandEast",
+                      "shape": "sphere",
+                      "position": {
+                        "x": 0.18,
+                        "y": 0.82,
+                        "z": -0.22
+                      },
+                      "size": {
+                        "x": 0.17,
+                        "y": 0.26,
+                        "z": 0.15
+                      },
+                      "rotation": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0,
+                        "w": 1
+                      },
+                      "parent": null,
+                      "color": {
+                        "r": 0.33,
+                        "g": 0.64,
+                        "b": 0.29,
+                        "a": 1
+                      }
+                    }
+                  ],
+                  "tracks": [],
+                  "duration": 2,
+                  "playing": false,
+                  "loop": false
+                }
+              },
+              "color": {
+                "r": 1,
+                "g": 1,
+                "b": 1,
+                "a": 1
+              },
+              "physics": {
+                "mode": "fixed",
+                "shape": "automatic",
+                "mass": 1
+              },
+              "collision": {
+                "version": 1,
+                "shapes": [
+                  {
+                    "id": "Base",
+                    "shape": "cylinder",
+                    "position": {
+                      "x": 0,
+                      "y": 0.06,
+                      "z": 0
+                    },
+                    "size": {
+                      "x": 0.5,
+                      "y": 0.12,
+                      "z": 0.5
+                    },
+                    "rotation": {
+                      "x": 0,
+                      "y": 0,
+                      "z": 0,
+                      "w": 1
+                    },
+                    "segments": 12
+                  },
+                  {
+                    "id": "Stand",
+                    "shape": "cylinder",
+                    "position": {
+                      "x": 0,
+                      "y": 0.35,
+                      "z": 0
+                    },
+                    "size": {
+                      "x": 0.08,
+                      "y": 0.5,
+                      "z": 0.08
+                    },
+                    "rotation": {
+                      "x": 0,
+                      "y": 0,
+                      "z": 0,
+                      "w": 1
+                    },
+                    "segments": 12
+                  },
+                  {
+                    "id": "Globe",
+                    "shape": "sphere",
+                    "position": {
+                      "x": 0,
+                      "y": 0.9,
+                      "z": 0
+                    },
+                    "size": {
+                      "x": 0.7,
+                      "y": 0.7,
+                      "z": 0.7
+                    },
+                    "rotation": {
+                      "x": 0,
+                      "y": 0,
+                      "z": 0,
+                      "w": 1
+                    }
+                  }
+                ]
+              },
+              "surfaces": [],
+              "drawingTips": [],
+              "visibilityLayer": "00000000000000000000000000000001"
+            }
+          }
+        }
+      ],
+      "resources": {
+        "version": 2,
+        "appearances": [],
+        "audioSources": [],
+        "environmentProfiles": [],
+        "visibilityLayers": [
+          {
+            "version": 1,
+            "id": "00000000000000000000000000000001",
+            "name": "Observatory",
+            "opacity": 1,
+            "realDepth": true
+          }
+        ]
+      }
+    },
+    "position": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "rotation": {
+      "x": 0,
+      "y": 0,
+      "z": 0,
+      "w": 1
+    },
+    "scale": 1
+  }
+}

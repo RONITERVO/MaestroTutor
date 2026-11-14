@@ -1,0 +1,130 @@
+{
+  "unsaved": {
+    "room": {
+      "phase": "unsaved",
+      "pending": false,
+      "dirty": true,
+      "dispatchHeld": false,
+      "error": ""
+    },
+    "behaviours": {
+      "phase": "unsaved",
+      "pending": false,
+      "dirty": true,
+      "dispatchHeld": false,
+      "error": ""
+    }
+  },
+  "saving": {
+    "room": {
+      "phase": "saving",
+      "pending": true,
+      "dirty": false,
+      "dispatchHeld": false,
+      "error": ""
+    },
+    "behaviours": {
+      "phase": "saving",
+      "pending": true,
+      "dirty": false,
+      "dispatchHeld": false,
+      "error": ""
+    }
+  },
+  "saved": {
+    "room": {
+      "phase": "idle",
+      "pending": false,
+      "dirty": false,
+      "dispatchHeld": false,
+      "error": ""
+    },
+    "behaviours": {
+      "phase": "idle",
+      "pending": false,
+      "dirty": false,
+      "dispatchHeld": false,
+      "error": ""
+    }
+  },
+  "newer": {
+    "room": {
+      "phase": "unsaved",
+      "pending": false,
+      "dirty": true,
+      "dispatchHeld": false,
+      "error": ""
+    },
+    "behaviours": {
+      "phase": "idle",
+      "pending": false,
+      "dirty": false,
+      "dispatchHeld": false,
+      "error": ""
+    }
+  },
+  "temporary": {
+    "room": {
+      "phase": "temporary",
+      "pending": false,
+      "dirty": false,
+      "dispatchHeld": false,
+      "error": ""
+    },
+    "behaviours": {
+      "phase": "idle",
+      "pending": false,
+      "dirty": false,
+      "dispatchHeld": false,
+      "error": ""
+    }
+  },
+  "held": {
+    "room": {
+      "phase": "unsaved",
+      "pending": false,
+      "dirty": true,
+      "dispatchHeld": true,
+      "error": ""
+    },
+    "behaviours": {
+      "phase": "unsaved",
+      "pending": false,
+      "dirty": true,
+      "dispatchHeld": true,
+      "error": ""
+    }
+  },
+  "failed": {
+    "room": {
+      "phase": "unconfirmed",
+      "pending": false,
+      "dirty": true,
+      "dispatchHeld": false,
+      "error": "Could not save room; the previous save is retained. Check available storage and try again."
+    },
+    "behaviours": {
+      "phase": "unconfirmed",
+      "pending": false,
+      "dirty": true,
+      "dispatchHeld": false,
+      "error": "Could not save behaviours; the previous save is retained. Check available storage and try again."
+    }
+  },
+  "recovered": {
+    "room": {
+      "phase": "idle",
+      "pending": false,
+      "dirty": false,
+      "dispatchHeld": false,
+      "error": ""
+    },
+    "behaviours": {
+      "phase": "idle",
+      "pending": false,
+      "dirty": false,
+      "dispatchHeld": false,
+      "error": ""
+    }
+  }
+}

@@ -1,0 +1,81 @@
+// Copyright 2026 Roni Tervo
+// SPDX-License-Identifier: Apache-2.0
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using Maestro.Quest.Art;
+using Maestro.Quest.Creation;
+using Maestro.Quest.Diagnostics;
+using Maestro.Quest.Interaction;
+using Newtonsoft.Json.Linq;
+using NUnit.Framework;
+using UnityEngine;
+using UnityEngine.TestTools;
+namespace Maestro.Quest.Tests
+{
+    public sealed partial class RoomRulesTests
+    {
+        List<NativePhysicsResources.Lease> FillPhysics(bool joints=false,int spare=0){
+            var held=new List<NativePhysicsResources.Lease>();int count=(joints?NativePhysicsResources.MaximumJoints:NativePhysicsResources.MaximumBodies)-(int)NativePhysicsResources.ObserveBudget()[joints?"joints":"bodies"]-spare;
+            try{for(int i=0;i<count;i++){var data=NativeObjectAdmissionFixture.Data();var owner=new RoomResourceOwner(editor.WorldIdentity,data.id,"physics");held.Add(joints?NativePhysicsResources.Connection(owner):NativePhysicsResources.Body(data,owner));}return held;}catch{foreach(var lease in held)lease.Dispose();throw;}
+        }
+        static void ReleasePhysicsReservations(IEnumerable<NativePhysicsResources.Lease> leases){foreach(var lease in leases)lease.Dispose();}
+        JObject[] PhysicsReservations(string target){var budget=CollisionFact("runtime.physicsBudget");return Enumerable.Range(0,(int)budget["bodies"]+(int)budget["joints"]).Select(i=>CollisionFact("runtime.physicsReservation",new JObject{["index"]=i})).Where(x=>(string)x["target"]==target).OrderBy(x=>(string)x["kind"]).ToArray();}
+        [UnityTest]public IEnumerator NativePhysicsAdmissionFullBodyBudgetPreservesSaveHistoryAndExistingObjects(){
+            Assert.That(editor.TryFlush(out var error),Is.True,error);var data=NativeObjectAdmissionFixture.Data();string saved=JsonUtility.ToJson(editor.Snapshot());var bytes=File.ReadAllBytes(Path.Combine(directory,RoomStorage.FileName));int revision=editor.Revision;bool undo=editor.CanUndo,redo=editor.CanRedo;var held=FillPhysics();var body=block.GetComponent<Rigidbody>();
+            try{Assert.That(editor.ApplyAgentEdit(editor.Revision,new[]{data},Array.Empty<string>(),out error),Is.False);StringAssert.Contains("physics body budget",error);Assert.That(editor.Revision,Is.EqualTo(revision));Assert.That(editor.CanUndo,Is.EqualTo(undo));Assert.That(editor.CanRedo,Is.EqualTo(redo));Assert.That(JsonUtility.ToJson(editor.Snapshot()),Is.EqualTo(saved));CollectionAssert.AreEqual(bytes,File.ReadAllBytes(Path.Combine(directory,RoomStorage.FileName)));Assert.That(editor.Find(data.id),Is.Null);Assert.That(editor.PaintObject(editor.Identity(block),Color.blue,out error),Is.True,error);Assert.That(block.GetComponent<Rigidbody>(),Is.SameAs(body));}finally{ReleasePhysicsReservations(held);}
+            Assert.That(editor.ApplyAgentEdit(editor.Revision,new[]{data},Array.Empty<string>(),out error),Is.True,error);editor.Undo();yield return null;held=FillPhysics();revision=editor.Revision;
+            try{editor.Redo();Assert.That(editor.Revision,Is.EqualTo(revision));Assert.That(editor.Find(data.id),Is.Null);Assert.That(editor.CanRedo,Is.True);}finally{ReleasePhysicsReservations(held);}editor.Redo();Assert.That(editor.Find(data.id).GetComponent<Rigidbody>(),Is.Not.Null);
+        }
+        [UnityTest]public IEnumerator NativePhysicsAdmissionFailedImmediateSaveAndLateBatchReleasePrivateBodySlots(){
+            Assert.That(editor.TryFlush(out var error),Is.True,error);var data=NativeObjectAdmissionFixture.Data();string saved=JsonUtility.ToJson(editor.Snapshot()),budget=NativePhysicsResources.ObserveBudget().ToString();int revision=editor.Revision;var bytes=File.ReadAllBytes(Path.Combine(directory,RoomStorage.FileName));string pending=Path.Combine(directory,RoomStorage.FileName+".pending");Directory.CreateDirectory(pending);
+            try{Assert.That(editor.CreatePrimitive(data.kind,data.name,data.position,data.scale,data.color,out var id,out error),Is.False);Assert.That(id,Is.Null);}finally{Directory.Delete(pending);}Assert.That(NativePhysicsResources.ObserveBudget().ToString(),Is.EqualTo(budget));Assert.That(editor.Revision,Is.EqualTo(revision));Assert.That(JsonUtility.ToJson(editor.Snapshot()),Is.EqualTo(saved));CollectionAssert.AreEqual(bytes,File.ReadAllBytes(Path.Combine(directory,RoomStorage.FileName)));
+            var first=NativeObjectAdmissionFixture.Data();var second=NativeObjectAdmissionFixture.Data();first.connections=new[]{new RoomConnection{connected=editor.Identity(block)}};second.connections=new[]{new RoomConnection{connected=editor.Identity(block)}};var held=FillPhysics(true,1);budget=NativePhysicsResources.ObserveBudget().ToString();
+            try{Assert.That(editor.ApplyAgentEdit(editor.Revision,new[]{first,second},Array.Empty<string>(),out error),Is.False);StringAssert.Contains("physics joint budget",error);Assert.That(NativePhysicsResources.ObserveBudget().ToString(),Is.EqualTo(budget));Assert.That(editor.Revision,Is.EqualTo(revision));Assert.That(JsonUtility.ToJson(editor.Snapshot()),Is.EqualTo(saved));CollectionAssert.AreEqual(bytes,File.ReadAllBytes(Path.Combine(directory,RoomStorage.FileName)));Assert.That(editor.Find(first.id),Is.Null);Assert.That(editor.Find(second.id),Is.Null);}finally{ReleasePhysicsReservations(held);}yield return null;
+        }
+        [UnityTest]public IEnumerator NativePhysicsAdmissionFullJointBudgetReusesAcceptedConnectionAndRemovalNeedsNoSlot(){
+            var (id,mount,view)=HingeStage();physics.PausePhysics();view.Refresh();yield return null;var lease=view.ReusableReservation;var held=FillPhysics(true);string target=editor.Identity(block);
+            try{var settings=editor.Read(id).connections[0];settings.drive.speed=17;Assert.That(editor.EditConnection(id,editor.ObjectRevision(id),"configure",mount,settings,0,out var error),Is.True,error);Assert.That(view.ReusableReservation,Is.SameAs(lease));Assert.That((int)NativePhysicsResources.ObserveBudget()["joints"],Is.EqualTo(32));Assert.That(editor.TryFlush(out error),Is.True,error);var bytes=File.ReadAllBytes(Path.Combine(directory,RoomStorage.FileName));int revision=editor.Revision;
+                Assert.That(editor.EditConnection(target,editor.ObjectRevision(target),"configure",mount,new RoomConnection{connected=mount},0,out error),Is.False);StringAssert.Contains("physics joint budget",error);Assert.That(editor.Revision,Is.EqualTo(revision));CollectionAssert.AreEqual(bytes,File.ReadAllBytes(Path.Combine(directory,RoomStorage.FileName)));Assert.That(block.GetComponent<RoomConnectionView>(),Is.Null);
+                Assert.That(editor.EditConnection(id,editor.ObjectRevision(id),"remove",null,null,0,out error),Is.True,error);Assert.That(view.ReusableReservation,Is.Null);Assert.That((int)NativePhysicsResources.ObserveBudget()["joints"],Is.EqualTo(31));
+            }finally{ReleasePhysicsReservations(held);}
+        }
+        [UnityTest]public IEnumerator NativePhysicsAdmissionFailedConnectionSavePreservesLiveJointAndReservation(){
+            var (id,mount,view)=HingeStage();var native=editor.Find(id).GetComponent<Joint>();Assert.That(native,Is.Not.Null);var lease=view.ReusableReservation;var original=editor.Read(id);var changed=original.connections[0].Copy();changed.drive.speed=23;Assert.That(editor.TryFlush(out var error),Is.True,error);int revision=editor.Revision;var bytes=File.ReadAllBytes(Path.Combine(directory,RoomStorage.FileName));
+            using(var locked=new FileStream(Path.Combine(directory,RoomStorage.FileName),FileMode.Open,FileAccess.Read,FileShare.Read))Assert.That(editor.EditConnection(id,editor.ObjectRevision(id),"configure",mount,changed,0,out error),Is.False);
+            Assert.That(editor.Revision,Is.EqualTo(revision));CollectionAssert.AreEqual(bytes,File.ReadAllBytes(Path.Combine(directory,RoomStorage.FileName)));Assert.That(JsonUtility.ToJson(editor.Read(id).connections[0]),Is.EqualTo(JsonUtility.ToJson(original.connections[0])));Assert.That(view.ReusableReservation,Is.SameAs(lease));Assert.That(editor.Find(id).GetComponent<Joint>(),Is.SameAs(native));Assert.That(view.Active,Is.True);yield return null;
+        }
+        [UnityTest]public IEnumerator NativePhysicsAdmissionPauseReplacementAndDisableRespectDeferredJointLifetime(){
+            var (id,mount,view)=HingeStage();var item=editor.Find(id);var old=item.GetComponent<Joint>();var lease=view.ReusableReservation;Assert.That(old,Is.Not.Null);var held=FillPhysics(true);
+            try{physics.PausePhysics();view.Refresh();Assert.That(view.Active,Is.False);Assert.That(old,Is.Not.Null);physics.StartPhysics();view.Refresh();Assert.That(view.Active,Is.False);Assert.That(view.Phase,Is.EqualTo("pausing"));Assert.That(item.GetComponent<Rigidbody>().isKinematic,Is.True);Assert.That((int)NativePhysicsResources.ObserveBudget()["joints"],Is.EqualTo(32));yield return null;view.Refresh();Assert.That(!old,Is.True);Assert.That(view.Active,Is.True,view.Error);Assert.That(view.ReusableReservation,Is.SameAs(lease));Assert.That(item.GetComponents<Joint>().Length,Is.EqualTo(1));
+                var disabled=editor.Read(id).connections[0];disabled.enabled=false;Assert.That(editor.EditConnection(id,editor.ObjectRevision(id),"configure",mount,disabled,0,out var error),Is.True,error);Assert.That(view.ReusableReservation,Is.Null);Assert.That(lease.Phase,Is.EqualTo("retiring"));Assert.That((int)NativePhysicsResources.ObserveBudget()["joints"],Is.EqualTo(32));Assert.Throws<RoomResourceLimitException>(()=>NativePhysicsResources.Connection(new RoomResourceOwner(editor.WorldIdentity,id,"physics")));yield return null;Assert.That((int)NativePhysicsResources.ObserveBudget()["joints"],Is.EqualTo(31));Assert.That(item.GetComponents<Joint>(),Is.Empty);
+            }finally{ReleasePhysicsReservations(held);}
+        }
+        [UnityTest]public IEnumerator NativePhysicsAdmissionUndoTemporaryDiscardAndDormantActivationCanRetry(){
+            var (id,mount,view)=HingeStage();physics.PausePhysics();view.Refresh();yield return null;Assert.That(editor.EditConnection(id,editor.ObjectRevision(id),"remove",null,null,0,out var error),Is.True,error);var held=FillPhysics(true);int revision=editor.Revision;
+            try{editor.Undo();Assert.That(editor.Revision,Is.EqualTo(revision));Assert.That(editor.Read(id).connections,Is.Empty);Assert.That(editor.CanUndo,Is.True);}finally{ReleasePhysicsReservations(held);}editor.Undo();Assert.That(editor.Read(id).connections.Length,Is.EqualTo(1));
+            Assert.That(editor.BeginTemporaryRoom(out error),Is.True,error);while(editor.TemporarySavePending)yield return null;Assert.That(editor.EditConnection(id,editor.ObjectRevision(id),"remove",null,null,0,out error),Is.True,error);string session=editor.TemporarySessionId;held=FillPhysics(true);
+            try{Assert.That(editor.DiscardTemporaryRoom(out error),Is.False);StringAssert.Contains("physics joint budget",error);Assert.That(editor.TemporarySessionId,Is.EqualTo(session));Assert.That(editor.Read(id).connections,Is.Empty);}finally{ReleasePhysicsReservations(held);}Assert.That(editor.DiscardTemporaryRoom(out error),Is.True,error);
+            string area=NativeAreaFor(id);Assert.That(editor.RetireNativeArea(area,out error),Is.True,error);yield return null;held=FillPhysics(true);revision=editor.Revision;string saved=JsonUtility.ToJson(editor.Snapshot());
+            try{yield return NativeAreaCompletion(editor.ActivateNativeArea(area),false);Assert.That(editor.Find(id),Is.Null);Assert.That(editor.NativeEntityDormant(id),Is.True);Assert.That(editor.Revision,Is.EqualTo(revision));Assert.That(JsonUtility.ToJson(editor.Snapshot()),Is.EqualTo(saved));}finally{ReleasePhysicsReservations(held);}yield return NativeAreaCompletion(editor.ActivateNativeArea(area));Assert.That(editor.Find(id).GetComponent<RoomConnectionView>().ReusableReservation,Is.Not.Null);
+            Assert.That(editor.RetireNativeArea(area,out error),Is.True,error);yield return null;held=FillPhysics();
+            try{yield return NativeAreaCompletion(editor.ActivateNativeArea(area),false);Assert.That(editor.Find(id),Is.Null);Assert.That(editor.NativeEntityDormant(id),Is.True);Assert.That(editor.Revision,Is.EqualTo(revision));}finally{ReleasePhysicsReservations(held);}yield return NativeAreaCompletion(editor.ActivateNativeArea(area));Assert.That(editor.Find(id).GetComponent<Rigidbody>(),Is.Not.Null);
+        }
+        [UnityTest]public IEnumerator NativePhysicsAdmissionUnrelatedChangesCannotRecreateMissingPeerConnections(){
+            var (id,_,view)=HingeStage();physics.PausePhysics();UnityEngine.Object.DestroyImmediate(view);yield return null;var held=FillPhysics(true);
+            try{Assert.That(editor.PaintObject(editor.Identity(block),Color.blue,out var error),Is.True,error);Assert.That(editor.Find(id).GetComponent<RoomConnectionView>(),Is.Null);int revision=editor.Revision;Assert.That(editor.PaintObject(id,Color.green,out error),Is.False);StringAssert.Contains("physics joint budget",error);Assert.That(editor.Revision,Is.EqualTo(revision));}finally{ReleasePhysicsReservations(held);}Assert.That(editor.PaintObject(id,Color.green,out var issue),Is.True,issue);Assert.That(editor.Find(id).GetComponent<RoomConnectionView>().ReusableReservation,Is.Not.Null);
+        }
+        [UnityTest]public IEnumerator NativePhysicsAdmissionCapturesBodyAndPotentialJointLifetimeWithoutStartingPhysics(){
+            root.AddComponent<RuntimeDiagnostics>();var data=NativeObjectAdmissionFixture.Data();data.connections=new[]{new RoomConnection{connected=editor.Identity(block)}};var journal=new RoomJournal(editor.Snapshot());Assert.That(journal.Prepare(new[]{data},Array.Empty<string>(),out var edit,out var error),Is.True,error);RoomItem item=null;var held=new List<NativePhysicsResources.Lease>();
+            using(edit)using(var prepared=RoomEditPreparation.TryCreate(editor,edit,out error)){
+                Assert.That(prepared,Is.Not.Null,error);var preparing=new JArray(PhysicsReservations(data.id));var wrong=data.Copy();wrong.kind=RoomObjectKind.Ball;Assert.Throws<InvalidOperationException>(()=>prepared.TakeBody(wrong));
+                try{item=CreatedRoomObject.CreatePrepared(data,root.transform,editor.Models,editor.RuntimeGate,editor.WorldIdentity,prepared);var view=item.gameObject.AddComponent<RoomConnectionView>();using(var connection=prepared.TakeConnection(data))view.ApplyPrepared(editor,data,connection);var ready=new JArray(PhysicsReservations(data.id));Assert.That(editor.Find(data.id),Is.Null);Assert.That(physics.Running,Is.False);Assert.That(item.GetComponent<Rigidbody>().isKinematic,Is.True);Assert.That(view.Active,Is.False);item.gameObject.SetActive(false);var disabled=new JArray(PhysicsReservations(data.id));held=FillPhysics();held.AddRange(FillPhysics(true));var budget=CollisionFact("runtime.physicsBudget");var again=CollisionFact("runtime.physicsBudget");again["bodies"]=0;Assert.That((int)CollisionFact("runtime.physicsBudget")["bodies"],Is.EqualTo(128));
+                    NativeResourceLifetime.Release(item.gameObject);UnityEngine.Object.Destroy(item.gameObject);var retiring=new JArray(PhysicsReservations(data.id));Assert.That(retiring.Count,Is.EqualTo(1),"An unallocated potential joint releases immediately; a native body still awaits destruction");Assert.That((string)retiring[0]["phase"],Is.EqualTo("retiring"));var extra=NativeObjectAdmissionFixture.Data();Assert.Throws<RoomResourceLimitException>(()=>NativePhysicsResources.Body(extra,new RoomResourceOwner(editor.WorldIdentity,extra.id,"physics")));
+                    string path=Environment.GetEnvironmentVariable("MAESTRO_NATIVE_PHYSICS_ADMISSION_EVIDENCE");if(!string.IsNullOrEmpty(path))File.WriteAllText(path,new JObject{["budget"]=budget,["preparing"]=preparing,["ready"]=ready,["disabled"]=disabled,["retiring"]=retiring}.ToString());yield return null;Assert.That(PhysicsReservations(data.id),Is.Empty);using var retry=NativePhysicsResources.Body(extra,new RoomResourceOwner(editor.WorldIdentity,extra.id,"physics"));
+                }finally{ReleasePhysicsReservations(held);if(item){NativeResourceLifetime.Release(item.gameObject);UnityEngine.Object.Destroy(item.gameObject);}}
+            }
+        }
+    }
+}

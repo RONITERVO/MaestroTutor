@@ -1,0 +1,71 @@
+{
+  "version": 3,
+  "memoryVersion": 1,
+  "entry": "main",
+  "resources": [],
+  "state": [
+    {
+      "name": "count",
+      "initial": 0,
+      "memory": "cccccccccccccccccccccccccccccccc"
+    },
+    {
+      "name": "perRun",
+      "initial": 5
+    }
+  ],
+  "events": [],
+  "functions": [
+    {
+      "name": "main",
+      "returns": "void",
+      "parameters": [],
+      "locals": [],
+      "body": [
+        {
+          "id": "increment",
+          "op": "setState",
+          "variable": "count",
+          "value": {
+            "op": "add",
+            "args": [
+              {
+                "state": "count"
+              },
+              {
+                "value": 1
+              }
+            ]
+          }
+        },
+        {
+          "id": "ephemeral",
+          "op": "setState",
+          "variable": "perRun",
+          "value": {
+            "op": "add",
+            "args": [
+              {
+                "state": "perRun"
+              },
+              {
+                "value": 3
+              }
+            ]
+          }
+        },
+        {
+          "id": "save",
+          "op": "checkpoint"
+        },
+        {
+          "id": "wait",
+          "op": "sleep",
+          "seconds": {
+            "value": 60
+          }
+        }
+      ]
+    }
+  ]
+}

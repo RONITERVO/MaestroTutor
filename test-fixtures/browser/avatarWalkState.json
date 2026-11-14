@@ -1,0 +1,201 @@
+{
+  "version": 1,
+  "revision": 3,
+  "sceneRevision": 3,
+  "ack": 0,
+  "session": "b956e6a93e3242b1ba270b574d8d9514",
+  "status": "Room actions ready",
+  "selectedId": "maestro",
+  "ok": true,
+  "canUndo": true,
+  "canRedo": false,
+  "physicsRunning": false,
+  "visible": false,
+  "inspection": null,
+  "workspaceView": "objects",
+  "rules": {
+    "revision": 3,
+    "bindingPage": 0,
+    "bindingCount": 0,
+    "queued": 0,
+    "canUndo": true,
+    "canRedo": false,
+    "readOnly": false,
+    "status": "Saved motion assigned",
+    "sequences": [
+      {
+        "id": "8401e2ae926e4ee788da44da3c51889e",
+        "name": "Action 1",
+        "steps": 1,
+        "repeat": false,
+        "program": false
+      }
+    ],
+    "selected": null,
+    "bindings": [],
+    "buttons": [],
+    "running": [],
+    "outcomes": []
+  },
+  "motions": null,
+  "capabilities": [
+    "physicsSettings.v1",
+    "avatarSettings.v1",
+    "avatarWalk.v1",
+    "motions.v1",
+    "behaviourPrograms.v3"
+  ],
+  "physics": null,
+  "avatar": null,
+  "walk": {
+    "source": "library",
+    "motionId": "073c377053074cfab79ba90c6eae7c09",
+    "modelHash": "c440b687d487a8f8f82bc727a321573e4fbac7c368514788cc8a9c5159226561",
+    "name": "Walking",
+    "status": "Saved walking motion is available",
+    "playbackStatus": "",
+    "clipIndex": -1,
+    "available": true
+  },
+  "objects": [
+    {
+      "id": "2594ac542f784a64bbb3a43cee754157",
+      "name": "Ball",
+      "kind": "Ball",
+      "objectRevision": 4,
+      "position": {
+        "x": 0.6899999976158142,
+        "y": 1.4500000476837158,
+        "z": 0.800000011920929
+      },
+      "scale": 1.0,
+      "color": {
+        "r": 0.7647058963775635,
+        "g": 0.6000000238418579,
+        "b": 0.3137255012989044,
+        "a": 1.0
+      },
+      "animated": false,
+      "held": false,
+      "simulating": false,
+      "physics": {
+        "mode": "fixed",
+        "shape": "automatic",
+        "mass": 0.5
+      },
+      "movement": null
+    },
+    {
+      "id": "a99eab6fb7f84e76a89cdd8e936641d5",
+      "name": "Block",
+      "kind": "Block",
+      "objectRevision": 3,
+      "position": {
+        "x": 0.5199999809265137,
+        "y": 1.4500000476837158,
+        "z": 0.800000011920929
+      },
+      "scale": 1.0,
+      "color": {
+        "r": 0.45098039507865906,
+        "g": 0.32549020648002625,
+        "b": 0.30588236451148987,
+        "a": 1.0
+      },
+      "animated": false,
+      "held": false,
+      "simulating": false,
+      "physics": {
+        "mode": "fixed",
+        "shape": "automatic",
+        "mass": 0.5
+      },
+      "movement": null
+    },
+    {
+      "id": "book",
+      "name": "Book",
+      "kind": "Book",
+      "objectRevision": 1,
+      "position": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "scale": 1.0,
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      },
+      "animated": false,
+      "held": false,
+      "simulating": false,
+      "physics": {
+        "mode": "fixed",
+        "shape": "automatic",
+        "mass": 0.5
+      },
+      "movement": null
+    },
+    {
+      "id": "e3fa2021b76941fca9cde6f4bb24cd58",
+      "name": "Cylinder",
+      "kind": "Cylinder",
+      "objectRevision": 5,
+      "position": {
+        "x": 0.8600000143051147,
+        "y": 1.4500000476837158,
+        "z": 0.800000011920929
+      },
+      "scale": 1.0,
+      "color": {
+        "r": 0.16862745583057404,
+        "g": 0.5529412031173706,
+        "b": 0.5333333611488342,
+        "a": 1.0
+      },
+      "animated": false,
+      "held": false,
+      "simulating": false,
+      "physics": {
+        "mode": "fixed",
+        "shape": "automatic",
+        "mass": 0.5
+      },
+      "movement": null
+    },
+    {
+      "id": "maestro",
+      "name": "Maestro",
+      "kind": "Maestro",
+      "objectRevision": 7,
+      "position": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "scale": 1.0,
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      },
+      "animated": false,
+      "held": false,
+      "simulating": false,
+      "physics": {
+        "mode": "fixed",
+        "shape": "automatic",
+        "mass": 0.5
+      },
+      "movement": {
+        "distance": 1.1,
+        "speed": 0.8
+      }
+    }
+  ],
+  "created": []
+}

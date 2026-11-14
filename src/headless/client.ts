@@ -1,5 +1,6 @@
 // Copyright 2025 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
+import type { HeadlessRoomAgent } from './roomJourney';
 import type { BackendAiContentReportRequest } from '../core/contracts/backend';
 import { getGeminiModels } from '../core-sdk/modelRegistry';
 import { createCoreEventJournal, type CoreEventListener } from '../core-sdk/events';
@@ -40,6 +41,7 @@ export interface HeadlessClientOptions extends HeadlessCredentialOptions {
 }
 
 export interface HeadlessClient {
+  roomAgent?: HeadlessRoomAgent;
   accessMode: HeadlessAccessMode;
   profile: HeadlessProfile;
   state: HeadlessProfileState;
@@ -138,6 +140,11 @@ export const describeHeadlessMethods = (accessMode: HeadlessAccessMode = 'manage
     'auth.google.verifyHosted': { mutates: true, params: ['appUrl?', 'headless?', 'timeoutMs?'] },
     'language.list': { mutates: false, params: ['targetLanguageCode?', 'nativeLanguageCode?', 'limit? (1..500, default 100)'] },
     'language.select': { mutates: true, params: ['pairId? | targetLanguageCode + nativeLanguageCode'] },
+    'journey.room': { mutates: true, external: true, params: ['text', 'languagePairId?', 'requireActions? (default true)'] },
+    'room.connect': { mutates: true, params: ['directory (explicitly started native probe)'] },
+    'room.disconnect': { mutates: true, params: [] },
+    'room.tasks': { mutates: false, params: ['includeEvidence? (default false; contains original context/media)'] },
+    'room.stop': { mutates: true, params: ['taskId'] },
     'chat.history': { mutates: false, params: ['languagePairId?'] },
     'chat.turn': { mutates: true, params: ['text', 'languagePairId?', 'useGoogleSearch?', 'requireInvariants?', 'fileParts?'] },
     'chat.attachment.turn': { mutates: true, external: true, params: ['text', 'fixture? (text|image|audio|pdf|svg|video|office) | dataUrl + mimeType', 'displayName?', 'languagePairId?', 'useGoogleSearch?', 'requireInvariants?', 'cleanup?'] },
@@ -175,7 +182,7 @@ export const describeHeadlessMethods = (accessMode: HeadlessAccessMode = 'manage
   ]));
 
   return {
-  protocolVersion: '1.8.0',
+  protocolVersion: '1.9.0',
   transport: 'json-rpc-2.0-ndjson',
   eventNotification: 'maestro.event',
   profileDefault: 'isolated-temporary',
@@ -189,6 +196,7 @@ export const describeHeadlessMethods = (accessMode: HeadlessAccessMode = 'manage
   methodInfo: describedMethodInfo,
   access,
   releaseRequirements: [
+    'Quest agent release proof additionally requires managed and BYOK chat/Live handoff journeys against real Unity and real providers; scripted native/book probes do not satisfy this gate.',
     'Android external Stripe checkout stays disabled until Play programme enrollment is recorded.',
     'Every provider-parity method must be green in paired managed and BYOK release proof; BYOK keys come only from MAESTRO_GEMINI_API_KEY.',
     'BYOK cleanup is restricted to files recorded as owned by the active headless profile.',

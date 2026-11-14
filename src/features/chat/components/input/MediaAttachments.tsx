@@ -1,3 +1,4 @@
+import { acquireUserMedia } from '../../../../platform/browser/sessionActivity';
 // Copyright 2025 Roni Tervo
 //
 // SPDX-License-Identifier: Apache-2.0
@@ -152,7 +153,7 @@ const MediaAttachments: React.FC<MediaAttachmentsProps> = ({
       // Acquire audio lazily to avoid mobile "call mode" from combined audio+video streams
       let recordStream: MediaStream = liveVideoStream;
       try {
-        const audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        const audioStream = await acquireUserMedia({ audio: true });
         recordingAudioStreamRef.current = audioStream;
         recordStream = new MediaStream([
           ...liveVideoStream.getVideoTracks(),

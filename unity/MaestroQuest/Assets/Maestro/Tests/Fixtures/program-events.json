@@ -1,0 +1,104 @@
+{
+  "version": 3,
+  "entry": "main",
+  "resources": [
+    "maestro"
+  ],
+  "state": [
+    {
+      "name": "count",
+      "initial": 0
+    }
+  ],
+  "events": [
+    {
+      "name": "user.wave",
+      "type": "number"
+    }
+  ],
+  "functions": [
+    {
+      "name": "main",
+      "returns": "void",
+      "parameters": [],
+      "locals": [
+        {
+          "name": "received",
+          "initial": false
+        },
+        {
+          "name": "payload",
+          "initial": ""
+        }
+      ],
+      "body": [
+        {
+          "id": "loop",
+          "op": "forever",
+          "body": [
+            {
+              "id": "wait",
+              "op": "awaitEvent",
+              "event": "object.tapped",
+              "source": "book",
+              "timeout": {
+                "value": 0
+              },
+              "received": "received",
+              "value": "payload"
+            },
+            {
+              "id": "choose",
+              "op": "if",
+              "test": {
+                "var": "received"
+              },
+              "then": [
+                {
+                  "id": "count",
+                  "op": "setState",
+                  "variable": "count",
+                  "value": {
+                    "op": "add",
+                    "args": [
+                      {
+                        "state": "count"
+                      },
+                      {
+                        "value": 1
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "wave",
+                  "op": "invoke",
+                  "capability": "animation.play",
+                  "version": 1,
+                  "arguments": {
+                    "target": "maestro",
+                    "seconds": 1,
+                    "source": {
+                      "kind": "gesture",
+                      "gesture": "greeting"
+                    },
+                    "channel": "wholeTarget"
+                  },
+                  "bindings": {}
+                },
+                {
+                  "id": "rest",
+                  "op": "sleep",
+                  "seconds": {
+                    "value": 0.25
+                  }
+                }
+              ],
+              "else": []
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

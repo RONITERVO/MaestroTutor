@@ -1,0 +1,57 @@
+{
+  "budget": {
+    "instances": 1,
+    "preparing": 0,
+    "ready": 1,
+    "retiring": 0,
+    "parts": 1,
+    "customVertices": 300,
+    "instanceLimit": 128,
+    "partLimit": 512,
+    "customVertexLimit": 524288
+  },
+  "preparing": {
+    "reservationId": "b83db2a50bd745409a07b9634f7a2c68",
+    "worldId": "4d8ad01940ae495582782bac4e00125f",
+    "regionId": "3431026e3097421f9dbce95ad3a685e9",
+    "target": "resource-probe",
+    "role": "object",
+    "phase": "preparing",
+    "parts": 1,
+    "customVertices": 300,
+    "active": false
+  },
+  "ready": {
+    "reservationId": "b83db2a50bd745409a07b9634f7a2c68",
+    "worldId": "4d8ad01940ae495582782bac4e00125f",
+    "regionId": "3431026e3097421f9dbce95ad3a685e9",
+    "target": "resource-probe",
+    "role": "object",
+    "phase": "ready",
+    "parts": 1,
+    "customVertices": 300,
+    "active": false
+  },
+  "active": {
+    "reservationId": "b83db2a50bd745409a07b9634f7a2c68",
+    "worldId": "4d8ad01940ae495582782bac4e00125f",
+    "regionId": "3431026e3097421f9dbce95ad3a685e9",
+    "target": "resource-probe",
+    "role": "object",
+    "phase": "ready",
+    "parts": 1,
+    "customVertices": 300,
+    "active": true
+  },
+  "retiring": {
+    "reservationId": "b83db2a50bd745409a07b9634f7a2c68",
+    "worldId": "4d8ad01940ae495582782bac4e00125f",
+    "regionId": "3431026e3097421f9dbce95ad3a685e9",
+    "target": "resource-probe",
+    "role": "object",
+    "phase": "retiring",
+    "parts": 1,
+    "customVertices": 300,
+    "active": false
+  }
+}

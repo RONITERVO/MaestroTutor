@@ -182,7 +182,8 @@ jobs:
         with:
           node-version: 22
           cache: npm
-      - run: npm ci
+      - id: dependencies
+        run: npm ci
       - uses: actions/download-artifact@v4
         with:
           name: long-live-audio-fixture
@@ -243,9 +244,9 @@ jobs:
             byok-long-conversation.events.jsonl
           retention-days: 14
       - name: Clear only files owned by the BYOK headless profile
-        if: always()
+        if: always() && steps.dependencies.outcome == 'success'
         run: |
-          npx tsx src/headless/cli.ts files.clear --access byok --profile staging-ci-byok > clear-byok.json
+          node node_modules/tsx/dist/cli.mjs src/headless/cli.ts files.clear --access byok --profile staging-ci-byok > clear-byok.json
           node -e "const c=require('./clear-byok.json'); if(c.failedCount!==0) throw new Error('Provider file cleanup failed: '+JSON.stringify(c.failedNames||[]))"
 
   access-parity:

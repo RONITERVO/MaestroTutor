@@ -1,0 +1,86 @@
+{
+  "deleted": {
+    "selected": {
+      "id": "3aefdd37ee774c56aeb668ea250d85dd",
+      "capability": "object.delete",
+      "version": 1,
+      "resources": [
+        "923da42850f443a39159df0f4a86f686"
+      ],
+      "phase": "completed",
+      "status": "Action completed",
+      "call": {
+        "id": "object.delete",
+        "version": 1,
+        "arguments": {
+          "target": "923da42850f443a39159df0f4a86f686"
+        }
+      }
+    },
+    "running": [
+      {
+        "id": "ceed5e408f4c4250859ddff38915e9d0",
+        "capability": "animation.play",
+        "version": 1,
+        "resources": [
+          "4794bdf3522f48c0b9ebadad6f7e721a"
+        ],
+        "phase": "running",
+        "status": "Action running"
+      }
+    ],
+    "outcomes": [
+      {
+        "id": "3aefdd37ee774c56aeb668ea250d85dd",
+        "capability": "object.delete",
+        "version": 1,
+        "resources": [
+          "923da42850f443a39159df0f4a86f686"
+        ],
+        "phase": "completed",
+        "status": "Action completed"
+      }
+    ],
+    "nextRunId": "68d3b7e03379481ab68d8bf6ec32e87b",
+    "storageError": null,
+    "recovery": null
+  },
+  "painted": {
+    "selected": {
+      "id": "d4a9d8b5cb49475ca375df6208c88323",
+      "capability": "object.color.set",
+      "version": 1,
+      "resources": [
+        "f9d95526865e4aedb31d855c3027fd20"
+      ],
+      "phase": "completed",
+      "status": "Action completed",
+      "call": {
+        "id": "object.color.set",
+        "version": 1,
+        "arguments": {
+          "target": "f9d95526865e4aedb31d855c3027fd20",
+          "red": 0.2,
+          "green": 0.4,
+          "blue": 1
+        }
+      }
+    },
+    "running": [],
+    "outcomes": [
+      {
+        "id": "d4a9d8b5cb49475ca375df6208c88323",
+        "capability": "object.color.set",
+        "version": 1,
+        "resources": [
+          "f9d95526865e4aedb31d855c3027fd20"
+        ],
+        "phase": "completed",
+        "status": "Action completed"
+      }
+    ],
+    "nextRunId": "1eb75e606d964e96b80c1952e7855699",
+    "storageError": null,
+    "recovery": null
+  }
+}

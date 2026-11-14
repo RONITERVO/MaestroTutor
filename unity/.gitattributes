@@ -1,0 +1,8 @@
+# Unity emits a space after empty YAML values. Preserve its generated format.
+*.meta text eol=lf whitespace=-blank-at-eol
+*.asset text eol=lf whitespace=-blank-at-eol
+*.controller text eol=lf whitespace=-blank-at-eol
+*.mat text eol=lf whitespace=-blank-at-eol
+*.unity text eol=lf whitespace=-blank-at-eol
+*.fbx binary
+*.png binary

@@ -118,6 +118,9 @@ export const selectIsSending = (state: { activityTokens: Set<string> }): boolean
 /**
  * Check if a response-generation request is actively in flight.
  */
+export const selectIsAgentWorking = (state: { activityTokens: Set<string> }): boolean =>
+  state.activityTokens.has(buildToken(TOKEN_CATEGORY.AGENT, TOKEN_SUBTYPE.TASK));
+
 export const selectIsResponsePending = (state: { activityTokens: Set<string> }): boolean =>
   state.activityTokens.has(buildToken(TOKEN_CATEGORY.GEN, TOKEN_SUBTYPE.RESPONSE));
 
@@ -195,6 +198,7 @@ export const selectActiveFlagTokens = (state: { activityTokens: Set<string> }): 
       || token.startsWith(`${TOKEN_CATEGORY.LIVE}:`)
       || token.startsWith(`${TOKEN_CATEGORY.VAD}:`)
       || token.startsWith(`${TOKEN_CATEGORY.WHISPER}:`)
+      || token.startsWith(`${TOKEN_CATEGORY.AGENT}:`)
     ))
     .filter(token => !isReengagementToken(token))
     .sort();

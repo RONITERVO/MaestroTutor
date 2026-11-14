@@ -1,0 +1,773 @@
+{
+  "pages": [
+    {
+      "request": {
+        "operation": "inspect",
+        "category": "facts",
+        "capability": "world.objects",
+        "version": 1,
+        "arguments": {
+          "query": "",
+          "kind": "all",
+          "cursor": ""
+        }
+      },
+      "view": {
+        "operation": "inspect",
+        "capability": "world.objects",
+        "version": 1,
+        "definition": {
+          "id": "world.objects",
+          "version": 1,
+          "type": {
+            "record": {
+              "worldId": "text",
+              "offset": "number",
+              "total": "number",
+              "next": "text",
+              "entries": {
+                "list": {
+                  "record": {
+                    "id": "text",
+                    "name": "text",
+                    "kind": "text"
+                  }
+                }
+              }
+            }
+          },
+          "label": "Find saved objects",
+          "description": "Search every saved top-level object, including dormant creations, without loading, selecting or moving anything. Match all space-separated words against saved names, exact IDs or kinds, ignoring case. kind filters one exact kind or all. Results are ordered by stable ID, up to three per page. Start with empty cursor; pass next unchanged with the same query/kind until it is empty. A cursor becomes unavailable when searchable metadata or workspace/temporary scope changes; restart from empty cursor. Movement and native loading do not change this directory. An object absent from a page is not deleted. Read object.definition for a known ID and its current edit revision; object.presence distinguishes saved existence from native readiness. Internal recipe parts are not separate objects.",
+          "input": {
+            "type": "object",
+            "properties": {
+              "query": {
+                "type": "string",
+                "pattern": null,
+                "maxLength": 80
+              },
+              "kind": {
+                "type": "string",
+                "pattern": null,
+                "maxLength": 16,
+                "enum": [
+                  "all",
+                  "Book",
+                  "Maestro",
+                  "Block",
+                  "Ball",
+                  "Cylinder",
+                  "Drawing",
+                  "ImportedModel",
+                  "Assembly"
+                ]
+              },
+              "cursor": {
+                "type": "string",
+                "pattern": null,
+                "maxLength": 65
+              }
+            },
+            "required": [
+              "query",
+              "kind",
+              "cursor"
+            ],
+            "additionalProperties": false
+          },
+          "example": {
+            "query": "",
+            "kind": "all",
+            "cursor": ""
+          },
+          "features": [
+            "factQueries.v1",
+            "objectSearch.v1"
+          ]
+        },
+        "status": "Current fact value. Reading does not change the room.",
+        "category": "facts",
+        "arguments": {
+          "query": "",
+          "kind": "all",
+          "cursor": ""
+        },
+        "available": true,
+        "value": {
+          "worldId": "eabd0c4af356454b91c17b466be86ac5",
+          "offset": 0,
+          "total": 5,
+          "next": "book.9c2f1525468572ed98c51f3567399d79",
+          "entries": [
+            {
+              "id": "6dfd5c0cc2b643028cef12ee08ed523e",
+              "name": "Cylinder",
+              "kind": "Cylinder"
+            },
+            {
+              "id": "b1da80370fe84f4babf6044aac5c5e41",
+              "name": "Block",
+              "kind": "Block"
+            },
+            {
+              "id": "book",
+              "name": "Book",
+              "kind": "Book"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "request": {
+        "operation": "inspect",
+        "category": "facts",
+        "capability": "world.objects",
+        "version": 1,
+        "arguments": {
+          "query": "",
+          "kind": "all",
+          "cursor": "book.9c2f1525468572ed98c51f3567399d79"
+        }
+      },
+      "view": {
+        "operation": "inspect",
+        "capability": "world.objects",
+        "version": 1,
+        "definition": {
+          "id": "world.objects",
+          "version": 1,
+          "type": {
+            "record": {
+              "worldId": "text",
+              "offset": "number",
+              "total": "number",
+              "next": "text",
+              "entries": {
+                "list": {
+                  "record": {
+                    "id": "text",
+                    "name": "text",
+                    "kind": "text"
+                  }
+                }
+              }
+            }
+          },
+          "label": "Find saved objects",
+          "description": "Search every saved top-level object, including dormant creations, without loading, selecting or moving anything. Match all space-separated words against saved names, exact IDs or kinds, ignoring case. kind filters one exact kind or all. Results are ordered by stable ID, up to three per page. Start with empty cursor; pass next unchanged with the same query/kind until it is empty. A cursor becomes unavailable when searchable metadata or workspace/temporary scope changes; restart from empty cursor. Movement and native loading do not change this directory. An object absent from a page is not deleted. Read object.definition for a known ID and its current edit revision; object.presence distinguishes saved existence from native readiness. Internal recipe parts are not separate objects.",
+          "input": {
+            "type": "object",
+            "properties": {
+              "query": {
+                "type": "string",
+                "pattern": null,
+                "maxLength": 80
+              },
+              "kind": {
+                "type": "string",
+                "pattern": null,
+                "maxLength": 16,
+                "enum": [
+                  "all",
+                  "Book",
+                  "Maestro",
+                  "Block",
+                  "Ball",
+                  "Cylinder",
+                  "Drawing",
+                  "ImportedModel",
+                  "Assembly"
+                ]
+              },
+              "cursor": {
+                "type": "string",
+                "pattern": null,
+                "maxLength": 65
+              }
+            },
+            "required": [
+              "query",
+              "kind",
+              "cursor"
+            ],
+            "additionalProperties": false
+          },
+          "example": {
+            "query": "",
+            "kind": "all",
+            "cursor": ""
+          },
+          "features": [
+            "factQueries.v1",
+            "objectSearch.v1"
+          ]
+        },
+        "status": "Current fact value. Reading does not change the room.",
+        "category": "facts",
+        "arguments": {
+          "query": "",
+          "kind": "all",
+          "cursor": "book.9c2f1525468572ed98c51f3567399d79"
+        },
+        "available": true,
+        "value": {
+          "worldId": "eabd0c4af356454b91c17b466be86ac5",
+          "offset": 3,
+          "total": 5,
+          "next": "",
+          "entries": [
+            {
+              "id": "ffc667b75ce54acdb71a0684221452f6",
+              "name": "Ball",
+              "kind": "Ball"
+            },
+            {
+              "id": "maestro",
+              "name": "Maestro",
+              "kind": "Maestro"
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "definitions": [
+    {
+      "request": {
+        "operation": "inspect",
+        "category": "facts",
+        "capability": "object.definition",
+        "version": 1,
+        "arguments": {
+          "target": "6dfd5c0cc2b643028cef12ee08ed523e"
+        }
+      },
+      "view": {
+        "operation": "inspect",
+        "capability": "object.definition",
+        "version": 1,
+        "definition": {
+          "id": "object.definition",
+          "version": 1,
+          "type": {
+            "record": {
+              "target": "text",
+              "revision": "number",
+              "kind": "text",
+              "name": "text",
+              "position": {
+                "record": {
+                  "x": "number",
+                  "y": "number",
+                  "z": "number"
+                }
+              },
+              "rotation": {
+                "record": {
+                  "x": "number",
+                  "y": "number",
+                  "z": "number",
+                  "w": "number"
+                }
+              },
+              "scale": "number",
+              "content": {
+                "record": {
+                  "points": "number",
+                  "parts": "number",
+                  "frames": "number",
+                  "modelHash": "text",
+                  "recipePlaying": "boolean"
+                }
+              }
+            }
+          },
+          "label": "Saved object definition",
+          "description": "Canonical object metadata and exact authored revision, from the temporary fork when active. Position/rotation/scale are saved room-local values, not live physics, camera coordinates or the animated pose. Content counts describe stored drawings, recipe parts and recorded frames; modelHash is an exact asset reference, not proof of availability or completed loading. Saved metadata remains readable when the native instance is inactive or unavailable. Use object.presence to distinguish that condition from missing saved content. Name is bounded display text; an empty copy name retains the original full name. Reading grants no edit authority and takes no ownership. Use this revision for kind=copy; a missing source is unavailable.",
+          "input": {
+            "type": "object",
+            "properties": {
+              "target": {
+                "type": "string",
+                "pattern": "^(maestro|book|[a-fA-F0-9]{32})$",
+                "maxLength": 32,
+                "x-resource": "object"
+              }
+            },
+            "required": [
+              "target"
+            ],
+            "additionalProperties": false
+          },
+          "example": {
+            "target": "book"
+          },
+          "features": [
+            "factQueries.v1"
+          ]
+        },
+        "status": "Current fact value. Reading does not change the room.",
+        "category": "facts",
+        "arguments": {
+          "target": "6dfd5c0cc2b643028cef12ee08ed523e"
+        },
+        "available": true,
+        "value": {
+          "target": "6dfd5c0cc2b643028cef12ee08ed523e",
+          "revision": 8,
+          "kind": "Cylinder",
+          "name": "",
+          "position": {
+            "x": 0.86,
+            "y": 1.45,
+            "z": 0.8
+          },
+          "rotation": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0,
+            "w": 1.0
+          },
+          "scale": 1.0,
+          "content": {
+            "points": 0,
+            "parts": 0,
+            "frames": 0,
+            "modelHash": "",
+            "recipePlaying": false
+          }
+        }
+      }
+    },
+    {
+      "request": {
+        "operation": "inspect",
+        "category": "facts",
+        "capability": "object.definition",
+        "version": 1,
+        "arguments": {
+          "target": "b1da80370fe84f4babf6044aac5c5e41"
+        }
+      },
+      "view": {
+        "operation": "inspect",
+        "capability": "object.definition",
+        "version": 1,
+        "definition": {
+          "id": "object.definition",
+          "version": 1,
+          "type": {
+            "record": {
+              "target": "text",
+              "revision": "number",
+              "kind": "text",
+              "name": "text",
+              "position": {
+                "record": {
+                  "x": "number",
+                  "y": "number",
+                  "z": "number"
+                }
+              },
+              "rotation": {
+                "record": {
+                  "x": "number",
+                  "y": "number",
+                  "z": "number",
+                  "w": "number"
+                }
+              },
+              "scale": "number",
+              "content": {
+                "record": {
+                  "points": "number",
+                  "parts": "number",
+                  "frames": "number",
+                  "modelHash": "text",
+                  "recipePlaying": "boolean"
+                }
+              }
+            }
+          },
+          "label": "Saved object definition",
+          "description": "Canonical object metadata and exact authored revision, from the temporary fork when active. Position/rotation/scale are saved room-local values, not live physics, camera coordinates or the animated pose. Content counts describe stored drawings, recipe parts and recorded frames; modelHash is an exact asset reference, not proof of availability or completed loading. Saved metadata remains readable when the native instance is inactive or unavailable. Use object.presence to distinguish that condition from missing saved content. Name is bounded display text; an empty copy name retains the original full name. Reading grants no edit authority and takes no ownership. Use this revision for kind=copy; a missing source is unavailable.",
+          "input": {
+            "type": "object",
+            "properties": {
+              "target": {
+                "type": "string",
+                "pattern": "^(maestro|book|[a-fA-F0-9]{32})$",
+                "maxLength": 32,
+                "x-resource": "object"
+              }
+            },
+            "required": [
+              "target"
+            ],
+            "additionalProperties": false
+          },
+          "example": {
+            "target": "book"
+          },
+          "features": [
+            "factQueries.v1"
+          ]
+        },
+        "status": "Current fact value. Reading does not change the room.",
+        "category": "facts",
+        "arguments": {
+          "target": "b1da80370fe84f4babf6044aac5c5e41"
+        },
+        "available": true,
+        "value": {
+          "target": "b1da80370fe84f4babf6044aac5c5e41",
+          "revision": 12,
+          "kind": "Block",
+          "name": "",
+          "position": {
+            "x": 0.52,
+            "y": 1.45,
+            "z": 0.8
+          },
+          "rotation": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0,
+            "w": 1.0
+          },
+          "scale": 1.0,
+          "content": {
+            "points": 0,
+            "parts": 0,
+            "frames": 2,
+            "modelHash": "",
+            "recipePlaying": false
+          }
+        }
+      }
+    },
+    {
+      "request": {
+        "operation": "inspect",
+        "category": "facts",
+        "capability": "object.definition",
+        "version": 1,
+        "arguments": {
+          "target": "book"
+        }
+      },
+      "view": {
+        "operation": "inspect",
+        "capability": "object.definition",
+        "version": 1,
+        "definition": {
+          "id": "object.definition",
+          "version": 1,
+          "type": {
+            "record": {
+              "target": "text",
+              "revision": "number",
+              "kind": "text",
+              "name": "text",
+              "position": {
+                "record": {
+                  "x": "number",
+                  "y": "number",
+                  "z": "number"
+                }
+              },
+              "rotation": {
+                "record": {
+                  "x": "number",
+                  "y": "number",
+                  "z": "number",
+                  "w": "number"
+                }
+              },
+              "scale": "number",
+              "content": {
+                "record": {
+                  "points": "number",
+                  "parts": "number",
+                  "frames": "number",
+                  "modelHash": "text",
+                  "recipePlaying": "boolean"
+                }
+              }
+            }
+          },
+          "label": "Saved object definition",
+          "description": "Canonical object metadata and exact authored revision, from the temporary fork when active. Position/rotation/scale are saved room-local values, not live physics, camera coordinates or the animated pose. Content counts describe stored drawings, recipe parts and recorded frames; modelHash is an exact asset reference, not proof of availability or completed loading. Saved metadata remains readable when the native instance is inactive or unavailable. Use object.presence to distinguish that condition from missing saved content. Name is bounded display text; an empty copy name retains the original full name. Reading grants no edit authority and takes no ownership. Use this revision for kind=copy; a missing source is unavailable.",
+          "input": {
+            "type": "object",
+            "properties": {
+              "target": {
+                "type": "string",
+                "pattern": "^(maestro|book|[a-fA-F0-9]{32})$",
+                "maxLength": 32,
+                "x-resource": "object"
+              }
+            },
+            "required": [
+              "target"
+            ],
+            "additionalProperties": false
+          },
+          "example": {
+            "target": "book"
+          },
+          "features": [
+            "factQueries.v1"
+          ]
+        },
+        "status": "Current fact value. Reading does not change the room.",
+        "category": "facts",
+        "arguments": {
+          "target": "book"
+        },
+        "available": true,
+        "value": {
+          "target": "book",
+          "revision": 4,
+          "kind": "Book",
+          "name": "",
+          "position": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "rotation": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0,
+            "w": 1.0
+          },
+          "scale": 1.0,
+          "content": {
+            "points": 0,
+            "parts": 0,
+            "frames": 0,
+            "modelHash": "",
+            "recipePlaying": false
+          }
+        }
+      }
+    },
+    {
+      "request": {
+        "operation": "inspect",
+        "category": "facts",
+        "capability": "object.definition",
+        "version": 1,
+        "arguments": {
+          "target": "ffc667b75ce54acdb71a0684221452f6"
+        }
+      },
+      "view": {
+        "operation": "inspect",
+        "capability": "object.definition",
+        "version": 1,
+        "definition": {
+          "id": "object.definition",
+          "version": 1,
+          "type": {
+            "record": {
+              "target": "text",
+              "revision": "number",
+              "kind": "text",
+              "name": "text",
+              "position": {
+                "record": {
+                  "x": "number",
+                  "y": "number",
+                  "z": "number"
+                }
+              },
+              "rotation": {
+                "record": {
+                  "x": "number",
+                  "y": "number",
+                  "z": "number",
+                  "w": "number"
+                }
+              },
+              "scale": "number",
+              "content": {
+                "record": {
+                  "points": "number",
+                  "parts": "number",
+                  "frames": "number",
+                  "modelHash": "text",
+                  "recipePlaying": "boolean"
+                }
+              }
+            }
+          },
+          "label": "Saved object definition",
+          "description": "Canonical object metadata and exact authored revision, from the temporary fork when active. Position/rotation/scale are saved room-local values, not live physics, camera coordinates or the animated pose. Content counts describe stored drawings, recipe parts and recorded frames; modelHash is an exact asset reference, not proof of availability or completed loading. Saved metadata remains readable when the native instance is inactive or unavailable. Use object.presence to distinguish that condition from missing saved content. Name is bounded display text; an empty copy name retains the original full name. Reading grants no edit authority and takes no ownership. Use this revision for kind=copy; a missing source is unavailable.",
+          "input": {
+            "type": "object",
+            "properties": {
+              "target": {
+                "type": "string",
+                "pattern": "^(maestro|book|[a-fA-F0-9]{32})$",
+                "maxLength": 32,
+                "x-resource": "object"
+              }
+            },
+            "required": [
+              "target"
+            ],
+            "additionalProperties": false
+          },
+          "example": {
+            "target": "book"
+          },
+          "features": [
+            "factQueries.v1"
+          ]
+        },
+        "status": "Current fact value. Reading does not change the room.",
+        "category": "facts",
+        "arguments": {
+          "target": "ffc667b75ce54acdb71a0684221452f6"
+        },
+        "available": true,
+        "value": {
+          "target": "ffc667b75ce54acdb71a0684221452f6",
+          "revision": 7,
+          "kind": "Ball",
+          "name": "",
+          "position": {
+            "x": 0.69,
+            "y": 1.45,
+            "z": 0.8
+          },
+          "rotation": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0,
+            "w": 1.0
+          },
+          "scale": 1.0,
+          "content": {
+            "points": 0,
+            "parts": 0,
+            "frames": 0,
+            "modelHash": "",
+            "recipePlaying": false
+          }
+        }
+      }
+    },
+    {
+      "request": {
+        "operation": "inspect",
+        "category": "facts",
+        "capability": "object.definition",
+        "version": 1,
+        "arguments": {
+          "target": "maestro"
+        }
+      },
+      "view": {
+        "operation": "inspect",
+        "capability": "object.definition",
+        "version": 1,
+        "definition": {
+          "id": "object.definition",
+          "version": 1,
+          "type": {
+            "record": {
+              "target": "text",
+              "revision": "number",
+              "kind": "text",
+              "name": "text",
+              "position": {
+                "record": {
+                  "x": "number",
+                  "y": "number",
+                  "z": "number"
+                }
+              },
+              "rotation": {
+                "record": {
+                  "x": "number",
+                  "y": "number",
+                  "z": "number",
+                  "w": "number"
+                }
+              },
+              "scale": "number",
+              "content": {
+                "record": {
+                  "points": "number",
+                  "parts": "number",
+                  "frames": "number",
+                  "modelHash": "text",
+                  "recipePlaying": "boolean"
+                }
+              }
+            }
+          },
+          "label": "Saved object definition",
+          "description": "Canonical object metadata and exact authored revision, from the temporary fork when active. Position/rotation/scale are saved room-local values, not live physics, camera coordinates or the animated pose. Content counts describe stored drawings, recipe parts and recorded frames; modelHash is an exact asset reference, not proof of availability or completed loading. Saved metadata remains readable when the native instance is inactive or unavailable. Use object.presence to distinguish that condition from missing saved content. Name is bounded display text; an empty copy name retains the original full name. Reading grants no edit authority and takes no ownership. Use this revision for kind=copy; a missing source is unavailable.",
+          "input": {
+            "type": "object",
+            "properties": {
+              "target": {
+                "type": "string",
+                "pattern": "^(maestro|book|[a-fA-F0-9]{32})$",
+                "maxLength": 32,
+                "x-resource": "object"
+              }
+            },
+            "required": [
+              "target"
+            ],
+            "additionalProperties": false
+          },
+          "example": {
+            "target": "book"
+          },
+          "features": [
+            "factQueries.v1"
+          ]
+        },
+        "status": "Current fact value. Reading does not change the room.",
+        "category": "facts",
+        "arguments": {
+          "target": "maestro"
+        },
+        "available": true,
+        "value": {
+          "target": "maestro",
+          "revision": 5,
+          "kind": "Maestro",
+          "name": "",
+          "position": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "rotation": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0,
+            "w": 1.0
+          },
+          "scale": 1.0,
+          "content": {
+            "points": 0,
+            "parts": 0,
+            "frames": 0,
+            "modelHash": "",
+            "recipePlaying": false
+          }
+        }
+      }
+    }
+  ],
+  "dormantId": "b1da80370fe84f4babf6044aac5c5e41"
+}

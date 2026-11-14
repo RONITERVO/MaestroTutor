@@ -1,0 +1,256 @@
+{
+  "before": {
+    "requestId": "",
+    "version": 0,
+    "phase": "idle",
+    "category": "",
+    "error": "",
+    "counts": {
+      "files": 0,
+      "saved": 0,
+      "failed": 0,
+      "waiting": 0
+    }
+  },
+  "select": {
+    "selected": {
+      "id": "b524de908fc84fc290522d8f848682a3",
+      "capability": "motion.import.batch",
+      "version": 1,
+      "resources": [],
+      "phase": "completed",
+      "status": "Action completed",
+      "output": {
+        "requestId": "79d768689a0c48f6a663194da8a96986",
+        "version": 1,
+        "phase": "selecting"
+      },
+      "call": {
+        "id": "motion.import.batch",
+        "version": 1,
+        "arguments": {
+          "operation": "select"
+        }
+      }
+    },
+    "running": [],
+    "outcomes": [
+      {
+        "id": "b524de908fc84fc290522d8f848682a3",
+        "capability": "motion.import.batch",
+        "version": 1,
+        "resources": [],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "requestId": "79d768689a0c48f6a663194da8a96986",
+          "version": 1,
+          "phase": "selecting"
+        }
+      }
+    ],
+    "nextRunId": "e26cba99b66b40c7beb8d2bc5a5a8a0c",
+    "storageError": null,
+    "recovery": null
+  },
+  "choosing": {
+    "requestId": "79d768689a0c48f6a663194da8a96986",
+    "version": 1,
+    "phase": "selecting",
+    "category": "",
+    "error": "",
+    "counts": {
+      "files": 0,
+      "saved": 0,
+      "failed": 0,
+      "waiting": 0
+    }
+  },
+  "ready": {
+    "requestId": "79d768689a0c48f6a663194da8a96986",
+    "version": 1,
+    "phase": "ready",
+    "category": "",
+    "error": "",
+    "counts": {
+      "files": 3,
+      "saved": 0,
+      "failed": 0,
+      "waiting": 3
+    }
+  },
+  "category": {
+    "selected": {
+      "id": "e26cba99b66b40c7beb8d2bc5a5a8a0c",
+      "capability": "motion.import.batch",
+      "version": 1,
+      "resources": [],
+      "phase": "completed",
+      "status": "Action completed",
+      "output": {
+        "requestId": "79d768689a0c48f6a663194da8a96986",
+        "version": 2,
+        "phase": "ready"
+      },
+      "call": {
+        "id": "motion.import.batch",
+        "version": 1,
+        "arguments": {
+          "operation": "category",
+          "requestId": "79d768689a0c48f6a663194da8a96986",
+          "version": 1,
+          "category": "gesture"
+        }
+      }
+    },
+    "running": [],
+    "outcomes": [
+      {
+        "id": "b524de908fc84fc290522d8f848682a3",
+        "capability": "motion.import.batch",
+        "version": 1,
+        "resources": [],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "requestId": "79d768689a0c48f6a663194da8a96986",
+          "version": 1,
+          "phase": "selecting"
+        }
+      },
+      {
+        "id": "e26cba99b66b40c7beb8d2bc5a5a8a0c",
+        "capability": "motion.import.batch",
+        "version": 1,
+        "resources": [],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "requestId": "79d768689a0c48f6a663194da8a96986",
+          "version": 2,
+          "phase": "ready"
+        }
+      }
+    ],
+    "nextRunId": "e0b0950dba994498a43ff96549041782",
+    "storageError": null,
+    "recovery": null
+  },
+  "tagged": {
+    "requestId": "79d768689a0c48f6a663194da8a96986",
+    "version": 2,
+    "phase": "ready",
+    "category": "gesture",
+    "error": "",
+    "counts": {
+      "files": 3,
+      "saved": 0,
+      "failed": 0,
+      "waiting": 3
+    }
+  },
+  "start": {
+    "selected": {
+      "id": "e0b0950dba994498a43ff96549041782",
+      "capability": "motion.import.batch",
+      "version": 1,
+      "resources": [],
+      "phase": "completed",
+      "status": "Action completed",
+      "output": {
+        "requestId": "79d768689a0c48f6a663194da8a96986",
+        "version": 3,
+        "phase": "running"
+      },
+      "call": {
+        "id": "motion.import.batch",
+        "version": 1,
+        "arguments": {
+          "operation": "start",
+          "requestId": "79d768689a0c48f6a663194da8a96986",
+          "version": 2
+        }
+      }
+    },
+    "running": [],
+    "outcomes": [
+      {
+        "id": "b524de908fc84fc290522d8f848682a3",
+        "capability": "motion.import.batch",
+        "version": 1,
+        "resources": [],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "requestId": "79d768689a0c48f6a663194da8a96986",
+          "version": 1,
+          "phase": "selecting"
+        }
+      },
+      {
+        "id": "e26cba99b66b40c7beb8d2bc5a5a8a0c",
+        "capability": "motion.import.batch",
+        "version": 1,
+        "resources": [],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "requestId": "79d768689a0c48f6a663194da8a96986",
+          "version": 2,
+          "phase": "ready"
+        }
+      },
+      {
+        "id": "e0b0950dba994498a43ff96549041782",
+        "capability": "motion.import.batch",
+        "version": 1,
+        "resources": [],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "requestId": "79d768689a0c48f6a663194da8a96986",
+          "version": 3,
+          "phase": "running"
+        }
+      }
+    ],
+    "nextRunId": "fcf64a0d66b94111a1f3892c10a0b14f",
+    "storageError": null,
+    "recovery": null
+  },
+  "after": {
+    "requestId": "79d768689a0c48f6a663194da8a96986",
+    "version": 4,
+    "phase": "partial",
+    "category": "gesture",
+    "error": "",
+    "counts": {
+      "files": 3,
+      "saved": 2,
+      "failed": 1,
+      "waiting": 0
+    }
+  },
+  "file": {
+    "requestId": "79d768689a0c48f6a663194da8a96986",
+    "index": 0,
+    "name": "Motion 0.glb",
+    "state": "saved",
+    "error": "",
+    "motionCount": 1,
+    "motionOffset": 0,
+    "motionIds": [
+      "084b34682ace47bcb460843295e40676"
+    ]
+  },
+  "failedFile": {
+    "requestId": "79d768689a0c48f6a663194da8a96986",
+    "index": 1,
+    "name": "Motion 1.glb",
+    "state": "failed",
+    "error": "Choose a GLB or VRM file smaller than 64 MB.",
+    "motionCount": 0,
+    "motionOffset": 0,
+    "motionIds": []
+  }
+}

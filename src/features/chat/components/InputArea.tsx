@@ -14,6 +14,7 @@ import { selectIsListening, selectIsSending, selectIsSpeaking, selectIsCreatingS
 import { TOKEN_CATEGORY, TOKEN_SUBTYPE, type TokenSubtype } from '../../../core/config/activityTokens';
 import { IMAGE_GEN_CAMERA_ID } from '../../../core/config/app';
 import MediaAttachments from './input/MediaAttachments';
+import LiveSessionControls from './input/LiveSessionControls';
 import Composer from './input/Composer';
 import AudioControls from './input/AudioControls';
 import CameraControls from './input/CameraControls';
@@ -236,7 +237,7 @@ const InputArea: React.FC<InputAreaProps> = ({
     updateSetting('selectedCameraId', deviceId);
   }, [updateSetting]);
 
-  const { handleShowLanguageSelector } = useLanguageSelection({
+  const { handleConfirmLanguageSelection } = useLanguageSelection({
     isSettingsLoaded,
     settings,
     settingsRef,
@@ -467,7 +468,7 @@ const InputArea: React.FC<InputAreaProps> = ({
 
   const handleSend = async () => {
     if (languageSelectionOpen) {
-      handleShowLanguageSelector();
+      await handleConfirmLanguageSelection();
       return;
     }
     if (isSuggestionMode) {
@@ -1029,7 +1030,7 @@ const InputArea: React.FC<InputAreaProps> = ({
           <div className={`relative w-full flex flex-col overflow-hidden transition-colors ${containerClass}`}>
             {isLive && !isSuggestionMode && !languageSelectionOpen ? (
               <div className="w-full py-3 px-4 min-h-[50px] flex items-center" style={{ fontSize: '3.6cqw', lineHeight: 1.35 }}>
-                <span className="opacity-60 italic">{t('chat.liveSession.activeIndicator')}</span>
+                <span className="opacity-60 italic">{t(showLiveFeed ? 'chat.liveSession.activeIndicator' : 'chat.liveSession.audioOnlyActiveIndicator')}</span>
               </div>
             ) : languageSelectionOpen ? (
               <SessionControls />
@@ -1118,7 +1119,7 @@ const InputArea: React.FC<InputAreaProps> = ({
                   }
                 >
                   {languageSelectionOpen
-                    ? <IconUndo className="w-5 h-5" />
+                    ? <IconCheck className="w-5 h-5" />
                     : isSuggestionMode
                       ? (isCreatingSuggestion ? <SmallSpinner className="w-5 h-5" /> : <IconPlus className="w-5 h-5" />)
                       : (sendPrep && sendPrep.active ? <SmallSpinner className="w-5 h-5" /> : <IconSend className="w-5 h-5" />)}
@@ -1127,6 +1128,17 @@ const InputArea: React.FC<InputAreaProps> = ({
             )}
             </div>
           </div>
+
+          {!languageSelectionOpen && !showLiveFeed && (
+            <LiveSessionControls
+              t={t}
+              liveSessionState={liveSessionState}
+              isSuggestionMode={isSuggestionMode}
+              onStartLiveSession={onStartLiveSession}
+              onStopLiveSession={onStopLiveSession}
+            />
+          )}
+          {!showLiveFeed && liveSessionError && <p className="mt-1 p-1 text-xs text-input-error-text" role="alert">{liveSessionError}</p>}
 
           {!isLive && sttError && <p className={`w-full max-w-2xl p-1 rounded mt-1 ${isSuggestionMode ? 'text-input-error-text bg-input-error-bg/10' : 'text-input-error-text/80 bg-input-error-bg/30'}`} style={{ fontSize: '0.75rem' }} role="alert">{t('chat.error.sttError', {error: sttError})}</p>}
           {autoCaptureError && <p className={`w-full max-w-2xl p-1 rounded mt-1 ${isSuggestionMode ? 'text-input-error-text bg-input-error-bg/10' : 'text-input-error-text/80 bg-input-error-bg/30'}`} style={{ fontSize: '0.75rem' }} role="alert">{t('chat.error.autoCaptureCameraError', {error: autoCaptureError})}</p>}

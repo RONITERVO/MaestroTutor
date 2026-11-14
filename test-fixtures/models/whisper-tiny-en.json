@@ -1,0 +1,115 @@
+{
+  "version": 1,
+  "modelId": "onnx-community/whisper-tiny.en",
+  "revision": "2575352d61be1bf7225cf8f8b268a4678025fc58",
+  "loader": {
+    "package": "@huggingface/transformers",
+    "version": "4.3.0",
+    "device": "wasm",
+    "dtype": {
+      "encoder_model": "q4",
+      "decoder_model_merged": "q4"
+    }
+  },
+  "files": [
+    {
+      "path": "config.json",
+      "url": "https://huggingface.co/onnx-community/whisper-tiny.en/resolve/2575352d61be1bf7225cf8f8b268a4678025fc58/config.json",
+      "size": 2197,
+      "sha256": "251ea843b5901a99efa58c0b99b8052c6019aa3e7d2baf46693a1128ff606233",
+      "contentType": "text/plain; charset=utf-8",
+      "remoteBlobId": "909d31b7c4123f177a3cb4c536a115d8ed758d4e",
+      "verification": "git-blob-sha1-and-size",
+      "gitBlobSha1": "909d31b7c4123f177a3cb4c536a115d8ed758d4e"
+    },
+    {
+      "path": "generation_config.json",
+      "url": "https://huggingface.co/onnx-community/whisper-tiny.en/resolve/2575352d61be1bf7225cf8f8b268a4678025fc58/generation_config.json",
+      "size": 1646,
+      "sha256": "7b2e8451ed5f118e75fdd991409d72119d21d2fef1eba9723f68fb9c57fe5dc9",
+      "contentType": "text/plain; charset=utf-8",
+      "remoteBlobId": "c4a4cdec79d2ecbce5b0c7d0cdefd8fec293da1f",
+      "verification": "git-blob-sha1-and-size",
+      "gitBlobSha1": "c4a4cdec79d2ecbce5b0c7d0cdefd8fec293da1f"
+    },
+    {
+      "path": "tokenizer.json",
+      "url": "https://huggingface.co/onnx-community/whisper-tiny.en/resolve/2575352d61be1bf7225cf8f8b268a4678025fc58/tokenizer.json",
+      "size": 2405679,
+      "sha256": "5eb60cec1e77aeeb6869a2bb5a8e01a84c3fe5d072d75369343021fe6f5310d0",
+      "contentType": "text/plain; charset=utf-8",
+      "remoteBlobId": "b5bd266de2f9b9a68efe13fb48ac6830ca71c0bb",
+      "verification": "git-blob-sha1-and-size",
+      "gitBlobSha1": "b5bd266de2f9b9a68efe13fb48ac6830ca71c0bb"
+    },
+    {
+      "path": "tokenizer_config.json",
+      "url": "https://huggingface.co/onnx-community/whisper-tiny.en/resolve/2575352d61be1bf7225cf8f8b268a4678025fc58/tokenizer_config.json",
+      "size": 282662,
+      "sha256": "93879c3dccdd4b976f709acd85b44778873f30c275e67026f30ca1e4c975230c",
+      "contentType": "text/plain; charset=utf-8",
+      "remoteBlobId": "220314442bbc85c24bb2ee0b4b8d682615dd79e7",
+      "verification": "git-blob-sha1-and-size",
+      "gitBlobSha1": "220314442bbc85c24bb2ee0b4b8d682615dd79e7"
+    },
+    {
+      "path": "preprocessor_config.json",
+      "url": "https://huggingface.co/onnx-community/whisper-tiny.en/resolve/2575352d61be1bf7225cf8f8b268a4678025fc58/preprocessor_config.json",
+      "size": 339,
+      "sha256": "a6a76d28c93edb273669eb9e0b0636a2bddbb1272c3261e47b7ca6dfdbac1b8d",
+      "contentType": "text/plain; charset=utf-8",
+      "remoteBlobId": "91876762a536a746d268353c5cba57286e76b058",
+      "verification": "git-blob-sha1-and-size",
+      "gitBlobSha1": "91876762a536a746d268353c5cba57286e76b058"
+    },
+    {
+      "path": "onnx/encoder_model_q4.onnx",
+      "url": "https://huggingface.co/onnx-community/whisper-tiny.en/resolve/2575352d61be1bf7225cf8f8b268a4678025fc58/onnx/encoder_model_q4.onnx",
+      "size": 9020667,
+      "sha256": "bb73f790e63906c9e9d02c4e3abf55817dd16fd7ef7c7f4754c1395202191b29",
+      "contentType": "application/octet-stream",
+      "remoteBlobId": "117c2220f58d6ad98c852c6945f766ded492c0fb",
+      "verification": "lfs-sha256-and-size",
+      "lfsSha256": "bb73f790e63906c9e9d02c4e3abf55817dd16fd7ef7c7f4754c1395202191b29",
+      "lfsSize": 9020667
+    },
+    {
+      "path": "onnx/decoder_model_merged_q4.onnx",
+      "url": "https://huggingface.co/onnx-community/whisper-tiny.en/resolve/2575352d61be1bf7225cf8f8b268a4678025fc58/onnx/decoder_model_merged_q4.onnx",
+      "size": 86712166,
+      "sha256": "57d4303f3bbc8bb4016273b172285236f5719c75e8a7d23b7265cfa1d71494a4",
+      "contentType": "application/octet-stream",
+      "remoteBlobId": "e97d678587b16f643b02048e689eb2cf23cbcb30",
+      "verification": "lfs-sha256-and-size",
+      "lfsSha256": "57d4303f3bbc8bb4016273b172285236f5719c75e8a7d23b7265cfa1d71494a4",
+      "lfsSize": 86712166
+    }
+  ],
+  "missingFiles": [],
+  "totalBytes": 98425356,
+  "metadataFiles": [
+    {
+      "path": "onnx/encoder_model_quantized.onnx",
+      "url": "https://huggingface.co/onnx-community/whisper-tiny.en/resolve/2575352d61be1bf7225cf8f8b268a4678025fc58/onnx/encoder_model_quantized.onnx",
+      "size": 10124993,
+      "sha256": "e93ec822f16a8fd264e7de972ad17d615ea7334b75a52d54c50c2e18dd503a25",
+      "firstByteSha256": "beead77994cf573341ec17b58bbf7eb34d2711c993c1d976b128b3188dc1829a",
+      "contentType": "application/octet-stream",
+      "remoteBlobId": "ce64efe67330c23e3bf198a4448d163be93e9e7b",
+      "verification": "lfs-sha256-and-size",
+      "lfsSha256": "e93ec822f16a8fd264e7de972ad17d615ea7334b75a52d54c50c2e18dd503a25",
+      "lfsSize": 10124993,
+      "purpose": "Range bytes=0-0 progress metadata only. Transformers 4.3.0 get_model_files selects dtype using Whisper session key model rather than encoder_model, so this metadata query defaults to wasm q8. Actual inference loads the seven q4 assets above. Full GET is prohibited."
+    }
+  ],
+  "metadataBytes": 10124993,
+  "licenseEvidence": {
+    "convertedRepositoryDeclaration": null,
+    "upstreamModelId": "openai/whisper-tiny.en",
+    "upstreamRevision": "87c7102498dcde7456f24cfd30239ca606ed9063",
+    "upstreamDeclaredLicense": "apache-2.0",
+    "note": "Converted model repository has no declared license in its metadata. Official upstream model card declares Apache-2.0. This records provenance for private offline evaluation, not independent redistribution license clearance.",
+    "convertedCardUrl": "https://huggingface.co/onnx-community/whisper-tiny.en/resolve/2575352d61be1bf7225cf8f8b268a4678025fc58/README.md",
+    "upstreamCardUrl": "https://huggingface.co/openai/whisper-tiny.en/resolve/87c7102498dcde7456f24cfd30239ca606ed9063/README.md"
+  }
+}

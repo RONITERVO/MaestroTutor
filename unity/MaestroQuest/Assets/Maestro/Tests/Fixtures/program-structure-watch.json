@@ -1,0 +1,715 @@
+{
+  "version": 3,
+  "dataVersion": 1,
+  "moduleVersion": 1,
+  "entry": "main",
+  "resources": [],
+  "state": [
+    {
+      "name": "structureId",
+      "initial": "11111111111111111111111111111111"
+    },
+    {
+      "name": "revision",
+      "initial": 1
+    },
+    {
+      "name": "threshold",
+      "initial": 1
+    },
+    {
+      "name": "phase",
+      "initial": "idle"
+    },
+    {
+      "name": "cycles",
+      "initial": 0
+    }
+  ],
+  "events": [
+    {
+      "name": "user.structureDisturbed",
+      "type": "number"
+    },
+    {
+      "name": "user.structureWatchStopped",
+      "type": "text"
+    }
+  ],
+  "imports": [
+    {
+      "alias": "structure",
+      "hash": "01222cc9ac3c360d62dcc4d639f8a2ead3d99504b3732443039c9639963f3903",
+      "module": {
+        "version": 1,
+        "name": "Structure state waits",
+        "exports": [
+          "waitForState"
+        ],
+        "program": {
+          "version": 3,
+          "dataVersion": 1,
+          "entry": "main",
+          "resources": [],
+          "state": [],
+          "events": [],
+          "functions": [
+            {
+              "name": "main",
+              "returns": "void",
+              "parameters": [],
+              "locals": [],
+              "body": []
+            },
+            {
+              "name": "waitForState",
+              "returns": "text",
+              "parameters": [
+                {
+                  "name": "structureId",
+                  "type": "text"
+                },
+                {
+                  "name": "expectedRevision",
+                  "type": "number"
+                },
+                {
+                  "name": "disturbed",
+                  "type": "boolean"
+                },
+                {
+                  "name": "threshold",
+                  "type": "number"
+                },
+                {
+                  "name": "stableSeconds",
+                  "type": "number"
+                },
+                {
+                  "name": "timeout",
+                  "type": "number"
+                }
+              ],
+              "locals": [
+                {
+                  "name": "received",
+                  "initial": false
+                },
+                {
+                  "name": "conditionValue",
+                  "initial": false
+                }
+              ],
+              "body": [
+                {
+                  "id": "thresholdGuard",
+                  "op": "if",
+                  "test": {
+                    "op": "or",
+                    "args": [
+                      {
+                        "op": "lt",
+                        "args": [
+                          {
+                            "var": "threshold"
+                          },
+                          {
+                            "value": 1
+                          }
+                        ]
+                      },
+                      {
+                        "op": "gt",
+                        "args": [
+                          {
+                            "var": "threshold"
+                          },
+                          {
+                            "value": 16
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  "then": [
+                    {
+                      "id": "invalid",
+                      "op": "return",
+                      "value": {
+                        "value": "invalidThreshold"
+                      }
+                    }
+                  ],
+                  "else": []
+                },
+                {
+                  "id": "revisionGuard",
+                  "op": "if",
+                  "test": {
+                    "op": "not",
+                    "args": [
+                      {
+                        "op": "eq",
+                        "args": [
+                          {
+                            "op": "field",
+                            "args": [
+                              {
+                                "fact": "structure.state",
+                                "version": 1,
+                                "arguments": {
+                                  "id": "00000000000000000000000000000000"
+                                },
+                                "bindings": {
+                                  "id": {
+                                    "var": "structureId"
+                                  }
+                                }
+                              },
+                              {
+                                "value": "revision"
+                              }
+                            ]
+                          },
+                          {
+                            "var": "expectedRevision"
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  "then": [
+                    {
+                      "id": "changedBefore",
+                      "op": "return",
+                      "value": {
+                        "value": "definitionChanged"
+                      }
+                    }
+                  ],
+                  "else": []
+                },
+                {
+                  "id": "watch",
+                  "op": "awaitCondition",
+                  "test": {
+                    "op": "or",
+                    "args": [
+                      {
+                        "op": "not",
+                        "args": [
+                          {
+                            "op": "eq",
+                            "args": [
+                              {
+                                "op": "field",
+                                "args": [
+                                  {
+                                    "fact": "structure.state",
+                                    "version": 1,
+                                    "arguments": {
+                                      "id": "00000000000000000000000000000000"
+                                    },
+                                    "bindings": {
+                                      "id": {
+                                        "var": "structureId"
+                                      }
+                                    }
+                                  },
+                                  {
+                                    "value": "revision"
+                                  }
+                                ]
+                              },
+                              {
+                                "var": "expectedRevision"
+                              }
+                            ]
+                          }
+                        ]
+                      },
+                      {
+                        "op": "and",
+                        "args": [
+                          {
+                            "op": "and",
+                            "args": [
+                              {
+                                "op": "field",
+                                "args": [
+                                  {
+                                    "fact": "structure.state",
+                                    "version": 1,
+                                    "arguments": {
+                                      "id": "00000000000000000000000000000000"
+                                    },
+                                    "bindings": {
+                                      "id": {
+                                        "var": "structureId"
+                                      }
+                                    }
+                                  },
+                                  {
+                                    "value": "available"
+                                  }
+                                ]
+                              },
+                              {
+                                "op": "eq",
+                                "args": [
+                                  {
+                                    "op": "field",
+                                    "args": [
+                                      {
+                                        "fact": "structure.state",
+                                        "version": 1,
+                                        "arguments": {
+                                          "id": "00000000000000000000000000000000"
+                                        },
+                                        "bindings": {
+                                          "id": {
+                                            "var": "structureId"
+                                          }
+                                        }
+                                      },
+                                      {
+                                        "value": "held"
+                                      }
+                                    ]
+                                  },
+                                  {
+                                    "value": 0
+                                  }
+                                ]
+                              }
+                            ]
+                          },
+                          {
+                            "op": "or",
+                            "args": [
+                              {
+                                "op": "and",
+                                "args": [
+                                  {
+                                    "var": "disturbed"
+                                  },
+                                  {
+                                    "op": "ge",
+                                    "args": [
+                                      {
+                                        "op": "add",
+                                        "args": [
+                                          {
+                                            "op": "field",
+                                            "args": [
+                                              {
+                                                "fact": "structure.state",
+                                                "version": 1,
+                                                "arguments": {
+                                                  "id": "00000000000000000000000000000000"
+                                                },
+                                                "bindings": {
+                                                  "id": {
+                                                    "var": "structureId"
+                                                  }
+                                                }
+                                              },
+                                              {
+                                                "value": "displaced"
+                                              }
+                                            ]
+                                          },
+                                          {
+                                            "op": "field",
+                                            "args": [
+                                              {
+                                                "fact": "structure.state",
+                                                "version": 1,
+                                                "arguments": {
+                                                  "id": "00000000000000000000000000000000"
+                                                },
+                                                "bindings": {
+                                                  "id": {
+                                                    "var": "structureId"
+                                                  }
+                                                }
+                                              },
+                                              {
+                                                "value": "missing"
+                                              }
+                                            ]
+                                          }
+                                        ]
+                                      },
+                                      {
+                                        "var": "threshold"
+                                      }
+                                    ]
+                                  }
+                                ]
+                              },
+                              {
+                                "op": "and",
+                                "args": [
+                                  {
+                                    "op": "not",
+                                    "args": [
+                                      {
+                                        "var": "disturbed"
+                                      }
+                                    ]
+                                  },
+                                  {
+                                    "op": "eq",
+                                    "args": [
+                                      {
+                                        "op": "add",
+                                        "args": [
+                                          {
+                                            "op": "field",
+                                            "args": [
+                                              {
+                                                "fact": "structure.state",
+                                                "version": 1,
+                                                "arguments": {
+                                                  "id": "00000000000000000000000000000000"
+                                                },
+                                                "bindings": {
+                                                  "id": {
+                                                    "var": "structureId"
+                                                  }
+                                                }
+                                              },
+                                              {
+                                                "value": "displaced"
+                                              }
+                                            ]
+                                          },
+                                          {
+                                            "op": "field",
+                                            "args": [
+                                              {
+                                                "fact": "structure.state",
+                                                "version": 1,
+                                                "arguments": {
+                                                  "id": "00000000000000000000000000000000"
+                                                },
+                                                "bindings": {
+                                                  "id": {
+                                                    "var": "structureId"
+                                                  }
+                                                }
+                                              },
+                                              {
+                                                "value": "missing"
+                                              }
+                                            ]
+                                          }
+                                        ]
+                                      },
+                                      {
+                                        "value": 0
+                                      }
+                                    ]
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  "transition": "true",
+                  "initial": "report",
+                  "stableSeconds": {
+                    "var": "stableSeconds"
+                  },
+                  "timeout": {
+                    "var": "timeout"
+                  },
+                  "received": "received",
+                  "value": "conditionValue"
+                },
+                {
+                  "id": "checkRevision",
+                  "op": "if",
+                  "test": {
+                    "op": "not",
+                    "args": [
+                      {
+                        "op": "eq",
+                        "args": [
+                          {
+                            "op": "field",
+                            "args": [
+                              {
+                                "fact": "structure.state",
+                                "version": 1,
+                                "arguments": {
+                                  "id": "00000000000000000000000000000000"
+                                },
+                                "bindings": {
+                                  "id": {
+                                    "var": "structureId"
+                                  }
+                                }
+                              },
+                              {
+                                "value": "revision"
+                              }
+                            ]
+                          },
+                          {
+                            "var": "expectedRevision"
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  "then": [
+                    {
+                      "id": "changedAfter",
+                      "op": "return",
+                      "value": {
+                        "value": "definitionChanged"
+                      }
+                    }
+                  ],
+                  "else": []
+                },
+                {
+                  "id": "checkMatch",
+                  "op": "if",
+                  "test": {
+                    "var": "received"
+                  },
+                  "then": [
+                    {
+                      "id": "match",
+                      "op": "return",
+                      "value": {
+                        "value": "matched"
+                      }
+                    }
+                  ],
+                  "else": [
+                    {
+                      "id": "timeoutResult",
+                      "op": "return",
+                      "value": {
+                        "value": "timeout"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "signals": {}
+    }
+  ],
+  "functions": [
+    {
+      "name": "main",
+      "returns": "void",
+      "parameters": [],
+      "locals": [
+        {
+          "name": "status",
+          "initial": ""
+        }
+      ],
+      "body": [
+        {
+          "id": "watchCycles",
+          "op": "forever",
+          "body": [
+            {
+              "id": "phase_rebuilt",
+              "op": "setState",
+              "variable": "phase",
+              "value": {
+                "value": "waitingForRebuild"
+              }
+            },
+            {
+              "id": "wait_rebuilt",
+              "op": "call",
+              "module": "structure",
+              "function": "waitForState",
+              "args": [
+                {
+                  "state": "structureId"
+                },
+                {
+                  "state": "revision"
+                },
+                {
+                  "value": false
+                },
+                {
+                  "state": "threshold"
+                },
+                {
+                  "value": 0.2
+                },
+                {
+                  "value": 0
+                }
+              ],
+              "result": "status"
+            },
+            {
+              "id": "check_rebuilt",
+              "op": "if",
+              "test": {
+                "op": "not",
+                "args": [
+                  {
+                    "op": "eq",
+                    "args": [
+                      {
+                        "var": "status"
+                      },
+                      {
+                        "value": "matched"
+                      }
+                    ]
+                  }
+                ]
+              },
+              "then": [
+                {
+                  "id": "result_rebuilt",
+                  "op": "setState",
+                  "variable": "phase",
+                  "value": {
+                    "var": "status"
+                  }
+                },
+                {
+                  "id": "notify_check_rebuilt",
+                  "op": "emitEvent",
+                  "event": "user.structureWatchStopped",
+                  "value": {
+                    "var": "status"
+                  }
+                },
+                {
+                  "id": "stop_rebuilt",
+                  "op": "return"
+                }
+              ],
+              "else": []
+            },
+            {
+              "id": "phase_disturbed",
+              "op": "setState",
+              "variable": "phase",
+              "value": {
+                "value": "waitingForDisturbance"
+              }
+            },
+            {
+              "id": "wait_disturbed",
+              "op": "call",
+              "module": "structure",
+              "function": "waitForState",
+              "args": [
+                {
+                  "state": "structureId"
+                },
+                {
+                  "state": "revision"
+                },
+                {
+                  "value": true
+                },
+                {
+                  "state": "threshold"
+                },
+                {
+                  "value": 0.2
+                },
+                {
+                  "value": 0
+                }
+              ],
+              "result": "status"
+            },
+            {
+              "id": "check_disturbed",
+              "op": "if",
+              "test": {
+                "op": "not",
+                "args": [
+                  {
+                    "op": "eq",
+                    "args": [
+                      {
+                        "var": "status"
+                      },
+                      {
+                        "value": "matched"
+                      }
+                    ]
+                  }
+                ]
+              },
+              "then": [
+                {
+                  "id": "result_disturbed",
+                  "op": "setState",
+                  "variable": "phase",
+                  "value": {
+                    "var": "status"
+                  }
+                },
+                {
+                  "id": "notify_check_disturbed",
+                  "op": "emitEvent",
+                  "event": "user.structureWatchStopped",
+                  "value": {
+                    "var": "status"
+                  }
+                },
+                {
+                  "id": "stop_disturbed",
+                  "op": "return"
+                }
+              ],
+              "else": []
+            },
+            {
+              "id": "count",
+              "op": "setState",
+              "variable": "cycles",
+              "value": {
+                "op": "add",
+                "args": [
+                  {
+                    "state": "cycles"
+                  },
+                  {
+                    "value": 1
+                  }
+                ]
+              }
+            },
+            {
+              "id": "signal",
+              "op": "emitEvent",
+              "event": "user.structureDisturbed",
+              "value": {
+                "state": "cycles"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

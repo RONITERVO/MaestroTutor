@@ -1,0 +1,251 @@
+{
+  "preview": {
+    "previewId": "768cdefa1edd47d9971ad0da420e8d77",
+    "generationId": "649e507a0a8f48deb50bbe5e9b484dd3",
+    "fingerprint": "462b4a145f6db2617172c6e660676e8f6c36bb74950772cd8bb31abd2ed7c1cb",
+    "eligible": true,
+    "reason": "Permanently discards this generation, including its private recovery evidence and action history. No Undo.",
+    "files": 7,
+    "sizeMiB": 0.0093107223510742188
+  },
+  "previewExecution": {
+    "selected": null,
+    "running": [],
+    "outcomes": [],
+    "nextRunId": "26fe7163f4344bf4a11ba0b31f027e89",
+    "storageError": null,
+    "recovery": null,
+    "workspace": {
+      "selected": {
+        "id": "768cdefa1edd47d9971ad0da420e8d77",
+        "capability": "workspace.retention.reviewRemoval",
+        "version": 1,
+        "resources": [],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "previewId": "768cdefa1edd47d9971ad0da420e8d77",
+          "generationId": "649e507a0a8f48deb50bbe5e9b484dd3",
+          "fingerprint": "462b4a145f6db2617172c6e660676e8f6c36bb74950772cd8bb31abd2ed7c1cb",
+          "eligible": true,
+          "reason": "Permanently discards this generation, including its private recovery evidence and action history. No Undo.",
+          "files": 7,
+          "sizeMiB": 0.0093107223510742188
+        },
+        "call": {
+          "id": "workspace.retention.reviewRemoval",
+          "version": 1,
+          "arguments": {
+            "inspectionId": "d52b23e8fa974856a5df9e22456e285d",
+            "generationId": "649e507a0a8f48deb50bbe5e9b484dd3"
+          }
+        }
+      },
+      "running": [],
+      "outcomes": [
+        {
+          "id": "d52b23e8fa974856a5df9e22456e285d",
+          "capability": "workspace.retention.inspect",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "inspectionId": "d52b23e8fa974856a5df9e22456e285d",
+            "count": 1,
+            "selectionReadable": true
+          }
+        },
+        {
+          "id": "768cdefa1edd47d9971ad0da420e8d77",
+          "capability": "workspace.retention.reviewRemoval",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "previewId": "768cdefa1edd47d9971ad0da420e8d77",
+            "generationId": "649e507a0a8f48deb50bbe5e9b484dd3",
+            "fingerprint": "462b4a145f6db2617172c6e660676e8f6c36bb74950772cd8bb31abd2ed7c1cb",
+            "eligible": true,
+            "reason": "Permanently discards this generation, including its private recovery evidence and action history. No Undo.",
+            "files": 7,
+            "sizeMiB": 0.0093107223510742188
+          }
+        }
+      ],
+      "nextRunId": "dd7efe34860b4e3fa1c8150c092cd5c8",
+      "storageError": null,
+      "recovery": null
+    }
+  },
+  "remove": {
+    "generationId": "649e507a0a8f48deb50bbe5e9b484dd3",
+    "fingerprint": "462b4a145f6db2617172c6e660676e8f6c36bb74950772cd8bb31abd2ed7c1cb",
+    "removed": true
+  },
+  "removeExecution": {
+    "selected": null,
+    "running": [],
+    "outcomes": [],
+    "nextRunId": "26fe7163f4344bf4a11ba0b31f027e89",
+    "storageError": null,
+    "recovery": null,
+    "workspace": {
+      "selected": {
+        "id": "dd7efe34860b4e3fa1c8150c092cd5c8",
+        "capability": "workspace.retention.remove",
+        "version": 1,
+        "resources": [],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "generationId": "649e507a0a8f48deb50bbe5e9b484dd3",
+          "fingerprint": "462b4a145f6db2617172c6e660676e8f6c36bb74950772cd8bb31abd2ed7c1cb",
+          "removed": true
+        },
+        "call": {
+          "id": "workspace.retention.remove",
+          "version": 1,
+          "arguments": {
+            "previewId": "768cdefa1edd47d9971ad0da420e8d77",
+            "generationId": "649e507a0a8f48deb50bbe5e9b484dd3",
+            "fingerprint": "462b4a145f6db2617172c6e660676e8f6c36bb74950772cd8bb31abd2ed7c1cb",
+            "confirmation": "delete 649e507a0a8f48deb50bbe5e9b484dd3"
+          }
+        }
+      },
+      "running": [],
+      "outcomes": [
+        {
+          "id": "d52b23e8fa974856a5df9e22456e285d",
+          "capability": "workspace.retention.inspect",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "inspectionId": "d52b23e8fa974856a5df9e22456e285d",
+            "count": 1,
+            "selectionReadable": true
+          }
+        },
+        {
+          "id": "768cdefa1edd47d9971ad0da420e8d77",
+          "capability": "workspace.retention.reviewRemoval",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "previewId": "768cdefa1edd47d9971ad0da420e8d77",
+            "generationId": "649e507a0a8f48deb50bbe5e9b484dd3",
+            "fingerprint": "462b4a145f6db2617172c6e660676e8f6c36bb74950772cd8bb31abd2ed7c1cb",
+            "eligible": true,
+            "reason": "Permanently discards this generation, including its private recovery evidence and action history. No Undo.",
+            "files": 7,
+            "sizeMiB": 0.0093107223510742188
+          }
+        },
+        {
+          "id": "dd7efe34860b4e3fa1c8150c092cd5c8",
+          "capability": "workspace.retention.remove",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "generationId": "649e507a0a8f48deb50bbe5e9b484dd3",
+            "fingerprint": "462b4a145f6db2617172c6e660676e8f6c36bb74950772cd8bb31abd2ed7c1cb",
+            "removed": true
+          }
+        }
+      ],
+      "nextRunId": "4b89fc721c6d4ee1a575da6592480072",
+      "storageError": null,
+      "recovery": null
+    }
+  },
+  "restartedExecution": {
+    "selected": null,
+    "running": [],
+    "outcomes": [],
+    "nextRunId": "80f2ef436d654b40873eaa1fcfb47531",
+    "storageError": null,
+    "recovery": null,
+    "workspace": {
+      "selected": {
+        "id": "dd7efe34860b4e3fa1c8150c092cd5c8",
+        "capability": "workspace.retention.remove",
+        "version": 1,
+        "resources": [],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "generationId": "649e507a0a8f48deb50bbe5e9b484dd3",
+          "fingerprint": "462b4a145f6db2617172c6e660676e8f6c36bb74950772cd8bb31abd2ed7c1cb",
+          "removed": true
+        },
+        "call": {
+          "id": "workspace.retention.remove",
+          "version": 1,
+          "arguments": {
+            "previewId": "768cdefa1edd47d9971ad0da420e8d77",
+            "generationId": "649e507a0a8f48deb50bbe5e9b484dd3",
+            "fingerprint": "462b4a145f6db2617172c6e660676e8f6c36bb74950772cd8bb31abd2ed7c1cb",
+            "confirmation": "delete 649e507a0a8f48deb50bbe5e9b484dd3"
+          }
+        }
+      },
+      "running": [],
+      "outcomes": [
+        {
+          "id": "d52b23e8fa974856a5df9e22456e285d",
+          "capability": "workspace.retention.inspect",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "inspectionId": "d52b23e8fa974856a5df9e22456e285d",
+            "count": 1,
+            "selectionReadable": true
+          }
+        },
+        {
+          "id": "768cdefa1edd47d9971ad0da420e8d77",
+          "capability": "workspace.retention.reviewRemoval",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "previewId": "768cdefa1edd47d9971ad0da420e8d77",
+            "generationId": "649e507a0a8f48deb50bbe5e9b484dd3",
+            "fingerprint": "462b4a145f6db2617172c6e660676e8f6c36bb74950772cd8bb31abd2ed7c1cb",
+            "eligible": true,
+            "reason": "Permanently discards this generation, including its private recovery evidence and action history. No Undo.",
+            "files": 7,
+            "sizeMiB": 0.0093107223510742188
+          }
+        },
+        {
+          "id": "dd7efe34860b4e3fa1c8150c092cd5c8",
+          "capability": "workspace.retention.remove",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "generationId": "649e507a0a8f48deb50bbe5e9b484dd3",
+            "fingerprint": "462b4a145f6db2617172c6e660676e8f6c36bb74950772cd8bb31abd2ed7c1cb",
+            "removed": true
+          }
+        }
+      ],
+      "nextRunId": "41a43755b17f4f6abfe01262ae73ec90",
+      "storageError": null,
+      "recovery": null
+    }
+  }
+}

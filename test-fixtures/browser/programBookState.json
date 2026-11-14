@@ -1,0 +1,335 @@
+{
+  "version": 1,
+  "revision": 1,
+  "sceneRevision": 3,
+  "ack": 0,
+  "session": "b37a6ebe533945a2820fcc839efbf8bc",
+  "status": "Room actions ready",
+  "selectedId": "7fbc5818087e4011922f8dcd1008395c",
+  "ok": true,
+  "canUndo": true,
+  "canRedo": false,
+  "physicsRunning": false,
+  "visible": true,
+  "inspection": null,
+  "workspaceView": "rules",
+  "rules": {
+    "revision": 20,
+    "bindingPage": 0,
+    "bindingCount": 1,
+    "queued": 0,
+    "eventQueue": 0,
+    "eventsDropped": 0,
+    "canUndo": true,
+    "canRedo": false,
+    "readOnly": false,
+    "status": "Behaviour edit applied. Undo restores this batch.",
+    "selectedError": "",
+    "sequences": [
+      {
+        "id": "2e0156b36cd64c2faa38594ac803d9e6",
+        "name": "Action 1",
+        "error": "",
+        "steps": 1,
+        "repeat": false,
+        "program": true
+      },
+      {
+        "id": "9b2135fbf94346989f93dc6cb954f293",
+        "name": "Programmed wave",
+        "error": "",
+        "steps": 11,
+        "repeat": false,
+        "program": true
+      }
+    ],
+    "selected": {
+      "id": "9b2135fbf94346989f93dc6cb954f293",
+      "name": "Programmed wave",
+      "interruption": 0,
+      "repeat": false,
+      "program": "{\"version\":2,\"entry\":\"main\",\"resources\":[\"d8ec0caffa694cf7ae8365d991047807\"],\"functions\":[{\"name\":\"main\",\"returns\":\"void\",\"parameters\":[],\"locals\":[{\"name\":\"answer\",\"initial\":false}],\"body\":[{\"id\":\"call_prime\",\"op\":\"call\",\"function\":\"prime\",\"args\":[{\"value\":7}],\"result\":\"answer\"},{\"id\":\"choose_gesture\",\"op\":\"if\",\"test\":{\"var\":\"answer\"},\"then\":[{\"id\":\"prime_wave\",\"op\":\"invoke\",\"bindings\":{},\"capability\":\"animation.play\",\"version\":1,\"arguments\":{\"target\":\"d8ec0caffa694cf7ae8365d991047807\",\"seconds\":0.8,\"loop\":true,\"source\":{\"kind\":\"recipe\"},\"channel\":\"wholeTarget\"}}],\"else\":[{\"id\":\"composite_idle\",\"op\":\"invoke\",\"bindings\":{},\"capability\":\"animation.play\",\"version\":1,\"arguments\":{\"target\":\"d8ec0caffa694cf7ae8365d991047807\",\"seconds\":0.8,\"loop\":true,\"source\":{\"kind\":\"recipe\"},\"channel\":\"wholeTarget\"}}]}]},{\"name\":\"prime\",\"returns\":\"boolean\",\"parameters\":[{\"name\":\"candidate\",\"type\":\"number\"}],\"locals\":[{\"name\":\"divisor\",\"initial\":2}],\"body\":[{\"id\":\"small\",\"op\":\"if\",\"test\":{\"op\":\"lt\",\"args\":[{\"var\":\"candidate\"},{\"value\":2}]},\"then\":[{\"id\":\"small_return\",\"op\":\"return\",\"value\":{\"value\":false}}],\"else\":[]},{\"id\":\"trial\",\"op\":\"repeat\",\"count\":{\"op\":\"sub\",\"args\":[{\"var\":\"candidate\"},{\"value\":2}]},\"body\":[{\"id\":\"divides\",\"op\":\"if\",\"test\":{\"op\":\"eq\",\"args\":[{\"op\":\"mod\",\"args\":[{\"var\":\"candidate\"},{\"var\":\"divisor\"}]},{\"value\":0}]},\"then\":[{\"id\":\"not_prime\",\"op\":\"return\",\"value\":{\"value\":false}}],\"else\":[]},{\"id\":\"increment\",\"op\":\"set\",\"variable\":\"divisor\",\"value\":{\"op\":\"add\",\"args\":[{\"var\":\"divisor\"},{\"value\":1}]}}]},{\"id\":\"is_prime\",\"op\":\"return\",\"value\":{\"value\":true}}]}]}"
+    },
+    "bindings": [
+      {
+        "id": "6a43cdfe0a584c089c38ba30110b643b",
+        "sequenceId": "9b2135fbf94346989f93dc6cb954f293",
+        "sourceId": "",
+        "trigger": 0,
+        "condition": 0,
+        "cooldown": 1.0,
+        "enabled": true,
+        "stopOnExit": true
+      }
+    ],
+    "buttons": [
+      {
+        "id": "8824f37fc9ad45e2bb0699987a04af78",
+        "sequenceId": "9b2135fbf94346989f93dc6cb954f293",
+        "mount": 1,
+        "position": {
+          "x": -0.11999999731779099,
+          "y": 0.05999999865889549,
+          "z": 0.05000000074505806
+        },
+        "rotation": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0,
+          "w": 1.0
+        }
+      }
+    ],
+    "running": [
+      {
+        "id": "8daba333d81c4cc29d65de6708d31408",
+        "sequenceId": "9b2135fbf94346989f93dc6cb954f293",
+        "preparing": false,
+        "waiting": false,
+        "waitEvent": "",
+        "waitSeconds": 0.0,
+        "state": [],
+        "nodeId": "prime_wave",
+        "functionName": "main",
+        "status": "Running",
+        "locals": [
+          {
+            "name": "answer",
+            "type": "boolean",
+            "value": "True"
+          }
+        ]
+      }
+    ],
+    "outcomes": []
+  },
+  "motions": null,
+  "capabilities": [
+    "physicsSettings.v1",
+    "avatarSettings.v1",
+    "physicsRun.v1",
+    "motions.v1",
+    "avatarActivities.v1",
+    "catalog.v1",
+    "behaviourPrograms.v3",
+    "eventPrograms.v1",
+    "execution.v1",
+    "executionReceipts.v1",
+    "actionResults.v1",
+    "recipeCreation.v1",
+    "objectEdits.v1",
+    "unavailablePrograms.v1",
+    "actionRecovery.v1"
+  ],
+  "physics": {
+    "ready": false,
+    "running": false,
+    "status": "Load or scan your room to use gravity"
+  },
+  "avatar": null,
+  "walk": null,
+  "activityProfile": {
+    "modelHash": "",
+    "status": "Uses included animations where no state motion is assigned",
+    "revision": 1,
+    "canAssign": false,
+    "readOnly": false,
+    "canUndo": false,
+    "canRedo": false,
+    "roles": [
+      {
+        "role": 0,
+        "choices": []
+      },
+      {
+        "role": 1,
+        "choices": []
+      },
+      {
+        "role": 2,
+        "choices": []
+      },
+      {
+        "role": 3,
+        "choices": []
+      }
+    ]
+  },
+  "objects": [
+    {
+      "id": "7446c19a3e4f4fb9b2f2b11a53286b9b",
+      "name": "Ball",
+      "kind": "Ball",
+      "objectRevision": 4,
+      "position": {
+        "x": 0.6899999976158142,
+        "y": 1.4500000476837158,
+        "z": 0.800000011920929
+      },
+      "scale": 1.0,
+      "color": {
+        "r": 0.7647058963775635,
+        "g": 0.6000000238418579,
+        "b": 0.3137255012989044,
+        "a": 1.0
+      },
+      "animated": false,
+      "held": false,
+      "simulating": false,
+      "physics": {
+        "mode": "fixed",
+        "shape": "automatic",
+        "mass": 0.5
+      },
+      "movement": null
+    },
+    {
+      "id": "7fbc5818087e4011922f8dcd1008395c",
+      "name": "Block",
+      "kind": "Block",
+      "objectRevision": 6,
+      "position": {
+        "x": 0.5199999809265137,
+        "y": 1.4500000476837158,
+        "z": 0.800000011920929
+      },
+      "scale": 1.0,
+      "color": {
+        "r": 0.45098039507865906,
+        "g": 0.32549020648002625,
+        "b": 0.30588236451148987,
+        "a": 1.0
+      },
+      "animated": false,
+      "held": false,
+      "simulating": false,
+      "physics": {
+        "mode": "fixed",
+        "shape": "automatic",
+        "mass": 0.5
+      },
+      "movement": null
+    },
+    {
+      "id": "book",
+      "name": "Book",
+      "kind": "Book",
+      "objectRevision": 1,
+      "position": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "scale": 1.0,
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      },
+      "animated": false,
+      "held": false,
+      "simulating": false,
+      "physics": {
+        "mode": "fixed",
+        "shape": "automatic",
+        "mass": 0.5
+      },
+      "movement": null
+    },
+    {
+      "id": "d8ec0caffa694cf7ae8365d991047807",
+      "name": "Program robot",
+      "kind": "Assembly",
+      "objectRevision": 7,
+      "position": {
+        "x": 0.30000001192092896,
+        "y": 1.2999999523162842,
+        "z": 0.6499999761581421
+      },
+      "scale": 1.0,
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      },
+      "animated": true,
+      "held": false,
+      "simulating": false,
+      "physics": {
+        "mode": "fixed",
+        "shape": "automatic",
+        "mass": 0.5
+      },
+      "movement": null
+    },
+    {
+      "id": "f0fd8064303a400489eed7d60af97ef5",
+      "name": "Cylinder",
+      "kind": "Cylinder",
+      "objectRevision": 5,
+      "position": {
+        "x": 0.8600000143051147,
+        "y": 1.4500000476837158,
+        "z": 0.800000011920929
+      },
+      "scale": 1.0,
+      "color": {
+        "r": 0.16862745583057404,
+        "g": 0.5529412031173706,
+        "b": 0.5333333611488342,
+        "a": 1.0
+      },
+      "animated": false,
+      "held": false,
+      "simulating": false,
+      "physics": {
+        "mode": "fixed",
+        "shape": "automatic",
+        "mass": 0.5
+      },
+      "movement": null
+    },
+    {
+      "id": "maestro",
+      "name": "Maestro",
+      "kind": "Maestro",
+      "objectRevision": 2,
+      "position": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "scale": 1.0,
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      },
+      "animated": false,
+      "held": false,
+      "simulating": false,
+      "physics": {
+        "mode": "fixed",
+        "shape": "automatic",
+        "mass": 0.5
+      },
+      "movement": {
+        "distance": 1.3,
+        "speed": 0.65
+      }
+    }
+  ],
+  "created": [],
+  "catalog": null,
+  "execution": {
+    "selected": null,
+    "running": [],
+    "outcomes": [],
+    "nextRunId": "26281291fe1e485fad021ae23fa41c5a",
+    "storageError": null,
+    "recovery": null
+  }
+}

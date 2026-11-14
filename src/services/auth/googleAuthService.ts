@@ -7,8 +7,8 @@ import {
   loadManagedAccessSession,
   saveManagedAccessSession,
 } from '../../core/security/managedAccessSessionStorage';
-import { maestroBackendService } from '../backend/maestroBackendService';
-import { firebaseAuthBridgeService } from './firebaseAuthBridgeService';
+import { getManagedSessionForIdentity, maestroBackendService } from '../backend/maestroBackendService';
+import { firebaseAuthBridgeService, type ManagedAuthIdentity } from './firebaseAuthBridgeService';
 
 const DEFAULT_BILLING_SUMMARY = {
   availableCredits: 0,
@@ -35,8 +35,8 @@ const persistSession = async (params: {
     firebaseIdToken: params.firebaseIdToken,
     refreshToken: params.refreshToken,
     expiresAt: params.expiresAt,
-    entitlements: existing?.entitlements || [],
-    billingSummary: existing?.billingSummary || { ...DEFAULT_BILLING_SUMMARY },
+    entitlements: existing?.user.id === params.user.id ? existing.entitlements : [],
+    billingSummary: existing?.user.id === params.user.id ? existing.billingSummary : { ...DEFAULT_BILLING_SUMMARY },
     lastSyncedAt: Date.now(),
   };
   await saveManagedAccessSession(session);
@@ -44,22 +44,30 @@ const persistSession = async (params: {
 };
 
 export const googleAuthService = {
-  beginSignIn: async (): Promise<ManagedAccessSession> => {
-    const identity = await firebaseAuthBridgeService.beginGoogleSignIn();
-    await persistSession(identity);
-    const backendSession = await maestroBackendService.getManagedSession();
-    const nextSession: ManagedAccessSession = {
-      provider: 'firebase',
-      user: backendSession.session.user,
-      firebaseIdToken: identity.firebaseIdToken,
-      refreshToken: identity.refreshToken,
-      expiresAt: identity.expiresAt,
-      entitlements: backendSession.session.entitlements,
-      billingSummary: backendSession.session.billingSummary,
-      lastSyncedAt: Date.now(),
-    };
-    await saveManagedAccessSession(nextSession);
-    return nextSession;
+  beginSignIn: async (signal?: AbortSignal): Promise<ManagedAccessSession> => {
+    let identity: ManagedAuthIdentity | undefined;
+    try {
+      identity = await firebaseAuthBridgeService.beginGoogleSignIn(signal);
+      identity.assertCurrent?.();
+      if (!identity.commit) await persistSession(identity);
+      const backendSession = identity.commit
+        ? await getManagedSessionForIdentity(identity) : await maestroBackendService.getManagedSession();
+      identity.assertCurrent?.();
+      const nextSession: ManagedAccessSession = {
+        provider: 'firebase', user: backendSession.session.user,
+        firebaseIdToken: identity.firebaseIdToken, refreshToken: identity.refreshToken, expiresAt: identity.expiresAt,
+        entitlements: backendSession.session.entitlements, billingSummary: backendSession.session.billingSummary,
+        lastSyncedAt: Date.now(),
+      };
+      if (identity.commit) await saveManagedAccessSession(nextSession, { requirePersistence: true });
+      else await saveManagedAccessSession(nextSession);
+      identity.assertCurrent?.();
+      identity.commit?.();
+      return nextSession;
+    } catch (error) {
+      if (identity?.rollback) await identity.rollback();
+      throw error;
+    }
   },
 
   restoreManagedSession: async (): Promise<ManagedAccessSession | null> => {

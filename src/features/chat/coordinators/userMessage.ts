@@ -1,5 +1,6 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
+import type { CameraImageOrigin } from '../../../../shared/imageOrigin';
 import type { ConversationDiagnostics } from './conversationContracts';
 import type { AppSettings, RecordedUtterance } from '../../../core/types';
 import type { UseTutorConversationConfig, UseTutorConversationReturn, MutableValue } from './conversationContracts';
@@ -32,9 +33,11 @@ export function createUserMessageCoordinator(ports: UserMessagePorts) {
     shouldGenerateUserImage: boolean;
     currentSettingsVal: AppSettings;
     triggeredByStt?: boolean;
+    imageOrigin?: CameraImageOrigin;
   }) => {
     let userMessageId: string | null = null;
     let userMessageText = params.text;
+    let imageOrigin = params.passedImageBase64 ? params.imageOrigin : undefined;
     let recordedSpeechForMessage: RecordedUtterance | null = null;
     let userImageToProcessBase64: string | undefined = (typeof params.passedImageBase64 === 'string' && params.passedImageBase64)
       ? params.passedImageBase64
@@ -59,6 +62,7 @@ export function createUserMessageCoordinator(ports: UserMessagePorts) {
       });
       return {
         userMessageId,
+        imageOrigin,
         userMessageText,
         recordedSpeechForMessage,
         userImageToProcessBase64,
@@ -101,6 +105,7 @@ export function createUserMessageCoordinator(ports: UserMessagePorts) {
         capturedImage: Boolean(snapshotResult),
       });
       if (snapshotResult) {
+        imageOrigin = snapshotResult.imageOrigin;
         userImageToProcessBase64 = snapshotResult.base64;
         userImageToProcessMimeType = snapshotResult.mimeType;
         userImageToProcessStorageOptimizedBase64 = snapshotResult.storageOptimizedBase64;
@@ -127,6 +132,7 @@ export function createUserMessageCoordinator(ports: UserMessagePorts) {
 
     userMessageId = addMessage({
       role: 'user',
+      ...(imageOrigin ? { imageOrigin } : {}),
       text: userMessageText,
       recordedUtterance: recordedSpeechForMessage || undefined,
       imageUrl: userImageToProcessBase64,
@@ -144,6 +150,7 @@ export function createUserMessageCoordinator(ports: UserMessagePorts) {
 
     return {
       userMessageId,
+      imageOrigin,
       userMessageText,
       recordedSpeechForMessage,
       userImageToProcessBase64,

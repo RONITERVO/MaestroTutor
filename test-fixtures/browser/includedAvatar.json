@@ -1,0 +1,68 @@
+{
+  "included": {
+    "modelHash": "7716642625ffe18842a6eb952b600ec8e5a821d9a0316f827214ca6c07e34356",
+    "name": "Included test Maestro",
+    "bundled": true,
+    "attribution": "Synthetic project test model",
+    "walkClipIndex": -1
+  },
+  "model": {
+    "revision": 12,
+    "selectedHash": "7716642625ffe18842a6eb952b600ec8e5a821d9a0316f827214ca6c07e34356",
+    "displayedHash": "7716642625ffe18842a6eb952b600ec8e5a821d9a0316f827214ca6c07e34356",
+    "busy": false,
+    "phase": "ready",
+    "status": "Custom Maestro ready — gestures, poses and recordings retained",
+    "temporary": false,
+    "canPose": true
+  },
+  "execution": {
+    "selected": {
+      "id": "4f3a475058974098a3bd6f1bac98b6ca",
+      "capability": "avatar.model.select",
+      "version": 1,
+      "resources": [
+        "maestro"
+      ],
+      "phase": "completed",
+      "status": "Action completed",
+      "output": {
+        "target": "maestro",
+        "modelHash": "7716642625ffe18842a6eb952b600ec8e5a821d9a0316f827214ca6c07e34356",
+        "revision": 8,
+        "temporary": false
+      },
+      "call": {
+        "id": "avatar.model.select",
+        "version": 1,
+        "arguments": {
+          "target": "maestro",
+          "modelHash": "",
+          "revision": 7
+        }
+      }
+    },
+    "running": [],
+    "outcomes": [
+      {
+        "id": "4f3a475058974098a3bd6f1bac98b6ca",
+        "capability": "avatar.model.select",
+        "version": 1,
+        "resources": [
+          "maestro"
+        ],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "target": "maestro",
+          "modelHash": "7716642625ffe18842a6eb952b600ec8e5a821d9a0316f827214ca6c07e34356",
+          "revision": 8,
+          "temporary": false
+        }
+      }
+    ],
+    "nextRunId": "2e6ed1fc52494e26b600e02706aae174",
+    "storageError": null,
+    "recovery": null
+  }
+}

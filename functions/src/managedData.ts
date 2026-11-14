@@ -71,6 +71,8 @@ export const liveGatewaySessionRef = (sessionId: string) => liveGatewaySessionsC
 export const purchaseClaimsCollection = () => adminDb.collection('purchaseClaims');
 export const purchaseClaimId = makePurchaseClaimId;
 export const checkoutGrantsCollection = () => adminDb.collection('checkoutGrants');
+export const QUEST_ACCOUNT_LINKS_COLLECTION = 'questAccountLinks';
+export const questAccountLinksCollection = () => adminDb.collection(QUEST_ACCOUNT_LINKS_COLLECTION);
 export const reportsCollection = () => adminDb.collection('reports');
 export const rateLimitWindowsCollection = () => adminDb.collection('rateLimitWindows');
 export const MANAGED_RATE_LIMIT_BUCKETS = ['default', 'live-token'] as const;
@@ -79,9 +81,10 @@ export const rateLimitWindowId = (uid: string, bucket: string): string => (
   createHash('sha256').update(`${uid}\0${bucket}`).digest('hex')
 );
 export const cleanupJobsCollection = () => adminDb.collection('cleanupJobs');
+export const accountDeletionClaimId = (uid: string): string => createHash('sha256').update(uid).digest('hex');
 export const accountDeletionClaimRef = (uid: string) => (
   adminDb.collection('accountDeletionClaims')
-    .doc(createHash('sha256').update(uid).digest('hex'))
+    .doc(accountDeletionClaimId(uid))
 );
 
 const isAlreadyExistsError = (error: unknown): boolean => {

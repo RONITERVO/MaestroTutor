@@ -105,13 +105,23 @@ const waitForCheckoutForm = async (page: Page, timeoutMs: number): Promise<void>
   const deadline = Date.now() + timeoutMs;
   const cardPaymentMethod = page.getByRole('radio', { name: /^card$/i }).first();
   const cardPaymentButton = page.getByRole('button', { name: /pay with card/i }).first();
+  let cardSelected = false;
   while (Date.now() < deadline) {
     if (await visibleLocator(page, /card number/i)) return;
-    if (await cardPaymentMethod.count()
-      && !await cardPaymentMethod.isChecked().catch(() => false)) {
-      await cardPaymentMethod.check({ force: true }).catch(() => undefined);
-    } else if (await cardPaymentButton.count()) {
-      await cardPaymentButton.click({ force: true }).catch(() => undefined);
+    if (!cardSelected && await cardPaymentMethod.count()) {
+      cardSelected = await cardPaymentMethod.isChecked().catch(() => false)
+        || await cardPaymentMethod.check({ force: true }).then(() => true).catch(() => false);
+    } else if (!cardSelected && await cardPaymentButton.count()) {
+      if (await cardPaymentButton.isVisible().catch(() => false)) {
+        cardSelected = await cardPaymentButton.click().then(() => true).catch(() => false);
+      } else if (await page.getByText(/^card$/i).first().isVisible().catch(() => false)) {
+        // Hosted Checkout can render the visible Card row through the button's
+        // CSS hit area while the button itself has a zero-size layout box.
+        // Activate that observed control once; repeated clicks can close it
+        // again while the fields are loading. The caller still enforces test-session guards.
+        cardSelected = await cardPaymentButton.evaluate((button: HTMLButtonElement) => button.click())
+          .then(() => true).catch(() => false);
+      }
     }
     await page.waitForTimeout(250);
   }

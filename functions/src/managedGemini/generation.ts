@@ -32,18 +32,24 @@ import { requireOwnedManagedContentFiles } from './fileLifecycle';
 
 const STREAM_CONTENT_TYPE = 'application/x-ndjson; charset=utf-8';
 
+/** No provider generation was dispatched; admission can stop without a reply. */
+class AbandonedGenerationAdmission extends Error {}
+
 const countPromptTokens = async (
   model: string,
   contents: unknown,
-  config?: Record<string, unknown>
+  config?: Record<string, unknown>,
+  checkActive?: () => void,
 ): Promise<number> => {
   try {
     let totalTokens = 0;
     for (const countableInput of buildManagedPromptTokenCountInputs(contents, config)) {
+      checkActive?.();
       const result = await getGeminiClient().models.countTokens({
         model,
         contents: countableInput,
       } as any);
+      checkActive?.();
       const tokenCount = Number((result as any)?.totalTokens ?? (result as any)?.tokenCount);
       if (!Number.isFinite(tokenCount) || tokenCount < 0) {
         throw new Error('Gemini countTokens returned no usable token count.');
@@ -52,6 +58,8 @@ const countPromptTokens = async (
     }
     return totalTokens;
   } catch (error) {
+    checkActive?.();
+    if (error instanceof AbandonedGenerationAdmission) throw error;
     console.error('[billing] Prompt token count failed; generation was not started.', error);
     throw createHttpError(502, 'The backend could not price this prompt before generation.');
   }
@@ -95,10 +103,11 @@ const serializeGenerateContentResponse = (
   response: any,
   billingSummary: unknown,
   modelVersionOverride?: string,
+  usageMetadataOverride?: Record<string, unknown>,
 ) => ({
   text: typeof response?.text === 'string' ? response.text : '',
   candidates: Array.isArray(response?.candidates) ? response.candidates : [],
-  usageMetadata: response?.usageMetadata || undefined,
+  usageMetadata: usageMetadataOverride || response?.usageMetadata || undefined,
   modelVersion: modelVersionOverride
     || (typeof response?.modelVersion === 'string' ? response.modelVersion : undefined),
   promptFeedback: response?.promptFeedback || undefined,
@@ -115,6 +124,7 @@ const serializeGenerateContentChunk = (chunk: any): Record<string, unknown> => {
 };
 
 interface ManagedGenerationAdmission {
+  checkActive?: () => void;
   uid: string;
   user: AppUser;
   operation: string;
@@ -125,9 +135,12 @@ interface ManagedGenerationAdmission {
 
 /** One pricing/reservation policy for direct and streaming generation. */
 const reserveGenerationCredits = async (params: ManagedGenerationAdmission) => {
+  params.checkActive?.();
   await sweepExpiredReservationsForUser(params.uid);
+  params.checkActive?.();
 
-  const promptTokens = await countPromptTokens(params.model, params.contents, params.config);
+  const promptTokens = await countPromptTokens(params.model, params.contents, params.config, params.checkActive);
+  params.checkActive?.();
   const reservedSearchQueries = usesManagedGoogleSearch(params.config)
     ? appConfig.managedSearchReservationQueries
     : 0;
@@ -260,14 +273,9 @@ export const streamManagedContent = async (params: {
   );
   const config = prepareManagedGenerationConfig(params.config, model);
   const operation = resolveManagedContentOperation(config, true, model);
-  await requireOwnedManagedContentFiles(params.uid, params.contents, config);
-  const reservation = await reserveGenerationCredits({ ...params, model, operation, config });
-
-  response.setHeader('Content-Type', STREAM_CONTENT_TYPE);
-  response.setHeader('Cache-Control', 'no-store, no-transform');
-  response.setHeader('X-Accel-Buffering', 'no');
-
+  let reservation: Awaited<ReturnType<typeof reserveGenerationCredits>> | undefined;
   let latestChunk: any = null;
+  let usageMetadata: Record<string, unknown> | undefined;
   let resolvedModelVersion: string | undefined;
   let deliveredAnyChunk = false;
   // Images arrive spread across chunks, so they are tallied as they stream
@@ -284,10 +292,38 @@ export const streamManagedContent = async (params: {
     }
   };
 
+  const disconnected = () => {
+    if (response.destroyed || !response.writable || response.writableEnded) clientDisconnected = true;
+    return clientDisconnected;
+  };
+  const checkActive = () => {
+    if (disconnected()) throw new AbandonedGenerationAdmission();
+  };
+  // A delivery error must not abort provider iteration or turn completed work
+  // into a refund. After dispatch, only provider/accounting outcomes settle it.
+  const write = (frame: unknown) => {
+    if (disconnected()) return false;
+    try { response.write(`${JSON.stringify(frame)}\n`); return true; }
+    catch { clientDisconnected = true; return false; }
+  };
+  const finish = () => {
+    streamFinished = true;
+    try { response.end(); } catch { clientDisconnected = true; }
+  };
+  // Observe Stop/network loss before any awaited admission work, including
+  // owned-file validation, token counting and the credit transaction.
   response.once('close', markDisconnected);
   response.once('error', markDisconnected);
 
   try {
+    checkActive();
+    await requireOwnedManagedContentFiles(params.uid, params.contents, config);
+    checkActive();
+    reservation = await reserveGenerationCredits({ ...params, model, operation, config, checkActive });
+    checkActive();
+    response.setHeader('Content-Type', STREAM_CONTENT_TYPE);
+    response.setHeader('Cache-Control', 'no-store, no-transform');
+    response.setHeader('X-Accel-Buffering', 'no');
     const stream = await getGeminiClient().models.generateContentStream({
       model,
       contents: params.contents,
@@ -296,6 +332,11 @@ export const streamManagedContent = async (params: {
 
     for await (const chunk of stream) {
       latestChunk = chunk;
+      if (chunk?.usageMetadata && typeof chunk.usageMetadata === 'object' && !Array.isArray(chunk.usageMetadata)) {
+        // Stream usage fields are cumulative snapshots, not per-chunk deltas.
+        // A later chunk can omit fields; retain the last reported value of each.
+        usageMetadata = { ...usageMetadata, ...chunk.usageMetadata };
+      }
       if (typeof chunk?.modelVersion === 'string' && chunk.modelVersion.trim()) {
         resolvedModelVersion = chunk.modelVersion.trim();
       }
@@ -304,23 +345,18 @@ export const streamManagedContent = async (params: {
         streamedSearchQueryCount,
         countGoogleSearchQueries(chunk),
       );
-      if (clientDisconnected || response.destroyed || !response.writable) {
+      if (disconnected()) {
         clientDisconnected = true;
         // Keep consuming the provider stream to obtain final usage metadata.
-        // Otherwise a client can avoid exact settlement by disconnecting, and
-        // honest network drops get charged the worst-case reservation.
+        // A delivery disconnect is not provider failure. Settle reported usage,
+        // rather than treating the admission estimate as the actual charge.
         continue;
       }
 
-      response.write(`${JSON.stringify({
-        type: 'chunk',
-        chunk: serializeGenerateContentChunk(chunk),
-      })}\n`);
-      deliveredAnyChunk = true;
+      deliveredAnyChunk = write({ type: 'chunk', chunk: serializeGenerateContentChunk(chunk) }) || deliveredAnyChunk;
     }
 
     providerCompleted = true;
-    const usageMetadata = latestChunk?.usageMetadata as Record<string, unknown> | undefined;
     const billedUsd = usageMetadataToUsd(
       model,
       usageMetadata,
@@ -347,34 +383,26 @@ export const streamManagedContent = async (params: {
       },
     });
 
-    if (!clientDisconnected && !response.destroyed && response.writable) {
-      response.write(`${JSON.stringify({
+    if (!disconnected()) {
+      if (write({
         type: 'final',
-        result: serializeGenerateContentResponse(
-          latestChunk || {},
-          billingSummary,
-          resolvedModelVersion,
-        ),
-      })}\n`);
-      streamFinished = true;
-      response.end();
+        result: serializeGenerateContentResponse(latestChunk || {}, billingSummary, resolvedModelVersion, usageMetadata),
+      })) finish();
     }
   } catch (error) {
-    if (!providerCompleted) {
-      try { await releaseManagedReservation(params.uid, reservation.reservationId, 'provider-stream-failed'); }
+    if (reservation && !providerCompleted) {
+      const reason = error instanceof AbandonedGenerationAdmission ? 'client-disconnected-before-provider' : 'provider-stream-failed';
+      try { await releaseManagedReservation(params.uid, reservation.reservationId, reason); }
       catch (releaseError) { console.error('Managed stream reservation release failed:', releaseError); }
     }
-    if (deliveredAnyChunk || clientDisconnected || response.headersSent) {
-      if (!response.destroyed && response.writable && !response.writableEnded) {
-        response.write(`${JSON.stringify({
-          type: 'error',
-          message: getErrorMessage(error),
-          status: Number((error as { status?: unknown })?.status) || 500,
-          code: getHttpErrorCode(error),
-        })}\n`);
-        streamFinished = true;
-        response.end();
-      }
+    if (error instanceof AbandonedGenerationAdmission) return;
+    if (deliveredAnyChunk || disconnected() || response.headersSent) {
+      if (write({
+        type: 'error',
+        message: getErrorMessage(error),
+        status: Number((error as { status?: unknown })?.status) || 500,
+        code: getHttpErrorCode(error),
+      })) finish();
       return;
     }
     throw error;

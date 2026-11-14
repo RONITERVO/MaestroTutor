@@ -12,6 +12,8 @@ interface LanguageSelectorGlobeProps {
     onSelectNative: (code: string | null) => void;
     onSelectTarget: (code: string | null) => void;
     onCancel?: () => void;
+    /** A composing form may include controls outside the globe itself. */
+    interactionBoundaryRef?: React.RefObject<HTMLElement | null>;
     onInteract: () => void;
 }
 
@@ -578,6 +580,7 @@ const LanguageSelectorGlobe: React.FC<LanguageSelectorGlobeProps> = ({
     onSelectNative,
     onSelectTarget,
     onCancel,
+    interactionBoundaryRef,
     onInteract
 }) => {
     const nativeLang = ALL_LANGUAGES.find(l => l.langCode === nativeLangCode) || null;
@@ -719,7 +722,8 @@ const LanguageSelectorGlobe: React.FC<LanguageSelectorGlobeProps> = ({
         if (!onCancel) return;
 
         const handler = (event: PointerEvent) => {
-            if (globeContainerRef.current && !globeContainerRef.current.contains(event.target as Node)) {
+            const boundary = interactionBoundaryRef?.current ?? globeContainerRef.current;
+            if (boundary && !boundary.contains(event.target as Node)) {
                 onCancel();
             }
         };
@@ -729,7 +733,7 @@ const LanguageSelectorGlobe: React.FC<LanguageSelectorGlobeProps> = ({
             window.clearTimeout(timer);
             document.removeEventListener('pointerdown', handler, true);
         };
-    }, [onCancel]);
+    }, [onCancel, interactionBoundaryRef]);
 
     const applyZoom = useCallback((next: number) => {
         const clamped = clamp(next, MIN_GLOBE_ZOOM, MAX_GLOBE_ZOOM);

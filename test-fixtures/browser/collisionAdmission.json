@@ -1,0 +1,24 @@
+{
+  "budget": {
+    "entries": 129,
+    "colliders": 2048,
+    "meshColliders": 0,
+    "sourceTriangles": 0,
+    "entryLimit": 256,
+    "colliderLimit": 2048,
+    "triangleLimit": 1048576
+  },
+  "retiring": {
+    "leaseId": "e624b5a590d343de87670285381271a8",
+    "worldId": "c95a4f4fadd2418caa237ea743fb4fb7",
+    "regionId": "a6543efe2f3a4f0bb932b59610cd3e9c",
+    "target": "last-slot",
+    "role": "collision",
+    "kind": "compound",
+    "phase": "retiring",
+    "colliders": 1,
+    "meshColliders": 0,
+    "sourceTriangles": 0,
+    "activeColliders": 0
+  }
+}

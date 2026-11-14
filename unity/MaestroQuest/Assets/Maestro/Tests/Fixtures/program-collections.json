@@ -1,0 +1,298 @@
+{
+  "version": 3,
+  "dataVersion": 1,
+  "entry": "main",
+  "resources": [],
+  "state": [
+    {
+      "name": "items",
+      "type": {
+        "list": {
+          "record": {
+            "id": "text",
+            "red": "number"
+          }
+        }
+      },
+      "initial": []
+    }
+  ],
+  "events": [],
+  "functions": [
+    {
+      "name": "main",
+      "returns": "void",
+      "parameters": [],
+      "locals": [
+        {
+          "name": "ball",
+          "initial": ""
+        },
+        {
+          "name": "item",
+          "initial": {
+            "id": "",
+            "red": 0.2
+          }
+        },
+        {
+          "name": "copy",
+          "type": {
+            "list": {
+              "record": {
+                "id": "text",
+                "red": "number"
+              }
+            }
+          },
+          "initial": []
+        }
+      ],
+      "body": [
+        {
+          "id": "make",
+          "op": "repeat",
+          "count": {
+            "value": 2
+          },
+          "body": [
+            {
+              "id": "create",
+              "op": "invoke",
+              "capability": "object.create",
+              "version": 1,
+              "arguments": {
+                "shape": "ball",
+                "name": "Collection ball",
+                "x": 0.3,
+                "y": 1.3,
+                "z": 0.65,
+                "scale": 1,
+                "red": 0.2,
+                "green": 0.6,
+                "blue": 0.9,
+                "kind": "primitive"
+              },
+              "bindings": {},
+              "results": {
+                "objectId": "ball"
+              }
+            },
+            {
+              "id": "remember",
+              "op": "set",
+              "variable": "item",
+              "value": {
+                "op": "withField",
+                "args": [
+                  {
+                    "var": "item"
+                  },
+                  {
+                    "value": "id"
+                  },
+                  {
+                    "var": "ball"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "collect",
+              "op": "setState",
+              "variable": "items",
+              "value": {
+                "op": "append",
+                "args": [
+                  {
+                    "state": "items"
+                  },
+                  {
+                    "var": "item"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "id": "copyItems",
+          "op": "set",
+          "variable": "copy",
+          "value": {
+            "state": "items"
+          }
+        },
+        {
+          "id": "changeCopy",
+          "op": "set",
+          "variable": "copy",
+          "value": {
+            "op": "replace",
+            "args": [
+              {
+                "var": "copy"
+              },
+              {
+                "value": 0
+              },
+              {
+                "op": "withField",
+                "args": [
+                  {
+                    "op": "at",
+                    "args": [
+                      {
+                        "var": "copy"
+                      },
+                      {
+                        "value": 0
+                      }
+                    ]
+                  },
+                  {
+                    "value": "red"
+                  },
+                  {
+                    "value": 0.9
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "paintOriginals",
+          "op": "call",
+          "function": "paint",
+          "args": [
+            {
+              "state": "items"
+            }
+          ]
+        },
+        {
+          "id": "inspect",
+          "op": "sleep",
+          "seconds": {
+            "value": 5
+          }
+        }
+      ]
+    },
+    {
+      "name": "paint",
+      "returns": "void",
+      "parameters": [
+        {
+          "name": "items",
+          "type": {
+            "list": {
+              "record": {
+                "id": "text",
+                "red": "number"
+              }
+            }
+          }
+        }
+      ],
+      "locals": [
+        {
+          "name": "index",
+          "initial": 0
+        },
+        {
+          "name": "item",
+          "initial": {
+            "id": "",
+            "red": 0.2
+          }
+        }
+      ],
+      "body": [
+        {
+          "id": "each",
+          "op": "repeat",
+          "count": {
+            "op": "length",
+            "args": [
+              {
+                "var": "items"
+              }
+            ]
+          },
+          "body": [
+            {
+              "id": "readItem",
+              "op": "set",
+              "variable": "item",
+              "value": {
+                "op": "at",
+                "args": [
+                  {
+                    "var": "items"
+                  },
+                  {
+                    "var": "index"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "paintItem",
+              "op": "invoke",
+              "capability": "object.color.set",
+              "version": 1,
+              "arguments": {
+                "target": "00000000000000000000000000000000",
+                "red": 1,
+                "green": 0.4,
+                "blue": 0.5
+              },
+              "bindings": {
+                "target": {
+                  "op": "field",
+                  "args": [
+                    {
+                      "var": "item"
+                    },
+                    {
+                      "value": "id"
+                    }
+                  ]
+                },
+                "red": {
+                  "op": "field",
+                  "args": [
+                    {
+                      "var": "item"
+                    },
+                    {
+                      "value": "red"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "id": "next",
+              "op": "set",
+              "variable": "index",
+              "value": {
+                "op": "add",
+                "args": [
+                  {
+                    "var": "index"
+                  },
+                  {
+                    "value": 1
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

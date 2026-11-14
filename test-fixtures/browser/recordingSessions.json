@@ -1,0 +1,229 @@
+{
+  "before": {
+    "sessionId": "ed42c0a711ea4a9e965c78b9df694771",
+    "target": "",
+    "phase": "idle",
+    "frames": 0,
+    "duration": 0.0,
+    "revision": 0,
+    "temporary": false,
+    "error": ""
+  },
+  "start": {
+    "selected": {
+      "id": "e0715fac44204ad589e1408ed76716e3",
+      "capability": "animation.record",
+      "version": 1,
+      "resources": [
+        "maestro"
+      ],
+      "phase": "completed",
+      "status": "Action completed",
+      "output": {
+        "sessionId": "ed42c0a711ea4a9e965c78b9df694771",
+        "target": "maestro",
+        "phase": "recording",
+        "frames": 1,
+        "duration": 0.0,
+        "revision": 5,
+        "temporary": false
+      },
+      "call": {
+        "id": "animation.record",
+        "version": 1,
+        "arguments": {
+          "operation": "start",
+          "sessionId": "ed42c0a711ea4a9e965c78b9df694771",
+          "target": "maestro",
+          "revision": 5
+        }
+      }
+    },
+    "running": [],
+    "outcomes": [
+      {
+        "id": "e0715fac44204ad589e1408ed76716e3",
+        "capability": "animation.record",
+        "version": 1,
+        "resources": [
+          "maestro"
+        ],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "sessionId": "ed42c0a711ea4a9e965c78b9df694771",
+          "target": "maestro",
+          "phase": "recording",
+          "frames": 1,
+          "duration": 0.0,
+          "revision": 5,
+          "temporary": false
+        }
+      }
+    ],
+    "nextRunId": "57f567fad9a045ad805bfe6a043207b4",
+    "storageError": null,
+    "recovery": null
+  },
+  "active": {
+    "sessionId": "ed42c0a711ea4a9e965c78b9df694771",
+    "target": "maestro",
+    "phase": "recording",
+    "frames": 3,
+    "duration": 0.200733185,
+    "revision": 5,
+    "temporary": false,
+    "error": ""
+  },
+  "preparing": {
+    "selected": {
+      "id": "57f567fad9a045ad805bfe6a043207b4",
+      "capability": "animation.record",
+      "version": 1,
+      "resources": [
+        "maestro"
+      ],
+      "phase": "preparing",
+      "status": "Waiting for action completion",
+      "call": {
+        "id": "animation.record",
+        "version": 1,
+        "arguments": {
+          "operation": "finish",
+          "sessionId": "ed42c0a711ea4a9e965c78b9df694771",
+          "target": "maestro"
+        }
+      }
+    },
+    "running": [
+      {
+        "id": "57f567fad9a045ad805bfe6a043207b4",
+        "capability": "animation.record",
+        "version": 1,
+        "resources": [
+          "maestro"
+        ],
+        "phase": "preparing",
+        "status": "Waiting for action completion"
+      }
+    ],
+    "outcomes": [
+      {
+        "id": "e0715fac44204ad589e1408ed76716e3",
+        "capability": "animation.record",
+        "version": 1,
+        "resources": [
+          "maestro"
+        ],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "sessionId": "ed42c0a711ea4a9e965c78b9df694771",
+          "target": "maestro",
+          "phase": "recording",
+          "frames": 1,
+          "duration": 0.0,
+          "revision": 5,
+          "temporary": false
+        }
+      }
+    ],
+    "nextRunId": "64b3d9ac9af6445b9c0183fba97dcdc3",
+    "storageError": null,
+    "recovery": null
+  },
+  "saving": {
+    "sessionId": "ed42c0a711ea4a9e965c78b9df694771",
+    "target": "maestro",
+    "phase": "saving",
+    "frames": 4,
+    "duration": 0.26051712,
+    "revision": 5,
+    "temporary": false,
+    "error": ""
+  },
+  "finish": {
+    "selected": {
+      "id": "57f567fad9a045ad805bfe6a043207b4",
+      "capability": "animation.record",
+      "version": 1,
+      "resources": [
+        "maestro"
+      ],
+      "phase": "completed",
+      "status": "Action completed",
+      "output": {
+        "sessionId": "ed42c0a711ea4a9e965c78b9df694771",
+        "target": "maestro",
+        "phase": "saved",
+        "frames": 4,
+        "duration": 0.26051712,
+        "revision": 9,
+        "temporary": false
+      },
+      "call": {
+        "id": "animation.record",
+        "version": 1,
+        "arguments": {
+          "operation": "finish",
+          "sessionId": "ed42c0a711ea4a9e965c78b9df694771",
+          "target": "maestro"
+        }
+      }
+    },
+    "running": [],
+    "outcomes": [
+      {
+        "id": "e0715fac44204ad589e1408ed76716e3",
+        "capability": "animation.record",
+        "version": 1,
+        "resources": [
+          "maestro"
+        ],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "sessionId": "ed42c0a711ea4a9e965c78b9df694771",
+          "target": "maestro",
+          "phase": "recording",
+          "frames": 1,
+          "duration": 0.0,
+          "revision": 5,
+          "temporary": false
+        }
+      },
+      {
+        "id": "57f567fad9a045ad805bfe6a043207b4",
+        "capability": "animation.record",
+        "version": 1,
+        "resources": [
+          "maestro"
+        ],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "sessionId": "ed42c0a711ea4a9e965c78b9df694771",
+          "target": "maestro",
+          "phase": "saved",
+          "frames": 4,
+          "duration": 0.26051712,
+          "revision": 9,
+          "temporary": false
+        }
+      }
+    ],
+    "nextRunId": "64b3d9ac9af6445b9c0183fba97dcdc3",
+    "storageError": null,
+    "recovery": null
+  },
+  "idle": {
+    "sessionId": "56134c3867854fed9d1f738ee9133531",
+    "target": "",
+    "phase": "idle",
+    "frames": 0,
+    "duration": 0.0,
+    "revision": 0,
+    "temporary": false,
+    "error": ""
+  }
+}

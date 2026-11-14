@@ -1,0 +1,30 @@
+{
+  "version": 2,
+  "entry": "main",
+  "resources": [
+    "book"
+  ],
+  "functions": [
+    {
+      "name": "main",
+      "returns": "void",
+      "parameters": [],
+      "locals": [],
+      "body": [
+        {
+          "id": "block_1",
+          "op": "invoke",
+          "capability": "object.rotation.set",
+          "version": 1,
+          "arguments": {
+            "target": "book",
+            "pitch": 20,
+            "yaw": 90,
+            "roll": -10
+          },
+          "bindings": {}
+        }
+      ]
+    }
+  ]
+}

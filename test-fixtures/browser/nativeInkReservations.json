@@ -1,0 +1,61 @@
+{
+  "budget": {
+    "surfaces": 0,
+    "strokes": 384,
+    "vertices": 6,
+    "preparing": 383,
+    "ready": 1,
+    "retiring": 0,
+    "surfaceLimit": 128,
+    "strokeLimit": 384,
+    "vertexLimit": 196608
+  },
+  "preparing": {
+    "reservationId": "de614435270948af8729f4270ea322d5",
+    "worldId": "c163789793e344d99f9371c1afa0e092",
+    "regionId": "0d1922fc9deb4daabd3cbb13fc93a47b",
+    "target": "baae5c1a1bf44a72a4e8952c90da1af5",
+    "role": "ink",
+    "source": "spatial",
+    "kind": "stroke",
+    "phase": "preparing",
+    "vertices": 6,
+    "active": false
+  },
+  "ready": {
+    "reservationId": "de614435270948af8729f4270ea322d5",
+    "worldId": "c163789793e344d99f9371c1afa0e092",
+    "regionId": "0d1922fc9deb4daabd3cbb13fc93a47b",
+    "target": "baae5c1a1bf44a72a4e8952c90da1af5",
+    "role": "ink",
+    "source": "spatial",
+    "kind": "stroke",
+    "phase": "ready",
+    "vertices": 6,
+    "active": true
+  },
+  "disabled": {
+    "reservationId": "de614435270948af8729f4270ea322d5",
+    "worldId": "c163789793e344d99f9371c1afa0e092",
+    "regionId": "0d1922fc9deb4daabd3cbb13fc93a47b",
+    "target": "baae5c1a1bf44a72a4e8952c90da1af5",
+    "role": "ink",
+    "source": "spatial",
+    "kind": "stroke",
+    "phase": "ready",
+    "vertices": 6,
+    "active": false
+  },
+  "retiring": {
+    "reservationId": "de614435270948af8729f4270ea322d5",
+    "worldId": "c163789793e344d99f9371c1afa0e092",
+    "regionId": "0d1922fc9deb4daabd3cbb13fc93a47b",
+    "target": "baae5c1a1bf44a72a4e8952c90da1af5",
+    "role": "ink",
+    "source": "spatial",
+    "kind": "stroke",
+    "phase": "retiring",
+    "vertices": 6,
+    "active": false
+  }
+}

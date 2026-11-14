@@ -1,0 +1,87 @@
+{
+  "format": "maestro-creation-template",
+  "version": 1,
+  "id": "platform",
+  "name": "Platform",
+  "description": "Editable low platform with matching box collision and explicit static support; starts fixed and idle.",
+  "tags": [
+    "building",
+    "ground",
+    "static-support"
+  ],
+  "author": "Roni Tervo / Maestro",
+  "license": "Apache-2.0",
+  "definition": {
+    "version": 1,
+    "recipe": {
+      "version": 1,
+      "parts": [
+        {
+          "id": "Platform",
+          "shape": "box",
+          "position": {
+            "x": 0,
+            "y": 0.04,
+            "z": 0
+          },
+          "size": {
+            "x": 0.8,
+            "y": 0.08,
+            "z": 0.8
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "parent": null,
+          "color": {
+            "r": 0.62,
+            "g": 0.42,
+            "b": 0.2,
+            "a": 1
+          }
+        }
+      ],
+      "tracks": [],
+      "duration": 2,
+      "playing": false,
+      "loop": false
+    },
+    "collision": {
+      "version": 1,
+      "shapes": [
+        {
+          "id": "Platform",
+          "shape": "box",
+          "position": {
+            "x": 0,
+            "y": 0.04,
+            "z": 0
+          },
+          "size": {
+            "x": 0.8,
+            "y": 0.08,
+            "z": 0.8
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        }
+      ]
+    },
+    "physics": {
+      "mode": "fixed",
+      "shape": "automatic",
+      "mass": 1
+    },
+    "staticSupport": {
+      "version": 1,
+      "enabled": true
+    }
+  }
+}

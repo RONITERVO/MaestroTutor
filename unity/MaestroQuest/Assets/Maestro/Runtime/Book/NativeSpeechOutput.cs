@@ -1,0 +1,131 @@
+// Copyright 2026 Roni Tervo
+// SPDX-License-Identifier: Apache-2.0
+using System;
+using Maestro.Quest.Avatar;
+using Maestro.Quest.Creation;
+using UnityEngine;
+
+namespace Maestro.Quest.Book
+{
+    [Serializable]
+    public sealed class SpeechOutputSnapshot
+    {
+        public long generation, acceptedSequence, submittedSamples, playedSamples;
+        public int sampleRate;
+        public bool started, inputComplete, rendererDrained;
+    }
+
+    /// <summary>Owned mono PCM playback, with a DSP timeline rather than network
+    /// arrival as completion. No provider, file URL, microphone or app identity.</summary>
+    [DefaultExecutionOrder(250)]
+    public sealed class NativeSpeechOutput : MonoBehaviour
+    {
+        const double ScheduleLeadSeconds = .1;
+        PcmOutputLease playback;
+        SpeechPcmStream stream => playback?.Stream;
+        long generation;
+        int sampleRate;
+        bool open, paused, focused = true;
+        AvatarPoseRig rig;
+        Transform frame;
+        RoomAudioOutput roomAudio;
+        internal bool MicrophoneSuppressed => roomAudio && roomAudio.MicrophoneSuppressed;
+        Vector3 mouthOffset = new(0, .08f, .08f), fallbackOffset = new(0, 1.4f, .08f);
+        // Tests control time/tail and exercise the same render function as the
+        // audio callback; clock advancement alone cannot acknowledge playback.
+        internal Func<double> Clock = () => AudioSettings.dspTime;
+        internal double? TailOverride;
+        internal void Render(float[] data, int channels, int rate, double dspTime) => stream.Render(data, channels, rate, dspTime);
+
+        public void ConfigureAnchor(AvatarPoseRig poseRig, Transform avatarFrame, Vector3 headOffset, Vector3 fallback)
+        {
+            if (!avatarFrame || avatarFrame == transform || avatarFrame.IsChildOf(transform)
+                || !Finite(headOffset) || !Finite(fallback) || headOffset.magnitude > .5f || fallback.magnitude > 5)
+                throw new ArgumentException("Invalid speech anchor.");
+            rig = poseRig; frame = avatarFrame; mouthOffset = headOffset; fallbackOffset = fallback;
+            FollowAnchor();
+        }
+        static bool Finite(Vector3 v) => float.IsFinite(v.x) && float.IsFinite(v.y) && float.IsFinite(v.z);
+        internal double TailSeconds => TailOverride ?? PcmOutputLease.DeviceTail;
+        /// <summary>Only the native owner creates generations. A late packet
+        /// cannot reopen a stopped output by reusing its old generation.</summary>
+        public long Begin(int rate)
+        {
+            if (rate != 24000) throw new ArgumentException("Speech requires mono PCM16 at 24000 Hz.");
+            if (!isActiveAndEnabled || paused || !focused) throw new InvalidOperationException("Speech output is inactive.");
+            Stop(); sampleRate = rate;
+            try
+            {
+                playback = PcmOutputLease.Open(transform,"Maestro voice stream",
+                    new SpeechPcmStream(Clock()+ScheduleLeadSeconds,TailSeconds),true,1,0,1,15);
+                roomAudio = playback.ReflectionOutput;
+                open = true; playback.Start();
+            }
+            catch { Stop(); throw; }
+            return generation;
+        }
+        public bool TryWrite(long owner, long nextSequence, short[] pcm, out string error)
+        {
+            error = null;
+            if (!open || owner != generation || !isActiveAndEnabled || paused || !focused) { error = "Speech output was stopped"; return false; }
+            Tick();
+            if (!open) { error = "Speech output was stopped"; return false; }
+            bool accepted = stream.TryWrite(nextSequence, pcm, Clock(), out error);
+            if (accepted && pcm.Length > 0 && roomAudio) roomAudio.NoteSpeech();
+            return accepted;
+        }
+        public bool TryComplete(long owner, long lastSequence, long submittedSamples, out string error)
+        {
+            error = null;
+            if (!open || owner != generation || !isActiveAndEnabled || paused || !focused)
+            { error = "Speech output was stopped"; return false; }
+            Tick();
+            if (!open) { error = "Speech output was stopped"; return false; }
+            if (stream.Read(Clock()).Submitted != submittedSamples)
+            { error = "Speech completion sample count does not match"; return false; }
+            return stream.TryComplete(lastSequence, out error);
+        }
+        public SpeechOutputSnapshot Read()
+        {
+            Tick();
+            double now = Clock();
+            var state = stream?.Read(now) ?? default;
+            return new SpeechOutputSnapshot { generation = generation, sampleRate = sampleRate,
+                acceptedSequence = state.Sequence, submittedSamples = state.Submitted, playedSamples = state.Played,
+                started = state.Played > 0, inputComplete = state.InputComplete,
+                rendererDrained = state.SourceDrained && playback?.IsDrained(now) == true };
+        }
+        internal void Tick()
+        {
+            if (!open) return;
+            if (playback?.Available != true || roomAudio && roomAudio.MonitorFailed) { Stop(); return; }
+            var state=stream.Read(Clock());
+            if(state.Faulted||state.Closed)Stop();
+        }
+        public void Stop()
+        {
+            open = false; generation++;
+            playback?.Dispose(); playback = null;
+            // The shared mixer owns its audible tail after this voice stops.
+            // Keep observing that monitor; disposing one lease cannot release
+            // capture suppression while another routed voice is still audible.
+        }
+        internal void FollowAnchor()
+        {
+            if (!frame) return;
+            var head = rig ? rig.Bone(PoseJoint.Head) : null;
+            var canonicalHead = rig ? rig.CanonicalBone(PoseJoint.Head) : null;
+            // Imported head positions are visible-model positions. Its bone scale
+            // and rest axes can differ: offset uses the canonical pose/root metres.
+            var rotation = canonicalHead ? canonicalHead.rotation : frame.rotation;
+            transform.SetPositionAndRotation(head ? head.position + rotation * Vector3.Scale(frame.lossyScale, mouthOffset)
+                : frame.TransformPoint(fallbackOffset), rotation);
+        }
+        void LateUpdate() { FollowAnchor(); Tick(); }
+        void OnEnable() => AudioSettings.OnAudioConfigurationChanged += AudioConfigurationChanged;
+        void OnDisable() { AudioSettings.OnAudioConfigurationChanged -= AudioConfigurationChanged; Stop(); }
+        void AudioConfigurationChanged(bool _) => Stop();
+        void OnApplicationPause(bool value) { paused = value; if (value) Stop(); }
+        void OnApplicationFocus(bool value) { focused = value; if (!value) Stop(); }
+    }
+}

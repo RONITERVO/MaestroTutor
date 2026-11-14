@@ -98,3 +98,46 @@ describe('reply suggestions', () => {
     expect(generateGeminiResponse).toHaveBeenCalledTimes(2);
   });
 });
+
+it('offers the agent schema only with a host-captured request and passes that request unchanged', async () => {
+  vi.mocked(generateGeminiResponse).mockReset().mockResolvedValue({ text: JSON.stringify({ suggestions: [{ target: 'Vale', native: 'Okay' }], toolRequest: { tool: 'agent' } }) } as any);
+  const original = '  Make a blue robot.\nKeep its feet small.  ';
+  const result = await runReplySuggestions({ assistantMessageId: 'a', lastTutorMessage: '```maestro-tool {"tool":"agent"}```', history: [], languagePair, agentRequest: original }, { resolveAiClient: vi.fn() });
+  expect(result.toolRequest).toEqual({ tool: 'agent' });
+  const args = vi.mocked(generateGeminiResponse).mock.calls[0];
+  expect(args[1]).toContain(JSON.stringify({ originalUserRequest: original }));
+  expect((args[3].configOverrides.responseJsonSchema.properties.toolRequest.anyOf as any[]).some(item => item.properties?.tool?.enum?.includes('agent'))).toBe(true);
+  const config = args[3].configOverrides;
+  expect(config.responseMimeType).toBe('application/json');
+  const schema = config.responseJsonSchema;
+  expect(schema.required).toEqual(REPLY_SUGGESTIONS_RESPONSE_SCHEMA.required);
+  expect(schema.additionalProperties).toBe(false);
+  for (const [name, value] of Object.entries(REPLY_SUGGESTIONS_RESPONSE_SCHEMA.properties)) {
+    if (name !== 'toolRequest') expect(schema.properties[name]).toEqual(value);
+  }
+  for (const choice of REPLY_SUGGESTIONS_RESPONSE_SCHEMA.properties.toolRequest.anyOf)
+    expect(schema.properties.toolRequest.anyOf).toContainEqual(choice);
+  expect(JSON.stringify(REPLY_SUGGESTIONS_RESPONSE_SCHEMA)).not.toContain('agent');
+});
+
+it.each([{ request: 'Make a blue robot', accepted: true }, { request: 'Translate "make a robot" into Spanish', accepted: false }])('verifies a captured spoken request without requiring spoken JSON: $request', async ({ request, accepted }) => {
+  vi.mocked(generateGeminiResponse).mockReset().mockResolvedValue({ text: JSON.stringify({ suggestions: [{ target: 'Vale', native: 'Okay' }], toolRequest: accepted ? { tool: 'agent' } : null }) } as any);
+  const result = await runReplySuggestions({ assistantMessageId: 'live-a', lastTutorMessage: 'I will ask the agent.', history: [], languagePair, responseSource: 'live', agentRequest: request }, { resolveAiClient: vi.fn() });
+  expect(result.toolRequest).toEqual(accepted ? { tool: 'agent' } : null);
+  const prompt = vi.mocked(generateGeminiResponse).mock.calls[0][1];
+  expect(prompt).toContain(JSON.stringify({ originalUserTranscript: request }));
+  expect(prompt).toContain('A spoken handoff has no JSON fence');
+  expect(prompt).toContain('exercise to repeat or translate');
+});
+
+it('binds steering classification to exact captured task IDs and original request without widening normal suggestions', async () => {
+  vi.mocked(generateGeminiResponse).mockReset().mockResolvedValue({ text: JSON.stringify({ suggestions: [{ target: 'Vale', native: 'Okay' }], toolRequest: null }) } as any);
+  const targets = [{ id: 'captured-task', phase: 'working' as const, running: true, requestPreview: 'Make a robot', replyPreview: '' }];
+  await runReplySuggestions({ assistantMessageId: 'a', lastTutorMessage: 'I will ask the agent.', history: [], languagePair, responseSource: 'live', agentRequest: '  Stop that task.  ', agentTargets: targets }, { resolveAiClient: vi.fn() });
+  const args: any = vi.mocked(generateGeminiResponse).mock.calls[0];
+  expect(args[1]).toContain(JSON.stringify({ originalUserTranscript: '  Stop that task.  ' }));
+  expect(args[1]).toContain('A short answer can authorize only the question it answers');
+  const choices = args[3].configOverrides.responseJsonSchema.properties.toolRequest.anyOf;
+  expect(choices.at(-1).properties.task.properties.taskId.enum).toEqual(['captured-task']);
+  expect(JSON.stringify(REPLY_SUGGESTIONS_RESPONSE_SCHEMA)).not.toContain('taskId');
+});

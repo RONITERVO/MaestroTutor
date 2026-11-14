@@ -12,10 +12,12 @@ const mocks = vi.hoisted(() => ({
   browserFinished: null as null | (() => void),
   startStripeCheckout: vi.fn(async () => ({ url: 'https://checkout.stripe.test', sessionId: 'cs_test_1' })),
   startStripeReturnPolling: vi.fn(),
-  signIn: vi.fn(async () => undefined),
+  signIn: vi.fn<(...args: [string?, AbortSignal?]) => Promise<unknown>>(async () => undefined),
+  quest: false,
 }));
 
-vi.mock('@capacitor/core', () => ({ Capacitor: { isNativePlatform: () => true } }));
+vi.mock('../../../platform/quest/questIntegrityBridge', () => ({ isNativeQuestBook: () => mocks.quest }));
+vi.mock('@capacitor/core', () => ({ Capacitor: { isNativePlatform: () => true, getPlatform: () => 'android' } }));
 vi.mock('@capacitor/browser', () => ({ Browser: { addListener: mocks.addListener } }));
 vi.mock('../../../shared/hooks/useAppTranslations', () => ({
   useAppTranslations: () => ({ t: (key: string) => ({
@@ -187,5 +189,28 @@ describe('ManagedAccessPanel card footprint', () => {
     const alert = await screen.findByRole('alert');
     expect(alert.textContent).toContain('Google could not verify this app on this device.');
     expect(screen.queryByText('Missing Firebase App Check token.')).toBeNull();
+  });
+});
+
+
+describe('Quest account dialog lifecycle', () => {
+  beforeEach(() => { mocks.quest = true; mocks.signIn.mockReset(); mocks.signIn.mockImplementation(() => new Promise(() => {})); });
+  afterEach(() => { mocks.quest = false; });
+  it('closing the dialog cancels even before a code has been created', async () => {
+    render(<ManagedAccessPanel session={null} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Sign in with Google' }));
+    const signal = mocks.signIn.mock.calls[0][1]; expect(signal?.aborted).toBe(false);
+    fireEvent.keyDown(screen.getByRole('dialog'), { key: 'Escape' });
+    expect(signal?.aborted).toBe(true);
+  });
+  it('unmount cancels the active sign-in', () => {
+    const view = render(<ManagedAccessPanel session={null} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Sign in with Google' }));
+    const signal = mocks.signIn.mock.calls[0][1]; view.unmount(); expect(signal?.aborted).toBe(true);
+  });
+  it('does not expose web checkout inside the Quest book', () => {
+    render(<ManagedAccessPanel session={session as any} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Managed account' }));
+    expect(screen.queryByRole('button', { name: 'Buy credits' })).toBeNull();
   });
 });

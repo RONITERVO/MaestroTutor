@@ -1,0 +1,173 @@
+{
+  "inspection": {
+    "inspectionId": "2af24a9b45284750b71aef53e5878d1c",
+    "count": 1,
+    "selectionReadable": true
+  },
+  "entry": {
+    "generationId": "f6fe9be5235e4895bb64314ccc0f5506",
+    "originalManifestHash": "d265d8367a339d12aa11da41a8e05ee471289e4f603ad57c8c04653eb1c54262",
+    "metadataAvailable": true,
+    "role": "inactive",
+    "reservation": "unreserved"
+  },
+  "export": {
+    "generationId": "f6fe9be5235e4895bb64314ccc0f5506",
+    "originalManifestHash": "d265d8367a339d12aa11da41a8e05ee471289e4f603ad57c8c04653eb1c54262",
+    "manifestHash": "970dbcddc25f253eaad03be26c933b58c46dba75e91076911a42d80b4b0d330a",
+    "sourceFingerprint": "20765bdf0f9f24c8824c6b08d991f9b7d9b76d0046cb8af1b5e5fb68c2618003",
+    "location": "Downloads/Maestro/maestro-workspace-de6b1015c2064c88983b2919eaf36f14.zip",
+    "archiveHash": "63e1e4b7b5fda6d5d97faffe8828e0713177f1bbd14cdcad56a994641a58a6fc",
+    "sizeKiB": 3.45703125,
+    "excludedFiles": 1,
+    "missingImages": 0,
+    "missingSounds": 0,
+    "missingModels": 0,
+    "missingMotions": 0,
+    "missingControllerPrograms": 0,
+    "unavailablePrograms": 0
+  },
+  "inspectExecution": {
+    "selected": null,
+    "running": [],
+    "outcomes": [],
+    "nextRunId": "31be4581c12348f0bded910670423d39",
+    "storageError": null,
+    "recovery": null,
+    "workspace": {
+      "selected": {
+        "id": "2af24a9b45284750b71aef53e5878d1c",
+        "capability": "workspace.retention.inspect",
+        "version": 1,
+        "resources": [],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "inspectionId": "2af24a9b45284750b71aef53e5878d1c",
+          "count": 1,
+          "selectionReadable": true
+        },
+        "call": {
+          "id": "workspace.retention.inspect",
+          "version": 1,
+          "arguments": {}
+        }
+      },
+      "running": [],
+      "outcomes": [
+        {
+          "id": "2af24a9b45284750b71aef53e5878d1c",
+          "capability": "workspace.retention.inspect",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "inspectionId": "2af24a9b45284750b71aef53e5878d1c",
+            "count": 1,
+            "selectionReadable": true
+          }
+        }
+      ],
+      "nextRunId": "c2972c9a07b542bb952e2217877571b2",
+      "storageError": null,
+      "recovery": null
+    }
+  },
+  "exportExecution": {
+    "selected": null,
+    "running": [],
+    "outcomes": [],
+    "nextRunId": "31be4581c12348f0bded910670423d39",
+    "storageError": null,
+    "recovery": null,
+    "workspace": {
+      "selected": {
+        "id": "c2972c9a07b542bb952e2217877571b2",
+        "capability": "workspace.retention.export",
+        "version": 1,
+        "resources": [],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "generationId": "f6fe9be5235e4895bb64314ccc0f5506",
+          "originalManifestHash": "d265d8367a339d12aa11da41a8e05ee471289e4f603ad57c8c04653eb1c54262",
+          "manifestHash": "970dbcddc25f253eaad03be26c933b58c46dba75e91076911a42d80b4b0d330a",
+          "sourceFingerprint": "20765bdf0f9f24c8824c6b08d991f9b7d9b76d0046cb8af1b5e5fb68c2618003",
+          "location": "Downloads/Maestro/maestro-workspace-de6b1015c2064c88983b2919eaf36f14.zip",
+          "archiveHash": "63e1e4b7b5fda6d5d97faffe8828e0713177f1bbd14cdcad56a994641a58a6fc",
+          "sizeKiB": 3.45703125,
+          "excludedFiles": 1,
+          "missingImages": 0,
+          "missingSounds": 0,
+          "missingModels": 0,
+          "missingMotions": 0,
+          "missingControllerPrograms": 0,
+          "unavailablePrograms": 0
+        },
+        "call": {
+          "id": "workspace.retention.export",
+          "version": 1,
+          "arguments": {
+            "inspectionId": "2af24a9b45284750b71aef53e5878d1c",
+            "generationId": "f6fe9be5235e4895bb64314ccc0f5506",
+            "originalManifestHash": "d265d8367a339d12aa11da41a8e05ee471289e4f603ad57c8c04653eb1c54262"
+          }
+        }
+      },
+      "running": [],
+      "outcomes": [
+        {
+          "id": "2af24a9b45284750b71aef53e5878d1c",
+          "capability": "workspace.retention.inspect",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "inspectionId": "2af24a9b45284750b71aef53e5878d1c",
+            "count": 1,
+            "selectionReadable": true
+          }
+        },
+        {
+          "id": "c2972c9a07b542bb952e2217877571b2",
+          "capability": "workspace.retention.export",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "generationId": "f6fe9be5235e4895bb64314ccc0f5506",
+            "originalManifestHash": "d265d8367a339d12aa11da41a8e05ee471289e4f603ad57c8c04653eb1c54262",
+            "manifestHash": "970dbcddc25f253eaad03be26c933b58c46dba75e91076911a42d80b4b0d330a",
+            "sourceFingerprint": "20765bdf0f9f24c8824c6b08d991f9b7d9b76d0046cb8af1b5e5fb68c2618003",
+            "location": "Downloads/Maestro/maestro-workspace-de6b1015c2064c88983b2919eaf36f14.zip",
+            "archiveHash": "63e1e4b7b5fda6d5d97faffe8828e0713177f1bbd14cdcad56a994641a58a6fc",
+            "sizeKiB": 3.45703125,
+            "excludedFiles": 1,
+            "missingImages": 0,
+            "missingSounds": 0,
+            "missingModels": 0,
+            "missingMotions": 0,
+            "missingControllerPrograms": 0,
+            "unavailablePrograms": 0
+          }
+        }
+      ],
+      "nextRunId": "2d0ac6283fdd40a98511ba37236e8642",
+      "storageError": null,
+      "recovery": null
+    }
+  },
+  "status": {
+    "requestId": "c2972c9a07b542bb952e2217877571b2",
+    "phase": "exported",
+    "status": "Export is optional. Permanent disposal requires a separate exact preview and confirmation.",
+    "inspectionId": "2af24a9b45284750b71aef53e5878d1c",
+    "generationId": "f6fe9be5235e4895bb64314ccc0f5506",
+    "manifestHash": "970dbcddc25f253eaad03be26c933b58c46dba75e91076911a42d80b4b0d330a",
+    "location": "Downloads/Maestro/maestro-workspace-de6b1015c2064c88983b2919eaf36f14.zip",
+    "archiveHash": "63e1e4b7b5fda6d5d97faffe8828e0713177f1bbd14cdcad56a994641a58a6fc"
+  }
+}

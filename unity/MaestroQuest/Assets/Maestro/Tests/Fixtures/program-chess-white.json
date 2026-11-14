@@ -1,0 +1,3074 @@
+{
+  "version": 3,
+  "dataVersion": 1,
+  "moduleVersion": 1,
+  "imports": [
+    {
+      "alias": "kit",
+      "hash": "b040511a4f99e516ed64f039f0142f8d85d26e7946df7e5a09e72bfd04f16f67",
+      "module": {
+        "version": 1,
+        "name": "Chess pieces white",
+        "exports": [
+          "create"
+        ],
+        "program": {
+          "version": 3,
+          "dataVersion": 1,
+          "entry": "main",
+          "resources": [],
+          "state": [],
+          "events": [],
+          "functions": [
+            {
+              "name": "main",
+              "returns": "void",
+              "parameters": [],
+              "locals": [],
+              "body": []
+            },
+            {
+              "name": "create",
+              "returns": {
+                "list": "text"
+              },
+              "parameters": [
+                {
+                  "name": "position",
+                  "type": {
+                    "record": {
+                      "x": "number",
+                      "y": "number",
+                      "z": "number"
+                    }
+                  }
+                },
+                {
+                  "name": "rotation",
+                  "type": {
+                    "record": {
+                      "x": "number",
+                      "y": "number",
+                      "z": "number",
+                      "w": "number"
+                    }
+                  }
+                },
+                {
+                  "name": "scale",
+                  "type": "number"
+                }
+              ],
+              "locals": [
+                {
+                  "name": "pieces",
+                  "type": {
+                    "list": "text"
+                  },
+                  "initial": []
+                }
+              ],
+              "body": [
+                {
+                  "id": "build",
+                  "op": "invoke",
+                  "capability": "object.batch.create",
+                  "version": 1,
+                  "arguments": {
+                    "blueprint": {
+                      "version": 1,
+                      "pieces": [
+                        {
+                          "slot": "A1",
+                          "name": "White rook A1",
+                          "position": {
+                            "x": -0.28,
+                            "y": 0.019,
+                            "z": -0.28
+                          },
+                          "rotation": {
+                            "x": 0,
+                            "y": 0,
+                            "z": 0,
+                            "w": 1
+                          },
+                          "scale": 1,
+                          "source": {
+                            "kind": "prototype",
+                            "prototype": {
+                              "version": 1,
+                              "color": {
+                                "r": 0.94,
+                                "g": 0.85,
+                                "b": 0.66,
+                                "a": 1
+                              },
+                              "physics": {
+                                "mode": "solid",
+                                "shape": "automatic",
+                                "mass": 0.06
+                              },
+                              "collision": {
+                                "version": 1,
+                                "shapes": [
+                                  {
+                                    "id": "Body",
+                                    "shape": "cylinder",
+                                    "position": {
+                                      "x": 0,
+                                      "y": 0.0455,
+                                      "z": 0
+                                    },
+                                    "size": {
+                                      "x": 0.052,
+                                      "y": 0.091,
+                                      "z": 0.052
+                                    },
+                                    "rotation": {
+                                      "x": 0,
+                                      "y": 0,
+                                      "z": 0,
+                                      "w": 1
+                                    },
+                                    "segments": 12
+                                  }
+                                ]
+                              },
+                              "snapPoints": [
+                                {
+                                  "version": 1,
+                                  "id": "Foot",
+                                  "name": "Foot",
+                                  "family": "ChessSquare",
+                                  "frame": {
+                                    "position": {
+                                      "x": 0,
+                                      "y": 0,
+                                      "z": 0
+                                    },
+                                    "rotation": {
+                                      "x": 0,
+                                      "y": 0,
+                                      "z": 0,
+                                      "w": 1
+                                    }
+                                  }
+                                }
+                              ],
+                              "surfaces": [],
+                              "drawingTips": [],
+                              "geometry": {
+                                "kind": "recipe",
+                                "recipe": {
+                                  "version": 1,
+                                  "parts": [
+                                    {
+                                      "id": "Body",
+                                      "shape": "lathe",
+                                      "position": {
+                                        "x": 0,
+                                        "y": 0.0385,
+                                        "z": 0
+                                      },
+                                      "size": {
+                                        "x": 0.052,
+                                        "y": 0.077,
+                                        "z": 0.052
+                                      },
+                                      "rotation": {
+                                        "x": 0,
+                                        "y": 0,
+                                        "z": 0,
+                                        "w": 1
+                                      },
+                                      "parent": null,
+                                      "color": {
+                                        "r": 1,
+                                        "g": 1,
+                                        "b": 1,
+                                        "a": 1
+                                      },
+                                      "profile": [
+                                        {
+                                          "x": 0,
+                                          "y": -0.5
+                                        },
+                                        {
+                                          "x": 0.5,
+                                          "y": -0.5
+                                        },
+                                        {
+                                          "x": 0.5,
+                                          "y": -0.4
+                                        },
+                                        {
+                                          "x": 0.4,
+                                          "y": -0.3
+                                        },
+                                        {
+                                          "x": 0.28,
+                                          "y": -0.22
+                                        },
+                                        {
+                                          "x": 0.2,
+                                          "y": 0.28
+                                        },
+                                        {
+                                          "x": 0.32,
+                                          "y": 0.38
+                                        },
+                                        {
+                                          "x": 0.32,
+                                          "y": 0.5
+                                        },
+                                        {
+                                          "x": 0,
+                                          "y": 0.5
+                                        }
+                                      ],
+                                      "segments": 24
+                                    },
+                                    {
+                                      "id": "Crown",
+                                      "shape": "extrude",
+                                      "position": {
+                                        "x": 0,
+                                        "y": 0.082,
+                                        "z": 0
+                                      },
+                                      "size": {
+                                        "x": 0.042,
+                                        "y": 0.018,
+                                        "z": 0.028
+                                      },
+                                      "rotation": {
+                                        "x": 0,
+                                        "y": 0,
+                                        "z": 0,
+                                        "w": 1
+                                      },
+                                      "parent": null,
+                                      "color": {
+                                        "r": 1,
+                                        "g": 1,
+                                        "b": 1,
+                                        "a": 1
+                                      },
+                                      "profile": [
+                                        {
+                                          "x": -0.5,
+                                          "y": -0.5
+                                        },
+                                        {
+                                          "x": 0.5,
+                                          "y": -0.5
+                                        },
+                                        {
+                                          "x": 0.5,
+                                          "y": 0.5
+                                        },
+                                        {
+                                          "x": 0.25,
+                                          "y": 0.5
+                                        },
+                                        {
+                                          "x": 0.25,
+                                          "y": 0
+                                        },
+                                        {
+                                          "x": 0.1,
+                                          "y": 0
+                                        },
+                                        {
+                                          "x": 0.1,
+                                          "y": 0.5
+                                        },
+                                        {
+                                          "x": -0.1,
+                                          "y": 0.5
+                                        },
+                                        {
+                                          "x": -0.1,
+                                          "y": 0
+                                        },
+                                        {
+                                          "x": -0.25,
+                                          "y": 0
+                                        },
+                                        {
+                                          "x": -0.25,
+                                          "y": 0.5
+                                        },
+                                        {
+                                          "x": -0.5,
+                                          "y": 0.5
+                                        }
+                                      ],
+                                      "segments": 0
+                                    }
+                                  ],
+                                  "tracks": [],
+                                  "duration": 2,
+                                  "playing": false,
+                                  "loop": true
+                                }
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "slot": "B1",
+                          "name": "White knight B1",
+                          "position": {
+                            "x": -0.2,
+                            "y": 0.019,
+                            "z": -0.28
+                          },
+                          "rotation": {
+                            "x": 0,
+                            "y": 0,
+                            "z": 0,
+                            "w": 1
+                          },
+                          "scale": 1,
+                          "source": {
+                            "kind": "prototype",
+                            "prototype": {
+                              "version": 1,
+                              "color": {
+                                "r": 0.94,
+                                "g": 0.85,
+                                "b": 0.66,
+                                "a": 1
+                              },
+                              "physics": {
+                                "mode": "solid",
+                                "shape": "automatic",
+                                "mass": 0.06
+                              },
+                              "collision": {
+                                "version": 1,
+                                "shapes": [
+                                  {
+                                    "id": "Body",
+                                    "shape": "cylinder",
+                                    "position": {
+                                      "x": 0,
+                                      "y": 0.05,
+                                      "z": 0
+                                    },
+                                    "size": {
+                                      "x": 0.052,
+                                      "y": 0.1,
+                                      "z": 0.052
+                                    },
+                                    "rotation": {
+                                      "x": 0,
+                                      "y": 0,
+                                      "z": 0,
+                                      "w": 1
+                                    },
+                                    "segments": 12
+                                  }
+                                ]
+                              },
+                              "snapPoints": [
+                                {
+                                  "version": 1,
+                                  "id": "Foot",
+                                  "name": "Foot",
+                                  "family": "ChessSquare",
+                                  "frame": {
+                                    "position": {
+                                      "x": 0,
+                                      "y": 0,
+                                      "z": 0
+                                    },
+                                    "rotation": {
+                                      "x": 0,
+                                      "y": 0,
+                                      "z": 0,
+                                      "w": 1
+                                    }
+                                  }
+                                }
+                              ],
+                              "surfaces": [],
+                              "drawingTips": [],
+                              "geometry": {
+                                "kind": "recipe",
+                                "recipe": {
+                                  "version": 1,
+                                  "parts": [
+                                    {
+                                      "id": "Base",
+                                      "shape": "lathe",
+                                      "position": {
+                                        "x": 0,
+                                        "y": 0.016,
+                                        "z": 0
+                                      },
+                                      "size": {
+                                        "x": 0.052,
+                                        "y": 0.032,
+                                        "z": 0.052
+                                      },
+                                      "rotation": {
+                                        "x": 0,
+                                        "y": 0,
+                                        "z": 0,
+                                        "w": 1
+                                      },
+                                      "parent": null,
+                                      "color": {
+                                        "r": 1,
+                                        "g": 1,
+                                        "b": 1,
+                                        "a": 1
+                                      },
+                                      "profile": [
+                                        {
+                                          "x": 0,
+                                          "y": -0.5
+                                        },
+                                        {
+                                          "x": 0.5,
+                                          "y": -0.5
+                                        },
+                                        {
+                                          "x": 0.5,
+                                          "y": -0.25
+                                        },
+                                        {
+                                          "x": 0.38,
+                                          "y": 0.3
+                                        },
+                                        {
+                                          "x": 0.3,
+                                          "y": 0.5
+                                        },
+                                        {
+                                          "x": 0,
+                                          "y": 0.5
+                                        }
+                                      ],
+                                      "segments": 24
+                                    },
+                                    {
+                                      "id": "Head",
+                                      "shape": "extrude",
+                                      "position": {
+                                        "x": 0,
+                                        "y": 0.066,
+                                        "z": 0
+                                      },
+                                      "size": {
+                                        "x": 0.047,
+                                        "y": 0.068,
+                                        "z": 0.026
+                                      },
+                                      "rotation": {
+                                        "x": 0,
+                                        "y": -0.70710678,
+                                        "z": 0,
+                                        "w": 0.70710678
+                                      },
+                                      "parent": null,
+                                      "color": {
+                                        "r": 1,
+                                        "g": 1,
+                                        "b": 1,
+                                        "a": 1
+                                      },
+                                      "profile": [
+                                        {
+                                          "x": -0.36,
+                                          "y": -0.5
+                                        },
+                                        {
+                                          "x": 0.3,
+                                          "y": -0.5
+                                        },
+                                        {
+                                          "x": 0.2,
+                                          "y": -0.12
+                                        },
+                                        {
+                                          "x": 0.48,
+                                          "y": 0.16
+                                        },
+                                        {
+                                          "x": 0.45,
+                                          "y": 0.35
+                                        },
+                                        {
+                                          "x": 0.02,
+                                          "y": 0.43
+                                        },
+                                        {
+                                          "x": -0.02,
+                                          "y": 0.5
+                                        },
+                                        {
+                                          "x": -0.17,
+                                          "y": 0.36
+                                        },
+                                        {
+                                          "x": -0.31,
+                                          "y": 0.12
+                                        }
+                                      ],
+                                      "segments": 0
+                                    }
+                                  ],
+                                  "tracks": [],
+                                  "duration": 2,
+                                  "playing": false,
+                                  "loop": true
+                                }
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "slot": "C1",
+                          "name": "White bishop C1",
+                          "position": {
+                            "x": -0.12,
+                            "y": 0.019,
+                            "z": -0.28
+                          },
+                          "rotation": {
+                            "x": 0,
+                            "y": 0,
+                            "z": 0,
+                            "w": 1
+                          },
+                          "scale": 1,
+                          "source": {
+                            "kind": "prototype",
+                            "prototype": {
+                              "version": 1,
+                              "color": {
+                                "r": 0.94,
+                                "g": 0.85,
+                                "b": 0.66,
+                                "a": 1
+                              },
+                              "physics": {
+                                "mode": "solid",
+                                "shape": "automatic",
+                                "mass": 0.06
+                              },
+                              "collision": {
+                                "version": 1,
+                                "shapes": [
+                                  {
+                                    "id": "Body",
+                                    "shape": "cylinder",
+                                    "position": {
+                                      "x": 0,
+                                      "y": 0.055,
+                                      "z": 0
+                                    },
+                                    "size": {
+                                      "x": 0.052,
+                                      "y": 0.11,
+                                      "z": 0.052
+                                    },
+                                    "rotation": {
+                                      "x": 0,
+                                      "y": 0,
+                                      "z": 0,
+                                      "w": 1
+                                    },
+                                    "segments": 12
+                                  }
+                                ]
+                              },
+                              "snapPoints": [
+                                {
+                                  "version": 1,
+                                  "id": "Foot",
+                                  "name": "Foot",
+                                  "family": "ChessSquare",
+                                  "frame": {
+                                    "position": {
+                                      "x": 0,
+                                      "y": 0,
+                                      "z": 0
+                                    },
+                                    "rotation": {
+                                      "x": 0,
+                                      "y": 0,
+                                      "z": 0,
+                                      "w": 1
+                                    }
+                                  }
+                                }
+                              ],
+                              "surfaces": [],
+                              "drawingTips": [],
+                              "geometry": {
+                                "kind": "recipe",
+                                "recipe": {
+                                  "version": 1,
+                                  "parts": [
+                                    {
+                                      "id": "Body",
+                                      "shape": "lathe",
+                                      "position": {
+                                        "x": 0,
+                                        "y": 0.055,
+                                        "z": 0
+                                      },
+                                      "size": {
+                                        "x": 0.052,
+                                        "y": 0.11,
+                                        "z": 0.052
+                                      },
+                                      "rotation": {
+                                        "x": 0,
+                                        "y": 0,
+                                        "z": 0,
+                                        "w": 1
+                                      },
+                                      "parent": null,
+                                      "color": {
+                                        "r": 1,
+                                        "g": 1,
+                                        "b": 1,
+                                        "a": 1
+                                      },
+                                      "profile": [
+                                        {
+                                          "x": 0,
+                                          "y": -0.5
+                                        },
+                                        {
+                                          "x": 0.5,
+                                          "y": -0.5
+                                        },
+                                        {
+                                          "x": 0.5,
+                                          "y": -0.43
+                                        },
+                                        {
+                                          "x": 0.32,
+                                          "y": -0.32
+                                        },
+                                        {
+                                          "x": 0.19,
+                                          "y": 0.05
+                                        },
+                                        {
+                                          "x": 0.31,
+                                          "y": 0.14
+                                        },
+                                        {
+                                          "x": 0.18,
+                                          "y": 0.2
+                                        },
+                                        {
+                                          "x": 0.27,
+                                          "y": 0.3
+                                        },
+                                        {
+                                          "x": 0.21,
+                                          "y": 0.39
+                                        },
+                                        {
+                                          "x": 0,
+                                          "y": 0.5
+                                        }
+                                      ],
+                                      "segments": 24
+                                    }
+                                  ],
+                                  "tracks": [],
+                                  "duration": 2,
+                                  "playing": false,
+                                  "loop": true
+                                }
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "slot": "D1",
+                          "name": "White queen D1",
+                          "position": {
+                            "x": -0.04,
+                            "y": 0.019,
+                            "z": -0.28
+                          },
+                          "rotation": {
+                            "x": 0,
+                            "y": 0,
+                            "z": 0,
+                            "w": 1
+                          },
+                          "scale": 1,
+                          "source": {
+                            "kind": "prototype",
+                            "prototype": {
+                              "version": 1,
+                              "color": {
+                                "r": 0.94,
+                                "g": 0.85,
+                                "b": 0.66,
+                                "a": 1
+                              },
+                              "physics": {
+                                "mode": "solid",
+                                "shape": "automatic",
+                                "mass": 0.06
+                              },
+                              "collision": {
+                                "version": 1,
+                                "shapes": [
+                                  {
+                                    "id": "Body",
+                                    "shape": "cylinder",
+                                    "position": {
+                                      "x": 0,
+                                      "y": 0.058,
+                                      "z": 0
+                                    },
+                                    "size": {
+                                      "x": 0.052,
+                                      "y": 0.116,
+                                      "z": 0.052
+                                    },
+                                    "rotation": {
+                                      "x": 0,
+                                      "y": 0,
+                                      "z": 0,
+                                      "w": 1
+                                    },
+                                    "segments": 12
+                                  }
+                                ]
+                              },
+                              "snapPoints": [
+                                {
+                                  "version": 1,
+                                  "id": "Foot",
+                                  "name": "Foot",
+                                  "family": "ChessSquare",
+                                  "frame": {
+                                    "position": {
+                                      "x": 0,
+                                      "y": 0,
+                                      "z": 0
+                                    },
+                                    "rotation": {
+                                      "x": 0,
+                                      "y": 0,
+                                      "z": 0,
+                                      "w": 1
+                                    }
+                                  }
+                                }
+                              ],
+                              "surfaces": [],
+                              "drawingTips": [],
+                              "geometry": {
+                                "kind": "recipe",
+                                "recipe": {
+                                  "version": 1,
+                                  "parts": [
+                                    {
+                                      "id": "Body",
+                                      "shape": "lathe",
+                                      "position": {
+                                        "x": 0,
+                                        "y": 0.058,
+                                        "z": 0
+                                      },
+                                      "size": {
+                                        "x": 0.056,
+                                        "y": 0.116,
+                                        "z": 0.056
+                                      },
+                                      "rotation": {
+                                        "x": 0,
+                                        "y": 0,
+                                        "z": 0,
+                                        "w": 1
+                                      },
+                                      "parent": null,
+                                      "color": {
+                                        "r": 1,
+                                        "g": 1,
+                                        "b": 1,
+                                        "a": 1
+                                      },
+                                      "profile": [
+                                        {
+                                          "x": 0,
+                                          "y": -0.5
+                                        },
+                                        {
+                                          "x": 0.5,
+                                          "y": -0.5
+                                        },
+                                        {
+                                          "x": 0.5,
+                                          "y": -0.42
+                                        },
+                                        {
+                                          "x": 0.32,
+                                          "y": -0.32
+                                        },
+                                        {
+                                          "x": 0.19,
+                                          "y": 0.04
+                                        },
+                                        {
+                                          "x": 0.35,
+                                          "y": 0.15
+                                        },
+                                        {
+                                          "x": 0.24,
+                                          "y": 0.22
+                                        },
+                                        {
+                                          "x": 0.36,
+                                          "y": 0.36
+                                        },
+                                        {
+                                          "x": 0.3,
+                                          "y": 0.4
+                                        },
+                                        {
+                                          "x": 0.12,
+                                          "y": 0.42
+                                        },
+                                        {
+                                          "x": 0.12,
+                                          "y": 0.48
+                                        },
+                                        {
+                                          "x": 0,
+                                          "y": 0.5
+                                        }
+                                      ],
+                                      "segments": 24
+                                    }
+                                  ],
+                                  "tracks": [],
+                                  "duration": 2,
+                                  "playing": false,
+                                  "loop": true
+                                }
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "slot": "E1",
+                          "name": "White king E1",
+                          "position": {
+                            "x": 0.04,
+                            "y": 0.019,
+                            "z": -0.28
+                          },
+                          "rotation": {
+                            "x": 0,
+                            "y": 0,
+                            "z": 0,
+                            "w": 1
+                          },
+                          "scale": 1,
+                          "source": {
+                            "kind": "prototype",
+                            "prototype": {
+                              "version": 1,
+                              "color": {
+                                "r": 0.94,
+                                "g": 0.85,
+                                "b": 0.66,
+                                "a": 1
+                              },
+                              "physics": {
+                                "mode": "solid",
+                                "shape": "automatic",
+                                "mass": 0.06
+                              },
+                              "collision": {
+                                "version": 1,
+                                "shapes": [
+                                  {
+                                    "id": "Body",
+                                    "shape": "cylinder",
+                                    "position": {
+                                      "x": 0,
+                                      "y": 0.0665,
+                                      "z": 0
+                                    },
+                                    "size": {
+                                      "x": 0.052,
+                                      "y": 0.133,
+                                      "z": 0.052
+                                    },
+                                    "rotation": {
+                                      "x": 0,
+                                      "y": 0,
+                                      "z": 0,
+                                      "w": 1
+                                    },
+                                    "segments": 12
+                                  }
+                                ]
+                              },
+                              "snapPoints": [
+                                {
+                                  "version": 1,
+                                  "id": "Foot",
+                                  "name": "Foot",
+                                  "family": "ChessSquare",
+                                  "frame": {
+                                    "position": {
+                                      "x": 0,
+                                      "y": 0,
+                                      "z": 0
+                                    },
+                                    "rotation": {
+                                      "x": 0,
+                                      "y": 0,
+                                      "z": 0,
+                                      "w": 1
+                                    }
+                                  }
+                                }
+                              ],
+                              "surfaces": [],
+                              "drawingTips": [],
+                              "geometry": {
+                                "kind": "recipe",
+                                "recipe": {
+                                  "version": 1,
+                                  "parts": [
+                                    {
+                                      "id": "Body",
+                                      "shape": "lathe",
+                                      "position": {
+                                        "x": 0,
+                                        "y": 0.0515,
+                                        "z": 0
+                                      },
+                                      "size": {
+                                        "x": 0.056,
+                                        "y": 0.103,
+                                        "z": 0.056
+                                      },
+                                      "rotation": {
+                                        "x": 0,
+                                        "y": 0,
+                                        "z": 0,
+                                        "w": 1
+                                      },
+                                      "parent": null,
+                                      "color": {
+                                        "r": 1,
+                                        "g": 1,
+                                        "b": 1,
+                                        "a": 1
+                                      },
+                                      "profile": [
+                                        {
+                                          "x": 0,
+                                          "y": -0.5
+                                        },
+                                        {
+                                          "x": 0.5,
+                                          "y": -0.5
+                                        },
+                                        {
+                                          "x": 0.5,
+                                          "y": -0.4
+                                        },
+                                        {
+                                          "x": 0.4,
+                                          "y": -0.3
+                                        },
+                                        {
+                                          "x": 0.28,
+                                          "y": -0.22
+                                        },
+                                        {
+                                          "x": 0.2,
+                                          "y": 0.28
+                                        },
+                                        {
+                                          "x": 0.32,
+                                          "y": 0.38
+                                        },
+                                        {
+                                          "x": 0.32,
+                                          "y": 0.5
+                                        },
+                                        {
+                                          "x": 0,
+                                          "y": 0.5
+                                        }
+                                      ],
+                                      "segments": 24
+                                    },
+                                    {
+                                      "id": "CrossVertical",
+                                      "shape": "box",
+                                      "position": {
+                                        "x": 0,
+                                        "y": 0.118,
+                                        "z": 0
+                                      },
+                                      "size": {
+                                        "x": 0.009,
+                                        "y": 0.03,
+                                        "z": 0.009
+                                      },
+                                      "rotation": {
+                                        "x": 0,
+                                        "y": 0,
+                                        "z": 0,
+                                        "w": 1
+                                      },
+                                      "parent": null,
+                                      "color": {
+                                        "r": 1,
+                                        "g": 1,
+                                        "b": 1,
+                                        "a": 1
+                                      }
+                                    },
+                                    {
+                                      "id": "CrossHorizontal",
+                                      "shape": "box",
+                                      "position": {
+                                        "x": 0,
+                                        "y": 0.121,
+                                        "z": 0
+                                      },
+                                      "size": {
+                                        "x": 0.029,
+                                        "y": 0.009,
+                                        "z": 0.009
+                                      },
+                                      "rotation": {
+                                        "x": 0,
+                                        "y": 0,
+                                        "z": 0,
+                                        "w": 1
+                                      },
+                                      "parent": null,
+                                      "color": {
+                                        "r": 1,
+                                        "g": 1,
+                                        "b": 1,
+                                        "a": 1
+                                      }
+                                    }
+                                  ],
+                                  "tracks": [],
+                                  "duration": 2,
+                                  "playing": false,
+                                  "loop": true
+                                }
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "slot": "F1",
+                          "name": "White bishop F1",
+                          "position": {
+                            "x": 0.12,
+                            "y": 0.019,
+                            "z": -0.28
+                          },
+                          "rotation": {
+                            "x": 0,
+                            "y": 0,
+                            "z": 0,
+                            "w": 1
+                          },
+                          "scale": 1,
+                          "source": {
+                            "kind": "prototype",
+                            "prototype": {
+                              "version": 1,
+                              "color": {
+                                "r": 0.94,
+                                "g": 0.85,
+                                "b": 0.66,
+                                "a": 1
+                              },
+                              "physics": {
+                                "mode": "solid",
+                                "shape": "automatic",
+                                "mass": 0.06
+                              },
+                              "collision": {
+                                "version": 1,
+                                "shapes": [
+                                  {
+                                    "id": "Body",
+                                    "shape": "cylinder",
+                                    "position": {
+                                      "x": 0,
+                                      "y": 0.055,
+                                      "z": 0
+                                    },
+                                    "size": {
+                                      "x": 0.052,
+                                      "y": 0.11,
+                                      "z": 0.052
+                                    },
+                                    "rotation": {
+                                      "x": 0,
+                                      "y": 0,
+                                      "z": 0,
+                                      "w": 1
+                                    },
+                                    "segments": 12
+                                  }
+                                ]
+                              },
+                              "snapPoints": [
+                                {
+                                  "version": 1,
+                                  "id": "Foot",
+                                  "name": "Foot",
+                                  "family": "ChessSquare",
+                                  "frame": {
+                                    "position": {
+                                      "x": 0,
+                                      "y": 0,
+                                      "z": 0
+                                    },
+                                    "rotation": {
+                                      "x": 0,
+                                      "y": 0,
+                                      "z": 0,
+                                      "w": 1
+                                    }
+                                  }
+                                }
+                              ],
+                              "surfaces": [],
+                              "drawingTips": [],
+                              "geometry": {
+                                "kind": "recipe",
+                                "recipe": {
+                                  "version": 1,
+                                  "parts": [
+                                    {
+                                      "id": "Body",
+                                      "shape": "lathe",
+                                      "position": {
+                                        "x": 0,
+                                        "y": 0.055,
+                                        "z": 0
+                                      },
+                                      "size": {
+                                        "x": 0.052,
+                                        "y": 0.11,
+                                        "z": 0.052
+                                      },
+                                      "rotation": {
+                                        "x": 0,
+                                        "y": 0,
+                                        "z": 0,
+                                        "w": 1
+                                      },
+                                      "parent": null,
+                                      "color": {
+                                        "r": 1,
+                                        "g": 1,
+                                        "b": 1,
+                                        "a": 1
+                                      },
+                                      "profile": [
+                                        {
+                                          "x": 0,
+                                          "y": -0.5
+                                        },
+                                        {
+                                          "x": 0.5,
+                                          "y": -0.5
+                                        },
+                                        {
+                                          "x": 0.5,
+                                          "y": -0.43
+                                        },
+                                        {
+                                          "x": 0.32,
+                                          "y": -0.32
+                                        },
+                                        {
+                                          "x": 0.19,
+                                          "y": 0.05
+                                        },
+                                        {
+                                          "x": 0.31,
+                                          "y": 0.14
+                                        },
+                                        {
+                                          "x": 0.18,
+                                          "y": 0.2
+                                        },
+                                        {
+                                          "x": 0.27,
+                                          "y": 0.3
+                                        },
+                                        {
+                                          "x": 0.21,
+                                          "y": 0.39
+                                        },
+                                        {
+                                          "x": 0,
+                                          "y": 0.5
+                                        }
+                                      ],
+                                      "segments": 24
+                                    }
+                                  ],
+                                  "tracks": [],
+                                  "duration": 2,
+                                  "playing": false,
+                                  "loop": true
+                                }
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "slot": "G1",
+                          "name": "White knight G1",
+                          "position": {
+                            "x": 0.2,
+                            "y": 0.019,
+                            "z": -0.28
+                          },
+                          "rotation": {
+                            "x": 0,
+                            "y": 0,
+                            "z": 0,
+                            "w": 1
+                          },
+                          "scale": 1,
+                          "source": {
+                            "kind": "prototype",
+                            "prototype": {
+                              "version": 1,
+                              "color": {
+                                "r": 0.94,
+                                "g": 0.85,
+                                "b": 0.66,
+                                "a": 1
+                              },
+                              "physics": {
+                                "mode": "solid",
+                                "shape": "automatic",
+                                "mass": 0.06
+                              },
+                              "collision": {
+                                "version": 1,
+                                "shapes": [
+                                  {
+                                    "id": "Body",
+                                    "shape": "cylinder",
+                                    "position": {
+                                      "x": 0,
+                                      "y": 0.05,
+                                      "z": 0
+                                    },
+                                    "size": {
+                                      "x": 0.052,
+                                      "y": 0.1,
+                                      "z": 0.052
+                                    },
+                                    "rotation": {
+                                      "x": 0,
+                                      "y": 0,
+                                      "z": 0,
+                                      "w": 1
+                                    },
+                                    "segments": 12
+                                  }
+                                ]
+                              },
+                              "snapPoints": [
+                                {
+                                  "version": 1,
+                                  "id": "Foot",
+                                  "name": "Foot",
+                                  "family": "ChessSquare",
+                                  "frame": {
+                                    "position": {
+                                      "x": 0,
+                                      "y": 0,
+                                      "z": 0
+                                    },
+                                    "rotation": {
+                                      "x": 0,
+                                      "y": 0,
+                                      "z": 0,
+                                      "w": 1
+                                    }
+                                  }
+                                }
+                              ],
+                              "surfaces": [],
+                              "drawingTips": [],
+                              "geometry": {
+                                "kind": "recipe",
+                                "recipe": {
+                                  "version": 1,
+                                  "parts": [
+                                    {
+                                      "id": "Base",
+                                      "shape": "lathe",
+                                      "position": {
+                                        "x": 0,
+                                        "y": 0.016,
+                                        "z": 0
+                                      },
+                                      "size": {
+                                        "x": 0.052,
+                                        "y": 0.032,
+                                        "z": 0.052
+                                      },
+                                      "rotation": {
+                                        "x": 0,
+                                        "y": 0,
+                                        "z": 0,
+                                        "w": 1
+                                      },
+                                      "parent": null,
+                                      "color": {
+                                        "r": 1,
+                                        "g": 1,
+                                        "b": 1,
+                                        "a": 1
+                                      },
+                                      "profile": [
+                                        {
+                                          "x": 0,
+                                          "y": -0.5
+                                        },
+                                        {
+                                          "x": 0.5,
+                                          "y": -0.5
+                                        },
+                                        {
+                                          "x": 0.5,
+                                          "y": -0.25
+                                        },
+                                        {
+                                          "x": 0.38,
+                                          "y": 0.3
+                                        },
+                                        {
+                                          "x": 0.3,
+                                          "y": 0.5
+                                        },
+                                        {
+                                          "x": 0,
+                                          "y": 0.5
+                                        }
+                                      ],
+                                      "segments": 24
+                                    },
+                                    {
+                                      "id": "Head",
+                                      "shape": "extrude",
+                                      "position": {
+                                        "x": 0,
+                                        "y": 0.066,
+                                        "z": 0
+                                      },
+                                      "size": {
+                                        "x": 0.047,
+                                        "y": 0.068,
+                                        "z": 0.026
+                                      },
+                                      "rotation": {
+                                        "x": 0,
+                                        "y": -0.70710678,
+                                        "z": 0,
+                                        "w": 0.70710678
+                                      },
+                                      "parent": null,
+                                      "color": {
+                                        "r": 1,
+                                        "g": 1,
+                                        "b": 1,
+                                        "a": 1
+                                      },
+                                      "profile": [
+                                        {
+                                          "x": -0.36,
+                                          "y": -0.5
+                                        },
+                                        {
+                                          "x": 0.3,
+                                          "y": -0.5
+                                        },
+                                        {
+                                          "x": 0.2,
+                                          "y": -0.12
+                                        },
+                                        {
+                                          "x": 0.48,
+                                          "y": 0.16
+                                        },
+                                        {
+                                          "x": 0.45,
+                                          "y": 0.35
+                                        },
+                                        {
+                                          "x": 0.02,
+                                          "y": 0.43
+                                        },
+                                        {
+                                          "x": -0.02,
+                                          "y": 0.5
+                                        },
+                                        {
+                                          "x": -0.17,
+                                          "y": 0.36
+                                        },
+                                        {
+                                          "x": -0.31,
+                                          "y": 0.12
+                                        }
+                                      ],
+                                      "segments": 0
+                                    }
+                                  ],
+                                  "tracks": [],
+                                  "duration": 2,
+                                  "playing": false,
+                                  "loop": true
+                                }
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "slot": "H1",
+                          "name": "White rook H1",
+                          "position": {
+                            "x": 0.28,
+                            "y": 0.019,
+                            "z": -0.28
+                          },
+                          "rotation": {
+                            "x": 0,
+                            "y": 0,
+                            "z": 0,
+                            "w": 1
+                          },
+                          "scale": 1,
+                          "source": {
+                            "kind": "prototype",
+                            "prototype": {
+                              "version": 1,
+                              "color": {
+                                "r": 0.94,
+                                "g": 0.85,
+                                "b": 0.66,
+                                "a": 1
+                              },
+                              "physics": {
+                                "mode": "solid",
+                                "shape": "automatic",
+                                "mass": 0.06
+                              },
+                              "collision": {
+                                "version": 1,
+                                "shapes": [
+                                  {
+                                    "id": "Body",
+                                    "shape": "cylinder",
+                                    "position": {
+                                      "x": 0,
+                                      "y": 0.0455,
+                                      "z": 0
+                                    },
+                                    "size": {
+                                      "x": 0.052,
+                                      "y": 0.091,
+                                      "z": 0.052
+                                    },
+                                    "rotation": {
+                                      "x": 0,
+                                      "y": 0,
+                                      "z": 0,
+                                      "w": 1
+                                    },
+                                    "segments": 12
+                                  }
+                                ]
+                              },
+                              "snapPoints": [
+                                {
+                                  "version": 1,
+                                  "id": "Foot",
+                                  "name": "Foot",
+                                  "family": "ChessSquare",
+                                  "frame": {
+                                    "position": {
+                                      "x": 0,
+                                      "y": 0,
+                                      "z": 0
+                                    },
+                                    "rotation": {
+                                      "x": 0,
+                                      "y": 0,
+                                      "z": 0,
+                                      "w": 1
+                                    }
+                                  }
+                                }
+                              ],
+                              "surfaces": [],
+                              "drawingTips": [],
+                              "geometry": {
+                                "kind": "recipe",
+                                "recipe": {
+                                  "version": 1,
+                                  "parts": [
+                                    {
+                                      "id": "Body",
+                                      "shape": "lathe",
+                                      "position": {
+                                        "x": 0,
+                                        "y": 0.0385,
+                                        "z": 0
+                                      },
+                                      "size": {
+                                        "x": 0.052,
+                                        "y": 0.077,
+                                        "z": 0.052
+                                      },
+                                      "rotation": {
+                                        "x": 0,
+                                        "y": 0,
+                                        "z": 0,
+                                        "w": 1
+                                      },
+                                      "parent": null,
+                                      "color": {
+                                        "r": 1,
+                                        "g": 1,
+                                        "b": 1,
+                                        "a": 1
+                                      },
+                                      "profile": [
+                                        {
+                                          "x": 0,
+                                          "y": -0.5
+                                        },
+                                        {
+                                          "x": 0.5,
+                                          "y": -0.5
+                                        },
+                                        {
+                                          "x": 0.5,
+                                          "y": -0.4
+                                        },
+                                        {
+                                          "x": 0.4,
+                                          "y": -0.3
+                                        },
+                                        {
+                                          "x": 0.28,
+                                          "y": -0.22
+                                        },
+                                        {
+                                          "x": 0.2,
+                                          "y": 0.28
+                                        },
+                                        {
+                                          "x": 0.32,
+                                          "y": 0.38
+                                        },
+                                        {
+                                          "x": 0.32,
+                                          "y": 0.5
+                                        },
+                                        {
+                                          "x": 0,
+                                          "y": 0.5
+                                        }
+                                      ],
+                                      "segments": 24
+                                    },
+                                    {
+                                      "id": "Crown",
+                                      "shape": "extrude",
+                                      "position": {
+                                        "x": 0,
+                                        "y": 0.082,
+                                        "z": 0
+                                      },
+                                      "size": {
+                                        "x": 0.042,
+                                        "y": 0.018,
+                                        "z": 0.028
+                                      },
+                                      "rotation": {
+                                        "x": 0,
+                                        "y": 0,
+                                        "z": 0,
+                                        "w": 1
+                                      },
+                                      "parent": null,
+                                      "color": {
+                                        "r": 1,
+                                        "g": 1,
+                                        "b": 1,
+                                        "a": 1
+                                      },
+                                      "profile": [
+                                        {
+                                          "x": -0.5,
+                                          "y": -0.5
+                                        },
+                                        {
+                                          "x": 0.5,
+                                          "y": -0.5
+                                        },
+                                        {
+                                          "x": 0.5,
+                                          "y": 0.5
+                                        },
+                                        {
+                                          "x": 0.25,
+                                          "y": 0.5
+                                        },
+                                        {
+                                          "x": 0.25,
+                                          "y": 0
+                                        },
+                                        {
+                                          "x": 0.1,
+                                          "y": 0
+                                        },
+                                        {
+                                          "x": 0.1,
+                                          "y": 0.5
+                                        },
+                                        {
+                                          "x": -0.1,
+                                          "y": 0.5
+                                        },
+                                        {
+                                          "x": -0.1,
+                                          "y": 0
+                                        },
+                                        {
+                                          "x": -0.25,
+                                          "y": 0
+                                        },
+                                        {
+                                          "x": -0.25,
+                                          "y": 0.5
+                                        },
+                                        {
+                                          "x": -0.5,
+                                          "y": 0.5
+                                        }
+                                      ],
+                                      "segments": 0
+                                    }
+                                  ],
+                                  "tracks": [],
+                                  "duration": 2,
+                                  "playing": false,
+                                  "loop": true
+                                }
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "slot": "A2",
+                          "name": "White pawn A2",
+                          "position": {
+                            "x": -0.28,
+                            "y": 0.019,
+                            "z": -0.2
+                          },
+                          "rotation": {
+                            "x": 0,
+                            "y": 0,
+                            "z": 0,
+                            "w": 1
+                          },
+                          "scale": 1,
+                          "source": {
+                            "kind": "prototype",
+                            "prototype": {
+                              "version": 1,
+                              "color": {
+                                "r": 0.94,
+                                "g": 0.85,
+                                "b": 0.66,
+                                "a": 1
+                              },
+                              "physics": {
+                                "mode": "solid",
+                                "shape": "automatic",
+                                "mass": 0.06
+                              },
+                              "collision": {
+                                "version": 1,
+                                "shapes": [
+                                  {
+                                    "id": "Body",
+                                    "shape": "cylinder",
+                                    "position": {
+                                      "x": 0,
+                                      "y": 0.0375,
+                                      "z": 0
+                                    },
+                                    "size": {
+                                      "x": 0.052,
+                                      "y": 0.075,
+                                      "z": 0.052
+                                    },
+                                    "rotation": {
+                                      "x": 0,
+                                      "y": 0,
+                                      "z": 0,
+                                      "w": 1
+                                    },
+                                    "segments": 12
+                                  }
+                                ]
+                              },
+                              "snapPoints": [
+                                {
+                                  "version": 1,
+                                  "id": "Foot",
+                                  "name": "Foot",
+                                  "family": "ChessSquare",
+                                  "frame": {
+                                    "position": {
+                                      "x": 0,
+                                      "y": 0,
+                                      "z": 0
+                                    },
+                                    "rotation": {
+                                      "x": 0,
+                                      "y": 0,
+                                      "z": 0,
+                                      "w": 1
+                                    }
+                                  }
+                                }
+                              ],
+                              "surfaces": [],
+                              "drawingTips": [],
+                              "geometry": {
+                                "kind": "recipe",
+                                "recipe": {
+                                  "version": 1,
+                                  "parts": [
+                                    {
+                                      "id": "Body",
+                                      "shape": "lathe",
+                                      "position": {
+                                        "x": 0,
+                                        "y": 0.0375,
+                                        "z": 0
+                                      },
+                                      "size": {
+                                        "x": 0.048,
+                                        "y": 0.075,
+                                        "z": 0.048
+                                      },
+                                      "rotation": {
+                                        "x": 0.0,
+                                        "y": 0,
+                                        "z": 0.0,
+                                        "w": 1.0
+                                      },
+                                      "parent": null,
+                                      "color": {
+                                        "r": 1,
+                                        "g": 1,
+                                        "b": 1,
+                                        "a": 1
+                                      },
+                                      "profile": [
+                                        {
+                                          "x": 0,
+                                          "y": -0.5
+                                        },
+                                        {
+                                          "x": 0.5,
+                                          "y": -0.5
+                                        },
+                                        {
+                                          "x": 0.5,
+                                          "y": -0.4
+                                        },
+                                        {
+                                          "x": 0.32,
+                                          "y": -0.25
+                                        },
+                                        {
+                                          "x": 0.2,
+                                          "y": 0.08
+                                        },
+                                        {
+                                          "x": 0.36,
+                                          "y": 0.22
+                                        },
+                                        {
+                                          "x": 0.38,
+                                          "y": 0.34
+                                        },
+                                        {
+                                          "x": 0.25,
+                                          "y": 0.47
+                                        },
+                                        {
+                                          "x": 0,
+                                          "y": 0.5
+                                        }
+                                      ],
+                                      "segments": 24
+                                    }
+                                  ],
+                                  "tracks": [],
+                                  "duration": 2,
+                                  "playing": false,
+                                  "loop": true
+                                }
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "slot": "B2",
+                          "name": "White pawn B2",
+                          "position": {
+                            "x": -0.2,
+                            "y": 0.019,
+                            "z": -0.2
+                          },
+                          "rotation": {
+                            "x": 0,
+                            "y": 0,
+                            "z": 0,
+                            "w": 1
+                          },
+                          "scale": 1,
+                          "source": {
+                            "kind": "prototype",
+                            "prototype": {
+                              "version": 1,
+                              "color": {
+                                "r": 0.94,
+                                "g": 0.85,
+                                "b": 0.66,
+                                "a": 1
+                              },
+                              "physics": {
+                                "mode": "solid",
+                                "shape": "automatic",
+                                "mass": 0.06
+                              },
+                              "collision": {
+                                "version": 1,
+                                "shapes": [
+                                  {
+                                    "id": "Body",
+                                    "shape": "cylinder",
+                                    "position": {
+                                      "x": 0,
+                                      "y": 0.0375,
+                                      "z": 0
+                                    },
+                                    "size": {
+                                      "x": 0.052,
+                                      "y": 0.075,
+                                      "z": 0.052
+                                    },
+                                    "rotation": {
+                                      "x": 0,
+                                      "y": 0,
+                                      "z": 0,
+                                      "w": 1
+                                    },
+                                    "segments": 12
+                                  }
+                                ]
+                              },
+                              "snapPoints": [
+                                {
+                                  "version": 1,
+                                  "id": "Foot",
+                                  "name": "Foot",
+                                  "family": "ChessSquare",
+                                  "frame": {
+                                    "position": {
+                                      "x": 0,
+                                      "y": 0,
+                                      "z": 0
+                                    },
+                                    "rotation": {
+                                      "x": 0,
+                                      "y": 0,
+                                      "z": 0,
+                                      "w": 1
+                                    }
+                                  }
+                                }
+                              ],
+                              "surfaces": [],
+                              "drawingTips": [],
+                              "geometry": {
+                                "kind": "recipe",
+                                "recipe": {
+                                  "version": 1,
+                                  "parts": [
+                                    {
+                                      "id": "Body",
+                                      "shape": "lathe",
+                                      "position": {
+                                        "x": 0,
+                                        "y": 0.0375,
+                                        "z": 0
+                                      },
+                                      "size": {
+                                        "x": 0.048,
+                                        "y": 0.075,
+                                        "z": 0.048
+                                      },
+                                      "rotation": {
+                                        "x": 0.0,
+                                        "y": 0,
+                                        "z": 0.0,
+                                        "w": 1.0
+                                      },
+                                      "parent": null,
+                                      "color": {
+                                        "r": 1,
+                                        "g": 1,
+                                        "b": 1,
+                                        "a": 1
+                                      },
+                                      "profile": [
+                                        {
+                                          "x": 0,
+                                          "y": -0.5
+                                        },
+                                        {
+                                          "x": 0.5,
+                                          "y": -0.5
+                                        },
+                                        {
+                                          "x": 0.5,
+                                          "y": -0.4
+                                        },
+                                        {
+                                          "x": 0.32,
+                                          "y": -0.25
+                                        },
+                                        {
+                                          "x": 0.2,
+                                          "y": 0.08
+                                        },
+                                        {
+                                          "x": 0.36,
+                                          "y": 0.22
+                                        },
+                                        {
+                                          "x": 0.38,
+                                          "y": 0.34
+                                        },
+                                        {
+                                          "x": 0.25,
+                                          "y": 0.47
+                                        },
+                                        {
+                                          "x": 0,
+                                          "y": 0.5
+                                        }
+                                      ],
+                                      "segments": 24
+                                    }
+                                  ],
+                                  "tracks": [],
+                                  "duration": 2,
+                                  "playing": false,
+                                  "loop": true
+                                }
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "slot": "C2",
+                          "name": "White pawn C2",
+                          "position": {
+                            "x": -0.12,
+                            "y": 0.019,
+                            "z": -0.2
+                          },
+                          "rotation": {
+                            "x": 0,
+                            "y": 0,
+                            "z": 0,
+                            "w": 1
+                          },
+                          "scale": 1,
+                          "source": {
+                            "kind": "prototype",
+                            "prototype": {
+                              "version": 1,
+                              "color": {
+                                "r": 0.94,
+                                "g": 0.85,
+                                "b": 0.66,
+                                "a": 1
+                              },
+                              "physics": {
+                                "mode": "solid",
+                                "shape": "automatic",
+                                "mass": 0.06
+                              },
+                              "collision": {
+                                "version": 1,
+                                "shapes": [
+                                  {
+                                    "id": "Body",
+                                    "shape": "cylinder",
+                                    "position": {
+                                      "x": 0,
+                                      "y": 0.0375,
+                                      "z": 0
+                                    },
+                                    "size": {
+                                      "x": 0.052,
+                                      "y": 0.075,
+                                      "z": 0.052
+                                    },
+                                    "rotation": {
+                                      "x": 0,
+                                      "y": 0,
+                                      "z": 0,
+                                      "w": 1
+                                    },
+                                    "segments": 12
+                                  }
+                                ]
+                              },
+                              "snapPoints": [
+                                {
+                                  "version": 1,
+                                  "id": "Foot",
+                                  "name": "Foot",
+                                  "family": "ChessSquare",
+                                  "frame": {
+                                    "position": {
+                                      "x": 0,
+                                      "y": 0,
+                                      "z": 0
+                                    },
+                                    "rotation": {
+                                      "x": 0,
+                                      "y": 0,
+                                      "z": 0,
+                                      "w": 1
+                                    }
+                                  }
+                                }
+                              ],
+                              "surfaces": [],
+                              "drawingTips": [],
+                              "geometry": {
+                                "kind": "recipe",
+                                "recipe": {
+                                  "version": 1,
+                                  "parts": [
+                                    {
+                                      "id": "Body",
+                                      "shape": "lathe",
+                                      "position": {
+                                        "x": 0,
+                                        "y": 0.0375,
+                                        "z": 0
+                                      },
+                                      "size": {
+                                        "x": 0.048,
+                                        "y": 0.075,
+                                        "z": 0.048
+                                      },
+                                      "rotation": {
+                                        "x": 0.0,
+                                        "y": 0,
+                                        "z": 0.0,
+                                        "w": 1.0
+                                      },
+                                      "parent": null,
+                                      "color": {
+                                        "r": 1,
+                                        "g": 1,
+                                        "b": 1,
+                                        "a": 1
+                                      },
+                                      "profile": [
+                                        {
+                                          "x": 0,
+                                          "y": -0.5
+                                        },
+                                        {
+                                          "x": 0.5,
+                                          "y": -0.5
+                                        },
+                                        {
+                                          "x": 0.5,
+                                          "y": -0.4
+                                        },
+                                        {
+                                          "x": 0.32,
+                                          "y": -0.25
+                                        },
+                                        {
+                                          "x": 0.2,
+                                          "y": 0.08
+                                        },
+                                        {
+                                          "x": 0.36,
+                                          "y": 0.22
+                                        },
+                                        {
+                                          "x": 0.38,
+                                          "y": 0.34
+                                        },
+                                        {
+                                          "x": 0.25,
+                                          "y": 0.47
+                                        },
+                                        {
+                                          "x": 0,
+                                          "y": 0.5
+                                        }
+                                      ],
+                                      "segments": 24
+                                    }
+                                  ],
+                                  "tracks": [],
+                                  "duration": 2,
+                                  "playing": false,
+                                  "loop": true
+                                }
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "slot": "D2",
+                          "name": "White pawn D2",
+                          "position": {
+                            "x": -0.04,
+                            "y": 0.019,
+                            "z": -0.2
+                          },
+                          "rotation": {
+                            "x": 0,
+                            "y": 0,
+                            "z": 0,
+                            "w": 1
+                          },
+                          "scale": 1,
+                          "source": {
+                            "kind": "prototype",
+                            "prototype": {
+                              "version": 1,
+                              "color": {
+                                "r": 0.94,
+                                "g": 0.85,
+                                "b": 0.66,
+                                "a": 1
+                              },
+                              "physics": {
+                                "mode": "solid",
+                                "shape": "automatic",
+                                "mass": 0.06
+                              },
+                              "collision": {
+                                "version": 1,
+                                "shapes": [
+                                  {
+                                    "id": "Body",
+                                    "shape": "cylinder",
+                                    "position": {
+                                      "x": 0,
+                                      "y": 0.0375,
+                                      "z": 0
+                                    },
+                                    "size": {
+                                      "x": 0.052,
+                                      "y": 0.075,
+                                      "z": 0.052
+                                    },
+                                    "rotation": {
+                                      "x": 0,
+                                      "y": 0,
+                                      "z": 0,
+                                      "w": 1
+                                    },
+                                    "segments": 12
+                                  }
+                                ]
+                              },
+                              "snapPoints": [
+                                {
+                                  "version": 1,
+                                  "id": "Foot",
+                                  "name": "Foot",
+                                  "family": "ChessSquare",
+                                  "frame": {
+                                    "position": {
+                                      "x": 0,
+                                      "y": 0,
+                                      "z": 0
+                                    },
+                                    "rotation": {
+                                      "x": 0,
+                                      "y": 0,
+                                      "z": 0,
+                                      "w": 1
+                                    }
+                                  }
+                                }
+                              ],
+                              "surfaces": [],
+                              "drawingTips": [],
+                              "geometry": {
+                                "kind": "recipe",
+                                "recipe": {
+                                  "version": 1,
+                                  "parts": [
+                                    {
+                                      "id": "Body",
+                                      "shape": "lathe",
+                                      "position": {
+                                        "x": 0,
+                                        "y": 0.0375,
+                                        "z": 0
+                                      },
+                                      "size": {
+                                        "x": 0.048,
+                                        "y": 0.075,
+                                        "z": 0.048
+                                      },
+                                      "rotation": {
+                                        "x": 0.0,
+                                        "y": 0,
+                                        "z": 0.0,
+                                        "w": 1.0
+                                      },
+                                      "parent": null,
+                                      "color": {
+                                        "r": 1,
+                                        "g": 1,
+                                        "b": 1,
+                                        "a": 1
+                                      },
+                                      "profile": [
+                                        {
+                                          "x": 0,
+                                          "y": -0.5
+                                        },
+                                        {
+                                          "x": 0.5,
+                                          "y": -0.5
+                                        },
+                                        {
+                                          "x": 0.5,
+                                          "y": -0.4
+                                        },
+                                        {
+                                          "x": 0.32,
+                                          "y": -0.25
+                                        },
+                                        {
+                                          "x": 0.2,
+                                          "y": 0.08
+                                        },
+                                        {
+                                          "x": 0.36,
+                                          "y": 0.22
+                                        },
+                                        {
+                                          "x": 0.38,
+                                          "y": 0.34
+                                        },
+                                        {
+                                          "x": 0.25,
+                                          "y": 0.47
+                                        },
+                                        {
+                                          "x": 0,
+                                          "y": 0.5
+                                        }
+                                      ],
+                                      "segments": 24
+                                    }
+                                  ],
+                                  "tracks": [],
+                                  "duration": 2,
+                                  "playing": false,
+                                  "loop": true
+                                }
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "slot": "E2",
+                          "name": "White pawn E2",
+                          "position": {
+                            "x": 0.04,
+                            "y": 0.019,
+                            "z": -0.2
+                          },
+                          "rotation": {
+                            "x": 0,
+                            "y": 0,
+                            "z": 0,
+                            "w": 1
+                          },
+                          "scale": 1,
+                          "source": {
+                            "kind": "prototype",
+                            "prototype": {
+                              "version": 1,
+                              "color": {
+                                "r": 0.94,
+                                "g": 0.85,
+                                "b": 0.66,
+                                "a": 1
+                              },
+                              "physics": {
+                                "mode": "solid",
+                                "shape": "automatic",
+                                "mass": 0.06
+                              },
+                              "collision": {
+                                "version": 1,
+                                "shapes": [
+                                  {
+                                    "id": "Body",
+                                    "shape": "cylinder",
+                                    "position": {
+                                      "x": 0,
+                                      "y": 0.0375,
+                                      "z": 0
+                                    },
+                                    "size": {
+                                      "x": 0.052,
+                                      "y": 0.075,
+                                      "z": 0.052
+                                    },
+                                    "rotation": {
+                                      "x": 0,
+                                      "y": 0,
+                                      "z": 0,
+                                      "w": 1
+                                    },
+                                    "segments": 12
+                                  }
+                                ]
+                              },
+                              "snapPoints": [
+                                {
+                                  "version": 1,
+                                  "id": "Foot",
+                                  "name": "Foot",
+                                  "family": "ChessSquare",
+                                  "frame": {
+                                    "position": {
+                                      "x": 0,
+                                      "y": 0,
+                                      "z": 0
+                                    },
+                                    "rotation": {
+                                      "x": 0,
+                                      "y": 0,
+                                      "z": 0,
+                                      "w": 1
+                                    }
+                                  }
+                                }
+                              ],
+                              "surfaces": [],
+                              "drawingTips": [],
+                              "geometry": {
+                                "kind": "recipe",
+                                "recipe": {
+                                  "version": 1,
+                                  "parts": [
+                                    {
+                                      "id": "Body",
+                                      "shape": "lathe",
+                                      "position": {
+                                        "x": 0,
+                                        "y": 0.0375,
+                                        "z": 0
+                                      },
+                                      "size": {
+                                        "x": 0.048,
+                                        "y": 0.075,
+                                        "z": 0.048
+                                      },
+                                      "rotation": {
+                                        "x": 0.0,
+                                        "y": 0,
+                                        "z": 0.0,
+                                        "w": 1.0
+                                      },
+                                      "parent": null,
+                                      "color": {
+                                        "r": 1,
+                                        "g": 1,
+                                        "b": 1,
+                                        "a": 1
+                                      },
+                                      "profile": [
+                                        {
+                                          "x": 0,
+                                          "y": -0.5
+                                        },
+                                        {
+                                          "x": 0.5,
+                                          "y": -0.5
+                                        },
+                                        {
+                                          "x": 0.5,
+                                          "y": -0.4
+                                        },
+                                        {
+                                          "x": 0.32,
+                                          "y": -0.25
+                                        },
+                                        {
+                                          "x": 0.2,
+                                          "y": 0.08
+                                        },
+                                        {
+                                          "x": 0.36,
+                                          "y": 0.22
+                                        },
+                                        {
+                                          "x": 0.38,
+                                          "y": 0.34
+                                        },
+                                        {
+                                          "x": 0.25,
+                                          "y": 0.47
+                                        },
+                                        {
+                                          "x": 0,
+                                          "y": 0.5
+                                        }
+                                      ],
+                                      "segments": 24
+                                    }
+                                  ],
+                                  "tracks": [],
+                                  "duration": 2,
+                                  "playing": false,
+                                  "loop": true
+                                }
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "slot": "F2",
+                          "name": "White pawn F2",
+                          "position": {
+                            "x": 0.12,
+                            "y": 0.019,
+                            "z": -0.2
+                          },
+                          "rotation": {
+                            "x": 0,
+                            "y": 0,
+                            "z": 0,
+                            "w": 1
+                          },
+                          "scale": 1,
+                          "source": {
+                            "kind": "prototype",
+                            "prototype": {
+                              "version": 1,
+                              "color": {
+                                "r": 0.94,
+                                "g": 0.85,
+                                "b": 0.66,
+                                "a": 1
+                              },
+                              "physics": {
+                                "mode": "solid",
+                                "shape": "automatic",
+                                "mass": 0.06
+                              },
+                              "collision": {
+                                "version": 1,
+                                "shapes": [
+                                  {
+                                    "id": "Body",
+                                    "shape": "cylinder",
+                                    "position": {
+                                      "x": 0,
+                                      "y": 0.0375,
+                                      "z": 0
+                                    },
+                                    "size": {
+                                      "x": 0.052,
+                                      "y": 0.075,
+                                      "z": 0.052
+                                    },
+                                    "rotation": {
+                                      "x": 0,
+                                      "y": 0,
+                                      "z": 0,
+                                      "w": 1
+                                    },
+                                    "segments": 12
+                                  }
+                                ]
+                              },
+                              "snapPoints": [
+                                {
+                                  "version": 1,
+                                  "id": "Foot",
+                                  "name": "Foot",
+                                  "family": "ChessSquare",
+                                  "frame": {
+                                    "position": {
+                                      "x": 0,
+                                      "y": 0,
+                                      "z": 0
+                                    },
+                                    "rotation": {
+                                      "x": 0,
+                                      "y": 0,
+                                      "z": 0,
+                                      "w": 1
+                                    }
+                                  }
+                                }
+                              ],
+                              "surfaces": [],
+                              "drawingTips": [],
+                              "geometry": {
+                                "kind": "recipe",
+                                "recipe": {
+                                  "version": 1,
+                                  "parts": [
+                                    {
+                                      "id": "Body",
+                                      "shape": "lathe",
+                                      "position": {
+                                        "x": 0,
+                                        "y": 0.0375,
+                                        "z": 0
+                                      },
+                                      "size": {
+                                        "x": 0.048,
+                                        "y": 0.075,
+                                        "z": 0.048
+                                      },
+                                      "rotation": {
+                                        "x": 0.0,
+                                        "y": 0,
+                                        "z": 0.0,
+                                        "w": 1.0
+                                      },
+                                      "parent": null,
+                                      "color": {
+                                        "r": 1,
+                                        "g": 1,
+                                        "b": 1,
+                                        "a": 1
+                                      },
+                                      "profile": [
+                                        {
+                                          "x": 0,
+                                          "y": -0.5
+                                        },
+                                        {
+                                          "x": 0.5,
+                                          "y": -0.5
+                                        },
+                                        {
+                                          "x": 0.5,
+                                          "y": -0.4
+                                        },
+                                        {
+                                          "x": 0.32,
+                                          "y": -0.25
+                                        },
+                                        {
+                                          "x": 0.2,
+                                          "y": 0.08
+                                        },
+                                        {
+                                          "x": 0.36,
+                                          "y": 0.22
+                                        },
+                                        {
+                                          "x": 0.38,
+                                          "y": 0.34
+                                        },
+                                        {
+                                          "x": 0.25,
+                                          "y": 0.47
+                                        },
+                                        {
+                                          "x": 0,
+                                          "y": 0.5
+                                        }
+                                      ],
+                                      "segments": 24
+                                    }
+                                  ],
+                                  "tracks": [],
+                                  "duration": 2,
+                                  "playing": false,
+                                  "loop": true
+                                }
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "slot": "G2",
+                          "name": "White pawn G2",
+                          "position": {
+                            "x": 0.2,
+                            "y": 0.019,
+                            "z": -0.2
+                          },
+                          "rotation": {
+                            "x": 0,
+                            "y": 0,
+                            "z": 0,
+                            "w": 1
+                          },
+                          "scale": 1,
+                          "source": {
+                            "kind": "prototype",
+                            "prototype": {
+                              "version": 1,
+                              "color": {
+                                "r": 0.94,
+                                "g": 0.85,
+                                "b": 0.66,
+                                "a": 1
+                              },
+                              "physics": {
+                                "mode": "solid",
+                                "shape": "automatic",
+                                "mass": 0.06
+                              },
+                              "collision": {
+                                "version": 1,
+                                "shapes": [
+                                  {
+                                    "id": "Body",
+                                    "shape": "cylinder",
+                                    "position": {
+                                      "x": 0,
+                                      "y": 0.0375,
+                                      "z": 0
+                                    },
+                                    "size": {
+                                      "x": 0.052,
+                                      "y": 0.075,
+                                      "z": 0.052
+                                    },
+                                    "rotation": {
+                                      "x": 0,
+                                      "y": 0,
+                                      "z": 0,
+                                      "w": 1
+                                    },
+                                    "segments": 12
+                                  }
+                                ]
+                              },
+                              "snapPoints": [
+                                {
+                                  "version": 1,
+                                  "id": "Foot",
+                                  "name": "Foot",
+                                  "family": "ChessSquare",
+                                  "frame": {
+                                    "position": {
+                                      "x": 0,
+                                      "y": 0,
+                                      "z": 0
+                                    },
+                                    "rotation": {
+                                      "x": 0,
+                                      "y": 0,
+                                      "z": 0,
+                                      "w": 1
+                                    }
+                                  }
+                                }
+                              ],
+                              "surfaces": [],
+                              "drawingTips": [],
+                              "geometry": {
+                                "kind": "recipe",
+                                "recipe": {
+                                  "version": 1,
+                                  "parts": [
+                                    {
+                                      "id": "Body",
+                                      "shape": "lathe",
+                                      "position": {
+                                        "x": 0,
+                                        "y": 0.0375,
+                                        "z": 0
+                                      },
+                                      "size": {
+                                        "x": 0.048,
+                                        "y": 0.075,
+                                        "z": 0.048
+                                      },
+                                      "rotation": {
+                                        "x": 0.0,
+                                        "y": 0,
+                                        "z": 0.0,
+                                        "w": 1.0
+                                      },
+                                      "parent": null,
+                                      "color": {
+                                        "r": 1,
+                                        "g": 1,
+                                        "b": 1,
+                                        "a": 1
+                                      },
+                                      "profile": [
+                                        {
+                                          "x": 0,
+                                          "y": -0.5
+                                        },
+                                        {
+                                          "x": 0.5,
+                                          "y": -0.5
+                                        },
+                                        {
+                                          "x": 0.5,
+                                          "y": -0.4
+                                        },
+                                        {
+                                          "x": 0.32,
+                                          "y": -0.25
+                                        },
+                                        {
+                                          "x": 0.2,
+                                          "y": 0.08
+                                        },
+                                        {
+                                          "x": 0.36,
+                                          "y": 0.22
+                                        },
+                                        {
+                                          "x": 0.38,
+                                          "y": 0.34
+                                        },
+                                        {
+                                          "x": 0.25,
+                                          "y": 0.47
+                                        },
+                                        {
+                                          "x": 0,
+                                          "y": 0.5
+                                        }
+                                      ],
+                                      "segments": 24
+                                    }
+                                  ],
+                                  "tracks": [],
+                                  "duration": 2,
+                                  "playing": false,
+                                  "loop": true
+                                }
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "slot": "H2",
+                          "name": "White pawn H2",
+                          "position": {
+                            "x": 0.28,
+                            "y": 0.019,
+                            "z": -0.2
+                          },
+                          "rotation": {
+                            "x": 0,
+                            "y": 0,
+                            "z": 0,
+                            "w": 1
+                          },
+                          "scale": 1,
+                          "source": {
+                            "kind": "prototype",
+                            "prototype": {
+                              "version": 1,
+                              "color": {
+                                "r": 0.94,
+                                "g": 0.85,
+                                "b": 0.66,
+                                "a": 1
+                              },
+                              "physics": {
+                                "mode": "solid",
+                                "shape": "automatic",
+                                "mass": 0.06
+                              },
+                              "collision": {
+                                "version": 1,
+                                "shapes": [
+                                  {
+                                    "id": "Body",
+                                    "shape": "cylinder",
+                                    "position": {
+                                      "x": 0,
+                                      "y": 0.0375,
+                                      "z": 0
+                                    },
+                                    "size": {
+                                      "x": 0.052,
+                                      "y": 0.075,
+                                      "z": 0.052
+                                    },
+                                    "rotation": {
+                                      "x": 0,
+                                      "y": 0,
+                                      "z": 0,
+                                      "w": 1
+                                    },
+                                    "segments": 12
+                                  }
+                                ]
+                              },
+                              "snapPoints": [
+                                {
+                                  "version": 1,
+                                  "id": "Foot",
+                                  "name": "Foot",
+                                  "family": "ChessSquare",
+                                  "frame": {
+                                    "position": {
+                                      "x": 0,
+                                      "y": 0,
+                                      "z": 0
+                                    },
+                                    "rotation": {
+                                      "x": 0,
+                                      "y": 0,
+                                      "z": 0,
+                                      "w": 1
+                                    }
+                                  }
+                                }
+                              ],
+                              "surfaces": [],
+                              "drawingTips": [],
+                              "geometry": {
+                                "kind": "recipe",
+                                "recipe": {
+                                  "version": 1,
+                                  "parts": [
+                                    {
+                                      "id": "Body",
+                                      "shape": "lathe",
+                                      "position": {
+                                        "x": 0,
+                                        "y": 0.0375,
+                                        "z": 0
+                                      },
+                                      "size": {
+                                        "x": 0.048,
+                                        "y": 0.075,
+                                        "z": 0.048
+                                      },
+                                      "rotation": {
+                                        "x": 0.0,
+                                        "y": 0,
+                                        "z": 0.0,
+                                        "w": 1.0
+                                      },
+                                      "parent": null,
+                                      "color": {
+                                        "r": 1,
+                                        "g": 1,
+                                        "b": 1,
+                                        "a": 1
+                                      },
+                                      "profile": [
+                                        {
+                                          "x": 0,
+                                          "y": -0.5
+                                        },
+                                        {
+                                          "x": 0.5,
+                                          "y": -0.5
+                                        },
+                                        {
+                                          "x": 0.5,
+                                          "y": -0.4
+                                        },
+                                        {
+                                          "x": 0.32,
+                                          "y": -0.25
+                                        },
+                                        {
+                                          "x": 0.2,
+                                          "y": 0.08
+                                        },
+                                        {
+                                          "x": 0.36,
+                                          "y": 0.22
+                                        },
+                                        {
+                                          "x": 0.38,
+                                          "y": 0.34
+                                        },
+                                        {
+                                          "x": 0.25,
+                                          "y": 0.47
+                                        },
+                                        {
+                                          "x": 0,
+                                          "y": 0.5
+                                        }
+                                      ],
+                                      "segments": 24
+                                    }
+                                  ],
+                                  "tracks": [],
+                                  "duration": 2,
+                                  "playing": false,
+                                  "loop": true
+                                }
+                              }
+                            }
+                          }
+                        }
+                      ],
+                      "connections": []
+                    },
+                    "position": {
+                      "x": 0,
+                      "y": 0,
+                      "z": 0
+                    },
+                    "rotation": {
+                      "x": 0,
+                      "y": 0,
+                      "z": 0,
+                      "w": 1
+                    },
+                    "scale": 1
+                  },
+                  "bindings": {
+                    "position": {
+                      "var": "position"
+                    },
+                    "rotation": {
+                      "var": "rotation"
+                    },
+                    "scale": {
+                      "var": "scale"
+                    }
+                  },
+                  "results": {
+                    "objectIds": "pieces"
+                  }
+                },
+                {
+                  "id": "created",
+                  "op": "return",
+                  "value": {
+                    "var": "pieces"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "signals": {}
+    }
+  ],
+  "entry": "main",
+  "resources": [],
+  "state": [],
+  "events": [],
+  "functions": [
+    {
+      "name": "main",
+      "returns": "void",
+      "parameters": [],
+      "locals": [
+        {
+          "name": "pieces",
+          "type": {
+            "list": "text"
+          },
+          "initial": []
+        }
+      ],
+      "body": [
+        {
+          "id": "buildPieces",
+          "op": "call",
+          "module": "kit",
+          "function": "create",
+          "args": [
+            {
+              "value": {
+                "x": 0.4,
+                "y": 1,
+                "z": 0.7
+              }
+            },
+            {
+              "value": {
+                "x": 0,
+                "y": 0,
+                "z": 0,
+                "w": 1
+              }
+            },
+            {
+              "value": 1
+            }
+          ],
+          "result": "pieces"
+        }
+      ]
+    }
+  ]
+}

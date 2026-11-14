@@ -1,0 +1,158 @@
+{
+  "forceCompetitors": 115,
+  "flowCompetitors": 32,
+  "trace": [
+    {
+      "frame": 0,
+      "liquidReady": false,
+      "forceBudget": {
+        "reservations": 119,
+        "units": 500480,
+        "reservationLimit": 128,
+        "unitLimit": 524288,
+        "samplesPerBody": 64,
+        "collidersPerBody": 64,
+        "nativeMediaPerSample": 32,
+        "missingMediaPerSample": 32
+      },
+      "flowBudget": {
+        "reservations": 1,
+        "units": 0,
+        "reservationLimit": 64,
+        "unitLimit": 524288,
+        "streamSegments": 32,
+        "queryHits": 64,
+        "scoopSamples": 5,
+        "rainSamples": 5
+      },
+      "forceSchedule": {
+        "step": 3332,
+        "executions": 115,
+        "executionLimit": 128,
+        "queued": 4,
+        "queueLimit": 128,
+        "units": 500480,
+        "unitLimit": 524288
+      },
+      "flowSchedule": {
+        "step": 3332,
+        "executions": 0,
+        "executionLimit": 32,
+        "queued": 1,
+        "queueLimit": 64,
+        "units": 0,
+        "unitLimit": 524288
+      },
+      "bodies": [
+        {
+          "target": "c73bcef10e144c8b9b52c33b557bd8fa",
+          "ready": false,
+          "groupReady": false,
+          "simulating": false,
+          "motionHeld": true,
+          "speedX": 0.0
+        },
+        {
+          "target": "7f7c6d67264746e0983feb4022bd2090",
+          "ready": false,
+          "groupReady": false,
+          "simulating": false,
+          "motionHeld": true,
+          "speedX": 0.0
+        },
+        {
+          "target": "eeacaebfa4e643238ad55a3cf063f650",
+          "ready": false,
+          "groupReady": false,
+          "simulating": false,
+          "motionHeld": true,
+          "speedX": 0.0
+        },
+        {
+          "target": "9cc74357e4cc4dbc950efc653c2bb242",
+          "ready": false,
+          "groupReady": false,
+          "simulating": false,
+          "motionHeld": true,
+          "speedX": 0.0
+        }
+      ]
+    },
+    {
+      "frame": 10,
+      "liquidReady": true,
+      "forceBudget": {
+        "reservations": 119,
+        "units": 517888,
+        "reservationLimit": 128,
+        "unitLimit": 524288,
+        "samplesPerBody": 64,
+        "collidersPerBody": 64,
+        "nativeMediaPerSample": 32,
+        "missingMediaPerSample": 32
+      },
+      "flowBudget": {
+        "reservations": 1,
+        "units": 5364,
+        "reservationLimit": 64,
+        "unitLimit": 524288,
+        "streamSegments": 32,
+        "queryHits": 64,
+        "scoopSamples": 5,
+        "rainSamples": 5
+      },
+      "forceSchedule": {
+        "step": 3333,
+        "executions": 119,
+        "executionLimit": 128,
+        "queued": 0,
+        "queueLimit": 128,
+        "units": 517888,
+        "unitLimit": 524288
+      },
+      "flowSchedule": {
+        "step": 3333,
+        "executions": 1,
+        "executionLimit": 32,
+        "queued": 0,
+        "queueLimit": 64,
+        "units": 5364,
+        "unitLimit": 524288
+      },
+      "bodies": [
+        {
+          "target": "c73bcef10e144c8b9b52c33b557bd8fa",
+          "ready": true,
+          "groupReady": true,
+          "simulating": true,
+          "motionHeld": false,
+          "speedX": 2.9988
+        },
+        {
+          "target": "7f7c6d67264746e0983feb4022bd2090",
+          "ready": true,
+          "groupReady": true,
+          "simulating": true,
+          "motionHeld": false,
+          "speedX": 2.9988
+        },
+        {
+          "target": "eeacaebfa4e643238ad55a3cf063f650",
+          "ready": true,
+          "groupReady": true,
+          "simulating": true,
+          "motionHeld": false,
+          "speedX": 2.9988
+        },
+        {
+          "target": "9cc74357e4cc4dbc950efc653c2bb242",
+          "ready": true,
+          "groupReady": true,
+          "simulating": true,
+          "motionHeld": false,
+          "speedX": 2.9988
+        }
+      ]
+    }
+  ]
+}

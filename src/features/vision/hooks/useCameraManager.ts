@@ -1,6 +1,9 @@
 // Copyright 2025 Roni Tervo
 //
 // SPDX-License-Identifier: Apache-2.0
+import type { CameraImageOrigin } from '../../../../shared/imageOrigin';
+import { cameraSourceProvider, onCameraSourcesChanged, isNativeCameraId, cameraFrameState, cameraStreamFresh } from '../../../platform/browser/cameraSources';
+import { acquireUserMedia } from '../../../platform/browser/sessionActivity';
 /**
  * useCameraManager - Hook for managing hardware access (camera, microphone).
  * 
@@ -55,6 +58,7 @@ export interface UseCameraManagerReturn {
     mimeType: string;
     storageOptimizedBase64: string;
     storageOptimizedMimeType: string;
+    imageOrigin?: CameraImageOrigin;
   } | null>;
   /** Fetch available cameras */
   fetchAvailableCameras: () => Promise<void>;
@@ -125,11 +129,13 @@ export const useCameraManager = (config: UseCameraManagerConfig): UseCameraManag
 
   const fetchAvailableCameras = useCallback(async () => {
     try {
-      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+      const native = cameraSourceProvider();
+      if (native) { setAvailableCameras(native.devices()); return; }
+      if (typeof navigator.mediaDevices?.getUserMedia === 'function') {
         try {
           // Requesting stream triggers permission prompt if not granted
           if (hasCameraConsent(useMaestroStore.getState().settings)) {
-            const tempStream = await navigator.mediaDevices.getUserMedia({ video: true });
+            const tempStream = await acquireUserMedia({ video: true });
             tempStream.getTracks().forEach(track => track.stop());
           }
         } catch (permError) {
@@ -170,10 +176,12 @@ export const useCameraManager = (config: UseCameraManagerConfig): UseCameraManag
   // Fetch cameras on mount and device changes
   useEffect(() => {
     fetchAvailableCameras();
+    const unsubscribe = onCameraSourcesChanged(() => { void fetchAvailableCameras(); });
     if (navigator.mediaDevices) {
       navigator.mediaDevices.addEventListener('devicechange', fetchAvailableCameras);
     }
     return () => {
+      unsubscribe();
       if (navigator.mediaDevices) {
         navigator.mediaDevices.removeEventListener('devicechange', fetchAvailableCameras);
       }
@@ -189,6 +197,9 @@ export const useCameraManager = (config: UseCameraManagerConfig): UseCameraManag
 
   // Manage visual context stream
   useEffect(() => {
+    let cancelled = false;
+    const cancellation = new AbortController();
+    let ownedStream: MediaStream | null = null;
     const startVisualContextStream = async () => {
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
         setVisualContextCameraError(t('error.cameraAccessNotSupported'));
@@ -203,7 +214,7 @@ export const useCameraManager = (config: UseCameraManagerConfig): UseCameraManag
 
         let stream: MediaStream;
         try {
-          stream = await navigator.mediaDevices.getUserMedia({ video: videoConstraints });
+          stream = await acquireUserMedia({ video: videoConstraints }, cancellation.signal);
         } catch (deviceErr) {
           // If a specific device was requested and it failed with a hardware/constraint
           // error, remove it from the available list and attempt a facingMode-based
@@ -211,7 +222,7 @@ export const useCameraManager = (config: UseCameraManagerConfig): UseCameraManag
           const isRecoverableError = deviceErr instanceof Error &&
             ['NotReadableError', 'OverconstrainedError', 'NotFoundError', 'DevicesNotFoundError'].includes(deviceErr.name);
 
-          if (selectedCameraId && isRecoverableError) {
+          if (selectedCameraId && !isNativeCameraId(selectedCameraId) && isRecoverableError) {
             const selected = availableCamerasRef.current.find(c => c.deviceId === selectedCameraId);
             const fallbackFacingMode = selected?.facingMode === 'user' ? 'user' : 'environment';
 
@@ -223,7 +234,7 @@ export const useCameraManager = (config: UseCameraManagerConfig): UseCameraManag
             setAvailableCameras(prev => prev.filter(c => c.deviceId !== selectedCameraId));
 
             try {
-              stream = await navigator.mediaDevices.getUserMedia({
+              stream = await acquireUserMedia({
                 video: { facingMode: { ideal: fallbackFacingMode } }
               });
 
@@ -243,6 +254,13 @@ export const useCameraManager = (config: UseCameraManagerConfig): UseCameraManag
           }
         }
 
+        if (cancelled) { stream.getTracks().forEach(track => track.stop()); return; }
+        ownedStream = stream;
+        stream.getVideoTracks().forEach(track => track.addEventListener?.('ended', () => {
+          if (cancelled || visualContextStreamRef.current !== stream) return;
+          stopVisualContextStream();
+          setVisualContextCameraError('Camera sharing stopped. Turn the camera off and select it again to resume.');
+        }, { once: true }));
         visualContextStreamRef.current = stream;
         setLiveVideoStream(stream);
         if (selectedCameraId === DEFAULT_CAMERA_ID) {
@@ -259,6 +277,7 @@ export const useCameraManager = (config: UseCameraManagerConfig): UseCameraManag
           try {
             await videoElement.play();
           } catch (playError: any) {
+            if (cancelled) return;
             const latestVideoElement = visualContextVideoRef.current;
             const isStalePlaybackError =
               visualContextStreamRef.current !== stream ||
@@ -284,6 +303,7 @@ export const useCameraManager = (config: UseCameraManagerConfig): UseCameraManag
             }
           }
 
+          if (cancelled || visualContextStreamRef.current !== stream) return;
           if (!hasBlockingPlaybackError) {
             setVisualContextCameraError(null);
           }
@@ -291,6 +311,7 @@ export const useCameraManager = (config: UseCameraManagerConfig): UseCameraManag
           setVisualContextCameraError(null);
         }
       } catch (err) {
+        if (cancelled) return;
         console.error("Error accessing camera for visual context:", err);
         let message = t("error.cameraUnknown");
         let excludeCamera = false;
@@ -333,7 +354,7 @@ export const useCameraManager = (config: UseCameraManagerConfig): UseCameraManag
       }
     };
 
-    const shouldStream = (useVisualContext || sendWithSnapshotEnabled) && 
+    const shouldStream = (useVisualContext || sendWithSnapshotEnabled) && Boolean(selectedCameraId) &&
       selectedCameraId !== IMAGE_GEN_CAMERA_ID;
 
     if (shouldStream) {
@@ -344,6 +365,8 @@ export const useCameraManager = (config: UseCameraManagerConfig): UseCameraManag
     }
 
     return () => {
+      cancelled = true; cancellation.abort();
+      ownedStream?.getTracks().forEach(track => track.stop());
       stopVisualContextStream();
     };
   }, [
@@ -361,6 +384,7 @@ export const useCameraManager = (config: UseCameraManagerConfig): UseCameraManag
     mimeType: string;
     storageOptimizedBase64: string;
     storageOptimizedMimeType: string;
+    imageOrigin?: CameraImageOrigin;
   } | null> => {
     const isForReengagement = typeof options === 'boolean'
       ? options
@@ -413,7 +437,7 @@ export const useCameraManager = (config: UseCameraManagerConfig): UseCameraManag
           videoHeight: videoElement.videoHeight,
         });
       } else {
-        if (requireReadyFrame) {
+        if (requireReadyFrame || isNativeCameraId(selectedCameraId)) {
           warnSttFlow('camera.capture.skip.frameNotReady', {
             selectedCameraId: selectedCameraId || 'none',
             readyState: videoElement.readyState,
@@ -434,7 +458,7 @@ export const useCameraManager = (config: UseCameraManagerConfig): UseCameraManag
         logSttFlow('camera.capture.tempStream.start', {
           selectedCameraId: selectedCameraId || 'none',
         });
-        streamForCapture = await navigator.mediaDevices.getUserMedia({ video: videoConstraints });
+        streamForCapture = await acquireUserMedia({ video: videoConstraints });
         streamWasTemporarilyStarted = true;
         videoElement.srcObject = streamForCapture;
         videoElement.muted = true;
@@ -475,7 +499,9 @@ export const useCameraManager = (config: UseCameraManagerConfig): UseCameraManag
         });
       }
 
-      if (!hasCameraConsent(useMaestroStore.getState().settings)) return null;
+      const latestSettings = useMaestroStore.getState().settings;
+      if (!hasCameraConsent(latestSettings) || latestSettings.selectedCameraId !== selectedCameraId || !cameraStreamFresh(streamForCapture)) return null;
+      const imageOrigin = cameraFrameState(streamForCapture)?.origin;
       const canvas = document.createElement('canvas');
       canvas.width = videoElement.videoWidth;
       canvas.height = videoElement.videoHeight;
@@ -491,7 +517,7 @@ export const useCameraManager = (config: UseCameraManagerConfig): UseCameraManag
         videoWidth: videoElement.videoWidth,
         videoHeight: videoElement.videoHeight,
       });
-      return { base64: imageBase64, mimeType: 'image/jpeg', storageOptimizedBase64: imageBase64, storageOptimizedMimeType: 'image/jpeg' };
+      return { base64: imageBase64, mimeType: 'image/jpeg', storageOptimizedBase64: imageBase64, storageOptimizedMimeType: 'image/jpeg', ...(imageOrigin ? { imageOrigin } : {}) };
 
     } catch (err) {
       console.error(`Error capturing image (${isForReengagement ? 're-engagement' : 'snapshot'}):`, err);

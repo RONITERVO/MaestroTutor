@@ -1,0 +1,8 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Microphone capture contract</title></head>
+<body><main>Local capture verification. Uses generated test audio only.</main>
+<script type="module">
+import { openBrowserPcmCapture } from '/src/features/speech/utils/browserPcmCapture.ts';
+import { waitForLocalSpeechTrigger } from '/src/features/speech/utils/localSpeechTrigger.ts';
+window.captureProbeModules = { openBrowserPcmCapture, waitForLocalSpeechTrigger };
+</script></body></html>

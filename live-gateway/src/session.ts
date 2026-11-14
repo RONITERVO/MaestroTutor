@@ -1,6 +1,7 @@
 // Copyright 2025 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 
+import { isRoomLiveTools, RoomLiveProtocol } from '../../shared/roomLiveProtocol';
 import {
   LIVE_GATEWAY_AUTH_TIMEOUT_MS,
   LIVE_GATEWAY_MAX_MESSAGE_BYTES,
@@ -18,6 +19,7 @@ import {
   createLiveGatewayUsageCheckpoint,
   observeLiveGatewayClientMessage,
   observeLiveGatewayProviderMessage,
+  observeLiveGatewayToolResponse,
   type LiveGatewayUsageCheckpoint,
 } from '../../shared/billing/liveGateway';
 
@@ -220,6 +222,7 @@ export class LiveGatewayConnection {
   private providerInputDurationScheduledMs = 0;
   private providerVideoPacingStartedAt: number | null = null;
   private providerVideoFramesScheduled = 0;
+  private roomTools = new RoomLiveProtocol(false);
   private inputTimer: ReturnType<typeof setTimeout> | null = null;
   private inputEnded = false;
   private inputStartedAt: number | null = null;
@@ -294,6 +297,7 @@ export class LiveGatewayConnection {
   private requestShutdown(reason: string): void {
     if (this.closingRequested || this.phase === 'closed') return;
     this.closingRequested = true;
+    this.roomTools.seal();
     this.inputEnded = true;
     this.clearTimers();
     this.cancelPacing();
@@ -518,7 +522,15 @@ export class LiveGatewayConnection {
     if (message.type === 'clientContent') {
       throw new Error('Managed Live client content is not supported.');
     }
-    throw new Error('Managed Live tool responses are not supported.');
+    if (this.now() >= this.ticketSession!.deadlineAt) {
+      this.requestShutdown('session-deadline'); return;
+    }
+    const response = this.roomTools.consumeResponses(message.input);
+    if (!response.functionResponses.length) return;
+    if (!this.providerSession.sendToolResponse) throw new Error('Live provider does not support tool responses.');
+    await this.providerSession.sendToolResponse(response);
+    this.checkpointState = observeLiveGatewayToolResponse(this.checkpointState, response);
+    await this.persistCheckpoint();
   }
 
   /**
@@ -552,6 +564,9 @@ export class LiveGatewayConnection {
     if (this.authTimer) clearTimeout(this.authTimer);
     this.authTimer = null;
     this.ticketSession = await this.options.billing.consumeTicket(ticket);
+    const ticketTools = this.ticketSession.config?.tools;
+    if (ticketTools !== undefined && !isRoomLiveTools(ticketTools)) throw new Error('Unsupported Live tools in ticket.');
+    this.roomTools = new RoomLiveProtocol(ticketTools !== undefined);
     if (this.transportDisconnected || this.closingRequested) {
       await this.shutdown('client-disconnect-before-provider', false);
       return;
@@ -559,6 +574,15 @@ export class LiveGatewayConnection {
 
     const callbacks: LiveProviderCallbacks = {
       onmessage: (message) => {
+        try {
+          // Cancellation must overtake queued audio and client responses. The
+          // guard never dispatches actions; it only owns pending provider IDs.
+          message = this.roomTools.receiveProvider(message);
+        } catch (error) {
+          this.roomTools.seal();
+          this.enqueue(() => this.handleFatal(error));
+          return;
+        }
         const content = (message as { serverContent?: { turnComplete?: boolean; inputTranscription?: unknown; outputTranscription?: unknown; modelTurn?: { parts?: Array<{ inlineData?: unknown }> } } })?.serverContent;
         if (content?.inputTranscription) this.markTimingOnce('input.first-provider-transcript-received');
         if (content?.outputTranscription) this.markTimingOnce('response.first-transcript-received');
@@ -576,8 +600,8 @@ export class LiveGatewayConnection {
         }
         this.enqueue(() => this.handleProviderMessage(message));
       },
-      onerror: (error) => this.enqueue(() => this.handleProviderError(error)),
-      onclose: (event) => this.enqueue(() => this.handleProviderClose(event)),
+      onerror: (error) => { this.roomTools.seal(); this.enqueue(() => this.handleProviderError(error)); },
+      onclose: (event) => { this.roomTools.seal(); this.enqueue(() => this.handleProviderClose(event)); },
     };
     this.markTiming('provider.connect-start');
     const connectPromise = this.options.provider.connect({
@@ -614,6 +638,7 @@ export class LiveGatewayConnection {
 
   private async handleProviderMessage(message: unknown): Promise<void> {
     if (this.phase !== 'ready' || !this.ticketSession) return;
+    message = this.roomTools.pendingMessage(message);
     const wasUseful = this.checkpointState.usefulOutput;
     this.checkpointState = observeLiveGatewayProviderMessage(this.checkpointState, message);
     const firstUsefulOutput = !wasUseful && this.checkpointState.usefulOutput;
@@ -623,7 +648,7 @@ export class LiveGatewayConnection {
     if (firstUsefulOutput || hasProviderAccountingBoundary(message)) {
       await this.persistCheckpoint();
     }
-    this.send({ type: 'providerMessage', message });
+    this.send({ type: 'providerMessage', message: this.roomTools.pendingMessage(message) });
     if (firstUsefulOutput) this.markTimingOnce('response.first-useful-output-forwarded');
   }
 
@@ -665,6 +690,7 @@ export class LiveGatewayConnection {
     });
     this.phase = 'closing';
     this.closingRequested = true;
+    this.roomTools.seal();
     this.inputEnded = true;
     this.clearTimers();
     this.cancelPacing();

@@ -1,0 +1,26 @@
+{
+  "name": "Maestro.Quest.PlayMode.Tests",
+  "rootNamespace": "Maestro.Quest.Tests",
+  "references": [
+    "Meta.XR.Audio",
+    "Maestro.Quest",
+    "Unity.XR.Interaction.Toolkit",
+    "Unity.XR.ARFoundation",
+    "Unity.XR.ARSubsystems",
+    "Maestro.Quest.TestFixtures",
+    "UniGLTF",
+    "UniGLTF.Utils",
+    "Unity.InputSystem",
+    "Unity.XR.OpenXR",
+    "TLab.Capture",
+    "Unity.XR.Hands",
+    "Unity.Collections"
+  ],
+  "optionalUnityReferences": [
+    "TestAssemblies"
+  ],
+  "overrideReferences": true,
+  "precompiledReferences": [
+    "Newtonsoft.Json.dll"
+  ]
+}
