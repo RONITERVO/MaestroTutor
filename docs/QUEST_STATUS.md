@@ -33,11 +33,11 @@ package bytes or acceptance. The signed-package record retains its full hash.
 
 | Record | Identity and evidence boundary |
 | --- | --- |
-| Current frozen runtime source | **Uncommitted included-world increment**, branch `codex/maestro-quest-v1`, [draft PR #248](https://github.com/RONITERVO/MaestroTutor/pull/248). Catalog-v4 pins 3,281 unchanged native inputs. The latest web prebuild covers 5,035 broad inputs; earlier full Headless used its recorded 5,034-input map before the web/driver fix. The fresh Android compilation below uses this frozen source; no new runtime commit or installed candidate is implied. |
+| Verified included-world source | `bb2de5fae152f9fdab8f7192381bab14942db6e3`, branch `codex/maestro-quest-v1`, [draft PR #248](https://github.com/RONITERVO/MaestroTutor/pull/248). The committed native and web content matches the final frozen inputs after Git line-ending normalization; the Observatory descriptor retains exact raw bytes. Earlier Headless has its separate pre-UI-fix boundary below. Later documentation commits do not create a new runtime build. |
 | Previous committed runtime checkpoint | `1db401172e68b1f00d4b64f7784fdba1336f4675`. Its verified frozen content matches the commit after Git line-ending normalization. This historical static-support checkpoint predates the current included-world source. |
 | Last verified installed development app | APK `D85F3CB7`, source `f58dab48`; later desktop source has not received physical acceptance. |
 | Last packaged development APK | `5899972E`, source `5100f612`; recorded as not installed. |
-| Latest verified unsigned Android compilation | `Android-compile-20261114-072523-02ff8c01`, from the current frozen uncommitted source; development package/profile, no APK/AAB, signing or installation. [Included-world checkpoint](quest/checkpoints/2026-11.md#included-editable-world-lifecycle--2026-11-14). The earlier `020734-02eff427` compilation remains historical static-support evidence. |
+| Latest verified unsigned Android compilation | `Android-compile-20261114-072523-02ff8c01`, from the verified frozen content committed as `bb2de5fa`; development package/profile, no APK/AAB, signing or installation. [Included-world checkpoint](quest/checkpoints/2026-11.md#included-editable-world-lifecycle--2026-11-14). The earlier `020734-02eff427` compilation remains historical static-support evidence. |
 | Signed/private Meta checkpoint | APK `DA689683`, source `d7d5d847`, app `1763835394893209`, package `com.maestro.quest`, build `1767008267909255`. Owner screenshots later confirmed it current in private Alpha. Package malware/security checks passed; VRC/Store/account/provider acceptance did not. [Signed package](QUEST_RELEASE_BUILD.md#corrected-signed-quest-3-candidate--2026-10-06) and [channel observation](https://github.com/RONITERVO/MaestroTutor/blob/f7a252feafcea470ddffe78df62512cd63a04de7/docs/QUEST_V1_PLAN.md#L471-L480). |
 | Backend rollout | Two Quest bootstrap endpoints were deployed but disabled; the temporary private diagnostic was removed. [Rollout record](QUEST_MANAGED_ACCESS.md#scoped-backend-rollout--2026-10-06). Existing application/account/provider rollout remains separate. |
 
@@ -67,8 +67,10 @@ evidence, but cannot substitute for the remaining acceptance in that row.
 
 ## Latest verified proof
 
-The current included-world evidence refers to **frozen uncommitted source**:
-3,281 unchanged native inputs and sixteen protected files. Latest web/prebuild
+The included-world source is `bb2de5fae152f9fdab8f7192381bab14942db6e3`.
+Independent commit review matches 3,281 native inputs and the final broad source
+after Git line-ending normalization; sixteen protected files remain unchanged.
+The Observatory descriptor retains exact raw bytes. Latest web/prebuild
 inputs total 5,035; earlier Headless retains its own 5,034-input map before the
 five-file web/driver correction. Earlier broad runs, focused corrections and the
 final test-only type annotation have separate source boundaries below.
