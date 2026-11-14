@@ -21,7 +21,7 @@ function Assert-QuestProbeEvidenceParents([string]$Path,[switch]$Leaf){
 }
 function Read-QuestProbeEvidenceJson([string]$Path,[int]$Maximum=4096){
  Assert-QuestProbeEvidenceParents $Path -Leaf
- $info=Get-Item -LiteralPath $Path -ErrorAction Stop
+ $info=Get-Item -LiteralPath $Path -Force -ErrorAction Stop
  if($info.PSIsContainer -or $info.Length -lt 1 -or $info.Length -gt $Maximum){throw 'Probe ownership must be a bounded regular JSON file.'}
  $bytes=[IO.File]::ReadAllBytes($Path)
  if($bytes.Length -lt 1 -or $bytes.Length -gt $Maximum){throw 'Probe ownership byte limit exceeded.'}

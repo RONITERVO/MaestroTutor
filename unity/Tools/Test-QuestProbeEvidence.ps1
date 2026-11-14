@@ -34,6 +34,28 @@ try{
   $owner=Read-QuestProbeEvidenceJson $plan.marker
   Need ($owner.Count -eq 2 -and $owner.source -ceq $repo -and $owner.buildMirror -ceq $mirror) 'Root owner mismatch.'
  }
+ Check 'hidden-exact-owner-is-readable-and-preserved' {
+  $before=[IO.File]::ReadAllBytes($plan.marker);$attributes=[IO.File]::GetAttributes($plan.marker)
+  try{
+   if($IsWindows){[IO.File]::SetAttributes($plan.marker,$attributes -bor [IO.FileAttributes]::Hidden)}
+   Need ([bool]([IO.File]::GetAttributes($plan.marker) -band [IO.FileAttributes]::Hidden)) 'Fixture owner must actually be hidden.'
+   $owner=Read-QuestProbeEvidenceJson $plan.marker
+   Need ($owner.Count -eq 2 -and $owner.source -ceq $repo -and $owner.buildMirror -ceq $mirror) 'Hidden owner was skipped or changed.'
+   $accepted=Get-QuestProbeEvidencePlan $chosen $repo $mirror $false
+   Need ($accepted.root -ceq $chosen -and $accepted.ownership -ceq 'exact-root-marker') 'Hidden owner lost exact ownership admission.'
+   Need ([Convert]::ToBase64String([IO.File]::ReadAllBytes($plan.marker)) -ceq [Convert]::ToBase64String($before)) 'Reading a hidden owner changed its bytes.'
+  }finally{if($IsWindows){[IO.File]::SetAttributes($plan.marker,$attributes)}}
+ }
+ Check 'hidden-foreign-owner-is-still-refused' {
+  $foreign=Join-Path $testRoot 'hidden-foreign';New-Item -ItemType Directory -Path $foreign | Out-Null
+  $marker=Join-Path $foreign '.maestro-probe-evidence.json'
+  [IO.File]::WriteAllText($marker,(@{source=(Join-Path $testRoot 'foreign-source');buildMirror=$mirror}|ConvertTo-Json -Compress))
+  if($IsWindows){[IO.File]::SetAttributes($marker,[IO.File]::GetAttributes($marker) -bor [IO.FileAttributes]::Hidden)}
+  Need ([bool]([IO.File]::GetAttributes($marker) -band [IO.FileAttributes]::Hidden)) 'Foreign owner fixture must actually be hidden.'
+  $before=[IO.File]::ReadAllBytes($marker)
+  Reject {Get-QuestProbeEvidencePlan $foreign $repo $mirror $false} 'another source'
+  Need ([Convert]::ToBase64String([IO.File]::ReadAllBytes($marker)) -ceq [Convert]::ToBase64String($before)) 'Refusing a hidden foreign owner changed its bytes.'
+ }
  Check 'same-owner-second-run-preserves-first' {
   [IO.File]::WriteAllText((Join-Path $script:run 'kept.txt'),'original')
   $next=New-QuestProbeEvidenceRun $plan ('2'*32)
@@ -96,6 +118,24 @@ try{
    Reject {Assert-QuestProbeResumeTree $testRoot} 'links or reparse'
   }finally{Remove-Item -LiteralPath $link -Force}
   Need ([IO.Directory]::Exists($target)) 'Link refusal/cleanup touched its target.'
+ }
+ Check 'hidden-resume-links-are-rejected-without-traversal' {
+  $tree=Join-Path $testRoot 'hidden-resume';$hidden=Join-Path $tree '.hidden'
+  $target=Join-Path $testRoot 'hidden-link-target'
+  New-Item -ItemType Directory -Path $hidden,$target | Out-Null
+  if($IsWindows){[IO.File]::SetAttributes($hidden,[IO.File]::GetAttributes($hidden) -bor [IO.FileAttributes]::Hidden)}
+  Need ([bool]([IO.File]::GetAttributes($hidden) -band [IO.FileAttributes]::Hidden)) 'Resume fixture directory must actually be hidden.'
+  [IO.File]::WriteAllText((Join-Path $hidden '.ordinary'),'kept hidden source')
+  [IO.File]::WriteAllText((Join-Path $target 'sentinel'),'untouched link target')
+  Assert-QuestProbeResumeTree $tree
+  $link=Join-Path $hidden '.linked'
+  New-Item -ItemType $(if($IsWindows){'Junction'}else{'SymbolicLink'}) -Path $link -Target $target | Out-Null
+  try{
+   Reject {Assert-QuestProbeResumeTree $tree} 'links or reparse'
+   Reject {Read-QuestProbeEvidenceJson (Join-Path $link 'sentinel')} 'links or reparse'
+  }finally{Remove-Item -LiteralPath $link -Force}
+  Need ([IO.File]::ReadAllText((Join-Path $target 'sentinel')) -ceq 'untouched link target') 'Hidden link refusal touched its target.'
+  Need ([IO.File]::ReadAllText((Join-Path $hidden '.ordinary')) -ceq 'kept hidden source') 'Hidden link refusal changed its sibling.'
  }
  Check 'packaging-entry-chain-forwards-without-execution' {
   foreach($name in @('Build-QuestDevelopment.ps1','Build-QuestRelease.ps1','Build-QuestPackage.ps1')){
